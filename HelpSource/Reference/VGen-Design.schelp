@@ -1,0 +1,40 @@
+section:: VGen Design Concepts
+
+subsection:: Coordinate Space
+
+By default we work in normalized coordinate spaces. The origin is at the center of the space, with X increasing to the right and Y increasing moving up. TBD on direction of Z, pending decision of handedness of Vulkan, it should be the same.
+
+The normal extents of the space are from -Pi to +Pi in both X and Y directions. It should be possible to alter the coordinate system of a VGen, along with projection. Basically there should be functionality to alter the vertex program, and some way to 
+specify which chain of fragment programs (VGens) it applies to.
+
+That's a VertexSpace - a domain in which fragments are applied? There's one by default described above?
+
+subsection:: Pre-defined variables.
+
+Things that every VGen gets "for free"
+
+table::
+## x || X coordinate of fragment
+## y || Y coordinate of fragment
+## z || Z coordinate of fragment (typically 0?)
+## w || W coordinate of fragment (depends on coord setup)
+## r || computed as magnitude of x, y, z, w, if needed.
+## pixel coords as i, j, k?
+::
+
+subsection:: Output
+
+By default single-channel intensity. Could look at multichannel expansion here. Let's avoid assignment of meaning to the values until its time to color pixels, meaning that the same VSynthDef can be used to do a single channel of color, or HSV, or whatever, its just tables of numbers until late.
+
+subsection:: Rendering
+
+In general there's three (ish) pieces to a render, and these names are horrible so rethink:
+
+Vertexy kinds of things (Context? Space? Extent?)
+The VGens, which get compiled into a fragment program
+A framebuffer, which has some rules about how the VGens map to pixel values.
+
+There's some prebuilt vertex type things, like the one described in coordinate space, and it can also take some parameters.
+The server provides an output framebuffer, which is configured at boot time. Server can also make arbitrarily many intermediate framebuffers for rendering stuff.
+
+It might be a good simplification to keep the vertex program and the framebuffer together.
