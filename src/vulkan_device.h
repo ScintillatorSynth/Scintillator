@@ -12,26 +12,26 @@ class VulkanInstance;
 // creation, and destruction.
 class VulkanDevice {
  public:
-  VulkanDevice(VulkanInstance* instance);
-  ~VulkanDevice();
+    VulkanDevice(VulkanInstance* instance);
+    ~VulkanDevice();
 
-  // Try to find a suitable physical device, returns true if one exists.
-  bool FindPhysicalDevice(VkSurfaceKHR surface);
-  // Creates the logical device, returns false on error.
-  bool Create(VkSurfaceKHR surface);
-  void Destroy();
+    // Try to find a suitable physical device, returns true if one exists.
+    bool FindPhysicalDevice(VkSurfaceKHR surface);
+    // Creates the logical device, returns false on error.
+    bool Create(VkSurfaceKHR surface);
+    void Destroy();
 
 
  private:
-  VulkanInstance* instance_;
-  VkPhysicalDevice physical_device_;
-  int graphics_family_index_;
-  int present_family_index_;
-  VkDevice device_;
-  VkQueue graphics_queue_;
-  VkQueue present_queue_;
+    VulkanInstance* instance_;
+    VkPhysicalDevice physical_device_;
+    int graphics_family_index_;
+    int present_family_index_;
+    VkDevice device_;
+    VkQueue graphics_queue_;
+    VkQueue present_queue_;
 };
 
-}  // namespace scin
+}    // namespace scin
 
-#endif  // SRC_VULKAN_DEVICE_H_
+#endif    // SRC_VULKAN_DEVICE_H_

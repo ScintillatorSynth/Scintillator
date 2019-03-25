@@ -11,23 +11,23 @@ namespace scin {
 // also currently handles the validation layer setup and logging.
 class VulkanInstance {
  public:
-  VulkanInstance();
-  ~VulkanInstance();
+    VulkanInstance();
+    ~VulkanInstance();
 
-  // Attempt to create the Vulkan Instance, will return true on success.
-  bool Create();
-  void Destroy();
+    // Attempt to create the Vulkan Instance, will return true on success.
+    bool Create();
+    void Destroy();
 
-  VkInstance get() { return instance_; }
+    VkInstance get() { return instance_; }
 
  private:
-  VkInstance instance_;
+    VkInstance instance_;
 
 #if defined(SCIN_VALIDATE_VULKAN)
-  VkDebugUtilsMessengerEXT debug_messenger_;
+    VkDebugUtilsMessengerEXT debug_messenger_;
 #endif
 };
 
-}  // namespace scin
+}    // namespace scin
 
-#endif  // SRC_VULKAN_INSTANCE_H_
+#endif    // SRC_VULKAN_INSTANCE_H_
