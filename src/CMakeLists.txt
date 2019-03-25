@@ -7,6 +7,10 @@ endif()
 
 set(scintillator_synth_files
   scinsynth.cc
+  vulkan_device.cc
+  vulkan_device.h
+  vulkan_instance.cc
+  vulkan_instance.h
 )
 
 add_executable(scinsynth ${scintillator_synth_files})
