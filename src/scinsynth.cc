@@ -231,12 +231,22 @@ int main() {
   deviceCreateInfo.enabledLayerCount = 0;
 #endif
 
+  if (vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &device) !=
+      VK_SUCCESS) {
+    std::cerr << "failed to create logical device." << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  VkQueue graphicsQueue;
+  vkGetDeviceQueue(device, graphicsFamilyIndex, 0, &graphicsQueue);
+
   // ========== Main loop.
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
   }
 
   // ========== Vulkan cleanup.
+  vkDestroyDevice(device, nullptr);
 #if defined(SCIN_VALIDATE_VULKAN)
   DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 #endif
