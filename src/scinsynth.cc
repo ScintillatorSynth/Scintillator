@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <cstring>
+#include <set>
 #include <vector>
 
 const int WIDTH = 800;
@@ -114,7 +115,7 @@ int main() {
   appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
   appInfo.apiVersion = VK_API_VERSION_1_0;
 
-  // Check for needed Vulkan extensions.
+  // Create the Vulkan instance, our primary access to the Vulkan API.
   VkInstanceCreateInfo instanceCreateInfo = {};
   instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
   instanceCreateInfo.pApplicationInfo = &appInfo;
@@ -140,7 +141,6 @@ int main() {
       extensions.size());
   instanceCreateInfo.ppEnabledExtensionNames = extensions.data();
 
-  // Create the Vulkan instance, our primary access to the Vulkan API.
   VkInstance instance;
   if (vkCreateInstance(&instanceCreateInfo, nullptr, &instance) != VK_SUCCESS) {
     std::cerr << "failed to create instance." << std::endl;
@@ -155,6 +155,14 @@ int main() {
   }
 #endif
 
+  // Create Vulkan window surface.
+  VkSurfaceKHR surface;
+  if (glfwCreateWindowSurface(instance, window, nullptr, &surface)
+      != VK_SUCCESS) {
+    std::cerr << "failed to create surface" << std::endl;
+    return EXIT_FAILURE;
+  }
+
   // Create Vulkan physical device with needed queue families.
   VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
   uint32_t deviceCount = 0;
@@ -164,18 +172,20 @@ int main() {
     return EXIT_FAILURE;
   }
 
-  int graphicsFamilyIndex = -1;
+  int graphicsFamilyIndex = 0;
+  int presentFamilyIndex = 0;
   std::vector<VkPhysicalDevice> devices(deviceCount);
   vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
   for (const auto& device : devices) {
     VkPhysicalDeviceProperties deviceProperties;
     vkGetPhysicalDeviceProperties(device, &deviceProperties);
+
     // Dedicated GPUs only for now. Device enumeration later.
     if (deviceProperties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
       continue;
     }
 
-    // Also needs to support graphics queue families.
+    // Also needs to support graphics and present queue families.
     uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
         nullptr);
@@ -183,17 +193,29 @@ int main() {
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
         queueFamilies.data());
     int familyIndex = 0;
+    bool allFamiliesFound = false;
     for (const auto& queueFamily : queueFamilies) {
-      if (queueFamily.queueCount > 0 &&
-          queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+      VkBool32 presentSupport = false;
+      vkGetPhysicalDeviceSurfaceSupportKHR(
+          device, familyIndex, surface, &presentSupport);
+      if (queueFamily.queueCount == 0) {
+        continue;
+      }
+      if (presentSupport) {
+        presentFamilyIndex = familyIndex;
+      }
+      if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
         graphicsFamilyIndex = familyIndex;
+      }
+      if (graphicsFamilyIndex >= 0 && presentFamilyIndex >= 0) {
+        allFamiliesFound = true;
         break;
       }
 
       ++familyIndex;
     }
 
-    if (graphicsFamilyIndex >= 0) {
+    if (allFamiliesFound) {
       physicalDevice = device;
       break;
     }
@@ -206,18 +228,29 @@ int main() {
 
   // Create Vulkan logical device
   VkDevice device;
-  VkDeviceQueueCreateInfo queueCreateInfo = {};
-  queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-  queueCreateInfo.queueFamilyIndex = graphicsFamilyIndex;
-  queueCreateInfo.queueCount = 1;
+
+  std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+  std::set<uint32_t> uniqueQueueFamilies = {
+      static_cast<uint32_t>(graphicsFamilyIndex),
+      static_cast<uint32_t>(presentFamilyIndex)
+  };
+
   float queuePriority = 1.0;
-  queueCreateInfo.pQueuePriorities = &queuePriority;
+  for (uint32_t queueFamily : uniqueQueueFamilies) {
+    VkDeviceQueueCreateInfo queueCreateInfo = {};
+    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queueCreateInfo.queueFamilyIndex = queueFamily;
+    queueCreateInfo.queueCount = 1;
+    queueCreateInfo.pQueuePriorities = &queuePriority;
+    queueCreateInfos.push_back(queueCreateInfo);
+  }
 
   VkPhysicalDeviceFeatures deviceFeatures = {};
   VkDeviceCreateInfo deviceCreateInfo = {};
   deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-  deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
-  deviceCreateInfo.queueCreateInfoCount = 1;
+  deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
+  deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(
+      queueCreateInfos.size());
   deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
 
   // These fields are supposedly ignored in newer Vulkan implementations,
@@ -239,6 +272,8 @@ int main() {
 
   VkQueue graphicsQueue;
   vkGetDeviceQueue(device, graphicsFamilyIndex, 0, &graphicsQueue);
+  VkQueue presentQueue;
+  vkGetDeviceQueue(device, presentFamilyIndex, 0, &presentQueue);
 
   // ========== Main loop.
   while (!glfwWindowShouldClose(window)) {
@@ -250,6 +285,7 @@ int main() {
 #if defined(SCIN_VALIDATE_VULKAN)
   DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 #endif
+  vkDestroySurfaceKHR(instance, surface, nullptr);
   vkDestroyInstance(instance, nullptr);
 
   // ========== glfw cleanup.
