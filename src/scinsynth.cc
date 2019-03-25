@@ -95,17 +95,17 @@ bool SetupDebugMessenger(VkInstance instance,
 
   return true;
 }
-#endif
+#endif  // SCIN_VALIDATE_VULKAN
 
 int main() {
-  // glfw setup and window creation.
+  // ========== glfw setup and window creation.
   glfwInit();
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
   GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT,
       "ScintillatorSynth", nullptr, nullptr);
 
-  // Vulkan setup.
+  // ========== Vulkan setup.
   VkApplicationInfo appInfo = {};
   appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   appInfo.pApplicationName = "scinsynth";
@@ -114,9 +114,10 @@ int main() {
   appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
   appInfo.apiVersion = VK_API_VERSION_1_0;
 
-  VkInstanceCreateInfo createInfo = {};
-  createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-  createInfo.pApplicationInfo = &appInfo;
+  // Check for needed Vulkan extensions.
+  VkInstanceCreateInfo instanceCreateInfo = {};
+  instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+  instanceCreateInfo.pApplicationInfo = &appInfo;
 
   uint32_t glfwExtensionCount = 0;
   const char** glfwExtensions;
@@ -127,18 +128,22 @@ int main() {
 
 #if defined(SCIN_VALIDATE_VULKAN)
   extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-  createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-  createInfo.ppEnabledLayerNames = validationLayers.data();
+
+  instanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(
+      validationLayers.size());
+  instanceCreateInfo.ppEnabledLayerNames = validationLayers.data();
 #else
-  createInfo.enabledLayerCount = 0;
+  instanceCreateInfo.enabledLayerCount = 0;
 #endif
 
-  createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-  createInfo.ppEnabledExtensionNames = extensions.data();
+  instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(
+      extensions.size());
+  instanceCreateInfo.ppEnabledExtensionNames = extensions.data();
 
+  // Create the Vulkan instance, our primary access to the Vulkan API.
   VkInstance instance;
-  if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
-    std::cerr << "failed to create instance!" << std::endl;
+  if (vkCreateInstance(&instanceCreateInfo, nullptr, &instance) != VK_SUCCESS) {
+    std::cerr << "failed to create instance." << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -150,19 +155,94 @@ int main() {
   }
 #endif
 
-  // Main loop.
+  // Create Vulkan physical device with needed queue families.
+  VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+  uint32_t deviceCount = 0;
+  vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+  if (deviceCount == 0) {
+    std::cerr << "no Vulkan physical devices found." << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  int graphicsFamilyIndex = -1;
+  std::vector<VkPhysicalDevice> devices(deviceCount);
+  vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+  for (const auto& device : devices) {
+    VkPhysicalDeviceProperties deviceProperties;
+    vkGetPhysicalDeviceProperties(device, &deviceProperties);
+    // Dedicated GPUs only for now. Device enumeration later.
+    if (deviceProperties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+      continue;
+    }
+
+    // Also needs to support graphics queue families.
+    uint32_t queueFamilyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
+        nullptr);
+    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
+        queueFamilies.data());
+    int familyIndex = 0;
+    for (const auto& queueFamily : queueFamilies) {
+      if (queueFamily.queueCount > 0 &&
+          queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+        graphicsFamilyIndex = familyIndex;
+        break;
+      }
+
+      ++familyIndex;
+    }
+
+    if (graphicsFamilyIndex >= 0) {
+      physicalDevice = device;
+      break;
+    }
+  }
+
+  if (physicalDevice == VK_NULL_HANDLE) {
+    std::cerr << "unable to find dedicated GPU." << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  // Create Vulkan logical device
+  VkDevice device;
+  VkDeviceQueueCreateInfo queueCreateInfo = {};
+  queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+  queueCreateInfo.queueFamilyIndex = graphicsFamilyIndex;
+  queueCreateInfo.queueCount = 1;
+  float queuePriority = 1.0;
+  queueCreateInfo.pQueuePriorities = &queuePriority;
+
+  VkPhysicalDeviceFeatures deviceFeatures = {};
+  VkDeviceCreateInfo deviceCreateInfo = {};
+  deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+  deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
+  deviceCreateInfo.queueCreateInfoCount = 1;
+  deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
+
+  // These fields are supposedly ignored in newer Vulkan implementations,
+  // set anyway.
+  deviceCreateInfo.enabledExtensionCount = 0;
+#if defined(SCIN_VALIDATE_VULKAN)
+  deviceCreateInfo.enabledLayerCount = static_cast<uint32_t>(
+      validationLayers.size());
+  deviceCreateInfo.ppEnabledLayerNames = validationLayers.data();
+#else
+  deviceCreateInfo.enabledLayerCount = 0;
+#endif
+
+  // ========== Main loop.
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
   }
 
+  // ========== Vulkan cleanup.
 #if defined(SCIN_VALIDATE_VULKAN)
   DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 #endif
-
-  // Vulkan cleanup.
   vkDestroyInstance(instance, nullptr);
 
-  // glfw cleanup.
+  // ========== glfw cleanup.
   glfwDestroyWindow(window);
   glfwTerminate();
 
