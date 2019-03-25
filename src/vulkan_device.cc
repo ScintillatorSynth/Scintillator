@@ -6,6 +6,12 @@
 #include <set>
 #include <vector>
 
+namespace {
+  const std::vector<const char*> device_extensions  {
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME
+  };
+}
+
 namespace scin {
 
 VulkanDevice::VulkanDevice(VulkanInstance* instance)
@@ -68,7 +74,20 @@ bool VulkanDevice::FindPhysicalDevice(VkSurfaceKHR surface) {
       ++family_index;
     }
 
-    if (all_families_found) {
+    // Check for supported device extensions.
+    uint32_t extension_count = 0;
+    vkEnumerateDeviceExtensionProperties(device, nullptr,
+        &extension_count, nullptr);
+    std::vector<VkExtensionProperties> available_extensions(extension_count);
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count,
+        available_extensions.data());
+    std::set<std::string> required_extensions(device_extensions.begin(),
+        device_extensions.end());
+    for (const auto& extension : available_extensions) {
+      required_extensions.erase(extension.extensionName);
+    }
+
+    if (required_extensions.empty() && all_families_found) {
       physical_device_ = device;
       break;
     }
@@ -114,19 +133,9 @@ bool VulkanDevice::Create(VkSurfaceKHR surface) {
   device_create_info.queueCreateInfoCount = static_cast<uint32_t>(
       queue_create_infos.size());
   device_create_info.pEnabledFeatures = &device_features;
-  device_create_info.enabledExtensionCount = 0;
-
-  // These fields are supposedly ignored in newer Vulkan implementations,
-  // set anyway.
-/* TODO: repair.
-#if defined(SCIN_VALIDATE_VULKAN)
-  device_create_info.enabledLayerCount = static_cast<uint32_t>(
-      validationLayers.size());
-  device_create_info.ppEnabledLayerNames = validationLayers.data();
-#else
-  device_create_info.enabledLayerCount = 0;
-#endif
-*/
+  device_create_info.enabledExtensionCount = static_cast<uint32_t>(
+      device_extensions.size());
+  device_create_info.ppEnabledExtensionNames = device_extensions.data();
 
   if (vkCreateDevice(physical_device_, &device_create_info, nullptr,
       &device_) != VK_SUCCESS) {
