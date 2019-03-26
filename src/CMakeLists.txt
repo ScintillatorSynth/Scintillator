@@ -6,11 +6,16 @@ if (NOT VULKAN_FOUND)
 endif()
 
 set(scintillator_synth_files
-  scinsynth.cc
-  vulkan_device.cc
-  vulkan_device.h
-  vulkan_instance.cc
-  vulkan_instance.h
+    scin_include_vulkan.h
+    scinsynth.cc
+    vulkan_device.cc
+    vulkan_device.h
+    vulkan_instance.cc
+    vulkan_instance.h
+    vulkan_swap_chain.cc
+    vulkan_swap_chain.h
+    vulkan_window.cc
+    vulkan_window.h
 )
 
 add_executable(scinsynth ${scintillator_synth_files})

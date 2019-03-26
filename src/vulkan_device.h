@@ -1,8 +1,9 @@
 #ifndef SRC_VULKAN_DEVICE_H_
 #define SRC_VULKAN_DEVICE_H_
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include "scin_include_vulkan.h"
+
+#include <memory>
 
 namespace scin {
 
@@ -11,8 +12,8 @@ class VulkanInstance;
 // This class encapsulates both logical and physical devices, handing selection,
 // creation, and destruction.
 class VulkanDevice {
- public:
-    VulkanDevice(VulkanInstance* instance);
+  public:
+    VulkanDevice(std::shared_ptr<VulkanInstance> instance);
     ~VulkanDevice();
 
     // Try to find a suitable physical device, returns true if one exists.
@@ -21,9 +22,11 @@ class VulkanDevice {
     bool Create(VkSurfaceKHR surface);
     void Destroy();
 
+    VkDevice get() { return device_; }
+    VkPhysicalDevice get_physical() { return physical_device_; }
 
- private:
-    VulkanInstance* instance_;
+  private:
+    std::shared_ptr<VulkanInstance> instance_;
     VkPhysicalDevice physical_device_;
     int graphics_family_index_;
     int present_family_index_;
@@ -35,3 +38,4 @@ class VulkanDevice {
 }    // namespace scin
 
 #endif    // SRC_VULKAN_DEVICE_H_
+

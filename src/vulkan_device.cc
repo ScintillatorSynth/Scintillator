@@ -14,15 +14,18 @@ namespace {
 
 namespace scin {
 
-VulkanDevice::VulkanDevice(VulkanInstance* instance)
-        : instance_(instance),
-            physical_device_(VK_NULL_HANDLE),
-            graphics_family_index_(-1),
-            present_family_index_(-1),
-            device_(VK_NULL_HANDLE) {
+VulkanDevice::VulkanDevice(std::shared_ptr<VulkanInstance> instance) :
+        instance_(instance),
+        physical_device_(VK_NULL_HANDLE),
+        graphics_family_index_(-1),
+        present_family_index_(-1),
+        device_(VK_NULL_HANDLE) {
 }
 
 VulkanDevice::~VulkanDevice() {
+    if (device_ != VK_NULL_HANDLE) {
+        Destroy();
+    }
 }
 
 bool VulkanDevice::FindPhysicalDevice(VkSurfaceKHR surface) {
@@ -40,7 +43,8 @@ bool VulkanDevice::FindPhysicalDevice(VkSurfaceKHR surface) {
         vkGetPhysicalDeviceProperties(device, &device_properties);
 
         // Dedicated GPUs only for now. Device enumeration later.
-        if (device_properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+        if (device_properties.deviceType !=
+            VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
             continue;
         }
 
@@ -78,7 +82,8 @@ bool VulkanDevice::FindPhysicalDevice(VkSurfaceKHR surface) {
         uint32_t extension_count = 0;
         vkEnumerateDeviceExtensionProperties(device, nullptr,
                 &extension_count, nullptr);
-        std::vector<VkExtensionProperties> available_extensions(extension_count);
+        std::vector<VkExtensionProperties> available_extensions(
+                extension_count);
         vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count,
                 available_extensions.data());
         std::set<std::string> required_extensions(device_extensions.begin(),
@@ -151,6 +156,7 @@ bool VulkanDevice::Create(VkSurfaceKHR surface) {
 
 void VulkanDevice::Destroy() {
     vkDestroyDevice(device_, nullptr);
+    device_ = VK_NULL_HANDLE;
 }
 
 }    // namespace scin

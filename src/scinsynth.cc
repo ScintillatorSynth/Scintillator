@@ -1,61 +1,42 @@
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
+#include "scin_include_vulkan.h"
 #include "vulkan_device.h"
 #include "vulkan_instance.h"
+#include "vulkan_window.h"
 
-#include <iostream>
-#include <stdexcept>
-#include <cstdlib>
-#include <cstring>
-#include <set>
-#include <vector>
-
-const int WIDTH = 800;
-const int HEIGHT = 600;
-
+#include <memory>
 
 int main() {
-    // ========== glfw setup and window creation.
     glfwInit();
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT,
-            "ScintillatorSynth", nullptr, nullptr);
 
     // ========== Vulkan setup.
-    scin::VulkanInstance vk_instance;
-    if (!vk_instance.Create()) {
+    std::shared_ptr<scin::VulkanInstance> vk_instance(
+            new scin::VulkanInstance());
+    if (!vk_instance->Create()) {
         return EXIT_FAILURE;
     }
 
-    // Create Vulkan window surface.
-    VkSurfaceKHR surface;
-    if (glfwCreateWindowSurface(vk_instance.get(), window, nullptr, &surface)
-            != VK_SUCCESS) {
-        std::cerr << "failed to create surface" << std::endl;
+    scin::VulkanWindow window(vk_instance);
+    if (!window.Create(800, 600)) {
         return EXIT_FAILURE;
     }
 
-    // Create Vulkan logical device.
-    scin::VulkanDevice vk_device(&vk_instance);
-    if (!vk_device.Create(surface)) {
+    // Create Vulkan physical and logical device.
+    scin::VulkanDevice vk_device(vk_instance);
+    if (!vk_device.Create(window.get_surface())) {
         return EXIT_FAILURE;
     }
 
     // ========== Main loop.
-    while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
-    }
+    window.Run();
 
     // ========== Vulkan cleanup.
     vk_device.Destroy();
-    vkDestroySurfaceKHR(vk_instance.get(), surface, nullptr);
-    vk_instance.Destroy();
+
+    vk_instance->Destroy();
 
     // ========== glfw cleanup.
-    glfwDestroyWindow(window);
     glfwTerminate();
 
     return EXIT_SUCCESS;
 }
+
