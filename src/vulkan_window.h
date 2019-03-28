@@ -20,9 +20,13 @@ class VulkanWindow {
 
     GLFWwindow* get() { return window_; }
     VkSurfaceKHR get_surface() { return surface_; }
+    int width() const { return width_; }
+    int height() const { return height_; }
 
   private:
     std::shared_ptr<VulkanInstance> instance_;
+    int width_;
+    int height_;
     GLFWwindow* window_;
     VkSurfaceKHR surface_;
 };

@@ -1,6 +1,7 @@
 #include "vulkan_device.h"
 
 #include "vulkan_instance.h"
+#include "vulkan_window.h"
 
 #include <iostream>
 #include <set>
@@ -28,7 +29,7 @@ VulkanDevice::~VulkanDevice() {
     }
 }
 
-bool VulkanDevice::FindPhysicalDevice(VkSurfaceKHR surface) {
+bool VulkanDevice::FindPhysicalDevice(VulkanWindow* window) {
     uint32_t device_count = 0;
     vkEnumeratePhysicalDevices(instance_->get(), &device_count, nullptr);
     if (device_count == 0) {
@@ -45,6 +46,7 @@ bool VulkanDevice::FindPhysicalDevice(VkSurfaceKHR surface) {
         // Dedicated GPUs only for now. Device enumeration later.
         if (device_properties.deviceType !=
             VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+            std::cout << "skipping indiscrete GPU" << std::endl;
             continue;
         }
 
@@ -60,7 +62,10 @@ bool VulkanDevice::FindPhysicalDevice(VkSurfaceKHR surface) {
         for (const auto& queue_family : queue_families) {
             VkBool32 present_support = false;
             vkGetPhysicalDeviceSurfaceSupportKHR(
-                    device, family_index, surface, &present_support);
+                    device,
+                    family_index,
+                    window->get_surface(),
+                    &present_support);
             if (queue_family.queueCount == 0) {
                 continue;
             }
@@ -78,6 +83,13 @@ bool VulkanDevice::FindPhysicalDevice(VkSurfaceKHR surface) {
             ++family_index;
         }
 
+        if (!all_families_found) {
+            graphics_family_index_ = -1;
+            present_family_index_ = -1;
+            std::cout << "missing a queue family, skipping" << std::endl;
+            continue;
+        }
+
         // Check for supported device extensions.
         uint32_t extension_count = 0;
         vkEnumerateDeviceExtensionProperties(device, nullptr,
@@ -92,7 +104,25 @@ bool VulkanDevice::FindPhysicalDevice(VkSurfaceKHR surface) {
             required_extensions.erase(extension.extensionName);
         }
 
-        if (required_extensions.empty() && all_families_found) {
+        if (!required_extensions.empty()) {
+            std::cout << "some required extension missing, skipping"
+                      << std::endl;
+            for (const auto& extension : required_extensions) {
+                std::cout << extension << std::endl;
+            }
+            continue;
+        }
+
+        // Check swap chain for suitability, it should support at least one
+        // format and present mode.
+        uint32_t format_count = 0;
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, window->get_surface(),
+                &format_count, nullptr);
+        uint32_t present_mode_count = 0;
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, window->get_surface(),
+                &present_mode_count, nullptr);
+
+        if (format_count > 0 && present_mode_count > 0) {
             physical_device_ = device;
             break;
         }
@@ -106,11 +136,11 @@ bool VulkanDevice::FindPhysicalDevice(VkSurfaceKHR surface) {
     return true;
 }
 
-bool VulkanDevice::Create(VkSurfaceKHR surface) {
+bool VulkanDevice::Create(VulkanWindow* window) {
     // FindPhysicalDevice() needs to be called first, if it hasn't been we call
     // it here.
     if (physical_device_ == VK_NULL_HANDLE) {
-        if (!FindPhysicalDevice(surface)) {
+        if (!FindPhysicalDevice(window)) {
             return false;
         }
     }

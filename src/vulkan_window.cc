@@ -8,6 +8,8 @@ namespace scin {
 
 VulkanWindow::VulkanWindow(std::shared_ptr<VulkanInstance> instance) :
     instance_(instance),
+    width_(-1),
+    height_(-1),
     window_(nullptr),
     surface_(VK_NULL_HANDLE) {
 }
@@ -25,6 +27,8 @@ bool VulkanWindow::Create(int width, int height) {
         std::cerr << "failed to create surface" << std::endl;
         return false;
     }
+    width_ = width;
+    height_ = height;
 
     return true;
 }
