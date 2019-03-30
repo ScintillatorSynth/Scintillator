@@ -14,6 +14,9 @@ VulkanSwapChain::VulkanSwapChain(std::shared_ptr<VulkanDevice> device) :
 }
 
 VulkanSwapChain::~VulkanSwapChain() {
+    if (swap_chain_ != VK_NULL_HANDLE) {
+        Destroy();
+    }
 }
 
 bool VulkanSwapChain::Create(VulkanWindow* window) {
