@@ -2,7 +2,7 @@
 #### Vulkan
 find_package(Vulkan)
 if (NOT VULKAN_FOUND)
-  message(FATAL_ERROR "Vulkan not found")
+    message(FATAL_ERROR "Vulkan not found")
 endif()
 
 set(scintillator_synth_files
@@ -21,11 +21,12 @@ set(scintillator_synth_files
 add_executable(scinsynth ${scintillator_synth_files})
 
 target_link_libraries(scinsynth
-  glfw
-  ${VULKAN_LIBRARY}
+    glfw
+    shaderc_combined
+    ${VULKAN_LIBRARY}
 )
 
 if (SCIN_VALIDATE_VULKAN)
-  target_compile_definitions(scinsynth PRIVATE SCIN_VALIDATE_VULKAN)
+    target_compile_definitions(scinsynth PRIVATE SCIN_VALIDATE_VULKAN)
 endif()
 
