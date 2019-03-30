@@ -14,6 +14,12 @@ set(scintillator_synth_files
     vulkan/instance.cc
     vulkan/instance.h
     vulkan/scin_include_vulkan.h
+    vulkan/shader.cc
+    vulkan/shader.h
+    vulkan/shader_compiler.cc
+    vulkan/shader_compiler.h
+    vulkan/shader_source.cc
+    vulkan/shader_source.h
     vulkan/swap_chain.cc
     vulkan/swap_chain.h
     vulkan/window.cc
