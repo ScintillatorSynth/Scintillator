@@ -21,10 +21,14 @@ set(scintillator_synth_files
 add_executable(scinsynth ${scintillator_synth_files})
 
 target_link_libraries(scinsynth
-    glfw
-    shaderc_combined
     ${VULKAN_LIBRARY}
+    SPIRV-Tools
+    glfw
+    glslang
+    shaderc
 )
+
+add_dependencies(scinsynth gmock)
 
 if (SCIN_VALIDATE_VULKAN)
     target_compile_definitions(scinsynth PRIVATE SCIN_VALIDATE_VULKAN)
