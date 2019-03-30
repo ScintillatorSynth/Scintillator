@@ -6,13 +6,15 @@
 
 namespace scin {
 
+namespace vk {
+
 // The Vulkan Instance, VkInstance, is the primary access to the Vulkan API.
 // This class encapsulates the instance, manages creation and destruction. It
 // also currently handles the validation layer setup and logging.
-class VulkanInstance {
+class Instance {
  public:
-    VulkanInstance();
-    ~VulkanInstance();
+    Instance();
+    ~Instance();
 
     // Attempt to create the Vulkan Instance, will return true on success.
     bool Create();
@@ -27,6 +29,8 @@ class VulkanInstance {
     VkDebugUtilsMessengerEXT debug_messenger_;
 #endif
 };
+
+}    // namespace vk
 
 }    // namespace scin
 

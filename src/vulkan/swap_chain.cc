@@ -1,7 +1,7 @@
-#include "vulkan_swap_chain.h"
+#include "vulkan/swap_chain.h"
 
-#include "vulkan_device.h"
-#include "vulkan_window.h"
+#include "vulkan/device.h"
+#include "vulkan/window.h"
 
 #include <iostream>
 #include <limits>
@@ -9,17 +9,19 @@
 
 namespace scin {
 
-VulkanSwapChain::VulkanSwapChain(std::shared_ptr<VulkanDevice> device) :
+namespace vk {
+
+SwapChain::SwapChain(std::shared_ptr<Device> device) :
     device_(device) {
 }
 
-VulkanSwapChain::~VulkanSwapChain() {
+SwapChain::~SwapChain() {
     if (swap_chain_ != VK_NULL_HANDLE) {
         Destroy();
     }
 }
 
-bool VulkanSwapChain::Create(VulkanWindow* window) {
+bool SwapChain::Create(Window* window) {
     // Pick swap chain format from available options.
     uint32_t format_count;
     vkGetPhysicalDeviceSurfaceFormatsKHR(device_->get_physical(),
@@ -165,7 +167,7 @@ bool VulkanSwapChain::Create(VulkanWindow* window) {
     return true;
 }
 
-void VulkanSwapChain::Destroy() {
+void SwapChain::Destroy() {
     for (auto view : image_views_) {
         vkDestroyImageView(device_->get(), view, nullptr);
     }
@@ -173,5 +175,7 @@ void VulkanSwapChain::Destroy() {
     swap_chain_ = VK_NULL_HANDLE;
 }
 
-}  // namespace scin
+}    // namespace vk
+
+}    // namespace scin
 

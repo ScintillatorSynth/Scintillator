@@ -1,7 +1,7 @@
-#include "vulkan_device.h"
+#include "vulkan/device.h"
 
-#include "vulkan_instance.h"
-#include "vulkan_window.h"
+#include "vulkan/instance.h"
+#include "vulkan/window.h"
 
 #include <iostream>
 #include <set>
@@ -15,7 +15,9 @@ namespace {
 
 namespace scin {
 
-VulkanDevice::VulkanDevice(std::shared_ptr<VulkanInstance> instance) :
+namespace vk {
+
+Device::Device(std::shared_ptr<Instance> instance) :
         instance_(instance),
         physical_device_(VK_NULL_HANDLE),
         graphics_family_index_(-1),
@@ -23,13 +25,13 @@ VulkanDevice::VulkanDevice(std::shared_ptr<VulkanInstance> instance) :
         device_(VK_NULL_HANDLE) {
 }
 
-VulkanDevice::~VulkanDevice() {
+Device::~Device() {
     if (device_ != VK_NULL_HANDLE) {
         Destroy();
     }
 }
 
-bool VulkanDevice::FindPhysicalDevice(VulkanWindow* window) {
+bool Device::FindPhysicalDevice(Window* window) {
     uint32_t device_count = 0;
     vkEnumeratePhysicalDevices(instance_->get(), &device_count, nullptr);
     if (device_count == 0) {
@@ -136,7 +138,7 @@ bool VulkanDevice::FindPhysicalDevice(VulkanWindow* window) {
     return true;
 }
 
-bool VulkanDevice::Create(VulkanWindow* window) {
+bool Device::Create(Window* window) {
     // FindPhysicalDevice() needs to be called first, if it hasn't been we call
     // it here.
     if (physical_device_ == VK_NULL_HANDLE) {
@@ -184,10 +186,12 @@ bool VulkanDevice::Create(VulkanWindow* window) {
     return true;
 }
 
-void VulkanDevice::Destroy() {
+void Device::Destroy() {
     vkDestroyDevice(device_, nullptr);
     device_ = VK_NULL_HANDLE;
 }
+
+}    // namespace vk
 
 }    // namespace scin
 

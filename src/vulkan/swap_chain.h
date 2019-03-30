@@ -8,19 +8,21 @@
 
 namespace scin {
 
-class VulkanDevice;
-class VulkanWindow;
+namespace vk {
 
-class VulkanSwapChain {
+class Device;
+class Window;
+
+class SwapChain {
    public:
-    VulkanSwapChain(std::shared_ptr<VulkanDevice> device);
-    ~VulkanSwapChain();
+    SwapChain(std::shared_ptr<Device> device);
+    ~SwapChain();
 
-    bool Create(VulkanWindow* window);
+    bool Create(Window* window);
     void Destroy();
 
    private:
-    std::shared_ptr<VulkanDevice> device_;
+    std::shared_ptr<Device> device_;
     VkSurfaceFormatKHR surface_format_;
     VkPresentModeKHR present_mode_;
     VkExtent2D extent_;
@@ -31,7 +33,9 @@ class VulkanSwapChain {
     std::vector<VkImageView> image_views_;
 };
 
-}  // namespace scin
+}    // namespace vk
 
-#endif  // SRC_VULKAN_SWAP_CHAIN_H_
+}    // namespace scin
+
+#endif    // SRC_VULKAN_SWAP_CHAIN_H_
 

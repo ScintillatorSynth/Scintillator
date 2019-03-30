@@ -1,8 +1,8 @@
-#include "scin_include_vulkan.h"
-#include "vulkan_device.h"
-#include "vulkan_instance.h"
-#include "vulkan_swap_chain.h"
-#include "vulkan_window.h"
+#include "vulkan/device.h"
+#include "vulkan/instance.h"
+#include "vulkan/scin_include_vulkan.h"
+#include "vulkan/swap_chain.h"
+#include "vulkan/window.h"
 
 #include <memory>
 
@@ -10,27 +10,25 @@ int main() {
     glfwInit();
 
     // ========== Vulkan setup.
-    std::shared_ptr<scin::VulkanInstance> vk_instance(
-            new scin::VulkanInstance());
-    if (!vk_instance->Create()) {
+    std::shared_ptr<scin::vk::Instance> instance(new scin::vk::Instance());
+    if (!instance->Create()) {
         return EXIT_FAILURE;
     }
 
-    scin::VulkanWindow window(vk_instance);
+    scin::vk::Window window(instance);
     if (!window.Create(800, 600)) {
         return EXIT_FAILURE;
     }
 
     // Create Vulkan physical and logical device.
-    std::shared_ptr<scin::VulkanDevice> vk_device(
-            new scin::VulkanDevice(vk_instance));
-    if (!vk_device->Create(&window)) {
+    std::shared_ptr<scin::vk::Device> device(new scin::vk::Device(instance));
+    if (!device->Create(&window)) {
         return EXIT_FAILURE;
     }
 
     // Configure swap chain based on device and surface capabilities.
-    scin::VulkanSwapChain vk_swap_chain(vk_device);
-    if (!vk_swap_chain.Create(&window)) {
+    scin::vk::SwapChain swap_chain(device);
+    if (!swap_chain.Create(&window)) {
         return EXIT_FAILURE;
     }
 
@@ -38,9 +36,9 @@ int main() {
     window.Run();
 
     // ========== Vulkan cleanup.
-    vk_swap_chain.Destroy();
-    vk_device->Destroy();
-    vk_instance->Destroy();
+    swap_chain.Destroy();
+    device->Destroy();
+    instance->Destroy();
 
     // ========== glfw cleanup.
     glfwTerminate();

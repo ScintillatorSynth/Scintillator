@@ -7,12 +7,16 @@
 
 namespace scin {
 
-class VulkanInstance;
+namespace vk {
 
-class VulkanWindow {
+class Instance;
+
+// While technically more a GLFW object than a Vulkan one, Window also maintains
+// a VkSurfaceKHR handle, so lives with the rest of the Vulkan objects.
+class Window {
   public:
-    VulkanWindow(std::shared_ptr<VulkanInstance> instance);
-    ~VulkanWindow();
+    Window(std::shared_ptr<Instance> instance);
+    ~Window();
 
     bool Create(int width, int height);
     void Run();
@@ -24,14 +28,16 @@ class VulkanWindow {
     int height() const { return height_; }
 
   private:
-    std::shared_ptr<VulkanInstance> instance_;
+    std::shared_ptr<Instance> instance_;
     int width_;
     int height_;
     GLFWwindow* window_;
     VkSurfaceKHR surface_;
 };
 
-}  // namespace scin
+}    // namespace vk
 
-#endif  // SRC_VULKAN_WINDOW_H_
+}    // namespace scin
+
+#endif    // SRC_VULKAN_WINDOW_H_
 

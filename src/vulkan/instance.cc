@@ -1,4 +1,4 @@
-#include "vulkan_instance.h"
+#include "vulkan/instance.h"
 
 #include <iostream>
 #include <cstring>
@@ -98,17 +98,19 @@ bool SetupDebugMessenger(VkInstance instance,
 
 namespace scin {
 
-VulkanInstance::VulkanInstance()
+namespace vk {
+
+Instance::Instance()
         : instance_(VK_NULL_HANDLE) {
 }
 
-VulkanInstance::~VulkanInstance() {
-    if (instance_ !=    VK_NULL_HANDLE) {
+Instance::~Instance() {
+    if (instance_ != VK_NULL_HANDLE) {
         Destroy();
     }
 }
 
-bool VulkanInstance::Create() {
+bool Instance::Create() {
     VkApplicationInfo app_info = {};
     app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     app_info.pApplicationName = "scinsynth";
@@ -158,13 +160,15 @@ bool VulkanInstance::Create() {
     return true;
 }
 
-void VulkanInstance::Destroy() {
+void Instance::Destroy() {
 #if defined(SCIN_VALIDATE_VULKAN)
     DestroyDebugUtilsMessengerEXT(instance_, debug_messenger_, nullptr);
 #endif
     vkDestroyInstance(instance_, nullptr);
     instance_ = VK_NULL_HANDLE;
 }
+
+}    // namespace vk
 
 }    // namespace scin
 

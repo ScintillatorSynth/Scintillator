@@ -1,12 +1,14 @@
-#include "vulkan_window.h"
+#include "vulkan/window.h"
 
-#include "vulkan_instance.h"
+#include "vulkan/instance.h"
 
 #include <iostream>
 
 namespace scin {
 
-VulkanWindow::VulkanWindow(std::shared_ptr<VulkanInstance> instance) :
+namespace vk {
+
+Window::Window(std::shared_ptr<Instance> instance) :
     instance_(instance),
     width_(-1),
     height_(-1),
@@ -14,10 +16,10 @@ VulkanWindow::VulkanWindow(std::shared_ptr<VulkanInstance> instance) :
     surface_(VK_NULL_HANDLE) {
 }
 
-VulkanWindow::~VulkanWindow() {
+Window::~Window() {
 }
 
-bool VulkanWindow::Create(int width, int height) {
+bool Window::Create(int width, int height) {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     window_ = glfwCreateWindow(width, height,
@@ -34,16 +36,18 @@ bool VulkanWindow::Create(int width, int height) {
 }
 
 
-void VulkanWindow::Run() {
+void Window::Run() {
     while (!glfwWindowShouldClose(window_)) {
         glfwPollEvents();
     }
 }
 
-void VulkanWindow::Destroy() {
+void Window::Destroy() {
     vkDestroySurfaceKHR(instance_->get(), surface_, nullptr);
     glfwDestroyWindow(window_);
 }
 
-}  // namespace scin
+}    // namespace vk
+
+}    // namespace scin
 

@@ -5,17 +5,19 @@ if (NOT VULKAN_FOUND)
     message(FATAL_ERROR "Vulkan not found")
 endif()
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
 set(scintillator_synth_files
-    scin_include_vulkan.h
     scinsynth.cc
-    vulkan_device.cc
-    vulkan_device.h
-    vulkan_instance.cc
-    vulkan_instance.h
-    vulkan_swap_chain.cc
-    vulkan_swap_chain.h
-    vulkan_window.cc
-    vulkan_window.h
+    vulkan/device.cc
+    vulkan/device.h
+    vulkan/instance.cc
+    vulkan/instance.h
+    vulkan/scin_include_vulkan.h
+    vulkan/swap_chain.cc
+    vulkan/swap_chain.h
+    vulkan/window.cc
+    vulkan/window.h
 )
 
 add_executable(scinsynth ${scintillator_synth_files})
@@ -27,8 +29,6 @@ target_link_libraries(scinsynth
     glslang
     shaderc
 )
-
-add_dependencies(scinsynth gmock)
 
 if (SCIN_VALIDATE_VULKAN)
     target_compile_definitions(scinsynth PRIVATE SCIN_VALIDATE_VULKAN)
