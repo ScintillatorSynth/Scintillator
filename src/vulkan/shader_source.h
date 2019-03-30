@@ -11,7 +11,7 @@ namespace vk {
 // assembly of the shader source code.
 class ShaderSource {
   public:
-    ShaderSource(std::string source, std::string name);
+    ShaderSource(std::string name, std::string source);
     ~ShaderSource();
 
     const char* get() const { return source_.c_str(); }
@@ -21,8 +21,8 @@ class ShaderSource {
     const char* entry_point() const { return "main"; }
 
   private:
-    std::string source_;
     std::string name_;
+    std::string source_;
 };
 
 }    // namespace vk

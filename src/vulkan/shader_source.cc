@@ -4,9 +4,9 @@ namespace scin {
 
 namespace vk {
 
-ShaderSource::ShaderSource(std::string source, std::string name) :
-    source_(source),
-    name_(name) {
+ShaderSource::ShaderSource(std::string name, std::string source) :
+    name_(name),
+    source_(source) {
 }
 
 ShaderSource::~ShaderSource() {

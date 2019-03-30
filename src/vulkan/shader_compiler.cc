@@ -15,6 +15,7 @@ ShaderCompiler::ShaderCompiler() :
 }
 
 ShaderCompiler::~ShaderCompiler() {
+    ReleaseCompiler();
 }
 
 bool ShaderCompiler::LoadCompiler() {
@@ -65,11 +66,16 @@ std::unique_ptr<Shader> ShaderCompiler::Compile(
             options);
 
     std::unique_ptr<Shader> shader(nullptr);
-
-    if (shaderc_result_get_compilation_status(result)) {
+    shaderc_compilation_status status =
+            shaderc_result_get_compilation_status(result);
+    if (status == shaderc_compilation_status_success) {
         size_t byte_size = shaderc_result_get_length(result);
         std::unique_ptr<char[]> spv_bytes(new char[byte_size]);
         const char* bytes = shaderc_result_get_bytes(result);
+        // TODO: could avoid memcpy by just keeping the bytes resident in the
+        // shaderc structure until the shader module is created - it looks like
+        // they get copied in to that anyway, so they don't have to persist
+        // with the shader.
         std::memcpy(spv_bytes.get(), bytes, byte_size);
         shader.reset(new Shader(kind, std::move(spv_bytes), byte_size));
     } else {
