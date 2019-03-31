@@ -73,7 +73,7 @@ std::unique_ptr<Shader> ShaderCompiler::Compile(
     if (status == shaderc_compilation_status_success) {
         const char* spv_bytes = shaderc_result_get_bytes(result);
         size_t byte_size = shaderc_result_get_length(result);
-        shader.reset(new Shader(kind, device));
+        shader.reset(new Shader(kind, device, source->entry_point()));
         if (!shader->Create(spv_bytes, byte_size)) {
             shader.reset(nullptr);
         }

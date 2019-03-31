@@ -1,4 +1,4 @@
-#include "vulkan/swap_chain.h"
+#include "vulkan/swapchain.h"
 
 #include "vulkan/device.h"
 #include "vulkan/window.h"
@@ -11,17 +11,17 @@ namespace scin {
 
 namespace vk {
 
-SwapChain::SwapChain(std::shared_ptr<Device> device) :
+Swapchain::Swapchain(std::shared_ptr<Device> device) :
     device_(device) {
 }
 
-SwapChain::~SwapChain() {
-    if (swap_chain_ != VK_NULL_HANDLE) {
+Swapchain::~Swapchain() {
+    if (swapchain_ != VK_NULL_HANDLE) {
         Destroy();
     }
 }
 
-bool SwapChain::Create(Window* window) {
+bool Swapchain::Create(Window* window) {
     // Pick swap chain format from available options.
     uint32_t format_count;
     vkGetPhysicalDeviceSurfaceFormatsKHR(device_->get_physical(),
@@ -126,7 +126,7 @@ bool SwapChain::Create(Window* window) {
     create_info.oldSwapchain = VK_NULL_HANDLE;
 
     if (vkCreateSwapchainKHR(device_->get(), &create_info, nullptr,
-                &swap_chain_) != VK_SUCCESS) {
+                &swapchain_) != VK_SUCCESS) {
         std::cerr << "error creating swap chain!" << std::endl;
         return false;
     }
@@ -134,9 +134,9 @@ bool SwapChain::Create(Window* window) {
     // Retrieve images from swap chain. Note it may be possible that Vulkan
     // has allocated more images than requested by the create call, so we
     // query first for the actual image count.
-    vkGetSwapchainImagesKHR(device_->get(), swap_chain_, &image_count, nullptr);
+    vkGetSwapchainImagesKHR(device_->get(), swapchain_, &image_count, nullptr);
     images_.resize(image_count);
-    vkGetSwapchainImagesKHR(device_->get(), swap_chain_, &image_count,
+    vkGetSwapchainImagesKHR(device_->get(), swapchain_, &image_count,
             images_.data());
 
     // Create image views to access each image.
@@ -167,12 +167,12 @@ bool SwapChain::Create(Window* window) {
     return true;
 }
 
-void SwapChain::Destroy() {
+void Swapchain::Destroy() {
     for (auto view : image_views_) {
         vkDestroyImageView(device_->get(), view, nullptr);
     }
-    vkDestroySwapchainKHR(device_->get(), swap_chain_, nullptr);
-    swap_chain_ = VK_NULL_HANDLE;
+    vkDestroySwapchainKHR(device_->get(), swapchain_, nullptr);
+    swapchain_ = VK_NULL_HANDLE;
 }
 
 }    // namespace vk

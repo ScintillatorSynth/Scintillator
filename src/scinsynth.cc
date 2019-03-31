@@ -1,10 +1,11 @@
 #include "vulkan/device.h"
 #include "vulkan/instance.h"
+#include "vulkan/pipeline.h"
 #include "vulkan/scin_include_vulkan.h"
 #include "vulkan/shader.h"
 #include "vulkan/shader_compiler.h"
 #include "vulkan/shader_source.h"
-#include "vulkan/swap_chain.h"
+#include "vulkan/swapchain.h"
 #include "vulkan/window.h"
 
 #include <iostream>
@@ -31,8 +32,8 @@ int main() {
     }
 
     // Configure swap chain based on device and surface capabilities.
-    scin::vk::SwapChain swap_chain(device);
-    if (!swap_chain.Create(&window)) {
+    scin::vk::Swapchain swapchain(device);
+    if (!swapchain.Create(&window)) {
         return EXIT_FAILURE;
     }
 
@@ -92,13 +93,21 @@ int main() {
 
     shader_compiler.ReleaseCompiler();
 
+    scin::vk::Pipeline pipeline(device);
+    if (!pipeline.Create(vertex_shader.get(), fragment_shader.get(),
+            &swapchain)) {
+        std::cerr << "error in pipeline creation." << std::endl;
+        return EXIT_FAILURE;
+    }
+
     // ========== Main loop.
     window.Run();
 
     // ========== Vulkan cleanup.
+    pipeline.Destroy();
     vertex_shader->Destroy();
     fragment_shader->Destroy();
-    swap_chain.Destroy();
+    swapchain.Destroy();
     device->Destroy();
     instance->Destroy();
 

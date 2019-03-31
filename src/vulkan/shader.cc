@@ -6,9 +6,11 @@ namespace scin {
 
 namespace vk {
 
-Shader::Shader(Kind kind, std::shared_ptr<Device> device) :
+Shader::Shader(Kind kind, std::shared_ptr<Device> device,
+        std::string entry_point) :
     kind_(kind),
     device_(device),
+    entry_point_(entry_point),
     shader_module_(VK_NULL_HANDLE) {
 }
 
@@ -26,7 +28,6 @@ void Shader::Destroy() {
     shader_module_ = VK_NULL_HANDLE;
 }
 
-
 Shader::~Shader() {
     if (shader_module_ != VK_NULL_HANDLE) {
         Destroy();
@@ -36,3 +37,4 @@ Shader::~Shader() {
 }    // namespace vk
 
 }    // namespace scin
+

@@ -13,22 +13,23 @@ namespace vk {
 class Device;
 class Window;
 
-class SwapChain {
+class Swapchain {
    public:
-    SwapChain(std::shared_ptr<Device> device);
-    ~SwapChain();
+    Swapchain(std::shared_ptr<Device> device);
+    ~Swapchain();
 
     bool Create(Window* window);
     void Destroy();
+
+    VkExtent2D extent() { return extent_; }
+    VkSurfaceFormatKHR surface_format() { return surface_format_; }
 
    private:
     std::shared_ptr<Device> device_;
     VkSurfaceFormatKHR surface_format_;
     VkPresentModeKHR present_mode_;
     VkExtent2D extent_;
-    // TODO: rename stuff to reflect fact that Vulkan thinks "swapchain" is
-    // a single word.
-    VkSwapchainKHR swap_chain_;
+    VkSwapchainKHR swapchain_;
     std::vector<VkImage> images_;
     std::vector<VkImageView> image_views_;
 };
