@@ -66,7 +66,7 @@ int main() {
             "}\n"
     );
     std::unique_ptr<scin::vk::Shader> vertex_shader = shader_compiler.Compile(
-            &vertex_source, scin::vk::Shader::kVertex);
+            device, &vertex_source, scin::vk::Shader::kVertex);
     if (!vertex_shader) {
         return EXIT_FAILURE;
     }
@@ -84,7 +84,7 @@ int main() {
             "}\n"
     );
     std::unique_ptr<scin::vk::Shader> fragment_shader = shader_compiler.Compile(
-            &fragment_source, scin::vk::Shader::kFragment);
+            device, &fragment_source, scin::vk::Shader::kFragment);
     if (!fragment_shader) {
         std::cerr << "error in fragment shader." << std::endl;
         return EXIT_FAILURE;
@@ -96,6 +96,8 @@ int main() {
     window.Run();
 
     // ========== Vulkan cleanup.
+    vertex_shader->Destroy();
+    fragment_shader->Destroy();
     swap_chain.Destroy();
     device->Destroy();
     instance->Destroy();

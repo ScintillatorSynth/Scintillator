@@ -11,6 +11,7 @@ namespace scin {
 
 namespace vk {
 
+class Device;
 class ShaderSource;
 
 // The shader compiler provided by libshaderc consumes some memory resources
@@ -24,7 +25,10 @@ class ShaderCompiler {
     bool LoadCompiler();
     void ReleaseCompiler();
 
-    std::unique_ptr<Shader> Compile(ShaderSource* source, Shader::Kind kind);
+    std::unique_ptr<Shader> Compile(
+            std::shared_ptr<Device> device,
+            ShaderSource* source,
+            Shader::Kind kind);
 
   private:
     shaderc_compiler_t compiler_;

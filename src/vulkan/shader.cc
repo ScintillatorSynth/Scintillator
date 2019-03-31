@@ -6,14 +6,31 @@ namespace scin {
 
 namespace vk {
 
-Shader::Shader(Kind kind, std::unique_ptr<char[]> spv_bytes, size_t byte_size) :
+Shader::Shader(Kind kind, std::shared_ptr<Device> device) :
     kind_(kind),
-    spv_bytes_(std::move(spv_bytes)),
-    byte_size_(byte_size),
+    device_(device),
     shader_module_(VK_NULL_HANDLE) {
 }
 
+bool Shader::Create(const char* spv_bytes, size_t byte_size) {
+    VkShaderModuleCreateInfo create_info = {};
+    create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    create_info.codeSize = byte_size;
+    create_info.pCode = reinterpret_cast<const uint32_t*>(spv_bytes);
+    return (vkCreateShaderModule(device_->get(), &create_info, nullptr,
+            &shader_module_) == VK_SUCCESS);
+}
+
+void Shader::Destroy() {
+    vkDestroyShaderModule(device_->get(), shader_module_, nullptr);
+    shader_module_ = VK_NULL_HANDLE;
+}
+
+
 Shader::~Shader() {
+    if (shader_module_ != VK_NULL_HANDLE) {
+        Destroy();
+    }
 }
 
 }    // namespace vk

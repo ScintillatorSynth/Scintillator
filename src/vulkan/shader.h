@@ -14,13 +14,15 @@ class Device;
 class Shader {
   public:
     enum Kind { kVertex, kFragment };
-    Shader(Kind kind, std::unique_ptr<char[]> spv_bytes, size_t byte_size);
+    Shader(Kind kind, std::shared_ptr<Device> device);
     ~Shader();
+
+    bool Create(const char* spv_bytes, size_t byte_size);
+    void Destroy();
 
   private:
     Kind kind_;
-    std::unique_ptr<char[]> spv_bytes_;
-    size_t byte_size_;
+    std::shared_ptr<Device> device_;
     VkShaderModule shader_module_;
 };
 
