@@ -1,6 +1,7 @@
 #include "vulkan/swapchain.h"
 
 #include "vulkan/device.h"
+#include "vulkan/pipeline.h"
 #include "vulkan/window.h"
 
 #include <iostream>
@@ -12,13 +13,13 @@ namespace scin {
 namespace vk {
 
 Swapchain::Swapchain(std::shared_ptr<Device> device) :
-    device_(device) {
+    device_(device),
+    image_count_(0),
+    swapchain_(VK_NULL_HANDLE) {
 }
 
 Swapchain::~Swapchain() {
-    if (swapchain_ != VK_NULL_HANDLE) {
-        Destroy();
-    }
+    Destroy();
 }
 
 bool Swapchain::Create(Window* window) {
@@ -88,16 +89,16 @@ bool Swapchain::Create(Window* window) {
                 static_cast<uint32_t>(window->height())));
     }
 
-    uint32_t image_count = capabilities.minImageCount + 1;
+    image_count_ = capabilities.minImageCount + 1;
     if (capabilities.maxImageCount > 0) {
-        image_count = std::min(image_count, capabilities.maxImageCount);
+        image_count_ = std::min(image_count_, capabilities.maxImageCount);
     }
 
     // Populate Swap Chain create info structure.
     VkSwapchainCreateInfoKHR create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     create_info.surface = window->get_surface();
-    create_info.minImageCount = image_count;
+    create_info.minImageCount = image_count_;
     create_info.imageFormat = surface_format_.format;
     create_info.imageColorSpace = surface_format_.colorSpace;
     create_info.imageExtent = extent_;
@@ -134,13 +135,13 @@ bool Swapchain::Create(Window* window) {
     // Retrieve images from swap chain. Note it may be possible that Vulkan
     // has allocated more images than requested by the create call, so we
     // query first for the actual image count.
-    vkGetSwapchainImagesKHR(device_->get(), swapchain_, &image_count, nullptr);
-    images_.resize(image_count);
-    vkGetSwapchainImagesKHR(device_->get(), swapchain_, &image_count,
+    vkGetSwapchainImagesKHR(device_->get(), swapchain_, &image_count_, nullptr);
+    images_.resize(image_count_);
+    vkGetSwapchainImagesKHR(device_->get(), swapchain_, &image_count_,
             images_.data());
 
     // Create image views to access each image.
-    image_views_.resize(images_.size());
+    image_views_.resize(image_count_);
     for (size_t i = 0; i < images_.size(); ++i) {
         VkImageViewCreateInfo view_create_info = {};
         view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -168,11 +169,51 @@ bool Swapchain::Create(Window* window) {
 }
 
 void Swapchain::Destroy() {
+    DestroyFramebuffers();
+
     for (auto view : image_views_) {
         vkDestroyImageView(device_->get(), view, nullptr);
     }
-    vkDestroySwapchainKHR(device_->get(), swapchain_, nullptr);
-    swapchain_ = VK_NULL_HANDLE;
+    image_views_.clear();
+
+    if (swapchain_ != VK_NULL_HANDLE) {
+        vkDestroySwapchainKHR(device_->get(), swapchain_, nullptr);
+        swapchain_ = VK_NULL_HANDLE;
+    }
+}
+
+bool Swapchain::CreateFramebuffers(Pipeline* pipeline) {
+    framebuffers_.resize(image_count_);
+
+    for (size_t i = 0; i < image_views_.size(); ++i) {
+        VkImageView attachments[] = {
+            image_views_[i]
+        };
+
+        VkFramebufferCreateInfo framebuffer_info = {};
+        framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebuffer_info.renderPass = pipeline->render_pass();
+        framebuffer_info.attachmentCount = 1;
+        framebuffer_info.pAttachments = attachments;
+        framebuffer_info.width = extent_.width;
+        framebuffer_info.height = extent_.height;
+        framebuffer_info.layers = 1;
+
+        if (vkCreateFramebuffer(device_->get(), &framebuffer_info, nullptr,
+                &framebuffers_[i]) != VK_SUCCESS) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void Swapchain::DestroyFramebuffers() {
+    for (auto framebuffer : framebuffers_) {
+        vkDestroyFramebuffer(device_->get(), framebuffer, nullptr);
+    }
+
+    framebuffers_.clear();
 }
 
 }    // namespace vk

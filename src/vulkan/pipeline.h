@@ -22,6 +22,8 @@ class Pipeline {
             Swapchain* swapchain);
     void Destroy();
 
+    VkRenderPass render_pass() { return render_pass_; }
+
   private:
     bool CreateRenderPass(Swapchain* swapchain);
     void DestroyRenderPass();

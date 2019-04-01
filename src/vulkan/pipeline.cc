@@ -165,6 +165,7 @@ bool Pipeline::Create(Shader* vertex_shader, Shader* fragment_shader,
 void Pipeline::Destroy() {
     if (pipeline_ != VK_NULL_HANDLE) {
         vkDestroyPipeline(device_->get(), pipeline_, nullptr);
+        pipeline_ = VK_NULL_HANDLE;
     }
     DestroyPipelineLayout();
     DestroyRenderPass();

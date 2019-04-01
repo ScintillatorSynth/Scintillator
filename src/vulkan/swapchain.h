@@ -11,6 +11,7 @@ namespace scin {
 namespace vk {
 
 class Device;
+class Pipeline;
 class Window;
 
 class Swapchain {
@@ -21,17 +22,24 @@ class Swapchain {
     bool Create(Window* window);
     void Destroy();
 
-    VkExtent2D extent() { return extent_; }
+    bool CreateFramebuffers(Pipeline* pipeline);
+    void DestroyFramebuffers();
+
     VkSurfaceFormatKHR surface_format() { return surface_format_; }
+    VkExtent2D extent() { return extent_; }
+    uint32_t image_count() const { return image_count_; }
+    VkFramebuffer framebuffer(size_t i) { return framebuffers_[i]; }
 
    private:
     std::shared_ptr<Device> device_;
     VkSurfaceFormatKHR surface_format_;
     VkPresentModeKHR present_mode_;
     VkExtent2D extent_;
+    uint32_t image_count_;
     VkSwapchainKHR swapchain_;
     std::vector<VkImage> images_;
     std::vector<VkImageView> image_views_;
+    std::vector<VkFramebuffer> framebuffers_;
 };
 
 }    // namespace vk

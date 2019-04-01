@@ -100,10 +100,16 @@ int main() {
         return EXIT_FAILURE;
     }
 
+    if (!swapchain.CreateFramebuffers(&pipeline)) {
+        std::cerr << "error creating framebuffers." << std::endl;
+        return EXIT_FAILURE;
+    }
+
     // ========== Main loop.
     window.Run();
 
     // ========== Vulkan cleanup.
+    swapchain.DestroyFramebuffers();
     pipeline.Destroy();
     vertex_shader->Destroy();
     fragment_shader->Destroy();
