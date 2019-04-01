@@ -1,7 +1,10 @@
 #ifndef SRC_VULKAN_COMMAND_POOL_H_
 #define SRC_VULKAN_COMMAND_POOL_H_
 
+#include "vulkan/scin_include_vulkan.h"
+
 #include <memory>
+#include <vector>
 
 namespace scin {
 
@@ -20,6 +23,8 @@ class CommandPool {
     void Destroy();
 
     bool CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline);
+
+    VkCommandBuffer command_buffer(size_t i) { return command_buffers_[i]; }
 
   private:
     std::shared_ptr<Device> device_;

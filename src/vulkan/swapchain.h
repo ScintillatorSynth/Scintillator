@@ -1,7 +1,7 @@
 #ifndef SRC_VULKAN_SWAP_CHAIN_H_
 #define SRC_VULKAN_SWAP_CHAIN_H_
 
-#include "scin_include_vulkan.h"
+#include "vulkan/scin_include_vulkan.h"
 
 #include <memory>
 #include <vector>
@@ -28,6 +28,7 @@ class Swapchain {
     VkSurfaceFormatKHR surface_format() { return surface_format_; }
     VkExtent2D extent() { return extent_; }
     uint32_t image_count() const { return image_count_; }
+    VkSwapchainKHR get() { return swapchain_; }
     VkFramebuffer framebuffer(size_t i) { return framebuffers_[i]; }
 
    private:

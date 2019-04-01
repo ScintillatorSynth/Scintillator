@@ -1,3 +1,4 @@
+#include "vulkan/command_pool.h"
 #include "vulkan/device.h"
 #include "vulkan/instance.h"
 #include "vulkan/pipeline.h"
@@ -105,10 +106,28 @@ int main() {
         return EXIT_FAILURE;
     }
 
+    scin::vk::CommandPool command_pool(device);
+    if (!command_pool.Create()) {
+        std::cerr << "error creating command pool." << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    if (!command_pool.CreateCommandBuffers(&swapchain, &pipeline)) {
+        std::cerr << "error creating command buffers." << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    if (!window.CreateSemaphores(device.get())) {
+        std::cerr << "error creating semaphores." << std::endl;
+        return EXIT_FAILURE;
+    }
+
     // ========== Main loop.
-    window.Run();
+    window.Run(device.get(), &swapchain, &command_pool);
 
     // ========== Vulkan cleanup.
+    window.DestroySemaphores(device.get());
+    command_pool.Destroy();
     swapchain.DestroyFramebuffers();
     pipeline.Destroy();
     vertex_shader->Destroy();

@@ -1,5 +1,6 @@
 #include "vulkan/command_pool.h"
 
+#include "vulkan/device.h"
 #include "vulkan/pipeline.h"
 #include "vulkan/swapchain.h"
 
@@ -21,10 +22,8 @@ bool CommandPool::Create() {
     pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     pool_info.queueFamilyIndex = device_->graphics_family_index();
     pool_info.flags = 0;
-    if (vkCreateCommandPool(device_->get(), &pool_info, nullptr,
-            &command_pool_) != VK_SUCCESS) {
-        return false;
-    }
+    return (vkCreateCommandPool(device_->get(), &pool_info, nullptr,
+            &command_pool_) == VK_SUCCESS);
 }
 
 void CommandPool::Destroy() {
@@ -73,6 +72,8 @@ bool CommandPool::CreateCommandBuffers(Swapchain* swapchain,
 
         vkCmdBeginRenderPass(command_buffers_[i], &render_pass_info,
                 VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBindPipeline(command_buffers_[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
+                pipeline->get());
         vkCmdDraw(command_buffers_[i], 3, 1, 0, 0);
         vkCmdEndRenderPass(command_buffers_[i]);
         if (vkEndCommandBuffer(command_buffers_[i]) != VK_SUCCESS) {

@@ -9,6 +9,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(scintillator_synth_files
     scinsynth.cc
+    vulkan/command_pool.cc
+    vulkan/command_pool.h
     vulkan/device.cc
     vulkan/device.h
     vulkan/instance.cc

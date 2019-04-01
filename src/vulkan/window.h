@@ -1,7 +1,7 @@
 #ifndef SRC_VULKAN_WINDOW_H_
 #define SRC_VULKAN_WINDOW_H_
 
-#include "scin_include_vulkan.h"
+#include "vulkan/scin_include_vulkan.h"
 
 #include <memory>
 
@@ -9,7 +9,10 @@ namespace scin {
 
 namespace vk {
 
+class CommandPool;
+class Device;
 class Instance;
+class Swapchain;
 
 // While technically more a GLFW object than a Vulkan one, Window also maintains
 // a VkSurfaceKHR handle, so lives with the rest of the Vulkan objects.
@@ -19,7 +22,9 @@ class Window {
     ~Window();
 
     bool Create(int width, int height);
-    void Run();
+    bool CreateSemaphores(Device* device);
+    void Run(Device* device, Swapchain* swapchain, CommandPool* command_pool);
+    void DestroySemaphores(Device* device);
     void Destroy();
 
     GLFWwindow* get() { return window_; }
@@ -33,6 +38,8 @@ class Window {
     int height_;
     GLFWwindow* window_;
     VkSurfaceKHR surface_;
+    VkSemaphore image_available_semaphore_;
+    VkSemaphore render_finished_semaphore_;
 };
 
 }    // namespace vk

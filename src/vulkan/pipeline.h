@@ -23,6 +23,7 @@ class Pipeline {
     void Destroy();
 
     VkRenderPass render_pass() { return render_pass_; }
+    VkPipeline get() { return pipeline_; }
 
   private:
     bool CreateRenderPass(Swapchain* swapchain);

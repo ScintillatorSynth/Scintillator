@@ -1,7 +1,7 @@
 #ifndef SRC_VULKAN_DEVICE_H_
 #define SRC_VULKAN_DEVICE_H_
 
-#include "scin_include_vulkan.h"
+#include "vulkan/scin_include_vulkan.h"
 
 #include <memory>
 
@@ -30,6 +30,8 @@ class Device {
 
     int graphics_family_index() const { return graphics_family_index_; }
     int present_family_index() const { return present_family_index_; }
+    VkQueue graphics_queue() { return graphics_queue_; }
+    VkQueue present_queue() { return present_queue_; }
 
   private:
     std::shared_ptr<Instance> instance_;

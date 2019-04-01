@@ -1,8 +1,7 @@
 #ifndef SRC_VULKAN_INSTANCE_H_
 #define SRC_VULKAN_INSTANCE_H_
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include "vulkan/scin_include_vulkan.h"
 
 namespace scin {
 
