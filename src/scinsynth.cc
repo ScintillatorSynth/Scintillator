@@ -117,7 +117,7 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    if (!window.CreateSemaphores(device.get())) {
+    if (!window.CreateSyncObjects(device.get())) {
         std::cerr << "error creating semaphores." << std::endl;
         return EXIT_FAILURE;
     }
@@ -126,7 +126,7 @@ int main() {
     window.Run(device.get(), &swapchain, &command_pool);
 
     // ========== Vulkan cleanup.
-    window.DestroySemaphores(device.get());
+    window.DestroySyncObjects(device.get());
     command_pool.Destroy();
     swapchain.DestroyFramebuffers();
     pipeline.Destroy();

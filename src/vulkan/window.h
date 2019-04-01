@@ -4,6 +4,7 @@
 #include "vulkan/scin_include_vulkan.h"
 
 #include <memory>
+#include <vector>
 
 namespace scin {
 
@@ -22,9 +23,9 @@ class Window {
     ~Window();
 
     bool Create(int width, int height);
-    bool CreateSemaphores(Device* device);
+    bool CreateSyncObjects(Device* device);
     void Run(Device* device, Swapchain* swapchain, CommandPool* command_pool);
-    void DestroySemaphores(Device* device);
+    void DestroySyncObjects(Device* device);
     void Destroy();
 
     GLFWwindow* get() { return window_; }
@@ -38,8 +39,9 @@ class Window {
     int height_;
     GLFWwindow* window_;
     VkSurfaceKHR surface_;
-    VkSemaphore image_available_semaphore_;
-    VkSemaphore render_finished_semaphore_;
+    std::vector<VkSemaphore> image_available_semaphores_;
+    std::vector<VkSemaphore> render_finished_semaphores_;
+    std::vector<VkFence> in_flight_fences_;
 };
 
 }    // namespace vk
