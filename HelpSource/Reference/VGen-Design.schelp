@@ -1,10 +1,17 @@
+title:: VGen Design Document
+summary:: Notes about the design of a VGen.
+categories:: Quarks>Scintillator
+related:: Classes/VGen
+
+Theese are some early notes, and need to be reorganized, possibly moved to the devblog.
+
 section:: VGen Design Concepts
 
 subsection:: Coordinate Space
 
 By default we work in normalized coordinate spaces. The origin is at the center of the space, with X increasing to the right and Y increasing moving up. TBD on direction of Z, pending decision of handedness of Vulkan, it should be the same.
 
-The normal extents of the space are from -Pi to +Pi in both X and Y directions. It should be possible to alter the coordinate system of a VGen, along with projection. Basically there should be functionality to alter the vertex program, and some way to 
+The normal extents of the space are from -Pi to +Pi in both X and Y directions. It should be possible to alter the coordinate system of a VGen, along with projection. Basically there should be functionality to alter the vertex program, and some way to
 specify which chain of fragment programs (VGens) it applies to.
 
 That's a VertexSpace - a domain in which fragments are applied? There's one by default described above?
@@ -46,6 +53,6 @@ Using a float32 for elapsed time in seconds since start of run, and assuming 23 
 
 Assuming a frame rate of 60 Hz there's roughly 16 ms between frames. That means that in roughly 36 hours of operation the timer will have moved up to 16 ms increments being the smallest precision increment we can pack into a 32 bit float. This is all back-of-the-envelope, but it's starting to feel like Nyquist sampling rules will apply, probably meaning that the smallest we would want to go is 2 increments between frames, so roughly 18 hours of runtime. A simple test might be to look at animations running after having started the clock artificially high. But loss of precision in the time variable is an obvious problem on longer-running synths, and I can't think of an obvious solution. Video cards are still strongly optimized for 32-bit math, so forcing everything into 64-bit modes doesn't seem prudent. Using an integer to represent elapsed times in milliseconds also doesn't seem like it will help, because the first thing everyone will do is cast it into float32, re-introducing the same loss of precision.
 
-It might be worth looking in to how scsynth solves this problem. Of course, because that's running on the CPU the obvious thing to do is to just use double precision floating point numbers for everything related to time. 
+It might be worth looking in to how scsynth solves this problem. Of course, because that's running on the CPU the obvious thing to do is to just use double precision floating point numbers for everything related to time.
 
 Furthermore, probably all of this help documentation should move over to my blog.
