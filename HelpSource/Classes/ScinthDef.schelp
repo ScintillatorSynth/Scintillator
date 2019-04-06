@@ -1,0 +1,30 @@
+TITLE:: ScinthDef
+summary:: (put short description here)
+categories:: Quarks>Scintillator
+related:: Classes/VGen
+
+DESCRIPTION::
+(put long description here)
+
+
+CLASSMETHODS::
+
+
+INSTANCEMETHODS::
+
+METHOD:: name
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: func
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+
+EXAMPLES::
+
+code::
+(some example code)
+::

@@ -1,0 +1,6 @@
+AbstractVideoOut : VGen {
+
+}
+
+VOut : AbstractVideoOut {
+}
