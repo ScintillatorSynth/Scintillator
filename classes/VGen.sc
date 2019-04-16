@@ -59,8 +59,12 @@ VGen : AbstractFunction {
 		^UnaryOpVGen.new(selector, this);
 	}
 
-	composeBinaryOp { | selector, something, adverb |
-		^thisMethod.notYetImplemented;
+	composeBinaryOp { | selector, input |
+		if (input.isValidVGenInput, {
+			^BinaryOpVGen.new(selector, this, input);
+		}, {
+			input.performBinaryOpOnVGen(selector, this);
+		});
 	}
 
 	reverseComposeBinaryOp { | selector, something, adverb |
@@ -79,6 +83,7 @@ VGen : AbstractFunction {
 	}
 
 	asVGenInput { ^this }
+	isValidVGenInput { ^true }
 
 	madd { | mul = 1.0, add = 0.0 |
 		^VMulAdd.new(this, mul, add);
@@ -96,16 +101,26 @@ PureVGen : VGen {
 
 + Object {
 	asVGenInput { ^this }
+
+	isValidVGenInput { ^false }
 }
 
 + AbstractFunction {
 	asVGenInput { | for |
 		^this.value(for);
 	}
+
+	isValidVGenInput { ^true }
 }
 
 + Array {
 	asVGenInput { | for |
 		^this.collect(_.asVGenInput(for));
 	}
+
+	isValidVGenInput { ^true }
+}
+
++ SimpleNumber {
+	isValidVGenInput { ^this.isNaN.not }
 }
