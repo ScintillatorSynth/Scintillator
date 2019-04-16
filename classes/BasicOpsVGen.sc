@@ -45,12 +45,7 @@ VMulAdd : VGen {
 		// If only adding, just add.
 		if (nomul, { ^in + add });
 
-		// Some VGens can also serve as MulAdds, as the
-		// math includes these operations. If so, replace
-		// the explicit node with an intrinsic one.
-		// TODO
-
-		^((in * mul) + add);
+		^super.singleNew(rate, in, mul, add);
 	}
 
 	init { | in, mul, add |

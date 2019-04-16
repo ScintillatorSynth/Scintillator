@@ -1,0 +1,9 @@
+(
+	name: "Scintillator",
+	summary: "A Vulkan-based visual synthesizer for SuperCollider",
+	author: "Luke Nihlen",
+	version: "0.0.1",
+	license: "GPL",
+	copyright: "Luke Nihlen 2019",
+	since: 2018
+)

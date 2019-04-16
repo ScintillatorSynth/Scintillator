@@ -3,7 +3,7 @@ VGen : AbstractFunction {
 	var <>scinthDef;
 	var <>inputs;
 	var <>rate = \fragment;
-	var <>scynthIndex;
+	var <>scinthIndex;
 
 	*singleNew { | rate ... args |
 		if (rate.isKindOf(Symbol).not or:
@@ -84,6 +84,7 @@ VGen : AbstractFunction {
 
 	asVGenInput { ^this }
 	isValidVGenInput { ^true }
+	isVGen { ^true }
 
 	madd { | mul = 1.0, add = 0.0 |
 		^VMulAdd.new(this, mul, add);
@@ -101,8 +102,8 @@ PureVGen : VGen {
 
 + Object {
 	asVGenInput { ^this }
-
 	isValidVGenInput { ^false }
+	isVGen { ^false }
 }
 
 + AbstractFunction {
