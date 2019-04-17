@@ -1,6 +1,6 @@
 VSinOsc : VGen {
 	// Fragment rate - computed once per "pixel" via a fragment shader.
-	*fg { | freq = 1.0, phase = 0.0, mul = 0.5, add = 0.5 |
+	*fg { | freq = 1.0, phase = 0.0, mul = 1.0, add = 0.0 |
 		^this.multiNew(\fragment, freq, phase).madd(mul, add);
 	}
 

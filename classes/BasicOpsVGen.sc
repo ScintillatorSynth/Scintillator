@@ -1,5 +1,9 @@
 BasicOpVGen : VGen {
 	var <operator;
+
+	name {
+		^(super.name ++ "_" ++ operator);
+	}
 }
 
 UnaryOpVGen : BasicOpVGen {
