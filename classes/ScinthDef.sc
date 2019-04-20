@@ -45,6 +45,22 @@ ScinthDef {
 		^yaml;
 	}
 
+	// Ultimately this should find the currently attached Scintillator Server, serialize it and send it
+	// to the server. But for now, it completes the YAML file spec and saves it to disk, for loading
+	// offline by the alpha server.
+	add { | filePath |
+		var file;
+		var yaml = "---\n";
+		yaml = yaml ++ "file_type: scinthdef\n";
+		yaml = yaml ++ "version: 0\n";
+		yaml = yaml ++ "scinthdefs:\n";
+		yaml = yaml ++ this.asYAML;
+		yaml = yaml ++ "...\n\n";
+		file = File(filePath, "w");
+		file.write(yaml);
+		file.close;
+	}
+
 	// VGens call these.
 	addVGen { | vGen |
 		vGen.scinthIndex = children.size;
