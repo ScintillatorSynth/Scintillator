@@ -86,6 +86,7 @@ VGen : AbstractFunction {
 	isValidVGenInput { ^true }
 	isVGen { ^true }
 	name { ^this.class.asString }
+	numOutputs { ^1 }
 
 	madd { | mul = 1.0, add = 0.0 |
 		^VMulAdd.new(this, mul, add);

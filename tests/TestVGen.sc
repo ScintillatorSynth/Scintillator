@@ -1,4 +1,6 @@
 TestVGen : UnitTest {
+	// TODO: rename these test cases to indicate that they are all built with single-output VGens only.
+
 	test_single_vgen_no_inputs {
 		var build = XPos.fg;
 
@@ -60,7 +62,7 @@ TestVGen : UnitTest {
 		this.assertEquals(build.inputs.size, 3);
 		this.assertEquals(build.inputs[0].class, VSinOsc);
 		this.assert(build.inputs[0].inputs.isArray);
-		this.assertEquals(build.inputs[0].size, 2);
+		this.assertEquals(build.inputs[0].inputs.size, 2);
 		this.assertEquals(build.inputs[0].inputs[0], 10.0);
 		this.assertEquals(build.inputs[0].inputs[1], -pi);
 		this.assert(build.inputs[1].isNumber);

@@ -3,7 +3,7 @@ AbstractVideoOut : VGen {
 }
 
 VOut : AbstractVideoOut {
-	*fr { | bus, channelsArray |
+	*fg { | bus, channelsArray |
 		this.multiNewList(['fragment', bus] ++ channelsArray.asArray);
 		^0.0;
 	}

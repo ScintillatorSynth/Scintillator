@@ -42,7 +42,7 @@ table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
 ## code::class_name:: || string || name of the VGen class, must match the name of a VGen configured on the server
 ## code::rate:: || string || currently either code::fragment:: or code::vertex::
-## code::inputs:: || list || input YAML dictionaries in an ordered list
+## code::inputs:: || list || input YAML dictionaries in an ordered list. May be absent if VGen has no inputs.
 ## code::outputs:: || list || output YAML dictionaries in an ordered list
 ::
 
@@ -78,9 +78,17 @@ table::
 ::
 ::
 
+note::
+Intrinsics right now are being treated like normal VGens.
+::
+
 subsection::VGen Output Dictionary Spec
 
-Outputs from VGens typically only specify output rates for now:
+Outputs from VGens typically only specify output rates.
+
+note::
+For the moment since all rates are assumed to be fragment rate, and all VGens are thought to be single-output, this section is omitted.
+::
 
 table::
 ## strong::key:: || strong::YAML type:: || strong::notes::

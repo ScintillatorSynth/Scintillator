@@ -4,9 +4,7 @@ ScinthDef {
 	var <>children;
 
 	*new { | name, vGenGraphFunc |
-		^super.newCopyArgs(name.asSymbol)
-		.children_(Array.new(64))
-		.build(vGenGraphFunc);
+		^super.newCopyArgs(name.asSymbol).children_(Array.new(64)).build(vGenGraphFunc);
 	}
 
 	build { | vGenGraphFunc |
@@ -26,19 +24,21 @@ ScinthDef {
 		children.do({ | vgen, index |
 			yaml = yaml ++ depthIndent ++ "- class_name:"  + vgen.name ++ "\n";
 			yaml = yaml ++ depthIndent ++ "  rate: fragment\n";
-			yaml = yaml ++ depthIndent ++ "  inputs:\n";
-			vgen.inputs.do({ | input, inputIndex |
-				case
-				{ input.isNumber } {
-					yaml = yaml ++ secondDepth ++ "- type: constant\n";
-					yaml = yaml ++ secondDepth ++ "  value:" + input.asString ++ "\n";
-				}
-				{ input.isVGen } {
-					yaml = yaml ++ secondDepth ++ "- type: vgen\n";
-					yaml = yaml ++ secondDepth ++
-					"  vgen_index:" + input.scinthIndex.asString ++ "\n";
-					yaml = yaml ++ secondDepth ++ "  output_index: 0\n";
-				}
+			if (vgen.inputs.size > 0, {
+				yaml = yaml ++ depthIndent ++ "  inputs:\n";
+				vgen.inputs.do({ | input, inputIndex |
+					case
+					{ input.isNumber } {
+						yaml = yaml ++ secondDepth ++ "- type: constant\n";
+						yaml = yaml ++ secondDepth ++ "  value:" + input.asString ++ "\n";
+					}
+					{ input.isVGen } {
+						yaml = yaml ++ secondDepth ++ "- type: vgen\n";
+						yaml = yaml ++ secondDepth ++ "  vgen_index:" + input.scinthIndex.asString ++ "\n";
+						yaml = yaml ++ secondDepth ++ "  output_index: 0\n";
+					}
+					{ this.notImplemented; }
+				});
 			});
 		});
 
