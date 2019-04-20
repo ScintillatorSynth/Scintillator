@@ -1,0 +1,133 @@
+title:: Scintillator Scinth Definition File Format
+summary:: Description of Scinth Definition file format used by Scintillator synth server.
+categories:: Quarks>Scintillator
+related:: Classes/VGen, Classes/ScinthDef, Reference/Synth-Definition-File-Format
+
+This is the documentation for the file format used to describe a Video synth, called a ScinthDef, to the Scintillator synth server, scinsynth. The development file format is in YAML, making for easier human readability and debugging. However, despite the difference in format from SuperCollider SynthDef files, the ScinthDef files mostly follow the same structure so should look conceptually familiar. The primary differences are:
+
+list::
+## YAML can provide the length of a list of objects and so we omit sizes of lists as separate fields.
+## Constants are defined inline, instead of at the header block at the top of the file.
+::
+
+section::File Format
+
+subsection::Top-Level Dictionary Spec
+
+A ScinthDef file contains one YAML document, beginning with code::---:: and ending with code::...:: on individual lines. Within there are a few tags, followed by a list of individual ScinthDef elements. The header is formatted such:
+
+table::
+## strong::key::  || strong::YAML type:: || strong::notes::
+## code::file_type:: || string || should always read code::scinthdef::
+## code::version:: || int || currently code::0::
+## code::scinthdefs:: || list || the individual ScinthDef YAML dictionaries in a list
+::
+
+subsection::ScinthDef Dictionary Spec
+
+The ScinthDef list elements follow the SuperCollider SynthDef structure except for that Constants are not identified verbatim but are rather provided directly in the input spec, in keeping with the desire to allow ScinthDef files to be human-readable, as well as the fact that the shader generation code inside of the synth does not require the constants to be separated out.
+
+table::
+## strong::key:: || strong::YAML type:: || strong::notes::
+## code::name:: || string || name of the ScinthDef, used as primary means of identification
+## code::parameters:: || list || empty for now, and ignored
+## code::vgens:: || list || the VGen YAML dictionaries in an ordered list
+::
+
+subsection::VGen Dictionary Spec
+
+Individual VGens are specified as YAML dictionaries and have the following keys:
+
+table::
+## strong::key:: || strong::YAML type:: || strong::notes::
+## code::class_name:: || string || name of the VGen class, must match the name of a VGen configured on the server
+## code::rate:: || string || currently either code::fragment:: or code::vertex::
+## code::inputs:: || list || input YAML dictionaries in an ordered list. May be absent if VGen has no inputs.
+## code::outputs:: || list || output YAML dictionaries in an ordered list
+::
+
+subsection::VGen Input Dictionary Spec
+
+Inputs to VGens are polymorphic, and takes on a different structure depending on what kind of input is specified in the code::type:: field. All input dictionaries supply the code::type:: key as well as an optional code::name:: field:
+
+table::
+## strong::key:: || strong::YAML type:: || strong::notes::
+## code::name:: || string || An emphasis::optional:: string, provided for readability
+## code::type:: || string || An enumerated type, for possible values see below
+::
+
+The rest of the keys in the Input dictionary are a function of type and are detailed here:
+
+table::
+## strong::type:: || strong::format::
+## code::vgen:: ||
+table::
+## strong::key:: || strong::YAML type:: || strong::notes::
+## code::vgen_index:: || int || The index of the VGen providing output to this input
+## code::output_index:: || int || The output index on that VGen
+::
+## code::constant:: ||
+table::
+## strong::key:: || strong::YAML type:: || strong::notes::
+## code::value:: || float || All constants will be treated as floating point numbers
+::
+## code::intrinsic:: ||
+table::
+## strong::key:: || strong::YAML type:: || strong::notes::
+## code::which:: || string || One of code::x_pos:: or the other predefined intrinsics (see link::Classes/ScinIntrinsic:: for details)
+::
+::
+
+note::
+Intrinsics right now are being treated like normal VGens.
+::
+
+subsection::VGen Output Dictionary Spec
+
+Outputs from VGens typically only specify output rates.
+
+note::
+For the moment since all rates are assumed to be fragment rate, and all VGens are thought to be single-output, this section is omitted.
+::
+
+table::
+## strong::key:: || strong::YAML type:: || strong::notes::
+## code::rate:: || One of code::fragment:: or code::vertex::
+::
+
+section::Example
+
+We execute the following code:
+
+code::
+~k = ScinthDef.new(\foo, {
+	VOut.fr(0, SinOsc.ar(200.0, 0.0, 0.9, 0.2));
+});
+::
+
+And ScinthDef produces the following:
+
+code::
+---
+filetype: scinthdef
+version: 0
+defcount: 2
+scinthdefs:
+    - name: foo
+      vgens:
+        - classname: VSinOsc
+          rate: fragment
+          inputs:
+            - name: freq
+              type: constant
+              value: 1.0
+            - name: phase
+              type: constant
+              value: 0.0
+          outputs:
+            - rate: fragment
+        - classname: VMulAdd
+          rate: fragment
+          inputs:
+...
+::
