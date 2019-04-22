@@ -9,6 +9,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(scintillator_synth_files
     scinsynth.cc
+
+    vulkan/buffer.cc
+    vulkan/buffer.h
     vulkan/command_pool.cc
     vulkan/command_pool.h
     vulkan/device.cc
@@ -37,6 +40,7 @@ target_link_libraries(scinsynth
     SPIRV-Tools
     glfw
     glslang
+    glm
     shaderc
 )
 

@@ -4,6 +4,9 @@
 #### glfw
 add_subdirectory(glfw)
 
+#### glm
+add_subdirectory(glm)
+
 #### googletest (required by effcee and re2)
 add_subdirectory(googletest)
 
