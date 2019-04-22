@@ -13,6 +13,7 @@
 #include "Version.h"
 
 #include "gflags/gflags.h"
+#include "glm/glm.hpp"
 #include "spdlog/spdlog.h"
 
 #include <memory>
@@ -52,6 +53,7 @@ int main(int argc, char* argv[]) {
     scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
     oscHandler.run();
 
+    // ========== glfw setup.
     glfwInit();
 
     // ========== Vulkan setup.
@@ -91,19 +93,10 @@ int main(int argc, char* argv[]) {
             "#version 450\n"
             "#extension GL_ARB_separate_shader_objects : enable\n"
             "\n"
+            "layout(location = 0) in vec2 inPosition;\n"
+            "layout(location = 1) in vec3 inColor;\n"
+            "\n"
             "layout(location = 0) out vec3 fragColor;\n"
-            "\n"
-            "vec2 positions[3] = vec2[](\n"
-            "   vec2(0.0, -0.5),\n"
-            "   vec2(0.5, 0.5),\n"
-            "   vec2(-0.5, 0.5)\n"
-            ");\n"
-            "\n"
-            "vec3 colors[3] = vec3[]("
-            "   vec3(1.0, 0.0, 0.0),\n"
-            "   vec3(0.0, 1.0, 0.0),\n"
-            "   vec3(0.0, 0.0, 1.0)\n"
-            ");\n"
             "\n"
             "void main() {\n"
             "   gl_Position = vec4(positions[gl_VertexIndex], 0.0, 1.0);\n"
