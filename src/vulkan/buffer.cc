@@ -6,7 +6,8 @@ namespace scin {
 
 namespace vk {
 
-Buffer::Buffer(std::shared_ptr<Device> device) :
+Buffer::Buffer(Kind kind, std::shared_ptr<Device> device) :
+    kind_(kind_),
     device_(device) {
 }
 

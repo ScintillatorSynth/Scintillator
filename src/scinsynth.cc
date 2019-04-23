@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <memory>
+#include <vector>
 
 int main() {
     // ========== glfw setup.
@@ -104,6 +105,18 @@ int main() {
         std::cerr << "error creating command pool." << std::endl;
         return EXIT_FAILURE;
     }
+
+    struct Vertex {
+        glm::vec2 pos;
+        glm::vec3 color;
+    };
+    const std::vector<Vertex> vertices = {
+        {{ 0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f }},
+        {{ 0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f }},
+        {{ -0.5f, 0.5f }, {  0.0f, 0.0f, 1.0f }}
+    };
+    scin::vk::Buffer vertex_buffer(kVertex, device);
+    // **
 
     if (!command_pool.CreateCommandBuffers(&swapchain, &pipeline)) {
         std::cerr << "error creating command buffers." << std::endl;
