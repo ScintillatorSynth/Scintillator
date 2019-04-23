@@ -13,9 +13,11 @@ class Device;
 
 class Buffer {
    public:
+    enum Kind { kVertex, kIndex };
     Buffer(std::shared_ptr<Device> device);
 
    private:
+    Kind kind_;
     std::shared_ptr<Device> device_;
     VkBuffer buffer_;
     VkDeviceMemory device_memory_;

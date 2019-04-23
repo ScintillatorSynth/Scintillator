@@ -17,6 +17,7 @@
 #include "spdlog/spdlog.h"
 
 #include <memory>
+#include <vector>
 
 // Command-line options specified to gflags.
 DEFINE_bool(print_version, false, "Print the Scintillator version and exit.");
@@ -147,6 +148,18 @@ int main(int argc, char* argv[]) {
         spdlog::error("error creating command pool.");
         return EXIT_FAILURE;
     }
+
+    struct Vertex {
+        glm::vec2 pos;
+        glm::vec3 color;
+    };
+    const std::vector<Vertex> vertices = {
+        {{ 0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f }},
+        {{ 0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f }},
+        {{ -0.5f, 0.5f }, {  0.0f, 0.0f, 1.0f }}
+    };
+    scin::vk::Buffer vertex_buffer(kVertex, device);
+    // **
 
     if (!command_pool.CreateCommandBuffers(&swapchain, &pipeline)) {
         spdlog::error("error creating command buffers.");
