@@ -10,6 +10,7 @@ namespace vk {
 
 Pipeline::Pipeline(std::shared_ptr<Device> device)  :
     device_(device),
+    vertex_stride_(0),
     render_pass_(VK_NULL_HANDLE),
     pipeline_layout_(VK_NULL_HANDLE),
     pipeline_(VK_NULL_HANDLE) {
@@ -25,14 +26,61 @@ bool Pipeline::Create(Shader* vertex_shader, Shader* fragment_shader,
         return false;
     }
 
-    // Vertex Input Info
+    // Vertex Input Info - note we assume there's always exactly one vertex buffer.
+    VkVertexInputBindingDescription vertex_binding_description = {};
+    vertex_binding_description.binding = 0;
+    vertex_binding_description.stride = vertex_stride_;
+    vertex_binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+    std::vector<VkVertexInputAttributeDescription> vertex_attribute_descriptions(vertex_attributes_.size());
+    for (size_t i = 0; i < vertex_attributes_.size(); ++i) {
+        vertex_attribute_descriptions[i].binding = 0;
+        vertex_attribute_descriptions[i].location = i;
+        VkFormat format;
+        switch (vertex_attributes_[i].first) {
+            case kFloat:
+                format = VK_FORMAT_R32_SFLOAT;
+                break;
+
+            case kVec2:
+                format = VK_FORMAT_R32G32_SFLOAT;
+                break;
+
+            case kVec3:
+                format = VK_FORMAT_R32G32B32_SFLOAT;
+                break;
+
+            case kVec4:
+                format = VK_FORMAT_R32G32B32A32_SFLOAT;
+                break;
+
+            case kIVec2:
+                format = VK_FORMAT_R32G32_SINT;
+                break;
+
+            case kUVec4:
+                format = VK_FORMAT_R32G32B32A32_UINT;
+                break;
+
+            case kDouble:
+                format = VK_FORMAT_R64_SFLOAT;
+                break;
+
+            default:
+                format = VK_FORMAT_UNDEFINED;
+                break;
+        }
+        vertex_attribute_descriptions[i].format = format;
+        vertex_attribute_descriptions[i].offset = vertex_attributes_[i].second;
+    }
+
     VkPipelineVertexInputStateCreateInfo vertex_input_info = {};
     vertex_input_info.sType =
             VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertex_input_info.vertexBindingDescriptionCount = 0;
-    vertex_input_info.pVertexBindingDescriptions = nullptr;
-    vertex_input_info.vertexAttributeDescriptionCount = 0;
-    vertex_input_info.pVertexAttributeDescriptions = nullptr;
+    vertex_input_info.vertexBindingDescriptionCount = 1;
+    vertex_input_info.pVertexBindingDescriptions = &vertex_binding_description;
+    vertex_input_info.vertexAttributeDescriptionCount = vertex_attribute_descriptions.size();
+    vertex_input_info.pVertexAttributeDescriptions = vertex_attribute_descriptions.data();
 
     // Input Assembly
     VkPipelineInputAssemblyStateCreateInfo input_assembly = {};

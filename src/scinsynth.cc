@@ -1,3 +1,4 @@
+#include "vulkan/buffer.h"
 #include "vulkan/command_pool.h"
 #include "vulkan/device.h"
 #include "vulkan/instance.h"
@@ -11,6 +12,7 @@
 
 #include <glm/glm.hpp>
 
+#include <cstring>
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -57,8 +59,8 @@ int main() {
             "layout(location = 0) out vec3 fragColor;\n"
             "\n"
             "void main() {\n"
-            "   gl_Position = vec4(positions[gl_VertexIndex], 0.0, 1.0);\n"
-            "   fragColor = colors[gl_VertexIndex];\n"
+            "   gl_Position = vec4(inPosition, 0.0, 1.0);\n"
+            "   fragColor = inColor;\n"
             "}\n"
     );
     std::unique_ptr<scin::vk::Shader> vertex_shader = shader_compiler.Compile(
@@ -88,7 +90,16 @@ int main() {
 
     shader_compiler.ReleaseCompiler();
 
+    struct Vertex {
+        glm::vec2 pos;
+        glm::vec3 color;
+    };
+
     scin::vk::Pipeline pipeline(device);
+    pipeline.SetVertexStride(sizeof(Vertex));
+    pipeline.AddVertexAttribute(scin::vk::Pipeline::kVec2, offsetof(Vertex, pos));
+    pipeline.AddVertexAttribute(scin::vk::Pipeline::kVec3, offsetof(Vertex, color));
+
     if (!pipeline.Create(vertex_shader.get(), fragment_shader.get(),
             &swapchain)) {
         std::cerr << "error in pipeline creation." << std::endl;
@@ -106,19 +117,24 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    struct Vertex {
-        glm::vec2 pos;
-        glm::vec3 color;
-    };
     const std::vector<Vertex> vertices = {
         {{ 0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f }},
         {{ 0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f }},
         {{ -0.5f, 0.5f }, {  0.0f, 0.0f, 1.0f }}
     };
-    scin::vk::Buffer vertex_buffer(kVertex, device);
-    // **
 
-    if (!command_pool.CreateCommandBuffers(&swapchain, &pipeline)) {
+    scin::vk::Buffer vertex_buffer(scin::vk::Buffer::kVertex, device);
+    if (!vertex_buffer.Create(sizeof(Vertex) * vertices.size())) {
+        std::cerr << "error creating vertex buffer." << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    vertex_buffer.MapMemory();
+    std::memcpy(vertex_buffer.mapped_address(), vertices.data(),
+        sizeof(Vertex) * vertices.size());
+    vertex_buffer.UnmapMemory();
+
+    if (!command_pool.CreateCommandBuffers(&swapchain, &pipeline, &vertex_buffer)) {
         std::cerr << "error creating command buffers." << std::endl;
         return EXIT_FAILURE;
     }
@@ -134,6 +150,7 @@ int main() {
     // ========== Vulkan cleanup.
     window.DestroySyncObjects(device.get());
     command_pool.Destroy();
+    vertex_buffer.Destroy();
     swapchain.DestroyFramebuffers();
     pipeline.Destroy();
     vertex_shader->Destroy();
