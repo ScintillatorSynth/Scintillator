@@ -38,9 +38,10 @@ add_executable(scinsynth ${scintillator_synth_files})
 target_link_libraries(scinsynth
     ${VULKAN_LIBRARY}
     SPIRV-Tools
+    VulkanMemoryAllocator
     glfw
-    glslang
     glm
+    glslang
     shaderc
 )
 
