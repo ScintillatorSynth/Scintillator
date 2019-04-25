@@ -47,6 +47,7 @@ add_executable(scinsynth ${scintillator_synth_files})
 target_link_libraries(scinsynth
     "${Vulkan_LIBRARY}"
     SPIRV-Tools
+    VulkanMemoryAllocator
     gflags
     glfw
     glm
