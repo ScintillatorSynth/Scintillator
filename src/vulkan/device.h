@@ -3,6 +3,10 @@
 
 #include "vulkan/scin_include_vulkan.h"
 
+// Note this header also directly includes Vulkan, so should come after the Vulkan include, to allow GLFW first
+// pass to include Vulkan and define macros as needed.
+#include "vk_mem_alloc.h"
+
 #include <memory>
 
 namespace scin {
@@ -21,12 +25,14 @@ class Device {
 
     // Try to find a suitable physical device, returns true if one exists.
     bool FindPhysicalDevice(Window* window);
+
     // Creates the logical device, returns false on error.
     bool Create(Window* window);
     void Destroy();
 
     VkDevice get() { return device_; }
     VkPhysicalDevice get_physical() { return physical_device_; }
+    VmaAllocator allocator() { return allocator_; }
 
     int graphics_family_index() const { return graphics_family_index_; }
     int present_family_index() const { return present_family_index_; }
@@ -39,6 +45,7 @@ class Device {
     int graphics_family_index_;
     int present_family_index_;
     VkDevice device_;
+    VmaAllocator allocator_;
     VkQueue graphics_queue_;
     VkQueue present_queue_;
 };
