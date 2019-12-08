@@ -1,13 +1,12 @@
-
 #### Vulkan
-find_package(Vulkan)
-if (NOT VULKAN_FOUND)
-    message(FATAL_ERROR "Vulkan not found")
-endif()
+find_package(Vulkan REQUIRED FATAL_ERROR)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+
+configure_file(Version.h.in "${CMAKE_CURRENT_BINARY_DIR}/Version.h")
 
 set(scintillator_synth_files
+    "${CMAKE_CURRENT_BINARY_DIR}/Version.h"
     scinsynth.cc
     vulkan/command_pool.cc
     vulkan/command_pool.h
@@ -33,8 +32,9 @@ set(scintillator_synth_files
 add_executable(scinsynth ${scintillator_synth_files})
 
 target_link_libraries(scinsynth
-    ${VULKAN_LIBRARY}
+    "${Vulkan_LIBRARY}"
     SPIRV-Tools
+    gflags
     glfw
     glslang
     shaderc

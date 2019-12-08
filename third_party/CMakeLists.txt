@@ -1,7 +1,12 @@
 #### gflags
-# add_subdirectory(gflags)
+set(GFLAGS_BUILD_STATIC_LIBS ON CACHE BOOL "build gflags as a static library")
+set(GFLAGS_BUILD_gflags_LIB ON CACHE BOOL "build multithreaded gflags library")
+add_subdirectory(gflags)
 
 #### glfw
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(glfw)
 
 #### googletest (required by effcee and re2)

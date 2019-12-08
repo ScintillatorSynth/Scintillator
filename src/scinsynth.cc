@@ -8,11 +8,27 @@
 #include "vulkan/shader_source.h"
 #include "vulkan/swapchain.h"
 #include "vulkan/window.h"
+#include "Version.h"
+
+#include "gflags/gflags.h"
 
 #include <iostream>
 #include <memory>
 
-int main() {
+// Command-line options specified to gflags.
+DEFINE_bool(print_version, false, "print the Scintillator version and exit");
+DEFINE_int32(udp_port_number, -1, "a port number 0-65535");
+DEFINE_string(bind_to_address, "127.0.0.1", "Bind the UDP socket to this address");
+
+int main(int argc, char* argv[]) {
+    gflags::ParseCommandLineFlags(&argc, &argv, false);
+
+    if (FLAGS_print_version) {
+        std::cout << "scinsynth version " << kScinVersionMajor << "." << kScinVersionMinor << "." << kScinVersionPatch
+            << " from branch " << kScinBranch << " at revision " << kScinCommitHash << std::endl;
+        return EXIT_SUCCESS;
+    }
+
     glfwInit();
 
     // ========== Vulkan setup.
