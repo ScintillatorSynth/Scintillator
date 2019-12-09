@@ -1,5 +1,6 @@
 #define OSC_HOST_LITTLE_ENDIAN
 
+#include "oscpack_1_1_0/ip/IpEndpointName.cpp"
 #include "oscpack_1_1_0/ip/posix/NetworkingUtils.cpp"
 #include "oscpack_1_1_0/ip/posix/UdpSocket.cpp"
 

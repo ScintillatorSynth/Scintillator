@@ -1,3 +1,4 @@
+#include "OscHandler.hpp"
 #include "vulkan/command_pool.h"
 #include "vulkan/device.h"
 #include "vulkan/instance.h"
@@ -16,13 +17,20 @@
 #include <memory>
 
 // Command-line options specified to gflags.
-DEFINE_bool(print_version, false, "print the Scintillator version and exit");
-DEFINE_int32(udp_port_number, -1, "a port number 0-65535");
+DEFINE_bool(print_version, false, "Print the Scintillator version and exit");
+DEFINE_int32(udp_port_number, -1, "A port number 0-65535");
 DEFINE_string(bind_to_address, "127.0.0.1", "Bind the UDP socket to this address");
+
+/*
+DEFINE_bool(fullscreen, false, "Create a fullscreen window.");
+*/
+DEFINE_int32(window_width, 800, "Viewable width in pixles of window to create. Ignored if --fullscreen is supplied.");
+DEFINE_int32(window_height, 600, "Viewable height in pixels of window to create. Ignored if --fullscreen is supplied.");
 
 int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
 
+    // Check for early exit conditions.
     if (FLAGS_print_version) {
         std::cout << "scinsynth version " << kScinVersionMajor << "." << kScinVersionMinor << "." << kScinVersionPatch
             << " from branch " << kScinBranch << " at revision " << kScinCommitHash << std::endl;
@@ -38,7 +46,7 @@ int main(int argc, char* argv[]) {
     }
 
     scin::vk::Window window(instance);
-    if (!window.Create(800, 600)) {
+    if (!window.Create(FLAGS_window_width, FLAGS_window_height)) {
         return EXIT_FAILURE;
     }
 
@@ -53,7 +61,6 @@ int main(int argc, char* argv[]) {
     if (!swapchain.Create(&window)) {
         return EXIT_FAILURE;
     }
-
 
     scin::vk::ShaderCompiler shader_compiler;
     if (!shader_compiler.LoadCompiler()) {

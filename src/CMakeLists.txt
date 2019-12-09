@@ -4,9 +4,17 @@ find_package(Vulkan REQUIRED FATAL_ERROR)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 configure_file(Version.h.in "${CMAKE_CURRENT_BINARY_DIR}/Version.h")
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.h"
+    COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/OscCommand.h" "${CMAKE_CURRENT_SOURCE_DIR}/OscCommand.h.in"
+    MAIN_DEPENDENCY OscCommand.h.in
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+)
 
 set(scintillator_synth_files
     "${CMAKE_CURRENT_BINARY_DIR}/Version.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.h"
+    OscHandler.cpp
+    OscHandler.hpp
     scinsynth.cc
     vulkan/command_pool.cc
     vulkan/command_pool.h
@@ -37,6 +45,7 @@ target_link_libraries(scinsynth
     gflags
     glfw
     glslang
+    oscpack
     shaderc
 )
 
