@@ -1,0 +1,41 @@
+%{
+#ifndef BUILD_SRC_OSCCOMMAND_H_
+#define BUILD_SRC_OSCCOMMAND_H_
+
+// Generated file, please edit original file at src/OscMessageTags.h.in
+#include <cstring>
+
+namespace scin {
+
+enum OscCommand : int {
+    kNone = 0,
+    kNotify = 1,
+    kStatus = 2,
+    kQuit = 3,
+    kDumpOSC = 39,
+    kError = 58,
+    kVersion = 64
+};
+
+}  // namespace scin
+
+namespace {
+
+%}
+%language=C++
+%struct-type
+struct OscCommandPair { const char* name; scin::OscCommand number; };
+%%
+/none,      scin::OscCommand::kNone
+/notify,    scin::OscCommand::kNotify
+/status,    scin::OscCommand::kStatus
+/quit,      scin::OscCommand::kQuit
+/dumpOSC,   scin::OscCommand::kDumpOSC
+/error,     scin::OscCommand::kError
+/version,   scin::OscCommand::kVersion
+%%
+
+}  // namespace
+
+#endif  // BUILD_SRC_OSCCOMMAND_H_
+
