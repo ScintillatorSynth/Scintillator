@@ -6,7 +6,7 @@ sudo apt-get install libvulkan-dev libxinerama-dev libxcursor-dev libvulkan-dev 
 
 ## Python 3
 
-Recent builds of some of the vulkan-related dependencies (effcee, SPIRV-Tools) are using a cmake command to locate python
+Recent builds of some of the vulkan-related dependencies (effcee at least) are using a cmake command to locate python
 that assumes that the in-path python is Python 3. Ubuntu for the [forseeable future](https://wiki.ubuntu.com/Python)
 will keep the ```/usr/bin/python``` symbolic link pointing to Python 2, with ```/usr/bin/python3``` pointing to an
 updated version of Python 3. There is an updated cmake command to find Python 3 specifically that is aware of this
