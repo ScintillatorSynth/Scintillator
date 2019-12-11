@@ -7,3 +7,12 @@ section::OSC Communication Details
 
 While the SuperCollider synth programs support a variety of connection modalities and multi-user scenarios, at present scinsynth only supports a single client commnicating exclusively over UDP. For asynchronous messages the server will respond to whatever UDP address and port messages are received from.
 
+section:: Master Controls
+
+subsection:: /scin_quit
+
+Quit program. Exits the scinsynth server.
+
+definitionlist::
+## Asynchronous. || Replies to sender with strong::/scin_done:: just before completion.
+::

@@ -17,9 +17,13 @@ public:
     OscHandler(const std::string& bindAddress, int listenPort);
     ~OscHandler();
 
-    // Function to call if we receive an OSC /scin_quit command.
+    // Function to call if we receive an OSC /scin_quit command. When called, it should safely terminate the scinsynth
+    // program.
     void setQuitHandler(std::function<void()> quitHandler);
     void run();
+
+    // Sends a response to the client if the shutdown was ordered by an OSC /scin_quit command, then unbinds the UDP
+    // socket and tidies up.
     void shutdown();
 
 private:

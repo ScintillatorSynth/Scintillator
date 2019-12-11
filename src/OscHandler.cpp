@@ -3,6 +3,7 @@
 #include "OscCommand.h"
 
 #include "ip/UdpSocket.h"
+#include "osc/OscOutboundPacketStream.h"
 #include "osc/OscPacketListener.h"
 #include "osc/OscReceivedElements.h"
 #include "spdlog/spdlog.h"
@@ -57,6 +58,7 @@ public:
 
                 case kQuit:
                     spdlog::info("scinsynth got OSC quit command, terminating.");
+                    m_quitSocket.reset(new UdpTransmitSocket(endpoint));
                     m_quitHandler();
                     break;
 
@@ -76,9 +78,22 @@ public:
 
     void setQuitHandler(std::function<void()> quitHandler) { m_quitHandler = quitHandler; }
 
+    void sendQuitDone() {
+        if (m_quitSocket) {
+            std::array<char, 32> buffer;
+            osc::OutboundPacketStream p(buffer.data(), sizeof(buffer));
+            p << osc::BeginMessage("/scin_done") << osc::EndMessage;
+            m_quitSocket->Send(p.Data(), p.Size());
+        }
+    }
+
 private:
     OscHandler* m_handler;
+
+    // Function to call back if a /scin_quit command is received, tells the rest of the scinsynth binary to quit.
     std::function<void()> m_quitHandler;
+    // Pointer to the sender to /scin_quit, if non-null, to which we send a /scin_done message right before shutdown.
+    std::unique_ptr<UdpTransmitSocket> m_quitSocket;
 };
 
 OscHandler::OscHandler(const std::string& bindAddress, int listenPort) :
@@ -103,6 +118,7 @@ void OscHandler::run() {
 }
 
 void OscHandler::shutdown() {
+    m_listener->sendQuitDone();
     m_listenSocket->AsynchronousBreak();
 }
 

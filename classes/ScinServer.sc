@@ -36,6 +36,9 @@ ScinServer {
 	}
 
 	quit {
+		OSCFunc.new({
+			"*** got scin_done back".postln;
+		}, '/scin_done').oneShot;
 		addr.sendMsg('/scin_quit');
 	}
 }
