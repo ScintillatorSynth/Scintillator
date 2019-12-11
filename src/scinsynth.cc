@@ -12,8 +12,8 @@
 #include "Version.h"
 
 #include "gflags/gflags.h"
+#include "spdlog/spdlog.h"
 
-#include <iostream>
 #include <memory>
 
 // Command-line options specified to gflags.
@@ -32,38 +32,51 @@ int main(int argc, char* argv[]) {
 
     // Check for early exit conditions.
     if (FLAGS_print_version) {
-        std::cout << "scinsynth version " << kScinVersionMajor << "." << kScinVersionMinor << "." << kScinVersionPatch
-            << " from branch " << kScinBranch << " at revision " << kScinCommitHash << std::endl;
+        spdlog::info("scinsynth version {}.{}.{} from branch {} at revision {}", kScinVersionMajor, kScinVersionMinor,
+            kScinVersionPatch, kScinBranch, kScinCommitHash);
         return EXIT_SUCCESS;
     }
+    if (FLAGS_udp_port_number < 1024 || FLAGS_udp_port_number > 65535) {
+        spdlog::error("scinsynth requires a UDP port number between 1024 and 65535. Specify with --udp_port_numnber");
+        return EXIT_FAILURE;
+    }
+
+    // Start listening for incoming OSC commands on UDP.
+    scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
+    oscHandler.run();
 
     glfwInit();
 
     // ========== Vulkan setup.
     std::shared_ptr<scin::vk::Instance> instance(new scin::vk::Instance());
     if (!instance->Create()) {
+        spdlog::error("unable to create Vulkan instance.");
         return EXIT_FAILURE;
     }
 
     scin::vk::Window window(instance);
     if (!window.Create(FLAGS_window_width, FLAGS_window_height)) {
+        spdlog::error("unable to create glfw window.");
         return EXIT_FAILURE;
     }
 
     // Create Vulkan physical and logical device.
     std::shared_ptr<scin::vk::Device> device(new scin::vk::Device(instance));
     if (!device->Create(&window)) {
+        spdlog::error("unable to create Vulkan device.");
         return EXIT_FAILURE;
     }
 
     // Configure swap chain based on device and surface capabilities.
     scin::vk::Swapchain swapchain(device);
     if (!swapchain.Create(&window)) {
+        spdlog::error("unable to create Vulkan swapchain.");
         return EXIT_FAILURE;
     }
 
     scin::vk::ShaderCompiler shader_compiler;
     if (!shader_compiler.LoadCompiler()) {
+        spdlog::error("unable to load shader compiler.");
         return EXIT_FAILURE;
     }
 
@@ -111,7 +124,7 @@ int main(int argc, char* argv[]) {
     std::unique_ptr<scin::vk::Shader> fragment_shader = shader_compiler.Compile(
             device, &fragment_source, scin::vk::Shader::kFragment);
     if (!fragment_shader) {
-        std::cerr << "error in fragment shader." << std::endl;
+        spdlog::error("error in fragment shader.");
         return EXIT_FAILURE;
     }
 
@@ -120,32 +133,33 @@ int main(int argc, char* argv[]) {
     scin::vk::Pipeline pipeline(device);
     if (!pipeline.Create(vertex_shader.get(), fragment_shader.get(),
             &swapchain)) {
-        std::cerr << "error in pipeline creation." << std::endl;
+        spdlog::error("error in pipeline creation.");
         return EXIT_FAILURE;
     }
 
     if (!swapchain.CreateFramebuffers(&pipeline)) {
-        std::cerr << "error creating framebuffers." << std::endl;
+        spdlog::error("error creating framebuffers..");
         return EXIT_FAILURE;
     }
 
     scin::vk::CommandPool command_pool(device);
     if (!command_pool.Create()) {
-        std::cerr << "error creating command pool." << std::endl;
+        spdlog::error("error creating command pool.");
         return EXIT_FAILURE;
     }
 
     if (!command_pool.CreateCommandBuffers(&swapchain, &pipeline)) {
-        std::cerr << "error creating command buffers." << std::endl;
+        spdlog::error("error creating command buffers.");
         return EXIT_FAILURE;
     }
 
     if (!window.CreateSyncObjects(device.get())) {
-        std::cerr << "error creating semaphores." << std::endl;
+        spdlog::error("error creating device semaphores.");
         return EXIT_FAILURE;
     }
 
     // ========== Main loop.
+    oscHandler.setQuitHandler([&window] { window.stop(); });
     window.Run(device.get(), &swapchain, &command_pool);
 
     // ========== Vulkan cleanup.
@@ -157,10 +171,13 @@ int main(int argc, char* argv[]) {
     fragment_shader->Destroy();
     swapchain.Destroy();
     device->Destroy();
+    window.Destroy();
     instance->Destroy();
 
     // ========== glfw cleanup.
     glfwTerminate();
+
+    oscHandler.shutdown();
 
     return EXIT_SUCCESS;
 }

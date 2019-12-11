@@ -47,6 +47,7 @@ target_link_libraries(scinsynth
     glslang
     oscpack
     shaderc
+    spdlog
 )
 
 if (SCIN_VALIDATE_VULKAN)

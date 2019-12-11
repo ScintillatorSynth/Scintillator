@@ -26,13 +26,13 @@ namespace {
 %struct-type
 struct OscCommandPair { const char* name; scin::OscCommand number; };
 %%
-/none,      scin::OscCommand::kNone
-/notify,    scin::OscCommand::kNotify
-/status,    scin::OscCommand::kStatus
-/quit,      scin::OscCommand::kQuit
-/dumpOSC,   scin::OscCommand::kDumpOSC
-/error,     scin::OscCommand::kError
-/version,   scin::OscCommand::kVersion
+none,      scin::OscCommand::kNone
+notify,    scin::OscCommand::kNotify
+status,    scin::OscCommand::kStatus
+quit,      scin::OscCommand::kQuit
+dumpOSC,   scin::OscCommand::kDumpOSC
+error,     scin::OscCommand::kError
+version,   scin::OscCommand::kVersion
 %%
 
 }  // namespace
