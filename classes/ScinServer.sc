@@ -26,7 +26,6 @@ ScinServer {
 
 	boot {
 		var commandLine = scinBinaryPath + "--udp_port_number=" ++ udpPortNumber.asString();
-		commandLine.postln;
 		scinPid = commandLine.unixCmd({ |exitCode, exitPid|
 			"*** got scinsynth exit code %".format(exitCode).postln;
 		});
@@ -49,6 +48,13 @@ ScinServer {
 			addr.sendMsg('/scin_dumpOSC', 1);
 		}, {
 			addr.sendMsg('/scin_dumpOSC', 0);
+		});
+	}
+
+	// Integer from 0 to 6.
+	logLevel { |level|
+		if (level >= 0 and: { level <= 6 }, {
+			addr.sendMsg('/scin_logLevel', level);
 		});
 	}
 

@@ -1,5 +1,6 @@
 #include "OscHandler.hpp"
 
+#include "LogLevels.h"
 #include "OscCommand.h"
 #include "Version.h"
 
@@ -28,7 +29,7 @@ public:
     void ProcessMessage(const osc::ReceivedMessage& message, const IpEndpointName& endpoint) override {
         try {
             if (m_dumpOSC) {
-                spdlog::info("dumpOC: {}", message);
+                spdlog::info("dumpOSC: {}", message);
             }
 
             // All scinsynth messages start with a scin_ prefix, to avoid confusion with similar messages and responses
@@ -95,8 +96,14 @@ public:
                     }
                     break;
 
-                case kError:
-
+                case kLogLevel:
+                    {
+                        osc::ReceivedMessage::const_iterator msg = message.ArgumentsBegin();
+                        int logLevel = (msg++)->AsInt32();
+                        if (msg != message.ArgumentsEnd()) throw osc::ExcessArgumentException();
+                        spdlog::info("Setting log level to {}.", logLevel);
+                        setGlobalLogLevel(logLevel);
+                    }
                     break;
 
                 case kVersion:

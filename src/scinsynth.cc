@@ -1,3 +1,4 @@
+#include "LogLevels.h"
 #include "OscHandler.hpp"
 #include "vulkan/command_pool.h"
 #include "vulkan/device.h"
@@ -17,9 +18,12 @@
 #include <memory>
 
 // Command-line options specified to gflags.
-DEFINE_bool(print_version, false, "Print the Scintillator version and exit");
-DEFINE_int32(udp_port_number, -1, "A port number 0-65535");
-DEFINE_string(bind_to_address, "127.0.0.1", "Bind the UDP socket to this address");
+DEFINE_bool(print_version, false, "Print the Scintillator version and exit.");
+DEFINE_int32(udp_port_number, -1, "A port number 0-65535.");
+DEFINE_string(bind_to_address, "127.0.0.1", "Bind the UDP socket to this address.");
+
+DEFINE_int32(log_level, 2, "Verbosity of logs, lowest value of 0 logs everything, highest value of 6 disables all "
+        "logging.");
 
 /*
 DEFINE_bool(fullscreen, false, "Create a fullscreen window.");
@@ -40,6 +44,9 @@ int main(int argc, char* argv[]) {
         spdlog::error("scinsynth requires a UDP port number between 1024 and 65535. Specify with --udp_port_numnber");
         return EXIT_FAILURE;
     }
+
+    // Set logging level, only after any critical user-triggered reporting or errors (--print_version, etc).
+    scin::setGlobalLogLevel(FLAGS_log_level);
 
     // Start listening for incoming OSC commands on UDP.
     scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
