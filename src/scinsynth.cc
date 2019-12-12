@@ -160,9 +160,12 @@ int main(int argc, char* argv[]) {
     }
 
     const std::vector<Vertex> vertices = {
-        {{ 0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f }},
-        {{ 0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f }},
-        {{ -0.5f, 0.5f }, {  0.0f, 0.0f, 1.0f }}
+        {{ -1.0f, -1.0f }, { 1.0f, 0.0f, 0.0f }},
+        {{ 1.0f, -1.0f }, { 0.0f, 1.0f, 0.0f }},
+        {{ 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }},
+        {{ -1.0f, -1.0f }, { 1.0f, 0.0f, 0.0f }},
+        {{ 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }},
+        {{ -1.0f, 1.0f }, { 0.5f, 0.5f, 1.0f }}
     };
 
     scin::vk::Buffer vertex_buffer(scin::vk::Buffer::kVertex, device);

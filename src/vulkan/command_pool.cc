@@ -77,7 +77,7 @@ bool CommandPool::CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline,
         VkBuffer vertex_buffers[] = { vertex_buffer->buffer() };
         VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(command_buffers_[i], 0, 1, vertex_buffers, offsets);
-        vkCmdDraw(command_buffers_[i], 3, 1, 0, 0);
+        vkCmdDraw(command_buffers_[i], 6, 2, 0, 0);
         vkCmdEndRenderPass(command_buffers_[i]);
         if (vkEndCommandBuffer(command_buffers_[i]) != VK_SUCCESS) {
             return false;
