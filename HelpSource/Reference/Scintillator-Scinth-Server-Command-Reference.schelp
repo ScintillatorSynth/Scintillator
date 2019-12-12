@@ -1,0 +1,60 @@
+title:: Scintillator Scinth Server Command Reference
+summary:: A list of all OSC commands accepted by scscinth
+categories:: Quarks>Scintillator
+related:: Reference/Server-Command-Architecture
+
+section::OSC Communication Details
+
+While the SuperCollider synth programs support a variety of connection modalities and multi-user scenarios, at present scinsynth only supports a single client commnicating exclusively over UDP. For asynchronous messages the server will respond to whatever UDP address and port messages are received from.
+
+section::Master Controls
+
+subsection::/scin_quit
+
+Quit program. Exits the scinsynth server.
+
+definitionlist::
+## Asynchronous. || Replies to sender with strong::/scin_done:: just before completion.
+::
+
+subsection::/scin_dumpOSC
+Log incoming OSC messages.
+
+table::
+## strong::int:: || 0 to disable logging. Nonzero to enable.
+::
+
+subsection::/scin_logLevel
+Set the logging level for the log streams. Lower log levels are inclusive of all higher log levels, so they tend to log more, and the highest log level turns off logging. This overrides any command-line argument supplied to scinsynth at startup.
+
+table::
+## strong::int:: || log level
+::
+
+The values for the log level are as follows:
+table::
+## 0 || Trace
+## 1 || Debug
+## 2 || Informational
+## 3 || Warnings
+## 4 || Errors
+## 5 || Critical Errors
+## 6 || Disable Logging
+::
+
+subsection::/scin_version
+
+Query the Scintillator version. Replies to sender with the following message:
+
+definitionList::
+## /scin_version.reply || table::
+## string || Program name. Will always be "scinsynth".
+## int || Scintillator major version number.
+## int || Scintillator minor version number.
+## int || Scintillator patch version number.
+## string || Git branch name.
+## string || First seven hex digits of the commit hash.
+::
+::
+
+It is expected that the scinsynth binary will always have the same major, minor, and patch version as the Scintillator Quark.

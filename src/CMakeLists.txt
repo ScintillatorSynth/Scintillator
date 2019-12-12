@@ -13,6 +13,8 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.h"
 set(scintillator_synth_files
     "${CMAKE_CURRENT_BINARY_DIR}/Version.h"
     "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.h"
+    LogLevels.cpp
+    LogLevels.h
     OscHandler.cpp
     OscHandler.hpp
     scinsynth.cc
@@ -47,6 +49,7 @@ target_link_libraries(scinsynth
     glslang
     oscpack
     shaderc
+    spdlog
 )
 
 if (SCIN_VALIDATE_VULKAN)

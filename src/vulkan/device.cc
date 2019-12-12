@@ -46,11 +46,11 @@ bool Device::FindPhysicalDevice(Window* window) {
         vkGetPhysicalDeviceProperties(device, &device_properties);
 
         // Dedicated GPUs only for now. Device enumeration later.
-        if (device_properties.deviceType !=
-            VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-            std::cout << "skipping indiscrete GPU" << std::endl;
-            continue;
-        }
+        //if (device_properties.deviceType !=
+        //    VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+        //    std::cout << "skipping indiscrete GPU" << std::endl;
+        //    continue;
+        //}
 
         // Also needs to support graphics and present queue families.
         uint32_t queue_family_count = 0;

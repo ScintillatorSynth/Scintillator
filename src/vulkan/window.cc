@@ -19,7 +19,8 @@ Window::Window(std::shared_ptr<Instance> instance) :
     width_(-1),
     height_(-1),
     window_(nullptr),
-    surface_(VK_NULL_HANDLE) {
+    surface_(VK_NULL_HANDLE),
+    m_stop(false) {
 }
 
 Window::~Window() {
@@ -76,7 +77,7 @@ void Window::Run(Device* device, Swapchain* swapchain,
         CommandPool* command_pool) {
     size_t current_frame = 0;
 
-    while (!glfwWindowShouldClose(window_)) {
+    while (!m_stop && !glfwWindowShouldClose(window_)) {
         glfwPollEvents();
 
         vkWaitForFences(device->get(), 1, &in_flight_fences_[current_frame],
