@@ -6,10 +6,13 @@
 #include "ip/UdpSocket.h"
 #include "osc/OscOutboundPacketStream.h"
 #include "osc/OscPacketListener.h"
+#include "osc/OscPrintReceivedElements.h"
 #include "osc/OscReceivedElements.h"
 #include "spdlog/spdlog.h"
 
 #include <cstring>
+#include <string>
+#include <sstream>
 
 namespace scin {
 
@@ -18,13 +21,20 @@ public:
     OscListener(OscHandler* handler) :
         osc::OscPacketListener(),
         m_handler(handler),
+        m_dumpOSC(false),
         m_quitHandler([]{}) {
     }
 
     void ProcessMessage(const osc::ReceivedMessage& message, const IpEndpointName& endpoint) override {
         try {
+            if (m_dumpOSC) {
+                std::stringstream ss;
+                ss << message;
+                spdlog::info("dumpOC: {}", ss.str());
+            }
+
             // All scinsynth messages start with a scin_ prefix, to avoid confusion with similar messages and responses
-            // that are sent to scsynth. So we check for this prefix first, and ignore any messages that lack it.
+            // that are sent to scsynth. So we check or this prefix first, and ignore any messages that lack it.
             const char* kPrefix = "/scin_";
             const size_t kPrefixLength = 6;
             const char* command = message.AddressPattern();
@@ -55,12 +65,15 @@ public:
             // the thing, and they will encapsulate the necessary information to send the thing back.
             switch (pair->number) {
                 case kNone:
+                    // None command means this is deliberately empty.
                     break;
 
                 case kNotify:
+                    // TBD the server having something to notify about.
                     break;
 
                 case kStatus:
+                    // TBD meaningful status.
                     break;
 
                 case kQuit:
@@ -70,6 +83,18 @@ public:
                     break;
 
                 case kDumpOSC:
+                    {
+                        osc::ReceivedMessage::const_iterator msg = message.ArgumentsBegin();
+                        int dump = (msg++)->AsInt32();
+                        if (msg != message.ArgumentsEnd()) throw osc::ExcessArgumentException();
+                        if (dump == 0) {
+                            spdlog::info("Turning off OSC message dumping to the log.");
+                            m_dumpOSC = false;
+                        } else {
+                            spdlog::info("Dumping parsed OSC messages to the log.");
+                            m_dumpOSC = true;
+                        }
+                    }
                     break;
 
                 case kError:
@@ -110,6 +135,7 @@ public:
 
 private:
     OscHandler* m_handler;
+    bool m_dumpOSC;
 
     // Function to call back if a /scin_quit command is received, tells the rest of the scinsynth binary to quit.
     std::function<void()> m_quitHandler;

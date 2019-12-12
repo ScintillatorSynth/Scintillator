@@ -44,6 +44,14 @@ ScinServer {
 		addr.sendMsg('/scin_quit');
 	}
 
+	dumpOSC { |on|
+		if (on, {
+			addr.sendMsg('/scin_dumpOSC', 1);
+		}, {
+			addr.sendMsg('/scin_dumpOSC', 0);
+		});
+	}
+
 	prGetVersionAsync { |callback|
 		fork {
 			var sync = Condition.new;

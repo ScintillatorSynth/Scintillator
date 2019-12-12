@@ -17,6 +17,13 @@ definitionlist::
 ## Asynchronous. || Replies to sender with strong::/scin_done:: just before completion.
 ::
 
+subsection::/scin_dumpOSC
+Log incoming OSC messages
+
+table::
+## strong::int:: || 0 to disable logging. Nonzero to enable.
+::
+
 subsection::/scin_version
 
 Query the Scintillator version. Replies to sender with the following message:
