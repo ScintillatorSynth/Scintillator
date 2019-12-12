@@ -7,12 +7,29 @@ section::OSC Communication Details
 
 While the SuperCollider synth programs support a variety of connection modalities and multi-user scenarios, at present scinsynth only supports a single client commnicating exclusively over UDP. For asynchronous messages the server will respond to whatever UDP address and port messages are received from.
 
-section:: Master Controls
+section::Master Controls
 
-subsection:: /scin_quit
+subsection::/scin_quit
 
 Quit program. Exits the scinsynth server.
 
 definitionlist::
 ## Asynchronous. || Replies to sender with strong::/scin_done:: just before completion.
 ::
+
+subsection::/scin_version
+
+Query the Scintillator version. Replies to sender with the following message:
+
+definitionList::
+## /scin_version.reply || table::
+## string || Program name. Will always be "scinsynth".
+## int || Scintillator major version number.
+## int || Scintillator minor version number.
+## int || Scintillator patch version number.
+## string || Git branch name.
+## string || First seven hex digits of the commit hash.
+::
+::
+
+It is expected that the scinsynth binary will always have the same major, minor, and patch version as the Scintillator Quark.

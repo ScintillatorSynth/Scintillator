@@ -1,6 +1,7 @@
 #include "OscHandler.hpp"
 
 #include "OscCommand.h"
+#include "Version.h"
 
 #include "ip/UdpSocket.h"
 #include "osc/OscOutboundPacketStream.h"
@@ -22,20 +23,16 @@ public:
 
     void ProcessMessage(const osc::ReceivedMessage& message, const IpEndpointName& endpoint) override {
         try {
+            // All scinsynth messages start with a scin_ prefix, to avoid confusion with similar messages and responses
+            // that are sent to scsynth. So we check for this prefix first, and ignore any messages that lack it.
             const char* kPrefix = "/scin_";
             const size_t kPrefixLength = 6;
-            // All scinsynth messages start with a scin_ prefix, to avoid confusion with similar messages and responses
-            // that are sent to scsynth. So check for this prefix first, and ignore any messages that lack it.
             const char* command = message.AddressPattern();
             size_t commandLength = std::strlen(command);
             if (commandLength < kPrefixLength || std::strncmp(command, kPrefix, kPrefixLength) != 0) {
                 spdlog::error("OSC command {} does not have {} prefix, is not a scinsynth command.", command, kPrefix);
                 return;
             }
-
-            char buf[32];
-            endpoint.AddressAndPortAsString(buf);
-            spdlog::info("got OSC from {}", buf);
 
             // Create a hash of command suffix.
             const OscCommandPair* pair = Perfect_Hash::in_word_set(command + kPrefixLength,
@@ -46,6 +43,16 @@ public:
                 return;
             }
 
+            // couple of needs that we have here. There will be some low-latency messages that should probably not be a
+            // delegated to a std::async task, but rather should be handled directly on this thread. Or maybe that is
+            // a premature optimization. Normal thing will be to collect a std::future from a std::async launch to
+            // to handle the response. What happens to those futures? For lightweight things, like setting the quit flag,
+            // doing on a separate thread seems excessive.
+            //
+            // Separately, there should be some way to send a reply back to the sender. Again here there are two use
+            // cases, the first where some code here is executing so the context is available to send the response. The
+            // other case is when some other thread has to do work, in which case maybe completion callbacks should be
+            // the thing, and they will encapsulate the necessary information to send the thing back.
             switch (pair->number) {
                 case kNone:
                     break;
@@ -69,6 +76,20 @@ public:
                     break;
 
                 case kVersion:
+                    {
+                        UdpTransmitSocket responseSocket(endpoint);
+                        std::array<char, 1024> buffer;
+                        osc::OutboundPacketStream p(buffer.data(), sizeof(buffer));
+                        p << osc::BeginMessage("/scin_version.reply");
+                        p << "scinsynth";
+                        p << kScinVersionMajor;
+                        p << kScinVersionMinor;
+                        p << kScinVersionPatch;
+                        p << kScinBranch;
+                        p << kScinCommitHash;
+                        p << osc::EndMessage;
+                        responseSocket.Send(p.Data(), p.Size());
+                    }
                     break;
             }
         } catch (osc::Exception exception) {

@@ -3,6 +3,7 @@
 
 #include "vulkan/scin_include_vulkan.h"
 
+#include <atomic>
 #include <memory>
 #include <vector>
 
@@ -28,7 +29,7 @@ class Window {
     void DestroySyncObjects(Device* device);
     void Destroy();
 
-    // Typically called on another thread, breaks the run() loop.
+    // Typically called on another thread, will exit the run() loop on next iteration.
     void stop() { m_stop = true; }
 
     GLFWwindow* get() { return window_; }
@@ -45,7 +46,7 @@ class Window {
     std::vector<VkSemaphore> image_available_semaphores_;
     std::vector<VkSemaphore> render_finished_semaphores_;
     std::vector<VkFence> in_flight_fences_;
-    bool m_stop;
+    std::atomic<bool> m_stop;
 };
 
 }    // namespace vk

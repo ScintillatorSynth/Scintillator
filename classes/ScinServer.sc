@@ -2,6 +2,7 @@ ScinServer {
 	var udpPortNumber;
 	var scinBinaryPath;
 
+	var scinQuarkVersion;
 	var scinPid;
 	var addr;
 
@@ -11,13 +12,14 @@ ScinServer {
 	}
 
 	init {
-		// If no override path specificed we assume the Scintillator binary is in the bin/ path
-		// within the Quark.
-		if (scinBinaryPath.isNil, {
-			Quarks.installed.do({ |quark, index|
-				if (quark.name == "Scintillator", {
+		Quarks.installed.do({ |quark, index|
+			if (quark.name == "Scintillator", {
+				// If no override path specificed we assume the Scintillator binary is in the
+				// bin/ path within the Quark.
+				if (scinBinaryPath.isNil, {
 					scinBinaryPath = quark.localPath ++ "/build/src/scinsynth";
 				});
+				scinQuarkVersion = quark.version;
 			});
 		});
 	}
@@ -40,5 +42,24 @@ ScinServer {
 			"*** got scin_done back".postln;
 		}, '/scin_done').oneShot;
 		addr.sendMsg('/scin_quit');
+	}
+
+	prGetVersionAsync { |callback|
+		fork {
+			var sync = Condition.new;
+			var version;
+			OSCFunc.new({ |msg|
+				version = msg[2].asString;
+				version = version ++ "." ++ msg[3].asString;
+				version = version ++ "." ++ msg[4].asString;
+				version = version + msg[5] ++ "@" ++ msg[6];
+
+				sync.test = true;
+				sync.signal;
+			}, '/scin_version.reply').oneShot;
+			addr.sendMsg('/scin_version');
+			sync.wait;
+			callback.value(version);
+		}
 	}
 }
