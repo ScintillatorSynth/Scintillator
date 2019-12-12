@@ -8,11 +8,11 @@
 #include "osc/OscPacketListener.h"
 #include "osc/OscPrintReceivedElements.h"
 #include "osc/OscReceivedElements.h"
+#include "spdlog/fmt/ostr.h"
 #include "spdlog/spdlog.h"
 
 #include <cstring>
 #include <string>
-#include <sstream>
 
 namespace scin {
 
@@ -28,9 +28,7 @@ public:
     void ProcessMessage(const osc::ReceivedMessage& message, const IpEndpointName& endpoint) override {
         try {
             if (m_dumpOSC) {
-                std::stringstream ss;
-                ss << message;
-                spdlog::info("dumpOC: {}", ss.str());
+                spdlog::info("dumpOC: {}", message);
             }
 
             // All scinsynth messages start with a scin_ prefix, to avoid confusion with similar messages and responses
@@ -98,6 +96,7 @@ public:
                     break;
 
                 case kError:
+
                     break;
 
                 case kVersion:
