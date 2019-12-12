@@ -4,6 +4,7 @@
 #include "vulkan/scin_include_vulkan.h"
 
 #include <memory>
+#include <vector>
 
 namespace scin {
 
@@ -17,6 +18,13 @@ class Pipeline {
   public:
     Pipeline(std::shared_ptr<Device> device);
     ~Pipeline();
+
+    // Call these methods before calling Create().
+    void SetVertexStride(size_t size) { vertex_stride_ = size; }
+    enum VertexType { kFloat, kVec2, kVec3, kVec4, kIVec2, kUVec4, kDouble };
+    void AddVertexAttribute(VertexType type, size_t offset) {
+        vertex_attributes_.push_back(std::make_pair(type, offset));
+    }
 
     bool Create(Shader* vertex_shader, Shader* fragment_shader,
             Swapchain* swapchain);
@@ -33,6 +41,10 @@ class Pipeline {
     void DestroyPipelineLayout();
 
     std::shared_ptr<Device> device_;
+
+    size_t vertex_stride_;
+    std::vector<std::pair<VertexType, size_t>> vertex_attributes_;
+
     VkRenderPass render_pass_;
     VkPipelineLayout pipeline_layout_;
     VkPipeline pipeline_;

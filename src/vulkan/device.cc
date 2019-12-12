@@ -18,11 +18,12 @@ namespace scin {
 namespace vk {
 
 Device::Device(std::shared_ptr<Instance> instance) :
-        instance_(instance),
-        physical_device_(VK_NULL_HANDLE),
-        graphics_family_index_(-1),
-        present_family_index_(-1),
-        device_(VK_NULL_HANDLE) {
+    instance_(instance),
+    physical_device_(VK_NULL_HANDLE),
+    allocator_(VK_NULL_HANDLE),
+    graphics_family_index_(-1),
+    present_family_index_(-1),
+    device_(VK_NULL_HANDLE) {
 }
 
 Device::~Device() {
@@ -183,10 +184,18 @@ bool Device::Create(Window* window) {
     vkGetDeviceQueue(device_, graphics_family_index_, 0, &graphics_queue_);
     vkGetDeviceQueue(device_, present_family_index_, 0, &present_queue_);
 
+    // Initialize memory allocator.
+    VmaAllocatorCreateInfo allocator_info = {};
+    allocator_info.physicalDevice = physical_device_;
+    allocator_info.device = device_;
+    vmaCreateAllocator(&allocator_info, &allocator_);
+
     return true;
 }
 
 void Device::Destroy() {
+    vmaDestroyAllocator(allocator_);
+    allocator_ = VK_NULL_HANDLE;
     vkDestroyDevice(device_, nullptr);
     device_ = VK_NULL_HANDLE;
 }

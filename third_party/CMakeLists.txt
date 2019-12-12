@@ -12,6 +12,14 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(glfw)
 
+#### glm
+add_subdirectory(glm)
+
+#### VulkanMemoryAllocator
+include_directories(VulkanMemoryAllocator/src)
+add_library(VulkanMemoryAllocator STATIC "vulkan_memory_allocator_build.cc")
+target_include_directories(VulkanMemoryAllocator INTERFACE VulkanMemoryAllocator/src)
+
 #### googletest (required by effcee and re2)
 add_subdirectory(googletest)
 

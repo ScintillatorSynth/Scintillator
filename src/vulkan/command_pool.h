@@ -10,6 +10,7 @@ namespace scin {
 
 namespace vk {
 
+class Buffer;
 class Device;
 class Pipeline;
 class Swapchain;
@@ -22,7 +23,7 @@ class CommandPool {
     bool Create();
     void Destroy();
 
-    bool CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline);
+    bool CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline, Buffer* vertex_buffer);
 
     VkCommandBuffer command_buffer(size_t i) { return command_buffers_[i]; }
 

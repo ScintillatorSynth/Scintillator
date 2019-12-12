@@ -1,5 +1,6 @@
 #include "LogLevels.h"
 #include "OscHandler.hpp"
+#include "vulkan/buffer.h"
 #include "vulkan/command_pool.h"
 #include "vulkan/device.h"
 #include "vulkan/instance.h"
@@ -13,9 +14,11 @@
 #include "Version.h"
 
 #include "gflags/gflags.h"
+#include "glm/glm.hpp"
 #include "spdlog/spdlog.h"
 
 #include <memory>
+#include <vector>
 
 // Command-line options specified to gflags.
 DEFINE_bool(print_version, false, "Print the Scintillator version and exit.");
@@ -52,6 +55,7 @@ int main(int argc, char* argv[]) {
     scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
     oscHandler.run();
 
+    // ========== glfw setup.
     glfwInit();
 
     // ========== Vulkan setup.
@@ -91,23 +95,14 @@ int main(int argc, char* argv[]) {
             "#version 450\n"
             "#extension GL_ARB_separate_shader_objects : enable\n"
             "\n"
+            "layout(location = 0) in vec2 inPosition;\n"
+            "layout(location = 1) in vec3 inColor;\n"
+            "\n"
             "layout(location = 0) out vec3 fragColor;\n"
             "\n"
-            "vec2 positions[3] = vec2[](\n"
-            "   vec2(0.0, -0.5),\n"
-            "   vec2(0.5, 0.5),\n"
-            "   vec2(-0.5, 0.5)\n"
-            ");\n"
-            "\n"
-            "vec3 colors[3] = vec3[]("
-            "   vec3(1.0, 0.0, 0.0),\n"
-            "   vec3(0.0, 1.0, 0.0),\n"
-            "   vec3(0.0, 0.0, 1.0)\n"
-            ");\n"
-            "\n"
             "void main() {\n"
-            "   gl_Position = vec4(positions[gl_VertexIndex], 0.0, 1.0);\n"
-            "   fragColor = colors[gl_VertexIndex];\n"
+            "   gl_Position = vec4(inPosition, 0.0, 1.0);\n"
+            "   fragColor = inColor;\n"
             "}\n"
     );
     std::unique_ptr<scin::vk::Shader> vertex_shader = shader_compiler.Compile(
@@ -137,7 +132,16 @@ int main(int argc, char* argv[]) {
 
     shader_compiler.ReleaseCompiler();
 
+    struct Vertex {
+        glm::vec2 pos;
+        glm::vec3 color;
+    };
+
     scin::vk::Pipeline pipeline(device);
+    pipeline.SetVertexStride(sizeof(Vertex));
+    pipeline.AddVertexAttribute(scin::vk::Pipeline::kVec2, offsetof(Vertex, pos));
+    pipeline.AddVertexAttribute(scin::vk::Pipeline::kVec3, offsetof(Vertex, color));
+
     if (!pipeline.Create(vertex_shader.get(), fragment_shader.get(),
             &swapchain)) {
         spdlog::error("error in pipeline creation.");
@@ -155,7 +159,27 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    if (!command_pool.CreateCommandBuffers(&swapchain, &pipeline)) {
+    const std::vector<Vertex> vertices = {
+        {{ -1.0f, -1.0f }, { 1.0f, 0.0f, 0.0f }},
+        {{ 1.0f, -1.0f }, { 0.0f, 1.0f, 0.0f }},
+        {{ 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }},
+        {{ -1.0f, -1.0f }, { 1.0f, 0.0f, 0.0f }},
+        {{ 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }},
+        {{ -1.0f, 1.0f }, { 0.5f, 0.5f, 1.0f }}
+    };
+
+    scin::vk::Buffer vertex_buffer(scin::vk::Buffer::kVertex, device);
+    if (!vertex_buffer.Create(sizeof(Vertex) * vertices.size())) {
+        spdlog::error("error creating vertex buffer.");
+        return EXIT_FAILURE;
+    }
+
+    vertex_buffer.MapMemory();
+    std::memcpy(vertex_buffer.mapped_address(), vertices.data(),
+        sizeof(Vertex) * vertices.size());
+    vertex_buffer.UnmapMemory();
+
+    if (!command_pool.CreateCommandBuffers(&swapchain, &pipeline, &vertex_buffer)) {
         spdlog::error("error creating command buffers.");
         return EXIT_FAILURE;
     }
@@ -172,6 +196,7 @@ int main(int argc, char* argv[]) {
     // ========== Vulkan cleanup.
     window.DestroySyncObjects(device.get());
     command_pool.Destroy();
+    vertex_buffer.Destroy();
     swapchain.DestroyFramebuffers();
     pipeline.Destroy();
     vertex_shader->Destroy();

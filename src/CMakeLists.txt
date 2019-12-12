@@ -18,6 +18,9 @@ set(scintillator_synth_files
     OscHandler.cpp
     OscHandler.hpp
     scinsynth.cc
+
+    vulkan/buffer.cc
+    vulkan/buffer.h
     vulkan/command_pool.cc
     vulkan/command_pool.h
     vulkan/device.cc
@@ -44,8 +47,10 @@ add_executable(scinsynth ${scintillator_synth_files})
 target_link_libraries(scinsynth
     "${Vulkan_LIBRARY}"
     SPIRV-Tools
+    VulkanMemoryAllocator
     gflags
     glfw
+    glm
     glslang
     oscpack
     shaderc
