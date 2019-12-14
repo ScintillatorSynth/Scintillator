@@ -12,11 +12,14 @@
 #include "vulkan/swapchain.h"
 #include "vulkan/window.h"
 #include "Version.h"
+#include "VGenManager.hpp"
 
 #include "gflags/gflags.h"
 #include "glm/glm.hpp"
 #include "spdlog/spdlog.h"
 
+#include <filesystem>
+#include <future>
 #include <memory>
 #include <vector>
 
@@ -27,6 +30,8 @@ DEFINE_string(bind_to_address, "127.0.0.1", "Bind the UDP socket to this address
 
 DEFINE_int32(log_level, 2, "Verbosity of logs, lowest value of 0 logs everything, highest value of 6 disables all "
         "logging.");
+
+DEFINE_string(quark_dir, "..", "Root directory of the Scintillator Quark, for finding dependent files.");
 
 /*
 DEFINE_bool(fullscreen, false, "Create a fullscreen window.");
@@ -47,13 +52,36 @@ int main(int argc, char* argv[]) {
         spdlog::error("scinsynth requires a UDP port number between 1024 and 65535. Specify with --udp_port_numnber");
         return EXIT_FAILURE;
     }
+    if (!std::filesystem::exists(FLAGS_quark_dir)) {
+        spdlog::error("invalid or nonexistent path {} supplied for --quark_dir, terminating.", FLAGS_quark_dir);
+        return EXIT_FAILURE;
+    }
 
     // Set logging level, only after any critical user-triggered reporting or errors (--print_version, etc).
     scin::setGlobalLogLevel(FLAGS_log_level);
 
+    std::filesystem::path quarkPath = std::filesystem::canonical(FLAGS_quark_dir);
+    if (!std::filesystem::exists(quarkPath / "Scintillator.quark")) {
+        spdlog::error("Path {} doesn't look like Scintillator Quark root directory, terminating.", quarkPath.string());
+        return EXIT_FAILURE;
+    }
+
     // Start listening for incoming OSC commands on UDP.
     scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
     oscHandler.run();
+
+    scin::VGenManager vgenManager;
+    auto parseVGens = std::async(std::launch::async, [&vgenManager, &quarkPath] {
+        std::filesystem::path vgens = quarkPath / "vgens";
+        spdlog::info("Parsing yaml files in {} for VGens.", vgens.string());
+        for (auto entry : std::filesystem::directory_iterator(vgens)) {
+            auto p = entry.path();
+            if (std::filesystem::is_regular_file(p) && p.extension() == ".yaml") {
+                spdlog::debug("Parsing VGen yaml file {}.", p.string());
+                vgenManager.loadFromFile(p.string());
+            }
+        }
+    });
 
     // ========== glfw setup.
     glfwInit();

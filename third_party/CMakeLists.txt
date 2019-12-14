@@ -51,3 +51,6 @@ add_subdirectory(glslang)
 set(SHADERC_SKIP_TESTS ON CACHE BOOL "skip testing in shaderc")
 add_subdirectory(shaderc)
 
+#### yaml-cpp
+add_subdirectory(yaml-cpp)
+

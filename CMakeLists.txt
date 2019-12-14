@@ -3,8 +3,7 @@ cmake_policy(SET CMP0048 NEW)
 # The authoritative version of Scintillator is always in the Scintillator.quark file in the root directory of the
 # project. This version is manually kept in sync and should be updated to match. Both C++ and sclang Scintillator code
 # is developed in parallel, and is designed to be released together.
-project(Scintillator
-        VERSION 0.0.1)
+project(Scintillator VERSION 0.0.1 LANGUAGES CXX)
 
 # Track cmake version requirements from SuperCollider main sources.
 cmake_minimum_required(VERSION 3.5)
