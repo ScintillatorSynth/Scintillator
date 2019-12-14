@@ -78,7 +78,29 @@ TEST(VGenManagerTest, ValidYamlStrings) {
     ASSERT_EQ(1, overwrite->parameters().size());
     EXPECT_EQ("time", overwrite->parameters()[0]);
     EXPECT_EQ("@out = @time;", overwrite->fragment());
+
+    EXPECT_EQ(1, manager.parseFromString(
+        "---\n"
+        "name: Overwrite\n"
+        "intermediates:\n"
+        "  - fl\n"
+        "fragment: \"@fl = 2.0; @out = @fl;\"\n"
+    ));
+    EXPECT_EQ(3, manager.numberOfVGens());
+    overwrite = manager.getVGenNamed("Overwrite");
+    ASSERT_TRUE(overwrite);
+    EXPECT_EQ("Overwrite", overwrite->name());
+    EXPECT_EQ(0, overwrite->parameters().size());
+    ASSERT_EQ(1, overwrite->intermediates().size());
+    EXPECT_EQ("fl", overwrite->intermediates()[0]);
+    EXPECT_EQ("@fl = 2.0; @out = @fl;", overwrite->fragment());
 }
+
+// TODO:
+//  (a) add test coverage metrics - consider LLVM for general compilation?
+//  (b) add file test using temporary file, to show metrics going up
+//  (c) add any other tests to get VGenManager test coverage up to 100%
+//  (d) Build ScinSynth parser/generator/compiler
 
 }  // namespace scin
 
