@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
         return EXIT_SUCCESS;
     }
     if (FLAGS_udp_port_number < 1024 || FLAGS_udp_port_number > 65535) {
-        spdlog::error("scinsynth requires a UDP port number between 1024 and 65535. Specify with --udp_port_numnber");
+        spdlog::error("scinsynth requires a UDP port number between 1024 and 65535. Specify with --udp_port_number");
         return EXIT_FAILURE;
     }
     if (!std::filesystem::exists(FLAGS_quark_dir)) {
@@ -81,6 +81,7 @@ int main(int argc, char* argv[]) {
                 vgenManager.loadFromFile(p.string());
             }
         }
+        spdlog::info("Parsed {} unique VGens.", vgenManager.numberOfVGens());
     });
 
     // ========== glfw setup.

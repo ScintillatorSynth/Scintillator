@@ -1,8 +1,22 @@
 ---
-name: VSinOsc
+name: ScinOsc
 inputs:
     - freq
     - phase
-outputs: 1
-fragment: "sin((@scinthTime * @freq * 2 * pi) + @phase);"
+parameters:
+    - time
+fragment: "@out = 1.0 + (0.5 * sin((@time * @freq * 2 * pi) + @phase));"
+---
+name: VSaw
+inputs:
+    - freq
+    - phase
+parameters:
+    - time
+intermediates:
+    - temp
+fragment: "
+float @temp = (@time + @phase) * @freq;
+@out = @temp - floor(@temp);
+"
 
