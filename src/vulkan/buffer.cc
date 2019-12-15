@@ -2,6 +2,8 @@
 
 #include "vulkan/device.h"
 
+#include "spdlog/spdlog.h"
+
 #include <iostream>
 
 namespace scin {
@@ -27,12 +29,18 @@ bool Buffer::Create(size_t size) {
     buffer_info.size = size;
     buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if (kind_ == kVertex) {
-        buffer_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-    } else {
-        // Currently unsupported buffer type.
-        std::cerr << "unsupported buffer type." << std::endl;
-        return false;
+    switch (kind_) {
+        case kUniform:
+            buffer_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+            break;
+
+        case kVertex:
+            buffer_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+            break;
+
+        default:
+            spdlog::error("unsupported buffer type.");
+            return false;
     }
 
     if (vkCreateBuffer(device_->get(), &buffer_info, nullptr, &buffer_) != VK_SUCCESS) {

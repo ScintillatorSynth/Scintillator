@@ -15,6 +15,7 @@ class CommandPool;
 class Device;
 class Instance;
 class Swapchain;
+class Uniform;
 
 // While technically more a GLFW object than a Vulkan one, Window also maintains
 // a VkSurfaceKHR handle, so lives with the rest of the Vulkan objects.
@@ -25,7 +26,7 @@ class Window {
 
     bool Create(int width, int height);
     bool CreateSyncObjects(Device* device);
-    void Run(Device* device, Swapchain* swapchain, CommandPool* command_pool);
+    void Run(Device* device, Swapchain* swapchain, CommandPool* command_pool, Uniform* uniform);
     void DestroySyncObjects(Device* device);
     void Destroy();
 

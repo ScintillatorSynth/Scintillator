@@ -4,6 +4,7 @@
 #include "vulkan/device.h"
 #include "vulkan/pipeline.h"
 #include "vulkan/swapchain.h"
+#include "vulkan/Uniform.hpp"
 
 namespace scin {
 
@@ -23,8 +24,7 @@ bool CommandPool::Create() {
     pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     pool_info.queueFamilyIndex = device_->graphics_family_index();
     pool_info.flags = 0;
-    return (vkCreateCommandPool(device_->get(), &pool_info, nullptr,
-            &command_pool_) == VK_SUCCESS);
+    return (vkCreateCommandPool(device_->get(), &pool_info, nullptr, &command_pool_) == VK_SUCCESS);
 }
 
 void CommandPool::Destroy() {
@@ -34,18 +34,17 @@ void CommandPool::Destroy() {
     }
 }
 
-bool CommandPool::CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline, Buffer* vertex_buffer) {
+bool CommandPool::CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline, Buffer* vertex_buffer,
+    Uniform* uniform) {
     command_buffers_.resize(swapchain->image_count());
 
     VkCommandBufferAllocateInfo alloc_info = {};
     alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     alloc_info.commandPool = command_pool_;
     alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    alloc_info.commandBufferCount = static_cast<uint32_t>(
-            command_buffers_.size());
+    alloc_info.commandBufferCount = static_cast<uint32_t>(command_buffers_.size());
 
-    if (vkAllocateCommandBuffers(device_->get(), &alloc_info,
-            command_buffers_.data()) != VK_SUCCESS) {
+    if (vkAllocateCommandBuffers(device_->get(), &alloc_info, command_buffers_.data()) != VK_SUCCESS) {
         return false;
     }
 
@@ -55,8 +54,7 @@ bool CommandPool::CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline,
         begin_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
         begin_info.pInheritanceInfo = nullptr;
 
-        if (vkBeginCommandBuffer(command_buffers_[i], &begin_info)
-                != VK_SUCCESS) {
+        if (vkBeginCommandBuffer(command_buffers_[i], &begin_info) != VK_SUCCESS) {
             return false;
         }
 
@@ -70,13 +68,13 @@ bool CommandPool::CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline,
         render_pass_info.clearValueCount = 1;
         render_pass_info.pClearValues = &clear_color;
 
-        vkCmdBeginRenderPass(command_buffers_[i], &render_pass_info,
-                VK_SUBPASS_CONTENTS_INLINE);
-        vkCmdBindPipeline(command_buffers_[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                pipeline->get());
+        vkCmdBeginRenderPass(command_buffers_[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBindPipeline(command_buffers_[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get());
         VkBuffer vertex_buffers[] = { vertex_buffer->buffer() };
         VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(command_buffers_[i], 0, 1, vertex_buffers, offsets);
+        vkCmdBindDescriptorSets(command_buffers_[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->layout(), 0, 1,
+            uniform->set(i), 0, nullptr);
         vkCmdDraw(command_buffers_[i], 6, 2, 0, 0);
         vkCmdEndRenderPass(command_buffers_[i]);
         if (vkEndCommandBuffer(command_buffers_[i]) != VK_SUCCESS) {

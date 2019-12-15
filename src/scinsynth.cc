@@ -11,6 +11,7 @@
 #include "vulkan/shader_source.h"
 #include "vulkan/swapchain.h"
 #include "vulkan/window.h"
+#include "vulkan/Uniform.hpp"
 #include "Version.h"
 #include "VGenManager.hpp"
 
@@ -125,17 +126,17 @@ int main(int argc, char* argv[]) {
             "#extension GL_ARB_separate_shader_objects : enable\n"
             "\n"
             "layout(location = 0) in vec2 inPosition;\n"
-            "layout(location = 1) in vec3 inColor;\n"
+            "// layout(location = 1) in vec3 inColor;\n"
             "\n"
-            "layout(location = 0) out vec3 fragColor;\n"
+            "// layout(location = 0) out vec3 fragColor;\n"
             "\n"
             "void main() {\n"
             "   gl_Position = vec4(inPosition, 0.0, 1.0);\n"
-            "   fragColor = inColor;\n"
+            "   // fragColor = inColor;\n"
             "}\n"
     );
-    std::unique_ptr<scin::vk::Shader> vertex_shader = shader_compiler.Compile(
-            device, &vertex_source, scin::vk::Shader::kVertex);
+    std::unique_ptr<scin::vk::Shader> vertex_shader = shader_compiler.Compile(device, &vertex_source,
+        scin::vk::Shader::kVertex);
     if (!vertex_shader) {
         return EXIT_FAILURE;
     }
@@ -144,16 +145,21 @@ int main(int argc, char* argv[]) {
             "#version 450\n"
             "#extension GL_ARB_separate_shader_objects : enable\n"
             "\n"
-            "layout(location = 0) in vec3 fragColor;\n"
+            "layout(binding = 0) uniform UBO {\n"
+            "   float time;\n"
+            "} ubo;\n"
+            "\n"
+            "// layout(location = 0) in vec3 fragColor;\n"
             "\n"
             "layout(location = 0) out vec4 outColor;\n"
             "\n"
             "void main() {\n"
-            "   outColor = vec4(fragColor, 1.0);\n"
+            "   float fragRad = 0.5 + (0.5 * sin((ubo.time / -2.0) + (length(gl_FragCoord) / 100.0)));\n"
+            "   outColor = vec4(fragRad, fragRad, fragRad, 1.0);\n"
             "}\n"
     );
-    std::unique_ptr<scin::vk::Shader> fragment_shader = shader_compiler.Compile(
-            device, &fragment_source, scin::vk::Shader::kFragment);
+    std::unique_ptr<scin::vk::Shader> fragment_shader = shader_compiler.Compile(device, &fragment_source,
+        scin::vk::Shader::kFragment);
     if (!fragment_shader) {
         spdlog::error("error in fragment shader.");
         return EXIT_FAILURE;
@@ -163,16 +169,18 @@ int main(int argc, char* argv[]) {
 
     struct Vertex {
         glm::vec2 pos;
-        glm::vec3 color;
+//        glm::vec3 color;
     };
 
     scin::vk::Pipeline pipeline(device);
     pipeline.SetVertexStride(sizeof(Vertex));
     pipeline.AddVertexAttribute(scin::vk::Pipeline::kVec2, offsetof(Vertex, pos));
-    pipeline.AddVertexAttribute(scin::vk::Pipeline::kVec3, offsetof(Vertex, color));
+//    pipeline.AddVertexAttribute(scin::vk::Pipeline::kVec3, offsetof(Vertex, color));
 
-    if (!pipeline.Create(vertex_shader.get(), fragment_shader.get(),
-            &swapchain)) {
+    scin::vk::Uniform uniform(device, sizeof(scin::vk::GlobalUniform));
+    uniform.createLayout();
+
+    if (!pipeline.Create(vertex_shader.get(), fragment_shader.get(), &swapchain, &uniform)) {
         spdlog::error("error in pipeline creation.");
         return EXIT_FAILURE;
     }
@@ -189,12 +197,12 @@ int main(int argc, char* argv[]) {
     }
 
     const std::vector<Vertex> vertices = {
-        {{ -1.0f, -1.0f }, { 1.0f, 0.0f, 0.0f }},
-        {{ 1.0f, -1.0f }, { 0.0f, 1.0f, 0.0f }},
-        {{ 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }},
-        {{ -1.0f, -1.0f }, { 1.0f, 0.0f, 0.0f }},
-        {{ 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }},
-        {{ -1.0f, 1.0f }, { 0.5f, 0.5f, 1.0f }}
+        {{ -1.0f, -1.0f }}, // { 1.0f, 0.0f, 0.0f }},
+        {{ 1.0f, -1.0f }}, // { 0.0f, 1.0f, 0.0f }},
+        {{ 1.0f, 1.0f }}, // { 0.0f, 0.0f, 1.0f }},
+        {{ -1.0f, -1.0f }}, // { 1.0f, 0.0f, 0.0f }},
+        {{ 1.0f, 1.0f }}, // { 0.0f, 0.0f, 1.0f }},
+        {{ -1.0f, 1.0f }} //,  { 0.5f, 0.5f, 1.0f }}
     };
 
     scin::vk::Buffer vertex_buffer(scin::vk::Buffer::kVertex, device);
@@ -204,11 +212,12 @@ int main(int argc, char* argv[]) {
     }
 
     vertex_buffer.MapMemory();
-    std::memcpy(vertex_buffer.mapped_address(), vertices.data(),
-        sizeof(Vertex) * vertices.size());
+    std::memcpy(vertex_buffer.mapped_address(), vertices.data(), sizeof(Vertex) * vertices.size());
     vertex_buffer.UnmapMemory();
 
-    if (!command_pool.CreateCommandBuffers(&swapchain, &pipeline, &vertex_buffer)) {
+    uniform.createBuffers(&swapchain);
+
+    if (!command_pool.CreateCommandBuffers(&swapchain, &pipeline, &vertex_buffer, &uniform)) {
         spdlog::error("error creating command buffers.");
         return EXIT_FAILURE;
     }
@@ -220,7 +229,7 @@ int main(int argc, char* argv[]) {
 
     // ========== Main loop.
     oscHandler.setQuitHandler([&window] { window.stop(); });
-    window.Run(device.get(), &swapchain, &command_pool);
+    window.Run(device.get(), &swapchain, &command_pool, &uniform);
 
     // ========== Vulkan cleanup.
     window.DestroySyncObjects(device.get());
@@ -228,6 +237,7 @@ int main(int argc, char* argv[]) {
     vertex_buffer.Destroy();
     swapchain.DestroyFramebuffers();
     pipeline.Destroy();
+    uniform.destroy();
     vertex_shader->Destroy();
     fragment_shader->Destroy();
     swapchain.Destroy();

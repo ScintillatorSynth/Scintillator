@@ -3,6 +3,7 @@
 #include "vulkan/device.h"
 #include "vulkan/shader.h"
 #include "vulkan/swapchain.h"
+#include "vulkan/Uniform.hpp"
 
 namespace scin {
 
@@ -20,8 +21,7 @@ Pipeline::~Pipeline() {
     Destroy();
 }
 
-bool Pipeline::Create(Shader* vertex_shader, Shader* fragment_shader,
-        Swapchain* swapchain) {
+bool Pipeline::Create(Shader* vertex_shader, Shader* fragment_shader, Swapchain* swapchain, Uniform* uniform) {
     if (!CreateRenderPass(swapchain)) {
         return false;
     }
@@ -163,7 +163,7 @@ bool Pipeline::Create(Shader* vertex_shader, Shader* fragment_shader,
     color_blending.blendConstants[3] = 0.0f;
 
     // Pipeline Layout
-    if (!CreatePipelineLayout()) {
+    if (!CreatePipelineLayout(uniform)) {
         return false;
     }
 
@@ -269,15 +269,19 @@ void Pipeline::DestroyRenderPass() {
     }
 }
 
-bool Pipeline::CreatePipelineLayout() {
+bool Pipeline::CreatePipelineLayout(Uniform* uniform) {
     VkPipelineLayoutCreateInfo pipeline_layout_info = {};
     pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipeline_layout_info.setLayoutCount = 0;
-    pipeline_layout_info.pSetLayouts = nullptr;
+    if (uniform) {
+        pipeline_layout_info.setLayoutCount = 1;
+        pipeline_layout_info.pSetLayouts = uniform->pLayout();
+    } else {
+        pipeline_layout_info.setLayoutCount = 0;
+        pipeline_layout_info.pSetLayouts = nullptr;
+    }
     pipeline_layout_info.pushConstantRangeCount = 0;
     pipeline_layout_info.pPushConstantRanges = nullptr;
-    return (vkCreatePipelineLayout(device_->get(), &pipeline_layout_info, nullptr,
-            &pipeline_layout_) == VK_SUCCESS);
+    return (vkCreatePipelineLayout(device_->get(), &pipeline_layout_info, nullptr, &pipeline_layout_) == VK_SUCCESS);
 }
 
 void Pipeline::DestroyPipelineLayout() {

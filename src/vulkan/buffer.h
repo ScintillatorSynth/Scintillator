@@ -13,7 +13,7 @@ class Device;
 
 class Buffer {
    public:
-    enum Kind { kVertex };
+    enum Kind { kUniform, kVertex };
     Buffer(Kind kind, std::shared_ptr<Device> device);
     ~Buffer();
 

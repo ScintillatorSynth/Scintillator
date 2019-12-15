@@ -14,6 +14,7 @@ class Buffer;
 class Device;
 class Pipeline;
 class Swapchain;
+class Uniform;
 
 class CommandPool {
   public:
@@ -23,7 +24,7 @@ class CommandPool {
     bool Create();
     void Destroy();
 
-    bool CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline, Buffer* vertex_buffer);
+    bool CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline, Buffer* vertex_buffer, Uniform* uniform);
 
     VkCommandBuffer command_buffer(size_t i) { return command_buffers_[i]; }
 

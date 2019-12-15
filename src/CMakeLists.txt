@@ -31,6 +31,8 @@ set(scintillator_synth_files
     OscHandler.hpp
     scinsynth.cc
 
+    vulkan/Uniform.cpp
+    vulkan/Uniform.hpp
     vulkan/buffer.cc
     vulkan/buffer.h
     vulkan/command_pool.cc
