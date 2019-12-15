@@ -1,7 +1,19 @@
-#### Vulkan
-find_package(Vulkan REQUIRED FATAL_ERROR)
-
+set(CMAKE_CXX_STANDARD 17)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+
+add_library(scintillator_core STATIC
+    VGen.cpp
+    VGen.hpp
+    VGenManager.cpp
+    VGenManager.hpp
+)
+
+target_link_libraries(scintillator_core
+    spdlog
+    yaml-cpp
+)
+
+find_package(Vulkan REQUIRED FATAL_ERROR)
 
 configure_file(Version.h.in "${CMAKE_CURRENT_BINARY_DIR}/Version.h")
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.h"
@@ -19,6 +31,8 @@ set(scintillator_synth_files
     OscHandler.hpp
     scinsynth.cc
 
+    vulkan/Uniform.cpp
+    vulkan/Uniform.hpp
     vulkan/buffer.cc
     vulkan/buffer.h
     vulkan/command_pool.cc
@@ -53,6 +67,7 @@ target_link_libraries(scinsynth
     glm
     glslang
     oscpack
+    scintillator_core
     shaderc
     spdlog
 )
@@ -61,3 +76,14 @@ if (SCIN_VALIDATE_VULKAN)
     target_compile_definitions(scinsynth PRIVATE SCIN_VALIDATE_VULKAN)
 endif()
 
+add_executable(run_unittests
+    VGenManager_unittests.cpp
+    VGen_unittests.cpp
+
+    run_unittests.cpp
+)
+
+target_link_libraries(run_unittests
+    gtest
+    scintillator_core
+)

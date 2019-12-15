@@ -1,11 +1,16 @@
 #include "vulkan/window.h"
 
+#include "vulkan/buffer.h"
 #include "vulkan/command_pool.h"
 #include "vulkan/device.h"
 #include "vulkan/instance.h"
 #include "vulkan/swapchain.h"
+#include "vulkan/Uniform.hpp"
+
+#include "spdlog/spdlog.h"
 
 #include <iostream>
+#include <chrono>
 #include <limits>
 
 const size_t kMaxFramesInFlight = 2;
@@ -73,16 +78,15 @@ bool Window::CreateSyncObjects(Device* device) {
     return true;
 }
 
-void Window::Run(Device* device, Swapchain* swapchain,
-        CommandPool* command_pool) {
+void Window::Run(Device* device, Swapchain* swapchain, CommandPool* command_pool, Uniform* uniform) {
     size_t current_frame = 0;
+    auto startTime = std::chrono::steady_clock::now();
 
     while (!m_stop && !glfwWindowShouldClose(window_)) {
         glfwPollEvents();
 
-        vkWaitForFences(device->get(), 1, &in_flight_fences_[current_frame],
-                VK_TRUE, std::numeric_limits<uint64_t>::max());
-        vkResetFences(device->get(), 1, &in_flight_fences_[current_frame]);
+        vkWaitForFences(device->get(), 1, &in_flight_fences_[current_frame], VK_TRUE,
+            std::numeric_limits<uint64_t>::max());
 
         uint32_t image_index;
         vkAcquireNextImageKHR(
@@ -93,17 +97,20 @@ void Window::Run(Device* device, Swapchain* swapchain,
                 VK_NULL_HANDLE,
                 &image_index);
 
-        VkSemaphore wait_semaphores[] = {
-            image_available_semaphores_[current_frame]
-        };
-        VkPipelineStageFlags wait_stages[] = {
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
-        };
-        VkCommandBuffer command_buffer = command_pool->command_buffer(
-                image_index);
-        VkSemaphore signal_semaphores[] = {
-            render_finished_semaphores_[current_frame]
-        };
+        // Update time uniform.
+        auto currentTime = std::chrono::steady_clock::now();
+        GlobalUniform gbo;
+        gbo.time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+        std::shared_ptr<Buffer> uniformBuffer = uniform->buffer(image_index);
+        uniformBuffer->MapMemory();
+        std::memcpy(uniformBuffer->mapped_address(), &gbo, sizeof(GlobalUniform));
+        uniformBuffer->UnmapMemory();
+
+        VkSemaphore wait_semaphores[] = { image_available_semaphores_[current_frame] };
+        VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        VkCommandBuffer command_buffer = command_pool->command_buffer(image_index);
+        VkSemaphore signal_semaphores[] = { render_finished_semaphores_[current_frame] };
+
         VkSubmitInfo submit_info = {};
         submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submit_info.waitSemaphoreCount = 1;
@@ -113,8 +120,10 @@ void Window::Run(Device* device, Swapchain* swapchain,
         submit_info.pCommandBuffers = &command_buffer;
         submit_info.signalSemaphoreCount = 1;
         submit_info.pSignalSemaphores = signal_semaphores;
-        if (vkQueueSubmit(device->graphics_queue(), 1, &submit_info,
-                in_flight_fences_[current_frame]) != VK_SUCCESS) {
+
+        vkResetFences(device->get(), 1, &in_flight_fences_[current_frame]);
+
+        if (vkQueueSubmit(device->graphics_queue(), 1, &submit_info, in_flight_fences_[current_frame]) != VK_SUCCESS) {
             break;
         }
 
