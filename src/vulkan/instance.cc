@@ -1,6 +1,7 @@
 #include "vulkan/instance.h"
 
-#include <iostream>
+#include "spdlog/spdlog.h"
+
 #include <cstring>
 #include <vector>
 
@@ -62,11 +63,22 @@ bool CheckValidationLayerSupport() {
 }
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
-        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-        VkDebugUtilsMessageTypeFlagsEXT messageType,
+        VkDebugUtilsMessageSeverityFlagBitsEXT severity,
+        VkDebugUtilsMessageTypeFlagsEXT type,
         const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
         void* pUserData) {
-    std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+    // The Severity bits can be combined, so we key log severity off of the most severe bit.
+    if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
+        spdlog::error("Vulkan validation error: {}", pCallbackData->pMessage);
+    } else if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
+        spdlog::warn("Vulkan validation warning: {}", pCallbackData->pMessage);
+    } else if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) {
+        // Vulkan validation info is quite extensive, so we lower the spdlog level to debug to better match the use of
+        // info/debug log levels in the rest of Scintillator.
+        spdlog::debug("Vulkan validation info: {}", pCallbackData->pMessage);
+    } else {
+        spdlog::trace("Vulkan validation verbose: {}", pCallbackData->pMessage);
+    }
     return VK_FALSE;
 }
 
@@ -76,11 +88,12 @@ bool SetupDebugMessenger(VkInstance instance,
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
     createInfo.messageSeverity =
             VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT    |
             VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
             VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
     createInfo.messageType =
-            VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT     |
+            VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT  |
             VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
     createInfo.pfnUserCallback = DebugCallback;
 
@@ -146,13 +159,13 @@ bool Instance::Create() {
 
     if (vkCreateInstance(&create_info, nullptr, &instance_)
             != VK_SUCCESS) {
-        std::cerr << "failed to create instance." << std::endl;
+        spdlog::error("Failed to create Vulkan instance.");
         return false;
     }
 
 #if defined(SCIN_VALIDATE_VULKAN)
     if (!SetupDebugMessenger(instance_, &debug_messenger_)) {
-        std::cerr << "failed to create debug messenger" << std::endl;
+        spdlog::error("Failed to create Vulkan Validation debug messenger.");
         return false;
     }
 #endif
