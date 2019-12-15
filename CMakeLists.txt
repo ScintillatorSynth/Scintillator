@@ -11,6 +11,8 @@ cmake_minimum_required(VERSION 3.5)
 option(SCIN_VALIDATE_VULKAN
     "Use LunarG Vulkan Validation Layers to check Vulkan calls" ON)
 
+# If this is a git checkout we can extract the git hash and branch. This code copied verbatim or close to it from the
+# SuperCollider CMake files.
 if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
     execute_process(
         COMMAND git rev-parse --abbrev-ref HEAD
@@ -32,6 +34,14 @@ endif()
 
 message(STATUS "Scintillator Version: ${PROJECT_VERSION}")
 message(STATUS "Building from ${GIT_BRANCH}, commit hash ${GIT_COMMIT_HASH}")
+
+# Add code coverage build configuration.
+set(CMAKE_CXX_FLAGS_COVERAGE
+    "${CMAKE_CXX_FLAGS_DEBUG} -fprofile-arcs --coverage"
+    CACHE STRING "C++ coverage compile flags" FORCE)
+set(CMAKE_C_FLAGS_COVERAGE
+    "${CMAKE_C_FLAGS_DEBUG} -fprofile-arcs --coverage"
+    CACHE STRING "C coverage comiple flags" FORCE)
 
 add_subdirectory(third_party)
 add_subdirectory(src)
