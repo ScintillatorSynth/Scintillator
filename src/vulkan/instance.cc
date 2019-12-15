@@ -2,19 +2,18 @@
 
 #include "spdlog/spdlog.h"
 
+#include "Version.h"
+
 #include <cstring>
 #include <vector>
 
 #if defined(SCIN_VALIDATE_VULKAN)
 namespace {
 
-VkResult CreateDebugUtilsMessengerEXT(
-    VkInstance instance,
-    const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
-    const VkAllocationCallbacks* pAllocator,
-    VkDebugUtilsMessengerEXT* pDebugMessenger) {
-    auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
-            instance, "vkCreateDebugUtilsMessengerEXT");
+VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+    const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
+    auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance,
+        "vkCreateDebugUtilsMessengerEXT"));
     if (func != nullptr) {
             return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
     } else {
@@ -22,12 +21,10 @@ VkResult CreateDebugUtilsMessengerEXT(
     }
 }
 
-void DestroyDebugUtilsMessengerEXT(
-    VkInstance instance,
-    VkDebugUtilsMessengerEXT debugMessenger,
+void DestroyDebugUtilsMessengerEXT(VkInstance instance,VkDebugUtilsMessengerEXT debugMessenger,
     const VkAllocationCallbacks* pAllocator) {
-    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
-            instance, "vkDestroyDebugUtilsMessengerEXT");
+    auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance,
+        "vkDestroyDebugUtilsMessengerEXT"));
     if (func != nullptr) {
             func(instance, debugMessenger, pAllocator);
     }
@@ -62,11 +59,8 @@ bool CheckValidationLayerSupport() {
         return true;
 }
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
-        VkDebugUtilsMessageSeverityFlagBitsEXT severity,
-        VkDebugUtilsMessageTypeFlagsEXT type,
-        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-        void* pUserData) {
+static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT severity,
+    VkDebugUtilsMessageTypeFlagsEXT type, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
     // The Severity bits can be combined, so we key log severity off of the most severe bit.
     if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
         spdlog::error("Vulkan validation error: {}", pCallbackData->pMessage);
@@ -127,9 +121,9 @@ bool Instance::Create() {
     VkApplicationInfo app_info = {};
     app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     app_info.pApplicationName = "scinsynth";
-    app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+    app_info.applicationVersion = VK_MAKE_VERSION(kScinVersionMajor, kScinVersionMinor, kScinVersionPatch);
     app_info.pEngineName = "Scintillator";
-    app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+    app_info.engineVersion = VK_MAKE_VERSION(kScinVersionMajor, kScinVersionMinor, kScinVersionPatch);
     app_info.apiVersion = VK_API_VERSION_1_0;
 
     VkInstanceCreateInfo create_info = {};
@@ -140,21 +134,18 @@ bool Instance::Create() {
     const char** glfw_extensions;
     glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
 
-    std::vector<const char*> extensions(glfw_extensions,
-            glfw_extensions + glfw_extension_count);
+    std::vector<const char*> extensions(glfw_extensions, glfw_extensions + glfw_extension_count);
 
 #if defined(SCIN_VALIDATE_VULKAN)
     extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
-    create_info.enabledLayerCount = static_cast<uint32_t>(
-            validation_layers.size());
+    create_info.enabledLayerCount = static_cast<uint32_t>(validation_layers.size());
     create_info.ppEnabledLayerNames = validation_layers.data();
 #else
     create_info.enabledLayerCount = 0;
 #endif
 
-    create_info.enabledExtensionCount = static_cast<uint32_t>(
-            extensions.size());
+    create_info.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
     create_info.ppEnabledExtensionNames = extensions.data();
 
     if (vkCreateInstance(&create_info, nullptr, &instance_)
