@@ -1,11 +1,13 @@
 language: cpp
 
 dist: trusty
-os:
-    - linux
+os: linux
 
 addons:
     apt:
+        update: true
+        sources:
+            - deadsnakes
         packages: &common_packages
             - build-essential
             - cmake
@@ -13,9 +15,9 @@ addons:
             - libxinerama-dev
             - libxcursor-dev
             - libxi-dev
+            - python3-distutils
 
 before_install:
-    - sudo apt-get update -qq
 
 before_script:
     - mkdir build && cd build
