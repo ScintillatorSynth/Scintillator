@@ -1,13 +1,11 @@
 language: cpp
 
-dist: trusty
+dist: xenial
 os: linux
 
 addons:
     apt:
         update: true
-        sources:
-            - deadsnakes
         packages: &common_packages
             - build-essential
             - cmake
