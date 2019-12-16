@@ -9,8 +9,6 @@ addons:
         packages: &common_packages
             - build-essential
             - cmake
-            - gperf
-            - python3-distutils
 
 before_install:
     - sudo apt-get update -qq
