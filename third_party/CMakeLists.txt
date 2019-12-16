@@ -1,5 +1,5 @@
 if(SCIN_USE_SWIFTSHADER)
-    include_directories(swiftshader/include/vulkan)
+    include_directories(swiftshader/include)
     add_subdirectory(swiftshader)
 endif()
 
