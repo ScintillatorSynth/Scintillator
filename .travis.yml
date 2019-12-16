@@ -2,6 +2,7 @@ language: cpp
 
 dist: bionic
 os: linux
+compiler: clang
 
 addons:
     apt:
@@ -19,7 +20,7 @@ before_install:
 
 before_script:
     - mkdir build && cd build
-    - cmake -DCMAKE_BUILD_TYPE=Coverage -DPYTHON_EXECUTABLE=`which python3` ..
+    - cmake -DCMAKE_BUILD_TYPE=Coverage -DSCIN_USE_SWIFTSHADER=ON -DPYTHON_EXECUTABLE=`which python3` ..
 
 script:
     - make

@@ -1,3 +1,7 @@
+if(SCIN_USE_SWIFTSHADER)
+    add_subdirectory(swiftshader)
+endif()
+
 #### gflags
 set(GFLAGS_BUILD_STATIC_LIBS ON CACHE BOOL "build gflags as a static library")
 set(GFLAGS_BUILD_gflags_LIB ON CACHE BOOL "build multithreaded gflags library")
@@ -41,8 +45,10 @@ add_subdirectory(effcee)
 add_subdirectory(SPIRV-Headers)
 
 #### SPIRV-Tools (required by shaderc)
+if(NOT SCIN_USE_SWIFTSHADER)
 set(SPIRV_SKIP_TESTS ON CACHE BOOL "skip testing in SPIRV-Tools")
 add_subdirectory(SPIRV-Tools)
+endif()
 
 #### glslang (required by shaderc)
 add_subdirectory(glslang)

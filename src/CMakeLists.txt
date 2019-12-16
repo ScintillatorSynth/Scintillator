@@ -13,8 +13,6 @@ target_link_libraries(scintillator_core
     yaml-cpp
 )
 
-find_package(Vulkan REQUIRED FATAL_ERROR)
-
 configure_file(Version.h.in "${CMAKE_CURRENT_BINARY_DIR}/Version.h")
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.h"
     COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/OscCommand.h" "${CMAKE_CURRENT_SOURCE_DIR}/OscCommand.h.in"
@@ -59,7 +57,6 @@ set(scintillator_synth_files
 add_executable(scinsynth ${scintillator_synth_files})
 
 target_link_libraries(scinsynth
-    "${Vulkan_LIBRARY}"
     SPIRV-Tools
     VulkanMemoryAllocator
     gflags
@@ -72,7 +69,18 @@ target_link_libraries(scinsynth
     spdlog
 )
 
-if (SCIN_VALIDATE_VULKAN)
+if(SCIN_USE_SWIFTSHADER)
+    target_link_libraries(scinsynth
+        SwiftShader
+        vk_swiftshader
+    )
+else()
+    find_package(Vulkan REQUIRED FATAL_ERROR)
+    target_link_libraries(scinsynth "${Vulkan_LIBRARY}")
+endif()
+
+
+if(SCIN_VALIDATE_VULKAN)
     target_compile_definitions(scinsynth PRIVATE SCIN_VALIDATE_VULKAN)
 endif()
 
