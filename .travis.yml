@@ -1,18 +1,24 @@
 language: cpp
 
-sudo: required
 dist: trusty
 os:
     - linux
 
+addons:
+    apt:
+        packages: &common_packages
+            - build-essential
+            - cmake
+            - gperf
+            - python3-distutils
+
 before_install:
-    - sudo apt-get update
-    - sudo apt-get install --yes build-essential cmake libvulkan-dev libxinerama-dev libxcursor-dev libvulkan-dev vulkan-validationlayers libxi-dev libxrandr-dev libgl-dev gperf python3-distutils
+    - sudo apt-get update -qq
 
 before_script:
     - mkdir build && cd build
     - cmake -DCMAKE_BUILD_TYPE=Coverage ..
 
 script:
-    - make
+    - make run_unittests
 

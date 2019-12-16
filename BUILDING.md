@@ -1,7 +1,7 @@
 Putting some basic notes about building stuff here, will organize into a more
 formal guide later.
 
-sudo apt-get install libvulkan-dev libxinerama-dev libxcursor-dev libvulkan-dev vulkan-validationlayers libxi-dev      \
+sudo apt-get install libxinerama-dev libxcursor-dev libvulkan-dev vulkan-validationlayers libxi-dev      \
     libxrandr-dev libgl-dev gperf python3-distutils
 
 ## Python 3
