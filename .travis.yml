@@ -9,6 +9,10 @@ addons:
         packages: &common_packages
             - build-essential
             - cmake
+            - libxrandr-dev
+            - libxinerama-dev
+            - libxcursor-dev
+            - libxi-dev
 
 before_install:
     - sudo apt-get update -qq
