@@ -19,8 +19,8 @@ before_install:
 
 before_script:
     - mkdir build && cd build
-    - cmake -DCMAKE_BUILD_TYPE=Coverage ..
+    - cmake -DCMAKE_BUILD_TYPE=Coverage -DPYTHON_EXECUTABLE=`which python3` ..
 
 script:
-    - make run_unittests
+    - make
 
