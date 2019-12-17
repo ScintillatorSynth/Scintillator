@@ -1,6 +1,7 @@
 cmake_policy(SET CMP0048 NEW)
 cmake_minimum_required(VERSION 3.9)
 
+## this is way too proscriptive. LLVM compile seems to be required only for swiftshader and coverage builds.
 if(NOT DEFINED LLVM_CONFIG)
     find_program(LLVM_CONFIG llvm-config)
 endif()
@@ -23,7 +24,7 @@ set(CMAKE_C_COMPILER "${LLVM_BIN_PATH}/clang" CACHE FILEPATH "clang" FORCE)
 set(CMAKE_C_COMPILER_AR "${LLVM_BIN_PATH}/llvm-ar" CACHE FILEPATH "ar" FORCE)
 set(CMAKE_C_COMPILER_RANLIB "${LLVM_BIN_PATH}/llvm-ranlib" CACHE FILEPATH "ranlib" FORCE)
 set(CMAKE_AR "${LLVM_BIN_PATH}/llvm-ar" CACHE FILEPATH "ar" FORCE)
-set(CMAKE_LINKER "${LLVM_BIN_PATH}/lld" CACHE FILEPATH "ld" FORCE)
+set(CMAKE_LINKER "${LLVM_BIN_PATH}/lld" CACHE FILEPATH "lld" FORCE)
 set(CMAKE_NM "{$LLVM_BIN_PATH}/llvm-nm" CACHE FILEPATH "nm" FORCE)
 set(CMAKE_OBJDUMP "${LLVM_BIN_PATH}/llvm-objdump" CACHE FILEPATH "objdump" FORCE)
 set(CMAKE_RANLIB "${LLVM_BIN_PATH}/llvm-ranlib" CACHE FILEPATH "ranlib" FORCE)

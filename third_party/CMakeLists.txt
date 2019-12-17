@@ -1,5 +1,8 @@
 if(SCIN_USE_SWIFTSHADER)
+    # Swiftshader can provide the Vulkan and GL headers to the other libraries.
     include_directories(swiftshader/include)
+    set(BUILD_SAMPLES OFF CACHE BOOL "don't build swiftshader samples")
+    set(BUILD_TESTS OFF CACHE BOOL "don't build swiftshader tests")
     add_subdirectory(swiftshader)
 endif()
 

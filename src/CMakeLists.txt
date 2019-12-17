@@ -1,4 +1,5 @@
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 add_library(scintillator_core STATIC
@@ -11,6 +12,7 @@ add_library(scintillator_core STATIC
 target_link_libraries(scintillator_core
     spdlog
     yaml-cpp
+    stdc++fs
 )
 
 configure_file(Version.h.in "${CMAKE_CURRENT_BINARY_DIR}/Version.h")
@@ -67,6 +69,7 @@ target_link_libraries(scinsynth
     scintillator_core
     shaderc
     spdlog
+    stdc++fs
 )
 
 if(SCIN_USE_SWIFTSHADER)

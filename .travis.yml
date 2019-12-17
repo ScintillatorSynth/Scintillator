@@ -23,5 +23,6 @@ before_script:
     - cmake -DCMAKE_BUILD_TYPE=Coverage -DSCIN_USE_SWIFTSHADER=ON -DPYTHON_EXECUTABLE=`which python3` ..
 
 script:
-    - make
+    - make run_unittests
+    - src/run_unittests
 
