@@ -6,7 +6,7 @@
 namespace fs = std::filesystem;
 #else
 #include <experimental/filesystem>
-namespace fs = std::experimental::filesystem
+namespace fs = std::experimental::filesystem;
 #endif
 
 #endif  // SRC_FILE_SYSTEM_HPP_
