@@ -55,10 +55,10 @@ message(STATUS "Building from ${GIT_BRANCH}, commit hash ${GIT_COMMIT_HASH}")
 
 # Add code coverage build configuration.
 set(CMAKE_CXX_FLAGS_COVERAGE
-    "${CMAKE_CXX_FLAGS_DEBUG} -fprofile-arcs --coverage"
+    "${CMAKE_CXX_FLAGS_DEBUG} -fprofile-instr-generate -fcoverage-mapping"
     CACHE STRING "C++ coverage compile flags" FORCE)
 set(CMAKE_C_FLAGS_COVERAGE
-    "${CMAKE_C_FLAGS_DEBUG} -fprofile-arcs --coverage"
+    "${CMAKE_C_FLAGS_DEBUG} -fprofile-instr-generate -fcoverage-mapping"
     CACHE STRING "C coverage comiple flags" FORCE)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
