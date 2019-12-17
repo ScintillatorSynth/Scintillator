@@ -10,11 +10,12 @@ addons:
         packages: &common_packages
             - build-essential
             - cmake
-            - libxrandr-dev
-            - libxinerama-dev
             - libxcursor-dev
             - libxi-dev
+            - libxinerama-dev
+            - libxrandr-dev
             - python3-distutils
+            - stdlibc++-7-dev
 
 before_install:
 
