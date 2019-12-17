@@ -15,7 +15,7 @@ addons:
             - libxinerama-dev
             - libxrandr-dev
             - python3-distutils
-            - stdlibc++-7-dev
+            - libstdc++-7-dev
 
 before_install:
 
