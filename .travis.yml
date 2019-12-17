@@ -9,13 +9,13 @@ addons:
         update: true
         packages: &common_packages
             - build-essential
+            - clang-8
             - cmake
             - libxcursor-dev
             - libxi-dev
             - libxinerama-dev
             - libxrandr-dev
             - python3-distutils
-            - libstdc++-7-dev
 
 before_install:
 
