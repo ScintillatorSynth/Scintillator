@@ -97,4 +97,5 @@ add_executable(run_unittests
 target_link_libraries(run_unittests
     gtest
     scintillator_core
+    stdc++fs
 )
