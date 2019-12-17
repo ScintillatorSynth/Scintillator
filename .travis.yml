@@ -21,8 +21,7 @@ addons:
             - python3-distutils
 
 env:
-    - CC=clang-8
-    - CXX=clang++-8
+    - CC=clang-8 CXX=clang++-8
 
 before_install:
 
