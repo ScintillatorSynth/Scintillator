@@ -11,11 +11,18 @@ addons:
             - build-essential
             - clang-8
             - cmake
+            - libc++-8-dev
+            - libc++abi-8-dev
             - libxcursor-dev
             - libxi-dev
             - libxinerama-dev
             - libxrandr-dev
+            - llvm-8-dev
             - python3-distutils
+
+env:
+    - CC=clang-8
+    - CXX=clang++-8
 
 before_install:
 

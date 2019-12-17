@@ -49,9 +49,9 @@ add_subdirectory(effcee)
 add_subdirectory(SPIRV-Headers)
 
 #### SPIRV-Tools (required by shaderc)
-if(NOT SCIN_USE_SWIFTSHADER)
-set(SPIRV_SKIP_TESTS ON CACHE BOOL "skip testing in SPIRV-Tools")
-add_subdirectory(SPIRV-Tools)
+if(NOT SCIN_USE_SWIFTSHADER) # swiftshader includes its own version of SPRIV-Tools
+    set(SPIRV_SKIP_TESTS ON CACHE BOOL "skip testing in SPIRV-Tools")
+    add_subdirectory(SPIRV-Tools)
 endif()
 
 #### glslang (required by shaderc)
