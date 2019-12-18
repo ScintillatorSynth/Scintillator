@@ -32,8 +32,6 @@ set(scintillator_synth_files
     OscHandler.hpp
     scinsynth.cpp
 
-    vulkan/Uniform.cpp
-    vulkan/Uniform.hpp
     vulkan/Buffer.cpp
     vulkan/Buffer.hpp
     vulkan/CommandPool.cpp
@@ -44,7 +42,6 @@ set(scintillator_synth_files
     vulkan/Instance.hpp
     vulkan/Pipeline.cpp
     vulkan/Pipeline.hpp
-    vulkan/Vulkan.hpp
     vulkan/Shader.cpp
     vulkan/Shader.hpp
     vulkan/ShaderCompiler.cpp
@@ -53,6 +50,9 @@ set(scintillator_synth_files
     vulkan/ShaderSource.hpp
     vulkan/Swapchain.cpp
     vulkan/Swapchain.hpp
+    vulkan/Uniform.cpp
+    vulkan/Uniform.hpp
+    vulkan/Vulkan.hpp
     vulkan/Window.cpp
     vulkan/Window.hpp
 )
@@ -121,7 +121,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
     add_custom_command(OUTPUT scinsynth_coverage.json
         DEPENDS scinsynth_coverage.profdata
         COMMAND ${LLVM_COV} export ./run_unittests -instr-profile=scinsynth_coverage.profdata -summary-only > scinsynth_coverage_raw.json
-        COMMAND ${PYTHON_EXECUTABLE} ../../tools/filter_coverage_report.py scinsynth_coverage_raw.json "${CMAKE_CURRENT_SOURCE_DIR}" ${GIT_COMMIT_HASH} scinsynth_coverage.json
+        COMMAND ${PYTHON_EXECUTABLE} ../../tools/filter-coverage-report.py scinsynth_coverage_raw.json "${CMAKE_CURRENT_SOURCE_DIR}" ${GIT_COMMIT_HASH} scinsynth_coverage.json
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMENT "summarizing coverage data."
         VERBATIM

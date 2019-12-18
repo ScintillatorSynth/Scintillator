@@ -10,6 +10,7 @@ addons:
         packages: &common_packages
             - build-essential
             - clang-8
+            - clang-format-8
             - cmake
             - libc++-8-dev
             - libc++abi-8-dev

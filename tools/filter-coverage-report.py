@@ -6,7 +6,7 @@ import sys
 
 def main(argv):
     if len(argv) != 4:
-        print('filter_coverage_report.py <inputfile> <Scintillator src/ dir> <commithash> <outputfile>')
+        print('filter-coverage-report.py <inputfile> <Scintillator src/ dir> <commithash> <outputfile>')
         sys.exit(2)
     total_lines = 0
     total_covered = 0
@@ -29,7 +29,7 @@ def main(argv):
         for filename in files:
             base, ext = os.path.splitext(filename)
             # skip files that aren't source files
-            if ext not in ['.cc', '.cpp', '.h', '.hpp']:
+            if ext not in ['.cpp', '.hpp']:
                 continue
             filename = os.path.join(root, filename)
             if filename not in file_counts:
