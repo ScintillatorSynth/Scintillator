@@ -1,7 +1,7 @@
 #include "LogLevels.hpp"
 #include "OscHandler.hpp"
 #include "FileSystem.hpp"
-#include "vulkan/buffer.h"
+#include "vulkan/Buffer.hpp"
 #include "vulkan/command_pool.h"
 #include "vulkan/device.h"
 #include "vulkan/instance.h"

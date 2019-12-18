@@ -1,6 +1,6 @@
 #include "vulkan/command_pool.h"
 
-#include "vulkan/buffer.h"
+#include "vulkan/Buffer.hpp"
 #include "vulkan/device.h"
 #include "vulkan/pipeline.h"
 #include "vulkan/swapchain.h"

@@ -1,6 +1,6 @@
 #include "Uniform.hpp"
 
-#include "vulkan/buffer.h"
+#include "vulkan/Buffer.hpp"
 #include "vulkan/device.h"
 #include "vulkan/swapchain.h"
 

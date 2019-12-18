@@ -34,8 +34,8 @@ set(scintillator_synth_files
 
     vulkan/Uniform.cpp
     vulkan/Uniform.hpp
-    vulkan/buffer.cc
-    vulkan/buffer.h
+    vulkan/Buffer.cpp
+    vulkan/Buffer.hpp
     vulkan/command_pool.cc
     vulkan/command_pool.h
     vulkan/device.cc

@@ -1,5 +1,5 @@
-#ifndef SRC_VULKAN_BUFFER_H_
-#define SRC_VULKAN_BUFFER_H_
+#ifndef SRC_VULKAN_BUFFER_HPP_
+#define SRC_VULKAN_BUFFER_HPP_
 
 #include "vulkan/scin_include_vulkan.h"
 
@@ -42,5 +42,5 @@ class Buffer {
 
 }    // namespace scin
 
-#endif    // SRC_VULKAN_BUFFER_H_
+#endif    // SRC_VULKAN_BUFFER_HPP_
 
