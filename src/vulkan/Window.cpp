@@ -1,10 +1,10 @@
-#include "vulkan/window.h"
+#include "vulkan/Window.hpp"
 
 #include "vulkan/Buffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Instance.hpp"
-#include "vulkan/swapchain.h"
+#include "vulkan/Swapchain.hpp"
 #include "vulkan/Uniform.hpp"
 
 #include "spdlog/spdlog.h"

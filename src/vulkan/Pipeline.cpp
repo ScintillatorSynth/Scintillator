@@ -2,7 +2,7 @@
 
 #include "vulkan/Device.hpp"
 #include "vulkan/Shader.hpp"
-#include "vulkan/swapchain.h"
+#include "vulkan/Swapchain.hpp"
 #include "vulkan/Uniform.hpp"
 
 namespace scin {

@@ -1,8 +1,8 @@
-#include "vulkan/swapchain.h"
+#include "vulkan/Swapchain.hpp"
 
 #include "vulkan/Device.hpp"
 #include "vulkan/Pipeline.hpp"
-#include "vulkan/window.h"
+#include "vulkan/Window.hpp"
 
 #include <iostream>
 #include <limits>

@@ -2,7 +2,7 @@
 
 #include "vulkan/Buffer.hpp"
 #include "vulkan/Device.hpp"
-#include "vulkan/swapchain.h"
+#include "vulkan/Swapchain.hpp"
 
 #include "spdlog/spdlog.h"
 

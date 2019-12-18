@@ -51,10 +51,10 @@ set(scintillator_synth_files
     vulkan/ShaderCompiler.hpp
     vulkan/ShaderSource.cpp
     vulkan/ShaderSource.hpp
-    vulkan/swapchain.cc
-    vulkan/swapchain.h
-    vulkan/window.cc
-    vulkan/window.h
+    vulkan/Swapchain.cpp
+    vulkan/Swapchain.hpp
+    vulkan/Window.cpp
+    vulkan/Window.hpp
 )
 
 add_executable(scinsynth ${scintillator_synth_files})

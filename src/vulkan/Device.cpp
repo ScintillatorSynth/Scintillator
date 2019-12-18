@@ -1,7 +1,7 @@
 #include "vulkan/Device.hpp"
 
 #include "vulkan/Instance.hpp"
-#include "vulkan/window.h"
+#include "vulkan/Window.hpp"
 
 #include <iostream>
 #include <set>
