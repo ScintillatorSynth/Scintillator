@@ -9,9 +9,7 @@
 
 #include <memory>
 
-namespace scin {
-
-namespace vk {
+namespace scin { namespace vk {
 
 class Instance;
 class Window;
@@ -19,7 +17,7 @@ class Window;
 // This class encapsulates both logical and physical devices, handing selection,
 // creation, and destruction.
 class Device {
-  public:
+public:
     Device(std::shared_ptr<Instance> instance);
     ~Device();
 
@@ -39,7 +37,7 @@ class Device {
     VkQueue graphics_queue() { return graphics_queue_; }
     VkQueue present_queue() { return present_queue_; }
 
-  private:
+private:
     std::shared_ptr<Instance> instance_;
     VkPhysicalDevice physical_device_;
     int graphics_family_index_;
@@ -50,9 +48,8 @@ class Device {
     VkQueue present_queue_;
 };
 
-}    // namespace vk
+} // namespace vk
 
-}    // namespace scin
+} // namespace scin
 
-#endif    // SRC_VULKAN_DEVICE_HPP_
-
+#endif // SRC_VULKAN_DEVICE_HPP_

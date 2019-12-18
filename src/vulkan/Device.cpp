@@ -8,23 +8,18 @@
 #include <vector>
 
 namespace {
-    const std::vector<const char*> device_extensions    {
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME
-    };
+const std::vector<const char*> device_extensions { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 }
 
-namespace scin {
+namespace scin { namespace vk {
 
-namespace vk {
-
-Device::Device(std::shared_ptr<Instance> instance) :
+Device::Device(std::shared_ptr<Instance> instance):
     instance_(instance),
     physical_device_(VK_NULL_HANDLE),
     allocator_(VK_NULL_HANDLE),
     graphics_family_index_(-1),
     present_family_index_(-1),
-    device_(VK_NULL_HANDLE) {
-}
+    device_(VK_NULL_HANDLE) {}
 
 Device::~Device() {
     if (device_ != VK_NULL_HANDLE) {
@@ -47,7 +42,7 @@ bool Device::FindPhysicalDevice(Window* window) {
         vkGetPhysicalDeviceProperties(device, &device_properties);
 
         // Dedicated GPUs only for now. Device enumeration later.
-        //if (device_properties.deviceType !=
+        // if (device_properties.deviceType !=
         //    VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
         //    std::cout << "skipping indiscrete GPU" << std::endl;
         //    continue;
@@ -55,20 +50,14 @@ bool Device::FindPhysicalDevice(Window* window) {
 
         // Also needs to support graphics and present queue families.
         uint32_t queue_family_count = 0;
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count,
-                nullptr);
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
         std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count,
-                queue_families.data());
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
         int family_index = 0;
         bool all_families_found = false;
         for (const auto& queue_family : queue_families) {
             VkBool32 present_support = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(
-                    device,
-                    family_index,
-                    window->get_surface(),
-                    &present_support);
+            vkGetPhysicalDeviceSurfaceSupportKHR(device, family_index, window->get_surface(), &present_support);
             if (queue_family.queueCount == 0) {
                 continue;
             }
@@ -95,21 +84,16 @@ bool Device::FindPhysicalDevice(Window* window) {
 
         // Check for supported device extensions.
         uint32_t extension_count = 0;
-        vkEnumerateDeviceExtensionProperties(device, nullptr,
-                &extension_count, nullptr);
-        std::vector<VkExtensionProperties> available_extensions(
-                extension_count);
-        vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count,
-                available_extensions.data());
-        std::set<std::string> required_extensions(device_extensions.begin(),
-                device_extensions.end());
+        vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
+        std::vector<VkExtensionProperties> available_extensions(extension_count);
+        vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, available_extensions.data());
+        std::set<std::string> required_extensions(device_extensions.begin(), device_extensions.end());
         for (const auto& extension : available_extensions) {
             required_extensions.erase(extension.extensionName);
         }
 
         if (!required_extensions.empty()) {
-            std::cout << "some required extension missing, skipping"
-                      << std::endl;
+            std::cout << "some required extension missing, skipping" << std::endl;
             for (const auto& extension : required_extensions) {
                 std::cout << extension << std::endl;
             }
@@ -119,11 +103,9 @@ bool Device::FindPhysicalDevice(Window* window) {
         // Check swap chain for suitability, it should support at least one
         // format and present mode.
         uint32_t format_count = 0;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, window->get_surface(),
-                &format_count, nullptr);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, window->get_surface(), &format_count, nullptr);
         uint32_t present_mode_count = 0;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, window->get_surface(),
-                &present_mode_count, nullptr);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, window->get_surface(), &present_mode_count, nullptr);
 
         if (format_count > 0 && present_mode_count > 0) {
             physical_device_ = device;
@@ -149,10 +131,8 @@ bool Device::Create(Window* window) {
     }
 
     std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
-    std::set<uint32_t> unique_queue_families = {
-            static_cast<uint32_t>(graphics_family_index_),
-            static_cast<uint32_t>(present_family_index_)
-    };
+    std::set<uint32_t> unique_queue_families = { static_cast<uint32_t>(graphics_family_index_),
+                                                 static_cast<uint32_t>(present_family_index_) };
 
     float queue_priority = 1.0;
     for (uint32_t queue_family : unique_queue_families) {
@@ -168,15 +148,12 @@ bool Device::Create(Window* window) {
     VkDeviceCreateInfo device_create_info = {};
     device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     device_create_info.pQueueCreateInfos = queue_create_infos.data();
-    device_create_info.queueCreateInfoCount = static_cast<uint32_t>(
-            queue_create_infos.size());
+    device_create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size());
     device_create_info.pEnabledFeatures = &device_features;
-    device_create_info.enabledExtensionCount = static_cast<uint32_t>(
-            device_extensions.size());
+    device_create_info.enabledExtensionCount = static_cast<uint32_t>(device_extensions.size());
     device_create_info.ppEnabledExtensionNames = device_extensions.data();
 
-    if (vkCreateDevice(physical_device_, &device_create_info, nullptr,
-            &device_) != VK_SUCCESS) {
+    if (vkCreateDevice(physical_device_, &device_create_info, nullptr, &device_) != VK_SUCCESS) {
         std::cerr << "failed to create logical device." << std::endl;
         return false;
     }
@@ -200,7 +177,6 @@ void Device::Destroy() {
     device_ = VK_NULL_HANDLE;
 }
 
-}    // namespace vk
+} // namespace vk
 
-}    // namespace scin
-
+} // namespace scin

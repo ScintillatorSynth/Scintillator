@@ -8,10 +8,8 @@
 
 namespace scin {
 
-VGenManager::VGenManager() {
-}
-VGenManager::~VGenManager() {
-}
+VGenManager::VGenManager() {}
+VGenManager::~VGenManager() {}
 
 int VGenManager::loadFromFile(const std::string& fileName) {
     std::vector<YAML::Node> nodes;
@@ -43,7 +41,8 @@ int VGenManager::parseFromString(const std::string& yaml) {
 int VGenManager::extractFromNodes(const std::vector<YAML::Node>& nodes) {
     int numberOfValidElements = 0;
     for (auto node : nodes) {
-        if (extractFromNode(node)) ++numberOfValidElements;
+        if (extractFromNode(node))
+            ++numberOfValidElements;
     }
 
     return numberOfValidElements;
@@ -108,5 +107,4 @@ bool VGenManager::extractFromNode(YAML::Node& node) {
     return true;
 }
 
-}  // namespace scin
-
+} // namespace scin

@@ -14,37 +14,34 @@ TEST(VGenManagerTest, InvalidYamlStrings) {
     EXPECT_EQ(0, manager.parseFromString("[ 1 2 3 4 ]"));
     EXPECT_EQ(0, manager.parseFromString("\""));
     // Name and fragment are currently required in all VGen specs.
-    EXPECT_EQ(0, manager.parseFromString(
-        "---\n"
-        "name: TestBadVGen\n"
-        "inputs:\n"
-        "  - a\n"
-        "  - b\n"
-    ));
-    EXPECT_EQ(0, manager.parseFromString(
-        "---\n"
-        "parameters:\n"
-        "  - time\n"
-        "fragment: \"@out = 1.0;\"\n"
-    ));
+    EXPECT_EQ(0,
+              manager.parseFromString("---\n"
+                                      "name: TestBadVGen\n"
+                                      "inputs:\n"
+                                      "  - a\n"
+                                      "  - b\n"));
+    EXPECT_EQ(0,
+              manager.parseFromString("---\n"
+                                      "parameters:\n"
+                                      "  - time\n"
+                                      "fragment: \"@out = 1.0;\"\n"));
     EXPECT_EQ(0, manager.numberOfVGens());
 }
 
 TEST(VGenManagerTest, ValidYamlStrings) {
     VGenManager manager;
-    EXPECT_EQ(3, manager.parseFromString(
-        "---\n"
-        "name: JustNameAndFragment\n"
-        "fragment: \"@out = 1.0;\"\n"
-        "---\n"
-        "name: AddInput\n"
-        "inputs:\n"
-        "  - a\n"
-        "fragment: \"@out = @a;\"\n"
-        "---\n"
-        "name: Overwrite\n"
-        "fragment: \"@out = 0.0;\"\n"
-    ));
+    EXPECT_EQ(3,
+              manager.parseFromString("---\n"
+                                      "name: JustNameAndFragment\n"
+                                      "fragment: \"@out = 1.0;\"\n"
+                                      "---\n"
+                                      "name: AddInput\n"
+                                      "inputs:\n"
+                                      "  - a\n"
+                                      "fragment: \"@out = @a;\"\n"
+                                      "---\n"
+                                      "name: Overwrite\n"
+                                      "fragment: \"@out = 0.0;\"\n"));
     EXPECT_EQ(3, manager.numberOfVGens());
     std::shared_ptr<VGen> justNameAndFragment = manager.getVGenNamed("JustNameAndFragment");
     ASSERT_TRUE(justNameAndFragment);
@@ -63,13 +60,12 @@ TEST(VGenManagerTest, ValidYamlStrings) {
 
     EXPECT_FALSE(manager.getVGenNamed("Nonexistent"));
 
-    EXPECT_EQ(1, manager.parseFromString(
-        "---\n"
-        "name: Overwrite\n"
-        "parameters:\n"
-        "  - time\n"
-        "fragment: \"@out = @time;\"\n"
-    ));
+    EXPECT_EQ(1,
+              manager.parseFromString("---\n"
+                                      "name: Overwrite\n"
+                                      "parameters:\n"
+                                      "  - time\n"
+                                      "fragment: \"@out = @time;\"\n"));
     // Should have overwritten the first Overwrite VGen.
     EXPECT_EQ(3, manager.numberOfVGens());
     overwrite = manager.getVGenNamed("Overwrite");
@@ -79,13 +75,12 @@ TEST(VGenManagerTest, ValidYamlStrings) {
     EXPECT_EQ("time", overwrite->parameters()[0]);
     EXPECT_EQ("@out = @time;", overwrite->fragment());
 
-    EXPECT_EQ(1, manager.parseFromString(
-        "---\n"
-        "name: Overwrite\n"
-        "intermediates:\n"
-        "  - fl\n"
-        "fragment: \"@fl = 2.0; @out = @fl;\"\n"
-    ));
+    EXPECT_EQ(1,
+              manager.parseFromString("---\n"
+                                      "name: Overwrite\n"
+                                      "intermediates:\n"
+                                      "  - fl\n"
+                                      "fragment: \"@fl = 2.0; @out = @fl;\"\n"));
     EXPECT_EQ(3, manager.numberOfVGens());
     overwrite = manager.getVGenNamed("Overwrite");
     ASSERT_TRUE(overwrite);
@@ -102,5 +97,4 @@ TEST(VGenManagerTest, ValidYamlStrings) {
 //  (c) add any other tests to get VGenManager test coverage up to 100%
 //  (d) Build ScinSynth parser/generator/compiler
 
-}  // namespace scin
-
+} // namespace scin

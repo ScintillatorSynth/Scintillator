@@ -6,8 +6,7 @@
 #include <memory>
 #include <vector>
 
-namespace scin {
-namespace vk {
+namespace scin { namespace vk {
 
 class Buffer;
 class Device;
@@ -41,8 +40,7 @@ private:
     std::vector<VkDescriptorSet> m_sets;
 };
 
-}  // namespace vk
-}  // namespace scin
+} // namespace vk
+} // namespace scin
 
-#endif  // SRC_VULKAN_UNIFORM_HPP_
-
+#endif // SRC_VULKAN_UNIFORM_HPP_

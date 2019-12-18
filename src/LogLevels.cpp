@@ -22,5 +22,4 @@ void setGlobalLogLevel(int level) {
 }
 
 
-}  // namespace scin
-
+} // namespace scin

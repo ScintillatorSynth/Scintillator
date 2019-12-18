@@ -11,56 +11,57 @@
 namespace {
 
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
-    const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
-    auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance,
-        "vkCreateDebugUtilsMessengerEXT"));
+                                      const VkAllocationCallbacks* pAllocator,
+                                      VkDebugUtilsMessengerEXT* pDebugMessenger) {
+    auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
+        vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
     if (func != nullptr) {
-            return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
     } else {
-            return VK_ERROR_EXTENSION_NOT_PRESENT;
+        return VK_ERROR_EXTENSION_NOT_PRESENT;
     }
 }
 
-void DestroyDebugUtilsMessengerEXT(VkInstance instance,VkDebugUtilsMessengerEXT debugMessenger,
-    const VkAllocationCallbacks* pAllocator) {
-    auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance,
-        "vkDestroyDebugUtilsMessengerEXT"));
+void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger,
+                                   const VkAllocationCallbacks* pAllocator) {
+    auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
+        vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
     if (func != nullptr) {
-            func(instance, debugMessenger, pAllocator);
+        func(instance, debugMessenger, pAllocator);
     }
 }
 
-const std::vector<const char*> validation_layers = {
-        "VK_LAYER_LUNARG_standard_validation"
-};
+const std::vector<const char*> validation_layers = { "VK_LAYER_LUNARG_standard_validation" };
 
 bool CheckValidationLayerSupport() {
-        uint32_t layerCount;
-        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+    uint32_t layerCount;
+    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
-        std::vector<VkLayerProperties> availableLayers(layerCount);
-        vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+    std::vector<VkLayerProperties> availableLayers(layerCount);
+    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-        for (const char* layerName : validation_layers) {
-                bool layerFound = false;
+    for (const char* layerName : validation_layers) {
+        bool layerFound = false;
 
-                for (const auto& layerProperties : availableLayers) {
-                        if (strcmp(layerName, layerProperties.layerName) == 0) {
-                                layerFound = true;
-                                break;
-                        }
-                }
-
-                if (!layerFound) {
-                        return false;
-                }
+        for (const auto& layerProperties : availableLayers) {
+            if (strcmp(layerName, layerProperties.layerName) == 0) {
+                layerFound = true;
+                break;
+            }
         }
 
-        return true;
+        if (!layerFound) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT severity,
-    VkDebugUtilsMessageTypeFlagsEXT type, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
+                                                    VkDebugUtilsMessageTypeFlagsEXT type,
+                                                    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                                                    void* pUserData) {
     // The Severity bits can be combined, so we key log severity off of the most severe bit.
     if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
         spdlog::error("Vulkan validation error: {}", pCallbackData->pMessage);
@@ -76,40 +77,30 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityF
     return VK_FALSE;
 }
 
-bool SetupDebugMessenger(VkInstance instance,
-        VkDebugUtilsMessengerEXT* debugMessenger) {
+bool SetupDebugMessenger(VkInstance instance, VkDebugUtilsMessengerEXT* debugMessenger) {
     VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-    createInfo.messageSeverity =
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT    |
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-    createInfo.messageType =
-            VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT     |
-            VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT  |
-            VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+    createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
+        | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
+        | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+    createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
+        | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
     createInfo.pfnUserCallback = DebugCallback;
 
-    if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr,
-            debugMessenger) != VK_SUCCESS) {
-            return false;
-        }
+    if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, debugMessenger) != VK_SUCCESS) {
+        return false;
+    }
 
     return true;
 }
 
-}    // namespace
+} // namespace
 
-#endif    // SCIN_VALIDATE_VULKAN
+#endif // SCIN_VALIDATE_VULKAN
 
-namespace scin {
+namespace scin { namespace vk {
 
-namespace vk {
-
-Instance::Instance()
-        : instance_(VK_NULL_HANDLE) {
-}
+Instance::Instance(): instance_(VK_NULL_HANDLE) {}
 
 Instance::~Instance() {
     if (instance_ != VK_NULL_HANDLE) {
@@ -148,8 +139,7 @@ bool Instance::Create() {
     create_info.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
     create_info.ppEnabledExtensionNames = extensions.data();
 
-    if (vkCreateInstance(&create_info, nullptr, &instance_)
-            != VK_SUCCESS) {
+    if (vkCreateInstance(&create_info, nullptr, &instance_) != VK_SUCCESS) {
         spdlog::error("Failed to create Vulkan instance.");
         return false;
     }
@@ -172,7 +162,6 @@ void Instance::Destroy() {
     instance_ = VK_NULL_HANDLE;
 }
 
-}    // namespace vk
+} // namespace vk
 
-}    // namespace scin
-
+} // namespace scin

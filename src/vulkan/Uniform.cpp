@@ -6,18 +6,15 @@
 
 #include "spdlog/spdlog.h"
 
-namespace scin {
-namespace vk {
+namespace scin { namespace vk {
 
-Uniform::Uniform(std::shared_ptr<Device> device, size_t size) :
+Uniform::Uniform(std::shared_ptr<Device> device, size_t size):
     m_device(device),
     m_size(size),
     m_layout(VK_NULL_HANDLE),
-    m_pool(VK_NULL_HANDLE) {
-}
+    m_pool(VK_NULL_HANDLE) {}
 
-Uniform::~Uniform() {
-}
+Uniform::~Uniform() {}
 
 bool Uniform::createLayout() {
     VkDescriptorSetLayoutBinding binding = {};
@@ -104,6 +101,5 @@ void Uniform::destroy() {
     vkDestroyDescriptorSetLayout(m_device->get(), m_layout, nullptr);
 }
 
-}  // namespace vk
-}  // namespace scin
-
+} // namespace vk
+} // namespace scin

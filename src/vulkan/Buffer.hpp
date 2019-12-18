@@ -5,14 +5,12 @@
 
 #include <memory>
 
-namespace scin {
-
-namespace vk {
+namespace scin { namespace vk {
 
 class Device;
 
 class Buffer {
-   public:
+public:
     enum Kind { kUniform, kVertex };
     Buffer(Kind kind, std::shared_ptr<Device> device);
     ~Buffer();
@@ -29,7 +27,7 @@ class Buffer {
     size_t size() const { return size_; }
     VkBuffer buffer() { return buffer_; }
 
-   private:
+private:
     Kind kind_;
     std::shared_ptr<Device> device_;
     size_t size_;
@@ -38,9 +36,8 @@ class Buffer {
     void* mapped_address_;
 };
 
-}    // namespace vk
+} // namespace vk
 
-}    // namespace scin
+} // namespace scin
 
-#endif    // SRC_VULKAN_BUFFER_HPP_
-
+#endif // SRC_VULKAN_BUFFER_HPP_

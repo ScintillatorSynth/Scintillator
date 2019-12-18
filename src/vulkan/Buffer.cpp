@@ -6,22 +6,17 @@
 
 #include <iostream>
 
-namespace scin {
+namespace scin { namespace vk {
 
-namespace vk {
-
-Buffer::Buffer(Kind kind, std::shared_ptr<Device> device) :
+Buffer::Buffer(Kind kind, std::shared_ptr<Device> device):
     kind_(kind),
     device_(device),
     size_(0),
     buffer_(VK_NULL_HANDLE),
     device_memory_(VK_NULL_HANDLE),
-    mapped_address_(nullptr) {
-}
+    mapped_address_(nullptr) {}
 
-Buffer::~Buffer() {
-    Destroy();
-}
+Buffer::~Buffer() { Destroy(); }
 
 bool Buffer::Create(size_t size) {
     VkBufferCreateInfo buffer_info = {};
@@ -30,17 +25,17 @@ bool Buffer::Create(size_t size) {
     buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
     switch (kind_) {
-        case kUniform:
-            buffer_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-            break;
+    case kUniform:
+        buffer_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+        break;
 
-        case kVertex:
-            buffer_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-            break;
+    case kVertex:
+        buffer_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        break;
 
-        default:
-            spdlog::error("unsupported buffer type.");
-            return false;
+    default:
+        spdlog::error("unsupported buffer type.");
+        return false;
     }
 
     if (vkCreateBuffer(device_->get(), &buffer_info, nullptr, &buffer_) != VK_SUCCESS) {
@@ -60,11 +55,11 @@ bool Buffer::Create(size_t size) {
 
     uint32_t type_index;
     for (type_index = 0; type_index < properties.memoryTypeCount; ++type_index) {
-        if ((requirements.memoryTypeBits & (1 << type_index)) &&
-                ((properties.memoryTypes[type_index].propertyFlags &
-                // TODO: optimum flag choice based on access patterns.
-                (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) ==
-                (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))) {
+        if ((requirements.memoryTypeBits & (1 << type_index))
+            && ((properties.memoryTypes[type_index].propertyFlags &
+                 // TODO: optimum flag choice based on access patterns.
+                 (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+                == (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))) {
             break;
         }
     }
@@ -116,7 +111,6 @@ void Buffer::UnmapMemory() {
     }
 }
 
-}    // namespace scin
+} // namespace scin
 
-}    // namespace vk
-
+} // namespace vk

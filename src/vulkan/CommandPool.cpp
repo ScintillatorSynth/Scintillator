@@ -6,18 +6,11 @@
 #include "vulkan/Swapchain.hpp"
 #include "vulkan/Uniform.hpp"
 
-namespace scin {
+namespace scin { namespace vk {
 
-namespace vk {
+CommandPool::CommandPool(std::shared_ptr<Device> device): device_(device), command_pool_(VK_NULL_HANDLE) {}
 
-CommandPool::CommandPool(std::shared_ptr<Device> device) :
-    device_(device),
-    command_pool_(VK_NULL_HANDLE) {
-}
-
-CommandPool::~CommandPool() {
-    Destroy();
-}
+CommandPool::~CommandPool() { Destroy(); }
 
 bool CommandPool::Create() {
     VkCommandPoolCreateInfo pool_info = {};
@@ -35,7 +28,7 @@ void CommandPool::Destroy() {
 }
 
 bool CommandPool::CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline, Buffer* vertex_buffer,
-    Uniform* uniform) {
+                                       Uniform* uniform) {
     command_buffers_.resize(swapchain->image_count());
 
     VkCommandBufferAllocateInfo alloc_info = {};
@@ -62,9 +55,9 @@ bool CommandPool::CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline,
         render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         render_pass_info.renderPass = pipeline->render_pass();
         render_pass_info.framebuffer = swapchain->framebuffer(i);
-        render_pass_info.renderArea.offset = {0, 0};
+        render_pass_info.renderArea.offset = { 0, 0 };
         render_pass_info.renderArea.extent = swapchain->extent();
-        VkClearValue clear_color = {0.0f, 0.0f, 0.0f, 1.0f};
+        VkClearValue clear_color = { 0.0f, 0.0f, 0.0f, 1.0f };
         render_pass_info.clearValueCount = 1;
         render_pass_info.pClearValues = &clear_color;
 
@@ -74,7 +67,7 @@ bool CommandPool::CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline,
         VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(command_buffers_[i], 0, 1, vertex_buffers, offsets);
         vkCmdBindDescriptorSets(command_buffers_[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->layout(), 0, 1,
-            uniform->set(i), 0, nullptr);
+                                uniform->set(i), 0, nullptr);
         vkCmdDraw(command_buffers_[i], 6, 2, 0, 0);
         vkCmdEndRenderPass(command_buffers_[i]);
         if (vkEndCommandBuffer(command_buffers_[i]) != VK_SUCCESS) {
@@ -85,6 +78,6 @@ bool CommandPool::CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline,
     return true;
 }
 
-}    // namespace vk
+} // namespace vk
 
-}    // namespace scin
+} // namespace scin
