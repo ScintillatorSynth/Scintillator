@@ -46,6 +46,6 @@ deploy:
       upload-dir: coverage/$TRAVIS_COMMIT
       verbose: true
       edge: true
+      skip_cleanup: true
       on:
-        tags: true
-        all_branches: true
+        branch: master
