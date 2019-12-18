@@ -2,7 +2,7 @@
 
 #include "LogLevels.hpp"
 #include "OscCommand.hpp"
-#include "Version.h"
+#include "Version.hpp"
 
 #include "ip/UdpSocket.h"
 #include "osc/OscOutboundPacketStream.h"

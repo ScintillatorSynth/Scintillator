@@ -2,7 +2,7 @@
 
 #include "spdlog/spdlog.h"
 
-#include "Version.h"
+#include "Version.hpp"
 
 #include <cstring>
 #include <vector>
