@@ -101,6 +101,22 @@ target_link_libraries(run_unittests
     stdc++fs
 )
 
+if (NOT DEFINED CLANG_FORMAT)
+    set(CLANG_FORMAT clang-format-8)
+endif()
+
+add_custom_target(lintall
+    COMMAND ${PYTHON_EXECUTABLE} ../tools/clang-format.py lint ${CLANG_FORMAT} ${CMAKE_CURRENT_SOURCE_DIR}
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    VERBATIM
+)
+
+add_custom_target(formatall
+    COMMAND ${PYTHON_EXECUTABLE} ../tools/clang-format.py format ${CLANG_FORMAT} ${CMAKE_CURRENT_SOURCE_DIR}
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    VERBATIM
+)
+
 if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
     if(NOT DEFINED LLVM_PROFDATA)
         set(LLVM_PROFDATA llvm-profdata)
