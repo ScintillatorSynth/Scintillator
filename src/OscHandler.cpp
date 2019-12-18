@@ -1,7 +1,7 @@
 #include "OscHandler.hpp"
 
 #include "LogLevels.hpp"
-#include "OscCommand.h"
+#include "OscCommand.hpp"
 #include "Version.h"
 
 #include "ip/UdpSocket.h"

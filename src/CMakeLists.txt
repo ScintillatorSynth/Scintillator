@@ -17,15 +17,15 @@ target_link_libraries(scintillator_core
 )
 
 configure_file(Version.h.in "${CMAKE_CURRENT_BINARY_DIR}/Version.h")
-add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.h"
-    COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/OscCommand.h" "${CMAKE_CURRENT_SOURCE_DIR}/OscCommand.h.in"
-    MAIN_DEPENDENCY OscCommand.h.in
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
+    COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp" "${CMAKE_CURRENT_SOURCE_DIR}/OscCommand.hpp.in"
+    MAIN_DEPENDENCY OscCommand.hpp.in
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
 set(scintillator_synth_files
     "${CMAKE_CURRENT_BINARY_DIR}/Version.h"
-    "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
     LogLevels.cpp
     LogLevels.hpp
     OscHandler.cpp
