@@ -30,7 +30,7 @@ set(scintillator_synth_files
     LogLevels.hpp
     OscHandler.cpp
     OscHandler.hpp
-    scinsynth.cc
+    scinsynth.cpp
 
     vulkan/Uniform.cpp
     vulkan/Uniform.hpp
