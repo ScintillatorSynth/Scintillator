@@ -19,6 +19,7 @@ addons:
             - libxrandr-dev
             - llvm-8-dev
             - python3-distutils
+            - zlib1g
 
 env:
     - CC=clang-8 CXX=clang++-8
