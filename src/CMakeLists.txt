@@ -100,3 +100,34 @@ target_link_libraries(run_unittests
     scintillator_core
     stdc++fs
 )
+
+if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
+    if(NOT DEFINED LLVM_PROFDATA)
+        set(LLVM_PROFDATA llvm-profdata)
+    endif()
+    if (NOT DEFINED LLVM_COV)
+        set(LLVM_COV llvm-cov)
+    endif()
+
+    add_custom_command(OUTPUT scinsynth_coverage.profdata
+        COMMAND rm -f scinsynth_coverage.profdata run_unittests.profraw
+        COMMAND ${CMAKE_COMMAND} -E env "LLVM_PROFILE_FILE=run_unittests.profraw" ./run_unittests
+        COMMAND ${LLVM_PROFDATA} merge -sparse run_unittests.profraw -o scinsynth_coverage.profdata
+        DEPENDS run_unittests
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        COMMENT "collecting test coverage data."
+        VERBATIM
+    )
+    add_custom_command(OUTPUT scinsynth_coverage.json
+        DEPENDS scinsynth_coverage.profdata
+        COMMAND ${LLVM_COV} export ./run_unittests -instr-profile=scinsynth_coverage.profdata -summary-only > scinsynth_coverage_raw.json
+        COMMAND ${PYTHON_EXECUTABLE} ../../tools/filter_coverage_report.py scinsynth_coverage_raw.json "${CMAKE_CURRENT_SOURCE_DIR}" ${GIT_COMMIT_HASH} scinsynth_coverage.json
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        COMMENT "summarizing coverage data."
+        VERBATIM
+    )
+    add_custom_target(coverage_report
+        DEPENDS scinsynth_coverage.json
+    )
+endif()
+
