@@ -1,5 +1,6 @@
 #include "LogLevels.h"
 #include "OscHandler.hpp"
+#include "FileSystem.hpp"
 #include "vulkan/buffer.h"
 #include "vulkan/command_pool.h"
 #include "vulkan/device.h"
@@ -19,7 +20,6 @@
 #include "glm/glm.hpp"
 #include "spdlog/spdlog.h"
 
-#include <filesystem>
 #include <future>
 #include <memory>
 #include <vector>
@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
         spdlog::error("scinsynth requires a UDP port number between 1024 and 65535. Specify with --udp_port_number");
         return EXIT_FAILURE;
     }
-    if (!std::filesystem::exists(FLAGS_quark_dir)) {
+    if (!fs::exists(FLAGS_quark_dir)) {
         spdlog::error("invalid or nonexistent path {} supplied for --quark_dir, terminating.", FLAGS_quark_dir);
         return EXIT_FAILURE;
     }
@@ -61,8 +61,8 @@ int main(int argc, char* argv[]) {
     // Set logging level, only after any critical user-triggered reporting or errors (--print_version, etc).
     scin::setGlobalLogLevel(FLAGS_log_level);
 
-    std::filesystem::path quarkPath = std::filesystem::canonical(FLAGS_quark_dir);
-    if (!std::filesystem::exists(quarkPath / "Scintillator.quark")) {
+    fs::path quarkPath = fs::canonical(FLAGS_quark_dir);
+    if (!fs::exists(quarkPath / "Scintillator.quark")) {
         spdlog::error("Path {} doesn't look like Scintillator Quark root directory, terminating.", quarkPath.string());
         return EXIT_FAILURE;
     }
@@ -73,11 +73,11 @@ int main(int argc, char* argv[]) {
 
     scin::VGenManager vgenManager;
     auto parseVGens = std::async(std::launch::async, [&vgenManager, &quarkPath] {
-        std::filesystem::path vgens = quarkPath / "vgens";
+        fs::path vgens = quarkPath / "vgens";
         spdlog::info("Parsing yaml files in {} for VGens.", vgens.string());
-        for (auto entry : std::filesystem::directory_iterator(vgens)) {
+        for (auto entry : fs::directory_iterator(vgens)) {
             auto p = entry.path();
-            if (std::filesystem::is_regular_file(p) && p.extension() == ".yaml") {
+            if (fs::is_regular_file(p) && p.extension() == ".yaml") {
                 spdlog::debug("Parsing VGen yaml file {}.", p.string());
                 vgenManager.loadFromFile(p.string());
             }

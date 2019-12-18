@@ -1,3 +1,11 @@
+if(SCIN_USE_SWIFTSHADER)
+    # Swiftshader can provide the Vulkan and GL headers to the other libraries.
+    include_directories(swiftshader/include)
+    set(BUILD_SAMPLES OFF CACHE BOOL "don't build swiftshader samples")
+    set(BUILD_TESTS OFF CACHE BOOL "don't build swiftshader tests")
+    add_subdirectory(swiftshader)
+endif()
+
 #### gflags
 set(GFLAGS_BUILD_STATIC_LIBS ON CACHE BOOL "build gflags as a static library")
 set(GFLAGS_BUILD_gflags_LIB ON CACHE BOOL "build multithreaded gflags library")
@@ -41,8 +49,10 @@ add_subdirectory(effcee)
 add_subdirectory(SPIRV-Headers)
 
 #### SPIRV-Tools (required by shaderc)
-set(SPIRV_SKIP_TESTS ON CACHE BOOL "skip testing in SPIRV-Tools")
-add_subdirectory(SPIRV-Tools)
+if(NOT SCIN_USE_SWIFTSHADER) # swiftshader includes its own version of SPRIV-Tools
+    set(SPIRV_SKIP_TESTS ON CACHE BOOL "skip testing in SPIRV-Tools")
+    add_subdirectory(SPIRV-Tools)
+endif()
 
 #### glslang (required by shaderc)
 add_subdirectory(glslang)

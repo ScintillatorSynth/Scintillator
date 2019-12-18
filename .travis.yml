@@ -1,0 +1,51 @@
+language: cpp
+
+dist: bionic
+os: linux
+compiler: clang
+
+addons:
+    apt:
+        update: true
+        packages: &common_packages
+            - build-essential
+            - clang-8
+            - cmake
+            - libc++-8-dev
+            - libc++abi-8-dev
+            - libxcursor-dev
+            - libxi-dev
+            - libxinerama-dev
+            - libxrandr-dev
+            - llvm-8-dev
+            - python3-distutils
+            - zlib1g
+
+env:
+    - CC=clang-8 CXX=clang++-8
+
+before_install:
+
+before_script:
+    - mkdir build && cd build
+    - cmake -DCMAKE_BUILD_TYPE=Coverage -DLLVM_COV="llvm-cov-8" -DLLVM_PROFDATA="llvm-profdata-8" -DSCIN_USE_SWIFTSHADER=ON -DPYTHON_EXECUTABLE=`which python3` ..
+
+script:
+    - make coverage_report
+
+before_deploy:
+    - mkdir -p $HOME/artifacts
+    - cp build/src/scinsynth_coverage.json $HOME/artifacts
+
+deploy:
+    - provider: s3
+      access_key_id: $AWS_KEY
+      secret_access_key: $AWS_SECRET
+      bucket: scintillator-synth-coverage
+      local-dir: $HOME/artifacts
+      upload-dir: coverage/$TRAVIS_COMMIT
+      verbose: true
+      edge: true
+      on:
+        tags: true
+        all_branches: true

@@ -1,7 +1,9 @@
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 add_library(scintillator_core STATIC
+    FileSystem.hpp
     VGen.cpp
     VGen.hpp
     VGenManager.cpp
@@ -11,9 +13,8 @@ add_library(scintillator_core STATIC
 target_link_libraries(scintillator_core
     spdlog
     yaml-cpp
+    stdc++fs
 )
-
-find_package(Vulkan REQUIRED FATAL_ERROR)
 
 configure_file(Version.h.in "${CMAKE_CURRENT_BINARY_DIR}/Version.h")
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.h"
@@ -59,7 +60,6 @@ set(scintillator_synth_files
 add_executable(scinsynth ${scintillator_synth_files})
 
 target_link_libraries(scinsynth
-    "${Vulkan_LIBRARY}"
     SPIRV-Tools
     VulkanMemoryAllocator
     gflags
@@ -70,9 +70,21 @@ target_link_libraries(scinsynth
     scintillator_core
     shaderc
     spdlog
+    stdc++fs
 )
 
-if (SCIN_VALIDATE_VULKAN)
+if(SCIN_USE_SWIFTSHADER)
+    target_link_libraries(scinsynth
+        SwiftShader
+        vk_swiftshader
+    )
+else()
+    find_package(Vulkan REQUIRED FATAL_ERROR)
+    target_link_libraries(scinsynth "${Vulkan_LIBRARY}")
+endif()
+
+
+if(SCIN_VALIDATE_VULKAN)
     target_compile_definitions(scinsynth PRIVATE SCIN_VALIDATE_VULKAN)
 endif()
 
@@ -86,4 +98,36 @@ add_executable(run_unittests
 target_link_libraries(run_unittests
     gtest
     scintillator_core
+    stdc++fs
 )
+
+if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
+    if(NOT DEFINED LLVM_PROFDATA)
+        set(LLVM_PROFDATA llvm-profdata)
+    endif()
+    if (NOT DEFINED LLVM_COV)
+        set(LLVM_COV llvm-cov)
+    endif()
+
+    add_custom_command(OUTPUT scinsynth_coverage.profdata
+        COMMAND rm -f scinsynth_coverage.profdata run_unittests.profraw
+        COMMAND ${CMAKE_COMMAND} -E env "LLVM_PROFILE_FILE=run_unittests.profraw" ./run_unittests
+        COMMAND ${LLVM_PROFDATA} merge -sparse run_unittests.profraw -o scinsynth_coverage.profdata
+        DEPENDS run_unittests
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        COMMENT "collecting test coverage data."
+        VERBATIM
+    )
+    add_custom_command(OUTPUT scinsynth_coverage.json
+        DEPENDS scinsynth_coverage.profdata
+        COMMAND ${LLVM_COV} export ./run_unittests -instr-profile=scinsynth_coverage.profdata -summary-only > scinsynth_coverage_raw.json
+        COMMAND ${PYTHON_EXECUTABLE} ../../tools/filter_coverage_report.py scinsynth_coverage_raw.json "${CMAKE_CURRENT_SOURCE_DIR}" ${GIT_COMMIT_HASH} scinsynth_coverage.json
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        COMMENT "summarizing coverage data."
+        VERBATIM
+    )
+    add_custom_target(coverage_report
+        DEPENDS scinsynth_coverage.json
+    )
+endif()
+

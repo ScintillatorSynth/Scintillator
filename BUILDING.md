@@ -1,7 +1,7 @@
 Putting some basic notes about building stuff here, will organize into a more
 formal guide later.
 
-sudo apt-get install libvulkan-dev libxinerama-dev libxcursor-dev libvulkan-dev vulkan-validationlayers libxi-dev      \
+sudo apt-get install libxinerama-dev libxcursor-dev libvulkan-dev vulkan-validationlayers libxi-dev      \
     libxrandr-dev libgl-dev gperf python3-distutils
 
 ## Python 3
@@ -13,4 +13,6 @@ updated version of Python 3. There is an updated cmake command to find Python 3 
 convention, but requirres a newer version of CMake than the dependences are ready to require. So the cmake configuration
 step for Scintillator will fail unless Python 3 is in-path as ```python```. There are a few different ways to do this,
 in varying levels of invasiveness, suggested on StackOverflow as well as elsewhere.
+
+The way we do it on travis-ci right now is to supply -DPYTHON_EXECUTABLE=`which python3` to cmake as an argument.
 

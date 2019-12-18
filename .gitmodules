@@ -38,3 +38,6 @@
 [submodule "third_party/yaml-cpp"]
 	path = third_party/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp
+[submodule "third_party/swiftshader"]
+	path = third_party/swiftshader
+	url = https://github.com/google/swiftshader
