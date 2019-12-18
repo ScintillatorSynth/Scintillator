@@ -3,7 +3,7 @@
 
 #include "shaderc/shaderc.h"
 
-#include "vulkan/shader.h"
+#include "vulkan/Shader.hpp"
 
 #include <memory>
 

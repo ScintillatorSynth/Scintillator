@@ -1,4 +1,4 @@
-#include "vulkan/shader.h"
+#include "vulkan/Shader.hpp"
 
 #include "vulkan/Device.hpp"
 

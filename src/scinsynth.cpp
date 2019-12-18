@@ -7,7 +7,7 @@
 #include "vulkan/Instance.hpp"
 #include "vulkan/Pipeline.hpp"
 #include "vulkan/Vulkan.hpp"
-#include "vulkan/shader.h"
+#include "vulkan/Shader.hpp"
 #include "vulkan/shader_compiler.h"
 #include "vulkan/shader_source.h"
 #include "vulkan/swapchain.h"

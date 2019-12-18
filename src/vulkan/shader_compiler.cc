@@ -1,7 +1,7 @@
 #include "vulkan/shader_compiler.h"
 
 #include "vulkan/Device.hpp"
-#include "vulkan/shader.h"
+#include "vulkan/Shader.hpp"
 #include "vulkan/shader_source.h"
 
 #include <iostream>

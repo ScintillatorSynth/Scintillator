@@ -45,8 +45,8 @@ set(scintillator_synth_files
     vulkan/Pipeline.cpp
     vulkan/Pipeline.hpp
     vulkan/Vulkan.hpp
-    vulkan/shader.cc
-    vulkan/shader.h
+    vulkan/Shader.cpp
+    vulkan/Shader.hpp
     vulkan/shader_compiler.cc
     vulkan/shader_compiler.h
     vulkan/shader_source.cc
