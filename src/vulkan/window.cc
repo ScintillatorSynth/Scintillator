@@ -1,7 +1,7 @@
 #include "vulkan/window.h"
 
 #include "vulkan/Buffer.hpp"
-#include "vulkan/command_pool.h"
+#include "vulkan/CommandPool.hpp"
 #include "vulkan/device.h"
 #include "vulkan/instance.h"
 #include "vulkan/swapchain.h"

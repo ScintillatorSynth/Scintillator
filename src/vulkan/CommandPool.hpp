@@ -1,5 +1,5 @@
-#ifndef SRC_VULKAN_COMMAND_POOL_H_
-#define SRC_VULKAN_COMMAND_POOL_H_
+#ifndef SRC_VULKAN_COMMAND_POOL_HPP_
+#define SRC_VULKAN_COMMAND_POOL_HPP_
 
 #include "vulkan/scin_include_vulkan.h"
 
@@ -38,5 +38,5 @@ class CommandPool {
 
 }    // namespace scin
 
-#endif    // SRC_VULKAN_COMMAND_POOL_H_
+#endif    // SRC_VULKAN_COMMAND_POOL_HPP_
 
