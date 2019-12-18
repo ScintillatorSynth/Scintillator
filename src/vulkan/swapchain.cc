@@ -1,6 +1,6 @@
 #include "vulkan/swapchain.h"
 
-#include "vulkan/device.h"
+#include "vulkan/Device.hpp"
 #include "vulkan/pipeline.h"
 #include "vulkan/window.h"
 

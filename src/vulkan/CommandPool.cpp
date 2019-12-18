@@ -1,7 +1,7 @@
 #include "vulkan/CommandPool.hpp"
 
 #include "vulkan/Buffer.hpp"
-#include "vulkan/device.h"
+#include "vulkan/Device.hpp"
 #include "vulkan/pipeline.h"
 #include "vulkan/swapchain.h"
 #include "vulkan/Uniform.hpp"

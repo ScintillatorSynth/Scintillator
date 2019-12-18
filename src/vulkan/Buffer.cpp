@@ -1,6 +1,6 @@
 #include "vulkan/Buffer.hpp"
 
-#include "vulkan/device.h"
+#include "vulkan/Device.hpp"
 
 #include "spdlog/spdlog.h"
 

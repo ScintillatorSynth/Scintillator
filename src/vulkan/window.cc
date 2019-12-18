@@ -2,8 +2,8 @@
 
 #include "vulkan/Buffer.hpp"
 #include "vulkan/CommandPool.hpp"
-#include "vulkan/device.h"
-#include "vulkan/instance.h"
+#include "vulkan/Device.hpp"
+#include "vulkan/Instance.hpp"
 #include "vulkan/swapchain.h"
 #include "vulkan/Uniform.hpp"
 

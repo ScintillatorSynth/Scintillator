@@ -1,6 +1,6 @@
 #include "vulkan/pipeline.h"
 
-#include "vulkan/device.h"
+#include "vulkan/Device.hpp"
 #include "vulkan/shader.h"
 #include "vulkan/swapchain.h"
 #include "vulkan/Uniform.hpp"

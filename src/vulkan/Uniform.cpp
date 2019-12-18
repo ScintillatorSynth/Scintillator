@@ -1,7 +1,7 @@
 #include "Uniform.hpp"
 
 #include "vulkan/Buffer.hpp"
-#include "vulkan/device.h"
+#include "vulkan/Device.hpp"
 #include "vulkan/swapchain.h"
 
 #include "spdlog/spdlog.h"

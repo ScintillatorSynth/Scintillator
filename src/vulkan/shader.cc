@@ -1,6 +1,6 @@
 #include "vulkan/shader.h"
 
-#include "vulkan/device.h"
+#include "vulkan/Device.hpp"
 
 namespace scin {
 

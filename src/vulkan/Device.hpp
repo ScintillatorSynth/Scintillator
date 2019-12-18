@@ -1,5 +1,5 @@
-#ifndef SRC_VULKAN_DEVICE_H_
-#define SRC_VULKAN_DEVICE_H_
+#ifndef SRC_VULKAN_DEVICE_HPP_
+#define SRC_VULKAN_DEVICE_HPP_
 
 #include "vulkan/scin_include_vulkan.h"
 
@@ -54,5 +54,5 @@ class Device {
 
 }    // namespace scin
 
-#endif    // SRC_VULKAN_DEVICE_H_
+#endif    // SRC_VULKAN_DEVICE_HPP_
 

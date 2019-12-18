@@ -38,10 +38,10 @@ set(scintillator_synth_files
     vulkan/Buffer.hpp
     vulkan/CommandPool.cpp
     vulkan/CommandPool.hpp
-    vulkan/device.cc
-    vulkan/device.h
-    vulkan/instance.cc
-    vulkan/instance.h
+    vulkan/Device.cpp
+    vulkan/Device.hpp
+    vulkan/Instance.cpp
+    vulkan/Instance.hpp
     vulkan/pipeline.cc
     vulkan/pipeline.h
     vulkan/scin_include_vulkan.h

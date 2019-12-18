@@ -1,6 +1,6 @@
-#include "vulkan/device.h"
+#include "vulkan/Device.hpp"
 
-#include "vulkan/instance.h"
+#include "vulkan/Instance.hpp"
 #include "vulkan/window.h"
 
 #include <iostream>
