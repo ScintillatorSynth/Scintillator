@@ -35,7 +35,7 @@ script:
 
 before_deploy:
     - mkdir -p $HOME/artifacts
-    - cp build/src/scinsynth_coverage.json $HOME/artifacts
+    - cp $TRAVIS_BUILD_DIR/build/src/scinsynth_coverage.json $HOME/artifacts
 
 deploy:
     - provider: s3
