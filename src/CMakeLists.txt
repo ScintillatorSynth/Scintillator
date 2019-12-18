@@ -27,7 +27,7 @@ set(scintillator_synth_files
     "${CMAKE_CURRENT_BINARY_DIR}/Version.h"
     "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.h"
     LogLevels.cpp
-    LogLevels.h
+    LogLevels.hpp
     OscHandler.cpp
     OscHandler.hpp
     scinsynth.cc
