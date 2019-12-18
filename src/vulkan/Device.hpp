@@ -1,7 +1,7 @@
 #ifndef SRC_VULKAN_DEVICE_HPP_
 #define SRC_VULKAN_DEVICE_HPP_
 
-#include "vulkan/scin_include_vulkan.h"
+#include "vulkan/Vulkan.hpp"
 
 // Note this header also directly includes Vulkan, so should come after the Vulkan include, to allow GLFW first
 // pass to include Vulkan and define macros as needed.

@@ -1,7 +1,7 @@
 #ifndef SRC_VULKAN_COMMAND_POOL_HPP_
 #define SRC_VULKAN_COMMAND_POOL_HPP_
 
-#include "vulkan/scin_include_vulkan.h"
+#include "vulkan/Vulkan.hpp"
 
 #include <memory>
 #include <vector>

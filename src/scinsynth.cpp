@@ -6,7 +6,7 @@
 #include "vulkan/Device.hpp"
 #include "vulkan/Instance.hpp"
 #include "vulkan/Pipeline.hpp"
-#include "vulkan/scin_include_vulkan.h"
+#include "vulkan/Vulkan.hpp"
 #include "vulkan/shader.h"
 #include "vulkan/shader_compiler.h"
 #include "vulkan/shader_source.h"

@@ -1,7 +1,7 @@
 #ifndef SRC_VULKAN_WINDOW_H_
 #define SRC_VULKAN_WINDOW_H_
 
-#include "vulkan/scin_include_vulkan.h"
+#include "vulkan/Vulkan.hpp"
 
 #include <atomic>
 #include <memory>

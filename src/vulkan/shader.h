@@ -1,7 +1,7 @@
 #ifndef SRC_VULKAN_SHADER_H_
 #define SRC_VULKAN_SHADER_H_
 
-#include "vulkan/scin_include_vulkan.h"
+#include "vulkan/Vulkan.hpp"
 
 #include <memory>
 #include <string>
