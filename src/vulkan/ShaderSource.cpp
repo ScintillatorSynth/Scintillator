@@ -1,4 +1,4 @@
-#include "vulkan/shader_source.h"
+#include "vulkan/ShaderSource.hpp"
 
 namespace scin {
 

@@ -1,5 +1,5 @@
-#ifndef SRC_VULKAN_SWAP_CHAIN_H_
-#define SRC_VULKAN_SWAP_CHAIN_H_
+#ifndef SRC_VULKAN_SWAP_CHAIN_HPP_
+#define SRC_VULKAN_SWAP_CHAIN_HPP_
 
 #include "vulkan/Vulkan.hpp"
 
@@ -47,5 +47,5 @@ class Swapchain {
 
 }    // namespace scin
 
-#endif    // SRC_VULKAN_SWAP_CHAIN_H_
+#endif    // SRC_VULKAN_SWAP_CHAIN_HPP_
 

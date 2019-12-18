@@ -1,5 +1,5 @@
-#ifndef SRC_VULKAN_SHADER_SOURCE_H_
-#define SRC_VULKAN_SHADER_SOURCE_H_
+#ifndef SRC_VULKAN_SHADER_SOURCE_HPP_
+#define SRC_VULKAN_SHADER_SOURCE_HPP_
 
 #include <string>
 
@@ -29,5 +29,5 @@ class ShaderSource {
 
 }    // namespace scin
 
-#endif    // SRC_VULKAN_SHADER_SOURCE_H_
+#endif    // SRC_VULKAN_SHADER_SOURCE_HPP_
 

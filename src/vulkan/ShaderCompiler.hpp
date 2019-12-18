@@ -1,5 +1,5 @@
-#ifndef SRC_VULKAN_SHADER_COMPILER_H_
-#define SRC_VULKAN_SHADER_COMIPLER_H_
+#ifndef SRC_VULKAN_SHADER_COMPILER_HPP_
+#define SRC_VULKAN_SHADER_COMPILER_HPP_
 
 #include "shaderc/shaderc.h"
 
@@ -38,5 +38,5 @@ class ShaderCompiler {
 
 }    // namespace scin
 
-#endif    // SRC_VULKAN_SHADER_COMPILER_H_
+#endif    // SRC_VULKAN_SHADER_COMPILER_HPP_
 

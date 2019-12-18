@@ -1,5 +1,5 @@
-#ifndef SRC_VULKAN_INSTANCE_H_
-#define SRC_VULKAN_INSTANCE_H_
+#ifndef SRC_VULKAN_INSTANCE_HPP_
+#define SRC_VULKAN_INSTANCE_HPP_
 
 #include "vulkan/Vulkan.hpp"
 
@@ -33,4 +33,4 @@ class Instance {
 
 }    // namespace scin
 
-#endif    // SRC_VULKAN_INSTANCE_H_
+#endif    // SRC_VULKAN_INSTANCE_HPP_

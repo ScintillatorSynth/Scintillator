@@ -1,5 +1,5 @@
-#ifndef SRC_VULKAN_WINDOW_H_
-#define SRC_VULKAN_WINDOW_H_
+#ifndef SRC_VULKAN_WINDOW_HPP_
+#define SRC_VULKAN_WINDOW_HPP_
 
 #include "vulkan/Vulkan.hpp"
 
@@ -54,5 +54,5 @@ class Window {
 
 }    // namespace scin
 
-#endif    // SRC_VULKAN_WINDOW_H_
+#endif    // SRC_VULKAN_WINDOW_HPP_
 

@@ -1,5 +1,5 @@
-#ifndef SRC_VULKAN_PIPELINE_H_
-#define SRC_VULKAN_PIPELINE_H_
+#ifndef SRC_VULKAN_PIPELINE_HPP_
+#define SRC_VULKAN_PIPELINE_HPP_
 
 #include "vulkan/Vulkan.hpp"
 
@@ -64,5 +64,5 @@ class Pipeline {
 
 }    // namespace scin
 
-#endif    // SRC_VULKAN_PIPELINE_H_
+#endif    // SRC_VULKAN_PIPELINE_HPP_
 
