@@ -1,14 +1,12 @@
-#ifndef SRC_VULKAN_PIPELINE_H_
-#define SRC_VULKAN_PIPELINE_H_
+#ifndef SRC_VULKAN_PIPELINE_HPP_
+#define SRC_VULKAN_PIPELINE_HPP_
 
-#include "vulkan/scin_include_vulkan.h"
+#include "vulkan/Vulkan.hpp"
 
 #include <memory>
 #include <vector>
 
-namespace scin {
-
-namespace vk {
+namespace scin { namespace vk {
 
 class Device;
 class Shader;
@@ -16,19 +14,11 @@ class Swapchain;
 class Uniform;
 
 class Pipeline {
-  public:
+public:
     Pipeline(std::shared_ptr<Device> device);
     ~Pipeline();
 
-    enum VertexType {
-        kFloat,
-        kVec2,
-        kVec3,
-        kVec4,
-        kIVec2,
-        kUVec4,
-        kDouble
-    };
+    enum VertexType { kFloat, kVec2, kVec3, kVec4, kIVec2, kUVec4, kDouble };
 
     // Call these methods before calling Create().
     void SetVertexStride(size_t size) { vertex_stride_ = size; }
@@ -43,7 +33,7 @@ class Pipeline {
     VkPipeline get() { return pipeline_; }
     VkPipelineLayout layout() { return pipeline_layout_; }
 
-  private:
+private:
     bool CreateRenderPass(Swapchain* swapchain);
     void DestroyRenderPass();
 
@@ -60,9 +50,8 @@ class Pipeline {
     VkPipeline pipeline_;
 };
 
-}    // namespace vk
+} // namespace vk
 
-}    // namespace scin
+} // namespace scin
 
-#endif    // SRC_VULKAN_PIPELINE_H_
-
+#endif // SRC_VULKAN_PIPELINE_HPP_

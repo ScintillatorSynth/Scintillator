@@ -1,22 +1,16 @@
-#include "vulkan/shader_compiler.h"
+#include "vulkan/ShaderCompiler.hpp"
 
-#include "vulkan/device.h"
-#include "vulkan/shader.h"
-#include "vulkan/shader_source.h"
+#include "vulkan/Device.hpp"
+#include "vulkan/Shader.hpp"
+#include "vulkan/ShaderSource.hpp"
 
 #include <iostream>
 
-namespace scin {
+namespace scin { namespace vk {
 
-namespace vk {
+ShaderCompiler::ShaderCompiler(): compiler_(nullptr) {}
 
-ShaderCompiler::ShaderCompiler() :
-    compiler_(nullptr) {
-}
-
-ShaderCompiler::~ShaderCompiler() {
-    ReleaseCompiler();
-}
+ShaderCompiler::~ShaderCompiler() { ReleaseCompiler(); }
 
 bool ShaderCompiler::LoadCompiler() {
     if (compiler_ == nullptr) {
@@ -32,10 +26,8 @@ void ShaderCompiler::ReleaseCompiler() {
     }
 }
 
-std::unique_ptr<Shader> ShaderCompiler::Compile(
-        std::shared_ptr<Device> device,
-        ShaderSource* source,
-        Shader::Kind kind) {
+std::unique_ptr<Shader> ShaderCompiler::Compile(std::shared_ptr<Device> device, ShaderSource* source,
+                                                Shader::Kind kind) {
     if (compiler_ == nullptr) {
         if (!LoadCompiler()) {
             return std::unique_ptr<Shader>();
@@ -44,13 +36,13 @@ std::unique_ptr<Shader> ShaderCompiler::Compile(
 
     shaderc_shader_kind shader_kind;
     switch (kind) {
-        case Shader::kVertex:
-            shader_kind = shaderc_vertex_shader;
-            break;
+    case Shader::kVertex:
+        shader_kind = shaderc_vertex_shader;
+        break;
 
-        case Shader::kFragment:
-            shader_kind = shaderc_fragment_shader;
-            break;
+    case Shader::kFragment:
+        shader_kind = shaderc_fragment_shader;
+        break;
     }
 
     shaderc_compile_options_t options = shaderc_compile_options_initialize();
@@ -59,17 +51,10 @@ std::unique_ptr<Shader> ShaderCompiler::Compile(
     }
 
     shaderc_compilation_result_t result = shaderc_compile_into_spv(
-            compiler_,
-            source->get(),
-            source->size(),
-            shader_kind,
-            source->name(),
-            source->entry_point(),
-            options);
+        compiler_, source->get(), source->size(), shader_kind, source->name(), source->entry_point(), options);
 
     std::unique_ptr<Shader> shader(nullptr);
-    shaderc_compilation_status status =
-            shaderc_result_get_compilation_status(result);
+    shaderc_compilation_status status = shaderc_result_get_compilation_status(result);
     if (status == shaderc_compilation_status_success) {
         const char* spv_bytes = shaderc_result_get_bytes(result);
         size_t byte_size = shaderc_result_get_length(result);
@@ -86,7 +71,6 @@ std::unique_ptr<Shader> ShaderCompiler::Compile(
     return shader;
 }
 
-}    // namespace vk
+} // namespace vk
 
-}    // namespace scin
-
+} // namespace scin

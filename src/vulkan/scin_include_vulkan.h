@@ -1,8 +1,0 @@
-#ifndef SRC_SCIN_INCLUDE_VULKAN_H_
-#define SRC_SCIN_INCLUDE_VULKAN_H_
-
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
-#endif  // SRC_SCIN_INCLUDE_VULKAN_H_
-

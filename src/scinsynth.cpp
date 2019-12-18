@@ -1,19 +1,19 @@
-#include "LogLevels.h"
+#include "LogLevels.hpp"
 #include "OscHandler.hpp"
 #include "FileSystem.hpp"
-#include "vulkan/buffer.h"
-#include "vulkan/command_pool.h"
-#include "vulkan/device.h"
-#include "vulkan/instance.h"
-#include "vulkan/pipeline.h"
-#include "vulkan/scin_include_vulkan.h"
-#include "vulkan/shader.h"
-#include "vulkan/shader_compiler.h"
-#include "vulkan/shader_source.h"
-#include "vulkan/swapchain.h"
-#include "vulkan/window.h"
+#include "vulkan/Buffer.hpp"
+#include "vulkan/CommandPool.hpp"
+#include "vulkan/Device.hpp"
+#include "vulkan/Instance.hpp"
+#include "vulkan/Pipeline.hpp"
+#include "vulkan/Vulkan.hpp"
+#include "vulkan/Shader.hpp"
+#include "vulkan/ShaderCompiler.hpp"
+#include "vulkan/ShaderSource.hpp"
+#include "vulkan/Swapchain.hpp"
+#include "vulkan/Window.hpp"
 #include "vulkan/Uniform.hpp"
-#include "Version.h"
+#include "Version.hpp"
 #include "VGenManager.hpp"
 
 #include "gflags/gflags.h"
@@ -29,8 +29,9 @@ DEFINE_bool(print_version, false, "Print the Scintillator version and exit.");
 DEFINE_int32(udp_port_number, -1, "A port number 0-65535.");
 DEFINE_string(bind_to_address, "127.0.0.1", "Bind the UDP socket to this address.");
 
-DEFINE_int32(log_level, 2, "Verbosity of logs, lowest value of 0 logs everything, highest value of 6 disables all "
-        "logging.");
+DEFINE_int32(log_level, 2,
+             "Verbosity of logs, lowest value of 0 logs everything, highest value of 6 disables all "
+             "logging.");
 
 DEFINE_string(quark_dir, "..", "Root directory of the Scintillator Quark, for finding dependent files.");
 
@@ -46,7 +47,7 @@ int main(int argc, char* argv[]) {
     // Check for early exit conditions.
     if (FLAGS_print_version) {
         spdlog::info("scinsynth version {}.{}.{} from branch {} at revision {}", kScinVersionMajor, kScinVersionMinor,
-            kScinVersionPatch, kScinBranch, kScinCommitHash);
+                     kScinVersionPatch, kScinBranch, kScinCommitHash);
         return EXIT_SUCCESS;
     }
     if (FLAGS_udp_port_number < 1024 || FLAGS_udp_port_number > 65535) {
@@ -122,44 +123,43 @@ int main(int argc, char* argv[]) {
     }
 
     scin::vk::ShaderSource vertex_source("vertex shader",
-            "#version 450\n"
-            "#extension GL_ARB_separate_shader_objects : enable\n"
-            "\n"
-            "layout(location = 0) in vec2 inPosition;\n"
-            "// layout(location = 1) in vec3 inColor;\n"
-            "\n"
-            "// layout(location = 0) out vec3 fragColor;\n"
-            "\n"
-            "void main() {\n"
-            "   gl_Position = vec4(inPosition, 0.0, 1.0);\n"
-            "   // fragColor = inColor;\n"
-            "}\n"
-    );
-    std::unique_ptr<scin::vk::Shader> vertex_shader = shader_compiler.Compile(device, &vertex_source,
-        scin::vk::Shader::kVertex);
+                                         "#version 450\n"
+                                         "#extension GL_ARB_separate_shader_objects : enable\n"
+                                         "\n"
+                                         "layout(location = 0) in vec2 inPosition;\n"
+                                         "// layout(location = 1) in vec3 inColor;\n"
+                                         "\n"
+                                         "// layout(location = 0) out vec3 fragColor;\n"
+                                         "\n"
+                                         "void main() {\n"
+                                         "   gl_Position = vec4(inPosition, 0.0, 1.0);\n"
+                                         "   // fragColor = inColor;\n"
+                                         "}\n");
+    std::unique_ptr<scin::vk::Shader> vertex_shader =
+        shader_compiler.Compile(device, &vertex_source, scin::vk::Shader::kVertex);
     if (!vertex_shader) {
         return EXIT_FAILURE;
     }
 
-    scin::vk::ShaderSource fragment_source("fragment shader",
-            "#version 450\n"
-            "#extension GL_ARB_separate_shader_objects : enable\n"
-            "\n"
-            "layout(binding = 0) uniform UBO {\n"
-            "   float time;\n"
-            "} ubo;\n"
-            "\n"
-            "// layout(location = 0) in vec3 fragColor;\n"
-            "\n"
-            "layout(location = 0) out vec4 outColor;\n"
-            "\n"
-            "void main() {\n"
-            "   float fragRad = 0.5 + (0.5 * sin((ubo.time / -2.0) + (length(gl_FragCoord) / 100.0)));\n"
-            "   outColor = vec4(fragRad, fragRad, fragRad, 1.0);\n"
-            "}\n"
-    );
-    std::unique_ptr<scin::vk::Shader> fragment_shader = shader_compiler.Compile(device, &fragment_source,
-        scin::vk::Shader::kFragment);
+    scin::vk::ShaderSource fragment_source(
+        "fragment shader",
+        "#version 450\n"
+        "#extension GL_ARB_separate_shader_objects : enable\n"
+        "\n"
+        "layout(binding = 0) uniform UBO {\n"
+        "   float time;\n"
+        "} ubo;\n"
+        "\n"
+        "// layout(location = 0) in vec3 fragColor;\n"
+        "\n"
+        "layout(location = 0) out vec4 outColor;\n"
+        "\n"
+        "void main() {\n"
+        "   float fragRad = 0.5 + (0.5 * sin((ubo.time / -2.0) + (length(gl_FragCoord) / 100.0)));\n"
+        "   outColor = vec4(fragRad, fragRad, fragRad, 1.0);\n"
+        "}\n");
+    std::unique_ptr<scin::vk::Shader> fragment_shader =
+        shader_compiler.Compile(device, &fragment_source, scin::vk::Shader::kFragment);
     if (!fragment_shader) {
         spdlog::error("error in fragment shader.");
         return EXIT_FAILURE;
@@ -169,13 +169,13 @@ int main(int argc, char* argv[]) {
 
     struct Vertex {
         glm::vec2 pos;
-//        glm::vec3 color;
+        //        glm::vec3 color;
     };
 
     scin::vk::Pipeline pipeline(device);
     pipeline.SetVertexStride(sizeof(Vertex));
     pipeline.AddVertexAttribute(scin::vk::Pipeline::kVec2, offsetof(Vertex, pos));
-//    pipeline.AddVertexAttribute(scin::vk::Pipeline::kVec3, offsetof(Vertex, color));
+    //    pipeline.AddVertexAttribute(scin::vk::Pipeline::kVec3, offsetof(Vertex, color));
 
     scin::vk::Uniform uniform(device, sizeof(scin::vk::GlobalUniform));
     uniform.createLayout();
@@ -197,12 +197,12 @@ int main(int argc, char* argv[]) {
     }
 
     const std::vector<Vertex> vertices = {
-        {{ -1.0f, -1.0f }}, // { 1.0f, 0.0f, 0.0f }},
-        {{ 1.0f, -1.0f }}, // { 0.0f, 1.0f, 0.0f }},
-        {{ 1.0f, 1.0f }}, // { 0.0f, 0.0f, 1.0f }},
-        {{ -1.0f, -1.0f }}, // { 1.0f, 0.0f, 0.0f }},
-        {{ 1.0f, 1.0f }}, // { 0.0f, 0.0f, 1.0f }},
-        {{ -1.0f, 1.0f }} //,  { 0.5f, 0.5f, 1.0f }}
+        { { -1.0f, -1.0f } }, // { 1.0f, 0.0f, 0.0f }},
+        { { 1.0f, -1.0f } }, // { 0.0f, 1.0f, 0.0f }},
+        { { 1.0f, 1.0f } }, // { 0.0f, 0.0f, 1.0f }},
+        { { -1.0f, -1.0f } }, // { 1.0f, 0.0f, 0.0f }},
+        { { 1.0f, 1.0f } }, // { 0.0f, 0.0f, 1.0f }},
+        { { -1.0f, 1.0f } } //,  { 0.5f, 0.5f, 1.0f }}
     };
 
     scin::vk::Buffer vertex_buffer(scin::vk::Buffer::kVertex, device);
@@ -252,4 +252,3 @@ int main(int argc, char* argv[]) {
 
     return EXIT_SUCCESS;
 }
-

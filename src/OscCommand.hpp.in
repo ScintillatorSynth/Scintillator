@@ -1,6 +1,6 @@
 %{
-#ifndef BUILD_SRC_OSCCOMMAND_H_
-#define BUILD_SRC_OSCCOMMAND_H_
+#ifndef BUILD_SRC_OSCCOMMAND_HPP_
+#define BUILD_SRC_OSCCOMMAND_HPP_
 
 // Generated file, please edit original file at src/OscMessageTags.h.in
 #include <cstring>
@@ -37,5 +37,5 @@ version,    scin::OscCommand::kVersion
 
 }  // namespace
 
-#endif  // BUILD_SRC_OSCCOMMAND_H_
+#endif  // BUILD_SRC_OSCCOMMAND_HPP_
 

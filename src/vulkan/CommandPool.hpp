@@ -1,14 +1,12 @@
-#ifndef SRC_VULKAN_COMMAND_POOL_H_
-#define SRC_VULKAN_COMMAND_POOL_H_
+#ifndef SRC_VULKAN_COMMAND_POOL_HPP_
+#define SRC_VULKAN_COMMAND_POOL_HPP_
 
-#include "vulkan/scin_include_vulkan.h"
+#include "vulkan/Vulkan.hpp"
 
 #include <memory>
 #include <vector>
 
-namespace scin {
-
-namespace vk {
+namespace scin { namespace vk {
 
 class Buffer;
 class Device;
@@ -17,7 +15,7 @@ class Swapchain;
 class Uniform;
 
 class CommandPool {
-  public:
+public:
     CommandPool(std::shared_ptr<Device> device);
     ~CommandPool();
 
@@ -28,15 +26,14 @@ class CommandPool {
 
     VkCommandBuffer command_buffer(size_t i) { return command_buffers_[i]; }
 
-  private:
+private:
     std::shared_ptr<Device> device_;
     VkCommandPool command_pool_;
     std::vector<VkCommandBuffer> command_buffers_;
 };
 
-}    // namespace vk
+} // namespace vk
 
-}    // namespace scin
+} // namespace scin
 
-#endif    // SRC_VULKAN_COMMAND_POOL_H_
-
+#endif // SRC_VULKAN_COMMAND_POOL_HPP_

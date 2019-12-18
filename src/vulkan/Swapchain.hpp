@@ -1,21 +1,19 @@
-#ifndef SRC_VULKAN_SWAP_CHAIN_H_
-#define SRC_VULKAN_SWAP_CHAIN_H_
+#ifndef SRC_VULKAN_SWAP_CHAIN_HPP_
+#define SRC_VULKAN_SWAP_CHAIN_HPP_
 
-#include "vulkan/scin_include_vulkan.h"
+#include "vulkan/Vulkan.hpp"
 
 #include <memory>
 #include <vector>
 
-namespace scin {
-
-namespace vk {
+namespace scin { namespace vk {
 
 class Device;
 class Pipeline;
 class Window;
 
 class Swapchain {
-   public:
+public:
     Swapchain(std::shared_ptr<Device> device);
     ~Swapchain();
 
@@ -31,7 +29,7 @@ class Swapchain {
     VkSwapchainKHR get() { return swapchain_; }
     VkFramebuffer framebuffer(size_t i) { return framebuffers_[i]; }
 
-   private:
+private:
     std::shared_ptr<Device> device_;
     VkSurfaceFormatKHR surface_format_;
     VkPresentModeKHR present_mode_;
@@ -43,9 +41,8 @@ class Swapchain {
     std::vector<VkFramebuffer> framebuffers_;
 };
 
-}    // namespace vk
+} // namespace vk
 
-}    // namespace scin
+} // namespace scin
 
-#endif    // SRC_VULKAN_SWAP_CHAIN_H_
-
+#endif // SRC_VULKAN_SWAP_CHAIN_HPP_

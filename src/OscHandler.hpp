@@ -37,7 +37,6 @@ private:
     std::future<void> m_socketFuture;
 };
 
-}  // namespace scin
+} // namespace scin
 
-#endif  // SRC_OSCHANDLER_HPP_
-
+#endif // SRC_OSCHANDLER_HPP_

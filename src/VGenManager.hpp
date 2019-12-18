@@ -40,7 +40,6 @@ private:
     std::unordered_map<std::string, std::shared_ptr<VGen>> m_VGens;
 };
 
-}  // namespace scin
+} // namespace scin
 
-#endif  // SRC_VGEN_MANAGER_HPP_
-
+#endif // SRC_VGEN_MANAGER_HPP_

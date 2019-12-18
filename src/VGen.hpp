@@ -9,9 +9,9 @@ namespace scin {
 class VGen {
 public:
     VGen(const std::string& name, const std::string& fragment,
-        const std::vector<std::string>& inputs = std::vector<std::string>(),
-        const std::vector<std::string>& parameters = std::vector<std::string>(),
-        const std::vector<std::string>& intermediates = std::vector<std::string>());
+         const std::vector<std::string>& inputs = std::vector<std::string>(),
+         const std::vector<std::string>& parameters = std::vector<std::string>(),
+         const std::vector<std::string>& intermediates = std::vector<std::string>());
     ~VGen();
 
     const std::string& name() const { return m_name; }
@@ -28,7 +28,6 @@ private:
     std::vector<std::string> m_intermediates;
 };
 
-}  // namespace scin
+} // namespace scin
 
-#endif  // SRC_VGEN_HPP_
-
+#endif // SRC_VGEN_HPP_

@@ -1,10 +1,10 @@
-#include "vulkan/window.h"
+#include "vulkan/Window.hpp"
 
-#include "vulkan/buffer.h"
-#include "vulkan/command_pool.h"
-#include "vulkan/device.h"
-#include "vulkan/instance.h"
-#include "vulkan/swapchain.h"
+#include "vulkan/Buffer.hpp"
+#include "vulkan/CommandPool.hpp"
+#include "vulkan/Device.hpp"
+#include "vulkan/Instance.hpp"
+#include "vulkan/Swapchain.hpp"
 #include "vulkan/Uniform.hpp"
 
 #include "spdlog/spdlog.h"
@@ -15,29 +15,23 @@
 
 const size_t kMaxFramesInFlight = 2;
 
-namespace scin {
+namespace scin { namespace vk {
 
-namespace vk {
-
-Window::Window(std::shared_ptr<Instance> instance) :
+Window::Window(std::shared_ptr<Instance> instance):
     instance_(instance),
     width_(-1),
     height_(-1),
     window_(nullptr),
     surface_(VK_NULL_HANDLE),
-    m_stop(false) {
-}
+    m_stop(false) {}
 
-Window::~Window() {
-}
+Window::~Window() {}
 
 bool Window::Create(int width, int height) {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-    window_ = glfwCreateWindow(width, height,
-            "ScintillatorSynth", nullptr, nullptr);
-    if (glfwCreateWindowSurface(instance_->get(), window_, nullptr, &surface_)
-            != VK_SUCCESS) {
+    window_ = glfwCreateWindow(width, height, "ScintillatorSynth", nullptr, nullptr);
+    if (glfwCreateWindowSurface(instance_->get(), window_, nullptr, &surface_) != VK_SUCCESS) {
         std::cerr << "failed to create surface" << std::endl;
         return false;
     }
@@ -61,16 +55,13 @@ bool Window::CreateSyncObjects(Device* device) {
     fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
     for (size_t i = 0; i < kMaxFramesInFlight; ++i) {
-        if (vkCreateSemaphore(device->get(), &semaphore_info, nullptr,
-                &image_available_semaphores_[i]) != VK_SUCCESS) {
+        if (vkCreateSemaphore(device->get(), &semaphore_info, nullptr, &image_available_semaphores_[i]) != VK_SUCCESS) {
             return false;
         }
-        if (vkCreateSemaphore(device->get(), &semaphore_info, nullptr,
-                &render_finished_semaphores_[i]) != VK_SUCCESS) {
+        if (vkCreateSemaphore(device->get(), &semaphore_info, nullptr, &render_finished_semaphores_[i]) != VK_SUCCESS) {
             return false;
         }
-        if (vkCreateFence(device->get(), &fence_info, nullptr,
-                &in_flight_fences_[i]) != VK_SUCCESS) {
+        if (vkCreateFence(device->get(), &fence_info, nullptr, &in_flight_fences_[i]) != VK_SUCCESS) {
             return false;
         }
     }
@@ -86,16 +77,11 @@ void Window::Run(Device* device, Swapchain* swapchain, CommandPool* command_pool
         glfwPollEvents();
 
         vkWaitForFences(device->get(), 1, &in_flight_fences_[current_frame], VK_TRUE,
-            std::numeric_limits<uint64_t>::max());
+                        std::numeric_limits<uint64_t>::max());
 
         uint32_t image_index;
-        vkAcquireNextImageKHR(
-                device->get(),
-                swapchain->get(),
-                std::numeric_limits<uint64_t>::max(),
-                image_available_semaphores_[current_frame],
-                VK_NULL_HANDLE,
-                &image_index);
+        vkAcquireNextImageKHR(device->get(), swapchain->get(), std::numeric_limits<uint64_t>::max(),
+                              image_available_semaphores_[current_frame], VK_NULL_HANDLE, &image_index);
 
         // Update time uniform.
         auto currentTime = std::chrono::steady_clock::now();
@@ -166,7 +152,6 @@ void Window::Destroy() {
     glfwDestroyWindow(window_);
 }
 
-}    // namespace vk
+} // namespace vk
 
-}    // namespace scin
-
+} // namespace scin

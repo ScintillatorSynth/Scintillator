@@ -1,25 +1,20 @@
-#include "vulkan/pipeline.h"
+#include "vulkan/Pipeline.hpp"
 
-#include "vulkan/device.h"
-#include "vulkan/shader.h"
-#include "vulkan/swapchain.h"
+#include "vulkan/Device.hpp"
+#include "vulkan/Shader.hpp"
+#include "vulkan/Swapchain.hpp"
 #include "vulkan/Uniform.hpp"
 
-namespace scin {
+namespace scin { namespace vk {
 
-namespace vk {
-
-Pipeline::Pipeline(std::shared_ptr<Device> device)  :
+Pipeline::Pipeline(std::shared_ptr<Device> device):
     device_(device),
     vertex_stride_(0),
     render_pass_(VK_NULL_HANDLE),
     pipeline_layout_(VK_NULL_HANDLE),
-    pipeline_(VK_NULL_HANDLE) {
-}
+    pipeline_(VK_NULL_HANDLE) {}
 
-Pipeline::~Pipeline() {
-    Destroy();
-}
+Pipeline::~Pipeline() { Destroy(); }
 
 bool Pipeline::Create(Shader* vertex_shader, Shader* fragment_shader, Swapchain* swapchain, Uniform* uniform) {
     if (!CreateRenderPass(swapchain)) {
@@ -38,45 +33,44 @@ bool Pipeline::Create(Shader* vertex_shader, Shader* fragment_shader, Swapchain*
         vertex_attribute_descriptions[i].location = i;
         VkFormat format;
         switch (vertex_attributes_[i].first) {
-            case kFloat:
-                format = VK_FORMAT_R32_SFLOAT;
-                break;
+        case kFloat:
+            format = VK_FORMAT_R32_SFLOAT;
+            break;
 
-            case kVec2:
-                format = VK_FORMAT_R32G32_SFLOAT;
-                break;
+        case kVec2:
+            format = VK_FORMAT_R32G32_SFLOAT;
+            break;
 
-            case kVec3:
-                format = VK_FORMAT_R32G32B32_SFLOAT;
-                break;
+        case kVec3:
+            format = VK_FORMAT_R32G32B32_SFLOAT;
+            break;
 
-            case kVec4:
-                format = VK_FORMAT_R32G32B32A32_SFLOAT;
-                break;
+        case kVec4:
+            format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            break;
 
-            case kIVec2:
-                format = VK_FORMAT_R32G32_SINT;
-                break;
+        case kIVec2:
+            format = VK_FORMAT_R32G32_SINT;
+            break;
 
-            case kUVec4:
-                format = VK_FORMAT_R32G32B32A32_UINT;
-                break;
+        case kUVec4:
+            format = VK_FORMAT_R32G32B32A32_UINT;
+            break;
 
-            case kDouble:
-                format = VK_FORMAT_R64_SFLOAT;
-                break;
+        case kDouble:
+            format = VK_FORMAT_R64_SFLOAT;
+            break;
 
-            default:
-                format = VK_FORMAT_UNDEFINED;
-                break;
+        default:
+            format = VK_FORMAT_UNDEFINED;
+            break;
         }
         vertex_attribute_descriptions[i].format = format;
         vertex_attribute_descriptions[i].offset = vertex_attributes_[i].second;
     }
 
     VkPipelineVertexInputStateCreateInfo vertex_input_info = {};
-    vertex_input_info.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertex_input_info.vertexBindingDescriptionCount = 1;
     vertex_input_info.pVertexBindingDescriptions = &vertex_binding_description;
     vertex_input_info.vertexAttributeDescriptionCount = vertex_attribute_descriptions.size();
@@ -84,8 +78,7 @@ bool Pipeline::Create(Shader* vertex_shader, Shader* fragment_shader, Swapchain*
 
     // Input Assembly
     VkPipelineInputAssemblyStateCreateInfo input_assembly = {};
-    input_assembly.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    input_assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     input_assembly.primitiveRestartEnable = VK_FALSE;
 
@@ -99,12 +92,11 @@ bool Pipeline::Create(Shader* vertex_shader, Shader* fragment_shader, Swapchain*
     viewport.maxDepth = 1.0f;
 
     VkRect2D scissor = {};
-    scissor.offset = {0, 0};
+    scissor.offset = { 0, 0 };
     scissor.extent = swapchain->extent();
 
     VkPipelineViewportStateCreateInfo viewport_state = {};
-    viewport_state.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewport_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     viewport_state.viewportCount = 1;
     viewport_state.pViewports = &viewport;
     viewport_state.scissorCount = 1;
@@ -112,8 +104,7 @@ bool Pipeline::Create(Shader* vertex_shader, Shader* fragment_shader, Swapchain*
 
     // Rasterizer
     VkPipelineRasterizationStateCreateInfo rasterizer = {};
-    rasterizer.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizer.depthClampEnable = VK_FALSE;
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
     rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
@@ -138,10 +129,7 @@ bool Pipeline::Create(Shader* vertex_shader, Shader* fragment_shader, Swapchain*
     // Color Blending
     VkPipelineColorBlendAttachmentState color_blend_attachment = {};
     color_blend_attachment.colorWriteMask =
-            VK_COLOR_COMPONENT_R_BIT |
-            VK_COLOR_COMPONENT_G_BIT |
-            VK_COLOR_COMPONENT_B_BIT |
-            VK_COLOR_COMPONENT_A_BIT;
+        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
     color_blend_attachment.blendEnable = VK_FALSE;
     color_blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
     color_blend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
@@ -151,8 +139,7 @@ bool Pipeline::Create(Shader* vertex_shader, Shader* fragment_shader, Swapchain*
     color_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
     VkPipelineColorBlendStateCreateInfo color_blending = {};
-    color_blending.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    color_blending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     color_blending.logicOpEnable = VK_FALSE;
     color_blending.logicOp = VK_LOGIC_OP_COPY;
     color_blending.attachmentCount = 1;
@@ -169,23 +156,18 @@ bool Pipeline::Create(Shader* vertex_shader, Shader* fragment_shader, Swapchain*
 
     // Shader stages
     VkPipelineShaderStageCreateInfo vertex_stage_info = {};
-    vertex_stage_info.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    vertex_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertex_stage_info.stage = VK_SHADER_STAGE_VERTEX_BIT;
     vertex_stage_info.module = vertex_shader->get();
     vertex_stage_info.pName = vertex_shader->entry_point();
 
     VkPipelineShaderStageCreateInfo fragment_stage_info = {};
-    fragment_stage_info.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    fragment_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     fragment_stage_info.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
     fragment_stage_info.module = fragment_shader->get();
     fragment_stage_info.pName = fragment_shader->entry_point();
 
-    VkPipelineShaderStageCreateInfo shader_stages[] = {
-        vertex_stage_info,
-        fragment_stage_info
-    };
+    VkPipelineShaderStageCreateInfo shader_stages[] = { vertex_stage_info, fragment_stage_info };
 
     // Pipeline
     VkGraphicsPipelineCreateInfo pipeline_info = {};
@@ -206,8 +188,8 @@ bool Pipeline::Create(Shader* vertex_shader, Shader* fragment_shader, Swapchain*
     pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
     pipeline_info.basePipelineIndex = -1;
 
-    return (vkCreateGraphicsPipelines(device_->get(), VK_NULL_HANDLE, 1,
-            &pipeline_info, nullptr, &pipeline_) == VK_SUCCESS);
+    return (vkCreateGraphicsPipelines(device_->get(), VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &pipeline_)
+            == VK_SUCCESS);
 }
 
 void Pipeline::Destroy() {
@@ -245,9 +227,7 @@ bool Pipeline::CreateRenderPass(Swapchain* swapchain) {
     dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     dependency.srcAccessMask = 0;
     dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependency.dstAccessMask =
-            VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
-            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
     VkRenderPassCreateInfo render_pass_info = {};
     render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -258,8 +238,7 @@ bool Pipeline::CreateRenderPass(Swapchain* swapchain) {
     render_pass_info.dependencyCount = 1;
     render_pass_info.pDependencies = &dependency;
 
-    return (vkCreateRenderPass(device_->get(), &render_pass_info, nullptr,
-            &render_pass_) == VK_SUCCESS);
+    return (vkCreateRenderPass(device_->get(), &render_pass_info, nullptr, &render_pass_) == VK_SUCCESS);
 }
 
 void Pipeline::DestroyRenderPass() {
@@ -291,7 +270,6 @@ void Pipeline::DestroyPipelineLayout() {
     }
 }
 
-}    // namespace vk
+} // namespace vk
 
-}    // namespace scin
-
+} // namespace scin

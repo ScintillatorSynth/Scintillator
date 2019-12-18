@@ -1,15 +1,13 @@
-#ifndef SRC_VULKAN_SHADER_COMPILER_H_
-#define SRC_VULKAN_SHADER_COMIPLER_H_
+#ifndef SRC_VULKAN_SHADER_COMPILER_HPP_
+#define SRC_VULKAN_SHADER_COMPILER_HPP_
 
 #include "shaderc/shaderc.h"
 
-#include "vulkan/shader.h"
+#include "vulkan/Shader.hpp"
 
 #include <memory>
 
-namespace scin {
-
-namespace vk {
+namespace scin { namespace vk {
 
 class Device;
 class ShaderSource;
@@ -18,25 +16,21 @@ class ShaderSource;
 // when loaded, so this object wraps the code needed by the shader compiler
 // to control loading and unloading as well as compilation.
 class ShaderCompiler {
-  public:
+public:
     ShaderCompiler();
     ~ShaderCompiler();
 
     bool LoadCompiler();
     void ReleaseCompiler();
 
-    std::unique_ptr<Shader> Compile(
-            std::shared_ptr<Device> device,
-            ShaderSource* source,
-            Shader::Kind kind);
+    std::unique_ptr<Shader> Compile(std::shared_ptr<Device> device, ShaderSource* source, Shader::Kind kind);
 
-  private:
+private:
     shaderc_compiler_t compiler_;
 };
 
-}    // namespace vk
+} // namespace vk
 
-}    // namespace scin
+} // namespace scin
 
-#endif    // SRC_VULKAN_SHADER_COMPILER_H_
-
+#endif // SRC_VULKAN_SHADER_COMPILER_HPP_

@@ -1,4 +1,4 @@
-#include "LogLevels.h"
+#include "LogLevels.hpp"
 
 #include "spdlog/spdlog.h"
 
@@ -22,5 +22,4 @@ void setGlobalLogLevel(int level) {
 }
 
 
-}  // namespace scin
-
+} // namespace scin

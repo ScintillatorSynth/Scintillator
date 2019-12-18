@@ -1,17 +1,15 @@
-#ifndef SRC_VULKAN_INSTANCE_H_
-#define SRC_VULKAN_INSTANCE_H_
+#ifndef SRC_VULKAN_INSTANCE_HPP_
+#define SRC_VULKAN_INSTANCE_HPP_
 
-#include "vulkan/scin_include_vulkan.h"
+#include "vulkan/Vulkan.hpp"
 
-namespace scin {
-
-namespace vk {
+namespace scin { namespace vk {
 
 // The Vulkan Instance, VkInstance, is the primary access to the Vulkan API.
 // This class encapsulates the instance, manages creation and destruction. It
 // also currently handles the validation layer setup and logging.
 class Instance {
- public:
+public:
     Instance();
     ~Instance();
 
@@ -21,7 +19,7 @@ class Instance {
 
     VkInstance get() { return instance_; }
 
- private:
+private:
     VkInstance instance_;
 
 #if defined(SCIN_VALIDATE_VULKAN)
@@ -29,8 +27,8 @@ class Instance {
 #endif
 };
 
-}    // namespace vk
+} // namespace vk
 
-}    // namespace scin
+} // namespace scin
 
-#endif    // SRC_VULKAN_INSTANCE_H_
+#endif // SRC_VULKAN_INSTANCE_HPP_

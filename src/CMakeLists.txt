@@ -16,45 +16,45 @@ target_link_libraries(scintillator_core
     stdc++fs
 )
 
-configure_file(Version.h.in "${CMAKE_CURRENT_BINARY_DIR}/Version.h")
-add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.h"
-    COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/OscCommand.h" "${CMAKE_CURRENT_SOURCE_DIR}/OscCommand.h.in"
-    MAIN_DEPENDENCY OscCommand.h.in
+configure_file(Version.hpp.in "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp")
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
+    COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp" "${CMAKE_CURRENT_SOURCE_DIR}/OscCommand.hpp.in"
+    MAIN_DEPENDENCY OscCommand.hpp.in
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
 set(scintillator_synth_files
-    "${CMAKE_CURRENT_BINARY_DIR}/Version.h"
-    "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp"
+    "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
     LogLevels.cpp
-    LogLevels.h
+    LogLevels.hpp
     OscHandler.cpp
     OscHandler.hpp
-    scinsynth.cc
+    scinsynth.cpp
 
+    vulkan/Buffer.cpp
+    vulkan/Buffer.hpp
+    vulkan/CommandPool.cpp
+    vulkan/CommandPool.hpp
+    vulkan/Device.cpp
+    vulkan/Device.hpp
+    vulkan/Instance.cpp
+    vulkan/Instance.hpp
+    vulkan/Pipeline.cpp
+    vulkan/Pipeline.hpp
+    vulkan/Shader.cpp
+    vulkan/Shader.hpp
+    vulkan/ShaderCompiler.cpp
+    vulkan/ShaderCompiler.hpp
+    vulkan/ShaderSource.cpp
+    vulkan/ShaderSource.hpp
+    vulkan/Swapchain.cpp
+    vulkan/Swapchain.hpp
     vulkan/Uniform.cpp
     vulkan/Uniform.hpp
-    vulkan/buffer.cc
-    vulkan/buffer.h
-    vulkan/command_pool.cc
-    vulkan/command_pool.h
-    vulkan/device.cc
-    vulkan/device.h
-    vulkan/instance.cc
-    vulkan/instance.h
-    vulkan/pipeline.cc
-    vulkan/pipeline.h
-    vulkan/scin_include_vulkan.h
-    vulkan/shader.cc
-    vulkan/shader.h
-    vulkan/shader_compiler.cc
-    vulkan/shader_compiler.h
-    vulkan/shader_source.cc
-    vulkan/shader_source.h
-    vulkan/swapchain.cc
-    vulkan/swapchain.h
-    vulkan/window.cc
-    vulkan/window.h
+    vulkan/Vulkan.hpp
+    vulkan/Window.cpp
+    vulkan/Window.hpp
 )
 
 add_executable(scinsynth ${scintillator_synth_files})
@@ -101,6 +101,22 @@ target_link_libraries(run_unittests
     stdc++fs
 )
 
+if (NOT DEFINED CLANG_FORMAT)
+    set(CLANG_FORMAT clang-format-8)
+endif()
+
+add_custom_target(lintall
+    COMMAND ${PYTHON_EXECUTABLE} ../tools/clang-format.py lint ${CLANG_FORMAT} ${CMAKE_CURRENT_SOURCE_DIR}
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    VERBATIM
+)
+
+add_custom_target(formatall
+    COMMAND ${PYTHON_EXECUTABLE} ../tools/clang-format.py format ${CLANG_FORMAT} ${CMAKE_CURRENT_SOURCE_DIR}
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    VERBATIM
+)
+
 if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
     if(NOT DEFINED LLVM_PROFDATA)
         set(LLVM_PROFDATA llvm-profdata)
@@ -121,7 +137,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
     add_custom_command(OUTPUT scinsynth_coverage.json
         DEPENDS scinsynth_coverage.profdata
         COMMAND ${LLVM_COV} export ./run_unittests -instr-profile=scinsynth_coverage.profdata -summary-only > scinsynth_coverage_raw.json
-        COMMAND ${PYTHON_EXECUTABLE} ../../tools/filter_coverage_report.py scinsynth_coverage_raw.json "${CMAKE_CURRENT_SOURCE_DIR}" ${GIT_COMMIT_HASH} scinsynth_coverage.json
+        COMMAND ${PYTHON_EXECUTABLE} ../../tools/filter-coverage-report.py scinsynth_coverage_raw.json "${CMAKE_CURRENT_SOURCE_DIR}" ${GIT_COMMIT_HASH} scinsynth_coverage.json
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMENT "summarizing coverage data."
         VERBATIM
