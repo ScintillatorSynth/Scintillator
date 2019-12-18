@@ -2,7 +2,7 @@
 
 #include "vulkan/Buffer.hpp"
 #include "vulkan/Device.hpp"
-#include "vulkan/pipeline.h"
+#include "vulkan/Pipeline.hpp"
 #include "vulkan/swapchain.h"
 #include "vulkan/Uniform.hpp"
 

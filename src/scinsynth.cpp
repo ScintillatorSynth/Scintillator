@@ -5,7 +5,7 @@
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Instance.hpp"
-#include "vulkan/pipeline.h"
+#include "vulkan/Pipeline.hpp"
 #include "vulkan/scin_include_vulkan.h"
 #include "vulkan/shader.h"
 #include "vulkan/shader_compiler.h"
