@@ -33,6 +33,7 @@ before_script:
 
 script:
     - make coverage_report
+    - make lintall
 
 before_deploy:
     - mkdir -p $HOME/artifacts
