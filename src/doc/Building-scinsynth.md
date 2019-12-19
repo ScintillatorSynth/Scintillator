@@ -1,3 +1,6 @@
+Building scinsynth From Source {#BuildingScinsynth}
+==============================
+
 Putting some basic notes about building stuff here, will organize into a more
 formal guide later.
 
