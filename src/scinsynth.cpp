@@ -1,20 +1,20 @@
+#include "FileSystem.hpp"
 #include "LogLevels.hpp"
 #include "OscHandler.hpp"
-#include "FileSystem.hpp"
+#include "VGenManager.hpp"
+#include "Version.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Instance.hpp"
 #include "vulkan/Pipeline.hpp"
-#include "vulkan/Vulkan.hpp"
 #include "vulkan/Shader.hpp"
 #include "vulkan/ShaderCompiler.hpp"
 #include "vulkan/ShaderSource.hpp"
 #include "vulkan/Swapchain.hpp"
-#include "vulkan/Window.hpp"
 #include "vulkan/Uniform.hpp"
-#include "Version.hpp"
-#include "VGenManager.hpp"
+#include "vulkan/Vulkan.hpp"
+#include "vulkan/Window.hpp"
 
 #include "gflags/gflags.h"
 #include "glm/glm.hpp"
@@ -201,6 +201,9 @@ int main(int argc, char* argv[]) {
         normPosX = 1.0f;
         normPosY = static_cast<float>(FLAGS_window_height) / static_cast<float>(FLAGS_window_width);
     }
+
+    // Vulkan coordinate system setup:
+    //
     //        ^ -y
     //        |
     //   -x   |    +x
@@ -209,7 +212,7 @@ int main(int argc, char* argv[]) {
     //        | +y
     //        V
     //
-    // Triangles must be wound clockwise.
+    // The axis is in the center of the frame, and frame edges are at +/-1.0 Triangles must be wound clockwise.
     const std::vector<Vertex> vertices = {
         // Lower left
         { { -1.0f, 1.0f }, { -normPosX, normPosY } },
