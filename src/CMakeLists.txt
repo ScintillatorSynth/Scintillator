@@ -147,3 +147,17 @@ if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
     )
 endif()
 
+if (SCIN_BUILD_DOCS)
+    find_package(Doxygen)
+    if (DOXYGEN_FOUND)
+        configure_file("${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in" "${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile" @ONLY)
+        add_custom_target(docs
+            COMMAND ${DOXYGEN_EXECUTABLE} "${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile"
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Generating API documentation with Doxygen"
+            VERBATIM)
+    else()
+        message(FATAL_ERROR "SCIN_BUILD_DOCS enabled but Doxygen not found.")
+    endif()
+endif()
+

@@ -28,6 +28,8 @@ option(SCIN_VALIDATE_VULKAN
     "Use LunarG Vulkan Validation Layers to check Vulkan calls" ON)
 option(SCIN_USE_SWIFTSHADER
     "Use SwiftShader for CPU rendering, instead of looking for locally installed Vulkan SDK" OFF)
+option(SCIN_BUILD_DOCS
+    "Add docs build target to build C++ documentation with Doxygen" ON)
 
 # If this is a git checkout we can extract the git hash and branch. This code copied verbatim or close to it from the
 # SuperCollider CMake files.
@@ -38,7 +40,6 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
         OUTPUT_VARIABLE GIT_BRANCH
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-
     execute_process(
         COMMAND git log -1 --format=%h
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
