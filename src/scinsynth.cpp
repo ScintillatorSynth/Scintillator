@@ -124,13 +124,13 @@ int main(int argc, char* argv[]) {
                                          "#extension GL_ARB_separate_shader_objects : enable\n"
                                          "\n"
                                          "layout(location = 0) in vec2 inPosition;\n"
-                                         "// layout(location = 1) in vec3 inColor;\n"
+                                         "layout(location = 1) in vec2 inNormPosition;\n"
                                          "\n"
-                                         "// layout(location = 0) out vec3 fragColor;\n"
+                                         "layout(location = 0) out vec2 normPos;\n"
                                          "\n"
                                          "void main() {\n"
                                          "   gl_Position = vec4(inPosition, 0.0, 1.0);\n"
-                                         "   // fragColor = inColor;\n"
+                                         "  normPos = inNormPosition;\n"
                                          "}\n");
     std::unique_ptr<scin::vk::Shader> vertex_shader =
         shader_compiler.Compile(device, &vertex_source, scin::vk::Shader::kVertex);
@@ -147,12 +147,12 @@ int main(int argc, char* argv[]) {
         "   float time;\n"
         "} ubo;\n"
         "\n"
-        "// layout(location = 0) in vec3 fragColor;\n"
+        "layout(location = 0) in vec2 normPos;\n"
         "\n"
         "layout(location = 0) out vec4 outColor;\n"
         "\n"
         "void main() {\n"
-        "   float fragRad = 0.5 + (0.5 * sin((ubo.time / -2.0) + (length(gl_FragCoord) / 100.0)));\n"
+        "   float fragRad = 0.5 + (0.5 * sin((ubo.time * 2.0) - (3.0 * length(normPos))));\n"
         "   outColor = vec4(fragRad, fragRad, fragRad, 1.0);\n"
         "}\n");
     std::unique_ptr<scin::vk::Shader> fragment_shader =
@@ -166,13 +166,13 @@ int main(int argc, char* argv[]) {
 
     struct Vertex {
         glm::vec2 pos;
-        //        glm::vec3 color;
+        glm::vec2 normPos;
     };
 
     scin::vk::Pipeline pipeline(device);
     pipeline.SetVertexStride(sizeof(Vertex));
     pipeline.AddVertexAttribute(scin::vk::Pipeline::kVec2, offsetof(Vertex, pos));
-    //    pipeline.AddVertexAttribute(scin::vk::Pipeline::kVec3, offsetof(Vertex, color));
+    pipeline.AddVertexAttribute(scin::vk::Pipeline::kVec2, offsetof(Vertex, normPos));
 
     scin::vk::Uniform uniform(device, sizeof(scin::vk::GlobalUniform));
     uniform.createLayout();
@@ -193,6 +193,14 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    float normPosX, normPosY;
+    if (FLAGS_window_width > FLAGS_window_height) {
+        normPosX = static_cast<float>(FLAGS_window_width) / static_cast<float>(FLAGS_window_height);
+        normPosY = 1.0f;
+    } else {
+        normPosX = 1.0f;
+        normPosY = static_cast<float>(FLAGS_window_height) / static_cast<float>(FLAGS_window_width);
+    }
     //        ^ -y
     //        |
     //   -x   |    +x
@@ -204,13 +212,13 @@ int main(int argc, char* argv[]) {
     // Triangles must be wound clockwise.
     const std::vector<Vertex> vertices = {
         // Lower left
-        { { -1.0f, 1.0f } }, // { 1.0f, 0.0f, 0.0f }},
+        { { -1.0f, 1.0f }, { -normPosX, normPosY } },
         // Upper left
-        { { -1.0f, -1.0f } }, // { 0.0f, 1.0f, 0.0f }},
+        { { -1.0f, -1.0f }, { -normPosX, -normPosY } },
         // Lower Right
-        { { 1.0f, 1.0f } }, // { 1.0f, 0.0f, 0.0f }},
+        { { 1.0f, 1.0f }, { normPosX, normPosY } },
         // Upper right
-        { { 1.0f, -1.0f } }, // { 0.0f, 0.0f, 1.0f }},
+        { { 1.0f, -1.0f }, { normPosX, -normPosY } },
     };
 
     scin::vk::Buffer vertex_buffer(scin::vk::Buffer::kVertex, device);
@@ -223,9 +231,7 @@ int main(int argc, char* argv[]) {
     std::memcpy(vertex_buffer.mapped_address(), vertices.data(), sizeof(Vertex) * vertices.size());
     vertex_buffer.UnmapMemory();
 
-    const std::vector<uint16_t> indices = {
-        0, 1, 2, 3
-    };
+    const std::vector<uint16_t> indices = { 0, 1, 2, 3 };
     scin::vk::Buffer indexBuffer(scin::vk::Buffer::kIndex, device);
     if (!indexBuffer.Create(sizeof(uint16_t) * indices.size())) {
         spdlog::error("error creating index buffer.");
