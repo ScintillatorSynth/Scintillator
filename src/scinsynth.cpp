@@ -225,7 +225,7 @@ int main(int argc, char* argv[]) {
     };
 
     scin::vk::Buffer vertexBuffer(scin::vk::Buffer::kVertex, device);
-    if (!vertexBuffer.Create(sizeof(Vertex) * vertices.size())) {
+    if (!vertexBuffer.create(sizeof(Vertex) * vertices.size())) {
         spdlog::error("error creating vertex buffer.");
         return EXIT_FAILURE;
     }
@@ -233,7 +233,7 @@ int main(int argc, char* argv[]) {
 
     const std::vector<uint16_t> indices = { 0, 1, 2, 3 };
     scin::vk::Buffer indexBuffer(scin::vk::Buffer::kIndex, device);
-    if (!indexBuffer.Create(sizeof(uint16_t) * indices.size())) {
+    if (!indexBuffer.create(sizeof(uint16_t) * indices.size())) {
         spdlog::error("error creating index buffer.");
         return EXIT_FAILURE;
     }
@@ -258,8 +258,8 @@ int main(int argc, char* argv[]) {
     // ========== Vulkan cleanup.
     window.DestroySyncObjects(device.get());
     command_pool.Destroy();
-    indexBuffer.Destroy();
-    vertexBuffer.Destroy();
+    indexBuffer.destroy();
+    vertexBuffer.destroy();
     swapchain.DestroyFramebuffers();
     pipeline.Destroy();
     uniform.destroy();

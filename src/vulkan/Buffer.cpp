@@ -4,27 +4,24 @@
 
 #include "spdlog/spdlog.h"
 
-#include <iostream>
-
 namespace scin { namespace vk {
 
 Buffer::Buffer(Kind kind, std::shared_ptr<Device> device):
-    kind_(kind),
-    device_(device),
-    size_(0),
-    buffer_(VK_NULL_HANDLE),
-    device_memory_(VK_NULL_HANDLE),
-    mapped_address_(nullptr) {}
+    m_kind(kind),
+    m_device(device),
+    m_size(0),
+    m_buffer(VK_NULL_HANDLE),
+    m_mappedAddress(nullptr) {}
 
-Buffer::~Buffer() { Destroy(); }
+Buffer::~Buffer() { destroy(); }
 
-bool Buffer::Create(size_t size) {
+bool Buffer::create(size_t size) {
     VkBufferCreateInfo bufferInfo = {};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufferInfo.size = size;
     bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    switch (kind_) {
+    switch (m_kind) {
     case kIndex:
         bufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
         break;
@@ -42,82 +39,45 @@ bool Buffer::Create(size_t size) {
         return false;
     }
 
-    if (vkCreateBuffer(device_->get(), &bufferInfo, nullptr, &buffer_) != VK_SUCCESS) {
-        std::cerr << "Vulkan create buffer call failed." << std::endl;
-        return false;
+    VmaAllocationCreateInfo allocInfo = {};
+    allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+    allocInfo.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+    allocInfo.preferredFlags = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+    if (vmaCreateBuffer(m_device->allocator(), &bufferInfo, &allocInfo, &m_buffer, &m_allocation, nullptr)
+            != VK_SUCCESS) {
+        spdlog::error("failed to allocate buffer memory of {} bytes.", size);
     }
 
-    VkMemoryRequirements requirements;
-    vkGetBufferMemoryRequirements(device_->get(), buffer_, &requirements);
-
-    // Actual size of buffer may exceed requested size due to alignment or other allocation constraints.
-    size_ = requirements.size;
-
-    // TODO: consider relocating to device, or centralized memory manager.
-    VkPhysicalDeviceMemoryProperties properties;
-    vkGetPhysicalDeviceMemoryProperties(device_->get_physical(), &properties);
-
-    uint32_t type_index;
-    for (type_index = 0; type_index < properties.memoryTypeCount; ++type_index) {
-        if ((requirements.memoryTypeBits & (1 << type_index))
-            && ((properties.memoryTypes[type_index].propertyFlags &
-                 // TODO: optimum flag choice based on access patterns.
-                 (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
-                == (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))) {
-            break;
-        }
-    }
-
-    if (type_index >= properties.memoryTypeCount) {
-        std::cerr << "couldn't find appropriate memory in create buffer." << std::endl;
-        return false;
-    }
-
-    VkMemoryAllocateInfo info = {};
-    info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    info.allocationSize = size_;
-    info.memoryTypeIndex = type_index;
-
-    if (vkAllocateMemory(device_->get(), &info, nullptr, &device_memory_) != VK_SUCCESS) {
-        std::cerr << "Vulkan buffer memory allocation failed." << std::endl;
-        return false;
-    }
-
-    vkBindBufferMemory(device_->get(), buffer_, device_memory_, 0);
+    m_size = size;
 
     return true;
 }
 
-void Buffer::Destroy() {
+void Buffer::destroy() {
     unmapMemory();
 
-    if (buffer_ != VK_NULL_HANDLE) {
-        vkDestroyBuffer(device_->get(), buffer_, nullptr);
-        buffer_ = VK_NULL_HANDLE;
-    }
-
-    if (device_memory_ != VK_NULL_HANDLE) {
-        vkFreeMemory(device_->get(), device_memory_, nullptr);
-        device_memory_ = VK_NULL_HANDLE;
+    if (m_buffer != VK_NULL_HANDLE) {
+        vmaDestroyBuffer(m_device->allocator(), m_buffer, m_allocation);
+        m_buffer = VK_NULL_HANDLE;
     }
 }
 
 void Buffer::copyToGPU(const void* source) {
     mapMemory();
-    std::memcpy(mapped_address_, source, size_);
+    std::memcpy(m_mappedAddress, source, m_size);
     unmapMemory();
 }
 
 void Buffer::mapMemory() {
-    if (mapped_address_ == nullptr) {
-        vkMapMemory(device_->get(), device_memory_, 0, size_, 0, &mapped_address_);
+    if (m_mappedAddress == nullptr) {
+        vmaMapMemory(m_device->allocator(), m_allocation, &m_mappedAddress);
     }
 }
 
 void Buffer::unmapMemory() {
-    if (mapped_address_ != nullptr) {
-        vkUnmapMemory(device_->get(), device_memory_);
-        mapped_address_ = nullptr;
+    if (m_mappedAddress != nullptr) {
+        vmaUnmapMemory(m_device->allocator(), m_allocation);
+        m_mappedAddress = nullptr;
     }
 }
 
