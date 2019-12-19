@@ -44,7 +44,7 @@ bool Buffer::create(size_t size) {
     allocInfo.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
     allocInfo.preferredFlags = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
     if (vmaCreateBuffer(m_device->allocator(), &bufferInfo, &allocInfo, &m_buffer, &m_allocation, nullptr)
-            != VK_SUCCESS) {
+        != VK_SUCCESS) {
         spdlog::error("failed to allocate buffer memory of {} bytes.", size);
     }
 
