@@ -18,16 +18,21 @@ public:
     bool Create(size_t size);
     void Destroy();
 
-    void MapMemory();
-    // TODO: void Flush();  // call after writing from CPU
-    // TODO: void Invalidate();  // call before reading from CPU
-    void UnmapMemory();
+    /*! Maps the buffer into CPU memory, copies source to it, then unmaps the buffer.
+     *
+     * \param source A pointer to at least size() bytes of data to transfer.
+     */
+    void copyToGPU(const void* source);
+
 
     void* mapped_address() { return mapped_address_; }
     size_t size() const { return size_; }
     VkBuffer buffer() { return buffer_; }
 
 private:
+    void mapMemory();
+    void unmapMemory();
+
     Kind kind_;
     std::shared_ptr<Device> device_;
     size_t size_;

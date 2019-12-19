@@ -26,10 +26,10 @@
 
 // Command-line options specified to gflags.
 DEFINE_bool(print_version, false, "Print the Scintillator version and exit.");
-DEFINE_int32(udp_port_number, -1, "A port number 0-65535.");
+DEFINE_int32(udp_port_number, 5511, "A port number 1024-65535.");
 DEFINE_string(bind_to_address, "127.0.0.1", "Bind the UDP socket to this address.");
 
-DEFINE_int32(log_level, 2,
+DEFINE_int32(log_level, 3,
              "Verbosity of logs, lowest value of 0 logs everything, highest value of 6 disables all "
              "logging.");
 
@@ -224,15 +224,12 @@ int main(int argc, char* argv[]) {
         { { 1.0f, -1.0f }, { normPosX, -normPosY } },
     };
 
-    scin::vk::Buffer vertex_buffer(scin::vk::Buffer::kVertex, device);
-    if (!vertex_buffer.Create(sizeof(Vertex) * vertices.size())) {
+    scin::vk::Buffer vertexBuffer(scin::vk::Buffer::kVertex, device);
+    if (!vertexBuffer.Create(sizeof(Vertex) * vertices.size())) {
         spdlog::error("error creating vertex buffer.");
         return EXIT_FAILURE;
     }
-
-    vertex_buffer.MapMemory();
-    std::memcpy(vertex_buffer.mapped_address(), vertices.data(), sizeof(Vertex) * vertices.size());
-    vertex_buffer.UnmapMemory();
+    vertexBuffer.copyToGPU(vertices.data());
 
     const std::vector<uint16_t> indices = { 0, 1, 2, 3 };
     scin::vk::Buffer indexBuffer(scin::vk::Buffer::kIndex, device);
@@ -240,13 +237,11 @@ int main(int argc, char* argv[]) {
         spdlog::error("error creating index buffer.");
         return EXIT_FAILURE;
     }
-    indexBuffer.MapMemory();
-    std::memcpy(indexBuffer.mapped_address(), indices.data(), sizeof(uint16_t) * indices.size());
-    indexBuffer.UnmapMemory();
+    indexBuffer.copyToGPU(indices.data());
 
     uniform.createBuffers(&swapchain);
 
-    if (!command_pool.CreateCommandBuffers(&swapchain, &pipeline, &vertex_buffer, &indexBuffer, &uniform)) {
+    if (!command_pool.CreateCommandBuffers(&swapchain, &pipeline, &vertexBuffer, &indexBuffer, &uniform)) {
         spdlog::error("error creating command buffers.");
         return EXIT_FAILURE;
     }
@@ -264,7 +259,7 @@ int main(int argc, char* argv[]) {
     window.DestroySyncObjects(device.get());
     command_pool.Destroy();
     indexBuffer.Destroy();
-    vertex_buffer.Destroy();
+    vertexBuffer.Destroy();
     swapchain.DestroyFramebuffers();
     pipeline.Destroy();
     uniform.destroy();

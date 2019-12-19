@@ -88,9 +88,7 @@ void Window::Run(Device* device, Swapchain* swapchain, CommandPool* command_pool
         GlobalUniform gbo;
         gbo.time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
         std::shared_ptr<Buffer> uniformBuffer = uniform->buffer(image_index);
-        uniformBuffer->MapMemory();
-        std::memcpy(uniformBuffer->mapped_address(), &gbo, sizeof(GlobalUniform));
-        uniformBuffer->UnmapMemory();
+        uniformBuffer->copyToGPU(&gbo);
 
         VkSemaphore wait_semaphores[] = { image_available_semaphores_[current_frame] };
         VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };

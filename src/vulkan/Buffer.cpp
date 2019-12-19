@@ -19,30 +19,30 @@ Buffer::Buffer(Kind kind, std::shared_ptr<Device> device):
 Buffer::~Buffer() { Destroy(); }
 
 bool Buffer::Create(size_t size) {
-    VkBufferCreateInfo buffer_info = {};
-    buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    buffer_info.size = size;
-    buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    VkBufferCreateInfo bufferInfo = {};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = size;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
     switch (kind_) {
     case kIndex:
-        buffer_info.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+        bufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
         break;
 
     case kUniform:
-        buffer_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+        bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
         break;
 
     case kVertex:
-        buffer_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
         break;
 
     default:
-        spdlog::error("unsupported buffer type.");
+        spdlog::error("Buffer::Create called with unsupported buffer type.");
         return false;
     }
 
-    if (vkCreateBuffer(device_->get(), &buffer_info, nullptr, &buffer_) != VK_SUCCESS) {
+    if (vkCreateBuffer(device_->get(), &bufferInfo, nullptr, &buffer_) != VK_SUCCESS) {
         std::cerr << "Vulkan create buffer call failed." << std::endl;
         return false;
     }
@@ -89,7 +89,7 @@ bool Buffer::Create(size_t size) {
 }
 
 void Buffer::Destroy() {
-    UnmapMemory();
+    unmapMemory();
 
     if (buffer_ != VK_NULL_HANDLE) {
         vkDestroyBuffer(device_->get(), buffer_, nullptr);
@@ -102,13 +102,19 @@ void Buffer::Destroy() {
     }
 }
 
-void Buffer::MapMemory() {
+void Buffer::copyToGPU(const void* source) {
+    mapMemory();
+    std::memcpy(mapped_address_, source, size_);
+    unmapMemory();
+}
+
+void Buffer::mapMemory() {
     if (mapped_address_ == nullptr) {
         vkMapMemory(device_->get(), device_memory_, 0, size_, 0, &mapped_address_);
     }
 }
 
-void Buffer::UnmapMemory() {
+void Buffer::unmapMemory() {
     if (mapped_address_ != nullptr) {
         vkUnmapMemory(device_->get(), device_memory_);
         mapped_address_ = nullptr;
