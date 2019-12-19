@@ -11,7 +11,7 @@ class Device;
 
 class Buffer {
 public:
-    enum Kind { kUniform, kVertex };
+    enum Kind { kIndex, kUniform, kVertex };
     Buffer(Kind kind, std::shared_ptr<Device> device);
     ~Buffer();
 

@@ -25,6 +25,10 @@ bool Buffer::Create(size_t size) {
     buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
     switch (kind_) {
+    case kIndex:
+        buffer_info.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+        break;
+
     case kUniform:
         buffer_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
         break;

@@ -35,9 +35,6 @@ DEFINE_int32(log_level, 2,
 
 DEFINE_string(quark_dir, "..", "Root directory of the Scintillator Quark, for finding dependent files.");
 
-/*
-DEFINE_bool(fullscreen, false, "Create a fullscreen window.");
-*/
 DEFINE_int32(window_width, 800, "Viewable width in pixles of window to create. Ignored if --fullscreen is supplied.");
 DEFINE_int32(window_height, 600, "Viewable height in pixels of window to create. Ignored if --fullscreen is supplied.");
 
@@ -196,13 +193,24 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    //        ^ -y
+    //        |
+    //   -x   |    +x
+    // <------+------>
+    //        |
+    //        | +y
+    //        V
+    //
+    // Triangles must be wound clockwise.
     const std::vector<Vertex> vertices = {
-        { { -1.0f, -1.0f } }, // { 1.0f, 0.0f, 0.0f }},
-        { { 1.0f, -1.0f } }, // { 0.0f, 1.0f, 0.0f }},
-        { { 1.0f, 1.0f } }, // { 0.0f, 0.0f, 1.0f }},
-        { { -1.0f, -1.0f } }, // { 1.0f, 0.0f, 0.0f }},
-        { { 1.0f, 1.0f } }, // { 0.0f, 0.0f, 1.0f }},
-        { { -1.0f, 1.0f } } //,  { 0.5f, 0.5f, 1.0f }}
+        // Lower left
+        { { -1.0f, 1.0f } }, // { 1.0f, 0.0f, 0.0f }},
+        // Upper left
+        { { -1.0f, -1.0f } }, // { 0.0f, 1.0f, 0.0f }},
+        // Lower Right
+        { { 1.0f, 1.0f } }, // { 1.0f, 0.0f, 0.0f }},
+        // Upper right
+        { { 1.0f, -1.0f } }, // { 0.0f, 0.0f, 1.0f }},
     };
 
     scin::vk::Buffer vertex_buffer(scin::vk::Buffer::kVertex, device);
@@ -215,9 +223,21 @@ int main(int argc, char* argv[]) {
     std::memcpy(vertex_buffer.mapped_address(), vertices.data(), sizeof(Vertex) * vertices.size());
     vertex_buffer.UnmapMemory();
 
+    const std::vector<uint16_t> indices = {
+        0, 1, 2, 3
+    };
+    scin::vk::Buffer indexBuffer(scin::vk::Buffer::kIndex, device);
+    if (!indexBuffer.Create(sizeof(uint16_t) * indices.size())) {
+        spdlog::error("error creating index buffer.");
+        return EXIT_FAILURE;
+    }
+    indexBuffer.MapMemory();
+    std::memcpy(indexBuffer.mapped_address(), indices.data(), sizeof(uint16_t) * indices.size());
+    indexBuffer.UnmapMemory();
+
     uniform.createBuffers(&swapchain);
 
-    if (!command_pool.CreateCommandBuffers(&swapchain, &pipeline, &vertex_buffer, &uniform)) {
+    if (!command_pool.CreateCommandBuffers(&swapchain, &pipeline, &vertex_buffer, &indexBuffer, &uniform)) {
         spdlog::error("error creating command buffers.");
         return EXIT_FAILURE;
     }
@@ -234,6 +254,7 @@ int main(int argc, char* argv[]) {
     // ========== Vulkan cleanup.
     window.DestroySyncObjects(device.get());
     command_pool.Destroy();
+    indexBuffer.Destroy();
     vertex_buffer.Destroy();
     swapchain.DestroyFramebuffers();
     pipeline.Destroy();

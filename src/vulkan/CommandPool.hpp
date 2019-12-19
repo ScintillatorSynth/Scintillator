@@ -22,7 +22,8 @@ public:
     bool Create();
     void Destroy();
 
-    bool CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline, Buffer* vertex_buffer, Uniform* uniform);
+    bool CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline, Buffer* vertex_buffer, Buffer* indexBuffer,
+        Uniform* uniform);
 
     VkCommandBuffer command_buffer(size_t i) { return command_buffers_[i]; }
 
