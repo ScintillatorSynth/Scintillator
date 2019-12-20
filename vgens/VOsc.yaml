@@ -3,9 +3,11 @@ name: ScinOsc
 inputs:
     - freq
     - phase
+    - mul
+    - add
 parameters:
     - time
-fragment: "@out = 1.0 + (0.5 * sin((@time * @freq * 2 * pi) + @phase));"
+fragment: "@out = @add + (@mul * sin((@time * @freq * 2 * pi) + @phase));"
 ---
 name: VSaw
 inputs:

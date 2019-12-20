@@ -14,15 +14,16 @@ ScinthDef {
 		VGen.buildScinthDef = nil;
 	}
 
-	asYAML { | indentDepth = 1 |
+	asYAML { |indentDepth = 0|
 		var yaml, indent, depthIndent, secondDepth;
+		indent = "";
 		indentDepth.do({ indent = indent ++ "    " });
 		yaml = indent ++ "- name: %\n".format(name);
 		yaml = yaml ++ indent ++ "  vgens:\n";
 		depthIndent = indent ++ "    ";
 		secondDepth = depthIndent ++ "    ";
 		children.do({ | vgen, index |
-			yaml = yaml ++ depthIndent ++ "- class_name:"  + vgen.name ++ "\n";
+			yaml = yaml ++ depthIndent ++ "- className:"  + vgen.name ++ "\n";
 			yaml = yaml ++ depthIndent ++ "  rate: fragment\n";
 			if (vgen.inputs.size > 0, {
 				yaml = yaml ++ depthIndent ++ "  inputs:\n";
@@ -34,8 +35,8 @@ ScinthDef {
 					}
 					{ input.isVGen } {
 						yaml = yaml ++ secondDepth ++ "- type: vgen\n";
-						yaml = yaml ++ secondDepth ++ "  vgen_index:" + input.scinthIndex.asString ++ "\n";
-						yaml = yaml ++ secondDepth ++ "  output_index: 0\n";
+						yaml = yaml ++ secondDepth ++ "  vgenIndex:" + input.scinthIndex.asString ++ "\n";
+						yaml = yaml ++ secondDepth ++ "  outputIndex: 0\n";
 					}
 					{ this.notImplemented; }
 				});
@@ -48,14 +49,10 @@ ScinthDef {
 	// Ultimately this should find the currently attached Scintillator Server, serialize it and send it
 	// to the server. But for now, it completes the YAML file spec and saves it to disk, for loading
 	// offline by the alpha server.
-	add { | filePath |
+	add { |filePath|
 		var file;
 		var yaml = "---\n";
-		yaml = yaml ++ "file_type: scinthdef\n";
-		yaml = yaml ++ "version: 0\n";
-		yaml = yaml ++ "scinthdefs:\n";
 		yaml = yaml ++ this.asYAML;
-		yaml = yaml ++ "...\n\n";
 		file = File(filePath, "w");
 		file.write(yaml);
 		file.close;

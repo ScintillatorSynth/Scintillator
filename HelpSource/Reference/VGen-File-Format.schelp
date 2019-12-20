@@ -9,7 +9,7 @@ A VGen file may contain multiple VGen definitions. Each definition at top level 
 
 table::
 ## strong::name:: || string || strong::required:: || The name of the VGen, must be unique. Used to identify this VGen in ScinthDef descriptions.
-## strong::inputs:: || list || optional || A list of strings identifying input names in the fragment program.
+## strong::inputs:: || list || optional || A list of strings identifying input names in the fragment program. The ordering of inputs here must match the ordering of inputs on the ScinthDef, as those inputs are unnamed.
 ## strong::parameters:: || list || optional || A list of strings identifying names of predefined parameters provided to all Scinths when running (TODO: make list of these, "time" is the first one)
 ## strong::intermediates:: || list || optional || A list of strings identifying names of intermediate variables, broken out here so the uniqueness of their names can be identified.
 ## strong::fragment:: || string || strong::required:: || The GLSL fragment program, with inputs, parameters, and intermediates, as well as the keyword "@out" prefixed with @ symbols.

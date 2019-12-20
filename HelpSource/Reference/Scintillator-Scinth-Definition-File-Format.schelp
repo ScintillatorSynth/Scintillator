@@ -14,18 +14,7 @@ section::File Format
 
 subsection::Top-Level Dictionary Spec
 
-A ScinthDef file contains one YAML document, beginning with code::---:: and ending with code::...:: on individual lines. Within there are a few tags, followed by a list of individual ScinthDef elements. The header is formatted such:
-
-table::
-## strong::key::  || strong::YAML type:: || strong::notes::
-## code::file_type:: || string || should always read code::scinthdef::
-## code::version:: || int || currently code::0::
-## code::scinthdefs:: || list || the individual ScinthDef YAML dictionaries in a list
-::
-
-subsection::ScinthDef Dictionary Spec
-
-The ScinthDef list elements follow the SuperCollider SynthDef structure except for that Constants are not identified verbatim but are rather provided directly in the input spec, in keeping with the desire to allow ScinthDef files to be human-readable, as well as the fact that the shader generation code inside of the synth does not require the constants to be separated out.
+A ScinthDef file contains one or more YAML documents. Each document roughly follows the SuperCollider SynthDef structure except for that Constants are not identified verbatim but are rather provided directly in the input spec, in keeping with the desire to allow ScinthDef files to be human-readable, as well as the fact that the shader generation code inside of the synth does not require the constants to be separated out.
 
 table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
@@ -40,7 +29,7 @@ Individual VGens are specified as YAML dictionaries and have the following keys:
 
 table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
-## code::class_name:: || string || name of the VGen class, must match the name of a VGen configured on the server
+## code::className:: || string || name of the VGen class, must match the name of a VGen configured on the server
 ## code::rate:: || string || currently either code::fragment:: or code::vertex::
 ## code::inputs:: || list || input YAML dictionaries in an ordered list. May be absent if VGen has no inputs.
 ## code::outputs:: || list || output YAML dictionaries in an ordered list
@@ -63,8 +52,8 @@ table::
 ## code::vgen:: ||
 table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
-## code::vgen_index:: || int || The index of the VGen providing output to this input
-## code::output_index:: || int || The output index on that VGen
+## code::vgenIndex:: || int || The index of the VGen providing output to this input
+## code::outputIndex:: || int || The output index on that VGen
 ::
 ## code::constant:: ||
 table::
@@ -100,34 +89,36 @@ section::Example
 We execute the following code:
 
 code::
+(
 ~k = ScinthDef.new(\foo, {
-	VOut.fr(0, SinOsc.ar(200.0, 0.0, 0.9, 0.2));
+	VOut.fg(0, ScinOsc.fg(200.0, 0.0, 0.9, 0.2));
 });
+~k.asYAML.postln;
+)
 ::
 
 And ScinthDef produces the following:
 
 code::
----
-filetype: scinthdef
-version: 0
-defcount: 2
-scinthdefs:
-    - name: foo
-      vgens:
-        - classname: VSinOsc
-          rate: fragment
-          inputs:
-            - name: freq
-              type: constant
-              value: 1.0
-            - name: phase
-              type: constant
-              value: 0.0
-          outputs:
-            - rate: fragment
-        - classname: VMulAdd
-          rate: fragment
-          inputs:
-...
+- name: foo
+  vgens:
+    - className: ScinOsc
+      rate: fragment
+      inputs:
+        - type: constant
+          value: 200.0
+        - type: constant
+          value: 0.0
+        - type: constant
+          value: 0.9
+        - type: constant
+          value: 0.2
+    - className: VOut
+      rate: fragment
+      inputs:
+        - type: constant
+          value: 0
+        - type: vgen
+          vgenIndex: 0
+          outputIndex: 0
 ::

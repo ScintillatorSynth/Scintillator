@@ -28,7 +28,7 @@ public:
 
     /*! Parse VGens from the supplied yaml file.
      *
-     * \param fileName A path and filename of the file to parse and load.
+     * \param fileName A path and filename of the file to load and parse.
      * \return The number of valid VGens parsed, or a negative number on load error.
      */
     int loadFromFile(const std::string& fileName);
