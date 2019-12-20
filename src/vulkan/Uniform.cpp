@@ -39,7 +39,7 @@ bool Uniform::createLayout() {
 bool Uniform::createBuffers(Swapchain* swapchain) {
     for (auto i = 0; i < swapchain->image_count(); ++i) {
         std::shared_ptr<Buffer> buffer(new Buffer(Buffer::Kind::kUniform, m_device));
-        if (!buffer->Create(m_size)) {
+        if (!buffer->create(m_size)) {
             spdlog::error("error creating uniform buffer");
             return false;
         }

@@ -79,7 +79,7 @@ bool Pipeline::Create(Shader* vertex_shader, Shader* fragment_shader, Swapchain*
     // Input Assembly
     VkPipelineInputAssemblyStateCreateInfo input_assembly = {};
     input_assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
     input_assembly.primitiveRestartEnable = VK_FALSE;
 
     // Viewport State

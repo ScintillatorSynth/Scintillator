@@ -28,7 +28,7 @@ void CommandPool::Destroy() {
 }
 
 bool CommandPool::CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline, Buffer* vertex_buffer,
-                                       Uniform* uniform) {
+                                       Buffer* indexBuffer, Uniform* uniform) {
     command_buffers_.resize(swapchain->image_count());
 
     VkCommandBufferAllocateInfo alloc_info = {};
@@ -63,12 +63,13 @@ bool CommandPool::CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline,
 
         vkCmdBeginRenderPass(command_buffers_[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
         vkCmdBindPipeline(command_buffers_[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get());
-        VkBuffer vertex_buffers[] = { vertex_buffer->buffer() };
+        VkBuffer vertexBuffers[] = { vertex_buffer->buffer() };
         VkDeviceSize offsets[] = { 0 };
-        vkCmdBindVertexBuffers(command_buffers_[i], 0, 1, vertex_buffers, offsets);
+        vkCmdBindVertexBuffers(command_buffers_[i], 0, 1, vertexBuffers, offsets);
+        vkCmdBindIndexBuffer(command_buffers_[i], indexBuffer->buffer(), 0, VK_INDEX_TYPE_UINT16);
         vkCmdBindDescriptorSets(command_buffers_[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->layout(), 0, 1,
                                 uniform->set(i), 0, nullptr);
-        vkCmdDraw(command_buffers_[i], 6, 2, 0, 0);
+        vkCmdDrawIndexed(command_buffers_[i], 4, 1, 0, 0, 0);
         vkCmdEndRenderPass(command_buffers_[i]);
         if (vkEndCommandBuffer(command_buffers_[i]) != VK_SUCCESS) {
             return false;

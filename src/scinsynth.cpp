@@ -1,20 +1,20 @@
+#include "FileSystem.hpp"
 #include "LogLevels.hpp"
 #include "OscHandler.hpp"
-#include "FileSystem.hpp"
+#include "VGenManager.hpp"
+#include "Version.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Instance.hpp"
 #include "vulkan/Pipeline.hpp"
-#include "vulkan/Vulkan.hpp"
 #include "vulkan/Shader.hpp"
 #include "vulkan/ShaderCompiler.hpp"
 #include "vulkan/ShaderSource.hpp"
 #include "vulkan/Swapchain.hpp"
-#include "vulkan/Window.hpp"
 #include "vulkan/Uniform.hpp"
-#include "Version.hpp"
-#include "VGenManager.hpp"
+#include "vulkan/Vulkan.hpp"
+#include "vulkan/Window.hpp"
 
 #include "gflags/gflags.h"
 #include "glm/glm.hpp"
@@ -26,18 +26,15 @@
 
 // Command-line options specified to gflags.
 DEFINE_bool(print_version, false, "Print the Scintillator version and exit.");
-DEFINE_int32(udp_port_number, -1, "A port number 0-65535.");
+DEFINE_int32(udp_port_number, 5511, "A port number 1024-65535.");
 DEFINE_string(bind_to_address, "127.0.0.1", "Bind the UDP socket to this address.");
 
-DEFINE_int32(log_level, 2,
+DEFINE_int32(log_level, 3,
              "Verbosity of logs, lowest value of 0 logs everything, highest value of 6 disables all "
              "logging.");
 
 DEFINE_string(quark_dir, "..", "Root directory of the Scintillator Quark, for finding dependent files.");
 
-/*
-DEFINE_bool(fullscreen, false, "Create a fullscreen window.");
-*/
 DEFINE_int32(window_width, 800, "Viewable width in pixles of window to create. Ignored if --fullscreen is supplied.");
 DEFINE_int32(window_height, 600, "Viewable height in pixels of window to create. Ignored if --fullscreen is supplied.");
 
@@ -127,13 +124,13 @@ int main(int argc, char* argv[]) {
                                          "#extension GL_ARB_separate_shader_objects : enable\n"
                                          "\n"
                                          "layout(location = 0) in vec2 inPosition;\n"
-                                         "// layout(location = 1) in vec3 inColor;\n"
+                                         "layout(location = 1) in vec2 inNormPosition;\n"
                                          "\n"
-                                         "// layout(location = 0) out vec3 fragColor;\n"
+                                         "layout(location = 0) out vec2 normPos;\n"
                                          "\n"
                                          "void main() {\n"
                                          "   gl_Position = vec4(inPosition, 0.0, 1.0);\n"
-                                         "   // fragColor = inColor;\n"
+                                         "  normPos = inNormPosition;\n"
                                          "}\n");
     std::unique_ptr<scin::vk::Shader> vertex_shader =
         shader_compiler.Compile(device, &vertex_source, scin::vk::Shader::kVertex);
@@ -150,12 +147,12 @@ int main(int argc, char* argv[]) {
         "   float time;\n"
         "} ubo;\n"
         "\n"
-        "// layout(location = 0) in vec3 fragColor;\n"
+        "layout(location = 0) in vec2 normPos;\n"
         "\n"
         "layout(location = 0) out vec4 outColor;\n"
         "\n"
         "void main() {\n"
-        "   float fragRad = 0.5 + (0.5 * sin((ubo.time / -2.0) + (length(gl_FragCoord) / 100.0)));\n"
+        "   float fragRad = 0.5 + (0.5 * sin((ubo.time * 2.0) - (3.0 * length(normPos))));\n"
         "   outColor = vec4(fragRad, fragRad, fragRad, 1.0);\n"
         "}\n");
     std::unique_ptr<scin::vk::Shader> fragment_shader =
@@ -169,13 +166,13 @@ int main(int argc, char* argv[]) {
 
     struct Vertex {
         glm::vec2 pos;
-        //        glm::vec3 color;
+        glm::vec2 normPos;
     };
 
     scin::vk::Pipeline pipeline(device);
     pipeline.SetVertexStride(sizeof(Vertex));
     pipeline.AddVertexAttribute(scin::vk::Pipeline::kVec2, offsetof(Vertex, pos));
-    //    pipeline.AddVertexAttribute(scin::vk::Pipeline::kVec3, offsetof(Vertex, color));
+    pipeline.AddVertexAttribute(scin::vk::Pipeline::kVec2, offsetof(Vertex, normPos));
 
     scin::vk::Uniform uniform(device, sizeof(scin::vk::GlobalUniform));
     uniform.createLayout();
@@ -196,28 +193,55 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    float normPosX, normPosY;
+    if (FLAGS_window_width > FLAGS_window_height) {
+        normPosX = static_cast<float>(FLAGS_window_width) / static_cast<float>(FLAGS_window_height);
+        normPosY = 1.0f;
+    } else {
+        normPosX = 1.0f;
+        normPosY = static_cast<float>(FLAGS_window_height) / static_cast<float>(FLAGS_window_width);
+    }
+
+    // Vulkan coordinate system setup:
+    //
+    //        ^ -y
+    //        |
+    //   -x   |    +x
+    // <------+------>
+    //        |
+    //        | +y
+    //        V
+    //
+    // The axis is in the center of the frame, and frame edges are at +/-1.0 Triangles must be wound clockwise.
     const std::vector<Vertex> vertices = {
-        { { -1.0f, -1.0f } }, // { 1.0f, 0.0f, 0.0f }},
-        { { 1.0f, -1.0f } }, // { 0.0f, 1.0f, 0.0f }},
-        { { 1.0f, 1.0f } }, // { 0.0f, 0.0f, 1.0f }},
-        { { -1.0f, -1.0f } }, // { 1.0f, 0.0f, 0.0f }},
-        { { 1.0f, 1.0f } }, // { 0.0f, 0.0f, 1.0f }},
-        { { -1.0f, 1.0f } } //,  { 0.5f, 0.5f, 1.0f }}
+        // Lower left
+        { { -1.0f, 1.0f }, { -normPosX, normPosY } },
+        // Upper left
+        { { -1.0f, -1.0f }, { -normPosX, -normPosY } },
+        // Lower Right
+        { { 1.0f, 1.0f }, { normPosX, normPosY } },
+        // Upper right
+        { { 1.0f, -1.0f }, { normPosX, -normPosY } },
     };
 
-    scin::vk::Buffer vertex_buffer(scin::vk::Buffer::kVertex, device);
-    if (!vertex_buffer.Create(sizeof(Vertex) * vertices.size())) {
+    scin::vk::Buffer vertexBuffer(scin::vk::Buffer::kVertex, device);
+    if (!vertexBuffer.create(sizeof(Vertex) * vertices.size())) {
         spdlog::error("error creating vertex buffer.");
         return EXIT_FAILURE;
     }
+    vertexBuffer.copyToGPU(vertices.data());
 
-    vertex_buffer.MapMemory();
-    std::memcpy(vertex_buffer.mapped_address(), vertices.data(), sizeof(Vertex) * vertices.size());
-    vertex_buffer.UnmapMemory();
+    const std::vector<uint16_t> indices = { 0, 1, 2, 3 };
+    scin::vk::Buffer indexBuffer(scin::vk::Buffer::kIndex, device);
+    if (!indexBuffer.create(sizeof(uint16_t) * indices.size())) {
+        spdlog::error("error creating index buffer.");
+        return EXIT_FAILURE;
+    }
+    indexBuffer.copyToGPU(indices.data());
 
     uniform.createBuffers(&swapchain);
 
-    if (!command_pool.CreateCommandBuffers(&swapchain, &pipeline, &vertex_buffer, &uniform)) {
+    if (!command_pool.CreateCommandBuffers(&swapchain, &pipeline, &vertexBuffer, &indexBuffer, &uniform)) {
         spdlog::error("error creating command buffers.");
         return EXIT_FAILURE;
     }
@@ -234,7 +258,8 @@ int main(int argc, char* argv[]) {
     // ========== Vulkan cleanup.
     window.DestroySyncObjects(device.get());
     command_pool.Destroy();
-    vertex_buffer.Destroy();
+    indexBuffer.destroy();
+    vertexBuffer.destroy();
     swapchain.DestroyFramebuffers();
     pipeline.Destroy();
     uniform.destroy();
