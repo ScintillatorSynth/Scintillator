@@ -19,7 +19,7 @@ int VGenManager::loadFromFile(const std::string& fileName) {
         spdlog::error("error parsing VGen yaml file {}", fileName);
         return -1;
     } catch (const YAML::BadFile&) {
-        spdlog::error("bad file {}", fileName);
+        spdlog::error("bad VGen yaml file {}", fileName);
         return -1;
     }
 

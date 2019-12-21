@@ -2,6 +2,7 @@
 
 #include "VGenInstance.hpp"
 #include "VGenManager.hpp"
+#include "ScinthDef.hpp"
 
 #include "spdlog/spdlog.h"
 #include "yaml-cpp/exceptions.h"
@@ -13,11 +14,42 @@ ScinthDefManager::ScinthDefManager(std::shared_ptr<VGenManager> vgenManager): m_
 
 ScinthDefManager::~ScinthDefManager() {}
 
-int ScinthDefManager::loadFromFile(const std::string& fileName) { return 0; }
+int ScinthDefManager::loadFromFile(const std::string& fileName) {
+    std::vector<YAML::Node> nodes;
+    try {
+        nodes = YAML::LoadAllFromFile(fileName);
+    } catch (const YAML::ParserException&) {
+        spdlog::error("error parsing ScinthDef yaml file {}", fileName);
+        return -1;
+    } catch (const YAML::BadFile&) {
+        spdlog::error("bad ScinthDef yaml file {}", fileName);
+        return -1;
+    }
 
-int ScinthDefManager::parseFromString(const std::string& yaml) { return 0; }
+    return extractFromNodes(nodes);
+}
 
-int ScinthDefManager::extractFromNodes(const std::vector<YAML::Node>& nodes) { return 0; }
+int ScinthDefManager::parseFromString(const std::string& yaml) {
+    std::vector<YAML::Node> nodes;
+    try {
+        nodes = YAML::LoadAll(yaml);
+    } catch (const YAML::ParserException&) {
+        spdlog::error("error parsing ScinthDef yaml string {}", yaml);
+        return -1;
+    }
+
+    return extractFromNodes(nodes);
+}
+
+int ScinthDefManager::extractFromNodes(const std::vector<YAML::Node>& nodes) {
+    int numberOfValidElements = 0;
+    for (auto node : nodes) {
+        if (extractFromNode(node))
+            ++numberOfValidElements;
+    }
+
+    return numberOfValidElements;
+}
 
 bool ScinthDefManager::extractFromNode(const YAML::Node& node) {
     if (!node.IsMap()) {
@@ -103,6 +135,12 @@ bool ScinthDefManager::extractFromNode(const YAML::Node& node) {
         instances.push_back(instance);
     }
 
+    std::shared_ptr<ScinthDef> scinthDef(new ScinthDef(instances));
+
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_scinthDefs.insert_or_assign(name, scinthDef);
+    }
     return true;
 }
 

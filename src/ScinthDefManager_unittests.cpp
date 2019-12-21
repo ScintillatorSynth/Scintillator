@@ -6,8 +6,7 @@
 
 namespace scin {
 
-TEST(ScinthDefManagerTest, SingleVGen) {
-}
+TEST(ScinthDefManagerTest, SingleVGen) {}
 
 
 } // namespace scin

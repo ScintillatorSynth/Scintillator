@@ -2,6 +2,7 @@
 #define SRC_SCINTHDEF_MANAGER_HPP_
 
 #include <memory>
+#include <mutex>
 #include <unordered_map>
 #include <vector>
 
@@ -40,6 +41,7 @@ private:
     bool extractFromNode(const YAML::Node& node);
 
     std::shared_ptr<VGenManager> m_vgenManager;
+    std::mutex m_mutex;
     std::unordered_map<std::string, std::shared_ptr<ScinthDef>> m_scinthDefs;
 };
 

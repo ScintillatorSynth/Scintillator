@@ -121,9 +121,10 @@ TEST(VGenManagerTest, ParseFromFile) {
     clobberFileWithString(tempFile, "'f#oo: '%>^'|");
     EXPECT_GT(0, manager.loadFromFile(tempFile));
 
-    clobberFileWithString(tempFile, "---\n"
-                                    "name: FileVGen\n"
-                                    "fragment: \"@out = 0.0f\"\n");
+    clobberFileWithString(tempFile,
+                          "---\n"
+                          "name: FileVGen\n"
+                          "fragment: \"@out = 0.0f\"\n");
     EXPECT_EQ(1, manager.loadFromFile(tempFile));
 
     // Remove temp file.
