@@ -4,6 +4,19 @@
 #include "VGen.hpp"
 #include "VGenManager.hpp"
 
+#include <array>
+#include <fstream>
+
+namespace {
+
+void clobberFileWithString(const fs::path& filePath, const std::string& contents) {
+    std::ofstream outFile(filePath, std::ofstream::out | std::ofstream::trunc);
+    ASSERT_TRUE(outFile.good());
+    outFile << contents;
+    ASSERT_TRUE(outFile.good());
+}
+
+}
 
 namespace scin {
 
@@ -13,6 +26,10 @@ TEST(VGenManagerTest, InvalidYamlStrings) {
     EXPECT_EQ(0, manager.parseFromString("xxzz"));
     EXPECT_EQ(0, manager.parseFromString("[ 1 2 3 4 ]"));
     EXPECT_EQ(0, manager.parseFromString("\""));
+    EXPECT_EQ(0, manager.parseFromString("\a\b\f\v\\x08\x16"));
+
+    EXPECT_GT(0, manager.parseFromString("'f#oo: '%>^'|"));
+
     // Name and fragment are currently required in all VGen specs.
     EXPECT_EQ(0,
               manager.parseFromString("---\n"
@@ -91,10 +108,26 @@ TEST(VGenManagerTest, ValidYamlStrings) {
     EXPECT_EQ("@fl = 2.0; @out = @fl;", overwrite->fragment());
 }
 
-// TODO:
-//  (a) add test coverage metrics - consider LLVM for general compilation?
-//  (b) add file test using temporary file, to show metrics going up
-//  (c) add any other tests to get VGenManager test coverage up to 100%
-//  (d) Build ScinSynth parser/generator/compiler
+TEST(VGenManagerTest, ParseFromFile) {
+    fs::path tempFile = fs::temp_directory_path() / "VGenManager_FileTest.yaml";
+    if (fs::exists(tempFile)) {
+        ASSERT_TRUE(fs::remove(tempFile));
+    }
+
+    VGenManager manager;
+    // Nonexistent file should return error.
+    EXPECT_GT(0, manager.loadFromFile(tempFile));
+
+    clobberFileWithString(tempFile, "'f#oo: '%>^'|");
+    EXPECT_GT(0, manager.loadFromFile(tempFile));
+
+    clobberFileWithString(tempFile, "---\n"
+                                    "name: FileVGen\n"
+                                    "fragment: \"@out = 0.0f\"\n");
+    EXPECT_EQ(1, manager.loadFromFile(tempFile));
+
+    // Remove temp file.
+    ASSERT_TRUE(fs::remove(tempFile));
+}
 
 } // namespace scin

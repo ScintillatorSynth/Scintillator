@@ -1,17 +1,23 @@
 #ifndef SRC_SCINTHDEF_HPP_
 #define SRC_SCINTHDEF_HPP_
 
-/*! A ScinthDef maintains a signal graph of VGen objects and can produce Scinth instances.
- *
+#include <vector>
+
+namespace scin {
+
+class VGenInstance;
+
+/*! Maintains a signal graph of VGen objects and can produce Scinth instances.
  */
 class ScinthDef {
 public:
-    ScinthDef();
+    ScinthDef(const std::vector<VGenInstance>& instances);
     ~ScinthDef();
 
-
 private:
+    std::vector<VGenInstance> m_instances;
 };
 
-#endif  // SRC_SCINTHDEF_HPP_
+} // namespace scin
 
+#endif // SRC_SCINTHDEF_HPP_

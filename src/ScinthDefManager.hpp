@@ -2,13 +2,16 @@
 #define SRC_SCINTHDEF_MANAGER_HPP_
 
 #include <memory>
+#include <unordered_map>
+#include <vector>
 
 namespace YAML {
-    class Node;
+class Node;
 }
 
 namespace scin {
 
+class ScinthDef;
 class VGenManager;
 
 /*! Maintains the list of currently defined ScinthDefs. Can parse yaml ScinthDef input.
@@ -32,15 +35,14 @@ public:
      */
     int parseFromString(const std::string& yaml);
 
-
 private:
     int extractFromNodes(const std::vector<YAML::Node>& nodes);
-    bool extractFromNode(YAML::Node& node);
+    bool extractFromNode(const YAML::Node& node);
 
     std::shared_ptr<VGenManager> m_vgenManager;
+    std::unordered_map<std::string, std::shared_ptr<ScinthDef>> m_scinthDefs;
 };
 
-}  // namespace scin
+} // namespace scin
 
-#endif   // SRC_SCINTHDEF_MANAGER_HPP_
-
+#endif // SRC_SCINTHDEF_MANAGER_HPP_

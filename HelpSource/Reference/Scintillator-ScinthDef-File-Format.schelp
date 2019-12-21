@@ -1,5 +1,5 @@
-title:: Scintillator Scinth Definition File Format
-summary:: Description of Scinth Definition file format used by Scintillator synth server.
+title:: Scintillator ScinthDef File Format
+summary:: Description of ScinthDef file format used by Scintillator synth server.
 categories:: Quarks>Scintillator
 related:: Classes/VGen, Classes/ScinthDef, Reference/Synth-Definition-File-Format
 
