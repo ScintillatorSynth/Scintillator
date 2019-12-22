@@ -12,16 +12,15 @@ add_library(scintillator_core STATIC
     ScinthDef.hpp
     ScinthDefManager.cpp
     ScinthDefManager.hpp
-    VGen.cpp
-    VGen.hpp
     VGenInstance.cpp
     VGenInstance.hpp
     VGenManager.cpp
     VGenManager.hpp
+    core/AbstractVGen.cpp
+    core/AbstractVGen.hpp
 )
 
 target_link_libraries(scintillator_core
-    gflags
     spdlog
     yaml-cpp
     stdc++fs
@@ -106,6 +105,7 @@ add_executable(run_unittests
 )
 
 target_link_libraries(run_unittests
+    gflags
     gtest
     scintillator_core
     stdc++fs

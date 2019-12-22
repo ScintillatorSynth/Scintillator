@@ -1,12 +1,12 @@
 #include "VGenInstance.hpp"
 
-#include "VGen.hpp"
+#include "core/AbstractVGen.hpp"
 
 #include "spdlog/spdlog.h"
 
 namespace scin {
 
-VGenInstance::VGenInstance(std::shared_ptr<const VGen> vgen): m_vgen(vgen) {}
+VGenInstance::VGenInstance(std::shared_ptr<const AbstractVGen> abstractVGen): m_abstractVGen(abstractVGen) {}
 
 VGenInstance::~VGenInstance() {}
 
@@ -15,9 +15,9 @@ void VGenInstance::addConstantInput(float constantValue) { m_inputs.emplace_back
 void VGenInstance::addVGenInput(int index) { m_inputs.emplace_back(VGenInput(index)); }
 
 bool VGenInstance::validate() {
-    if (m_inputs.size() != m_vgen->inputs().size()) {
-        spdlog::error("input size mismatch for VGen {}, expected {}, got {}", m_vgen->name(), m_vgen->inputs().size(),
-                      m_inputs.size());
+    if (m_inputs.size() != m_abstractVGen->inputs().size()) {
+        spdlog::error("input size mismatch for VGen {}, expected {}, got {}", m_abstractVGen->name(),
+                      m_abstractVGen->inputs().size(), m_inputs.size());
         return false;
     }
 

@@ -1,6 +1,6 @@
 #include "VGenManager.hpp"
 
-#include "VGen.hpp"
+#include "core/AbstractVGen.hpp"
 
 #include "spdlog/spdlog.h"
 #include "yaml-cpp/exceptions.h"
@@ -48,8 +48,8 @@ int VGenManager::extractFromNodes(const std::vector<YAML::Node>& nodes) {
     return numberOfValidElements;
 }
 
-std::shared_ptr<const VGen> VGenManager::getVGenNamed(const std::string& name) {
-    std::shared_ptr<const VGen> vgen;
+std::shared_ptr<const AbstractVGen> VGenManager::getVGenNamed(const std::string& name) {
+    std::shared_ptr<const AbstractVGen> vgen;
     std::lock_guard<std::mutex> lock(m_mutex);
     auto it = m_VGens.find(name);
     if (it != m_VGens.end()) {
@@ -97,7 +97,7 @@ bool VGenManager::extractFromNode(YAML::Node& node) {
         }
     }
 
-    std::shared_ptr<VGen> vgen(new VGen(name, fragment, inputs, parameters, intermediates));
+    std::shared_ptr<AbstractVGen> vgen(new AbstractVGen(name, fragment, inputs, parameters, intermediates));
     {
         std::lock_guard<std::mutex> lock(m_mutex);
         m_VGens.insert_or_assign(name, vgen);

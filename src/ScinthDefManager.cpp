@@ -1,5 +1,6 @@
 #include "ScinthDefManager.hpp"
 
+#include "core/AbstractVGen.hpp"
 #include "VGenInstance.hpp"
 #include "VGenManager.hpp"
 #include "ScinthDef.hpp"
@@ -97,7 +98,7 @@ bool ScinthDefManager::extractFromNode(const YAML::Node& node) {
             return false;
         }
         std::string className = vgen["className"].as<std::string>();
-        std::shared_ptr<const VGen> vgenClass = m_vgenManager->getVGenNamed(className);
+        std::shared_ptr<const AbstractVGen> vgenClass = m_vgenManager->getVGenNamed(className);
         if (!vgenClass) {
             spdlog::error("ScinthDef {} has vgen with VGen {} not defined.", name, className);
             return false;

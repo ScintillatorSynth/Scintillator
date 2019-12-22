@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "FileSystem.hpp"
-#include "VGen.hpp"
+#include "core/AbstractVGen.hpp"
 #include "VGenManager.hpp"
 
 #include <fstream>
@@ -59,17 +59,17 @@ TEST(VGenManagerTest, ValidYamlStrings) {
                                       "name: Overwrite\n"
                                       "fragment: \"@out = 0.0;\"\n"));
     EXPECT_EQ(3, manager.numberOfVGens());
-    std::shared_ptr<const VGen> justNameAndFragment = manager.getVGenNamed("JustNameAndFragment");
+    std::shared_ptr<const AbstractVGen> justNameAndFragment = manager.getVGenNamed("JustNameAndFragment");
     ASSERT_TRUE(justNameAndFragment);
     EXPECT_EQ("JustNameAndFragment", justNameAndFragment->name());
     EXPECT_EQ("@out = 1.0;", justNameAndFragment->fragment());
-    std::shared_ptr<const VGen> addInput = manager.getVGenNamed("AddInput");
+    std::shared_ptr<const AbstractVGen> addInput = manager.getVGenNamed("AddInput");
     ASSERT_TRUE(addInput);
     EXPECT_EQ("AddInput", addInput->name());
     ASSERT_EQ(1, addInput->inputs().size());
     EXPECT_EQ("a", addInput->inputs()[0]);
     EXPECT_EQ("@out = @a;", addInput->fragment());
-    std::shared_ptr<const VGen> overwrite = manager.getVGenNamed("Overwrite");
+    std::shared_ptr<const AbstractVGen> overwrite = manager.getVGenNamed("Overwrite");
     ASSERT_TRUE(overwrite);
     EXPECT_EQ("Overwrite", overwrite->name());
     EXPECT_EQ("@out = 0.0;", overwrite->fragment());

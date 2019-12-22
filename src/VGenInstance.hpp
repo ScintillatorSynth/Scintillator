@@ -6,13 +6,13 @@
 
 namespace scin {
 
-class VGen;
+class AbstractVGen;
 
 /*! Represents a single node in the signal flow graph of a ScinthDef. Combines a VGen and inputs.
  */
 class VGenInstance {
 public:
-    VGenInstance(std::shared_ptr<const VGen> vgen);
+    VGenInstance(std::shared_ptr<const AbstractVGen> abstractVGen);
     ~VGenInstance();
 
     /*! Adds a constant-valued input.
@@ -50,7 +50,7 @@ public:
     bool getInputVGenIndex(int index, int& outIndex) const;
 
     int numberOfInputs() const { return m_inputs.size(); }
-    std::shared_ptr<const VGen> vgen() const { return m_vgen; }
+    std::shared_ptr<const AbstractVGen> abstractVGen() const { return m_abstractVGen; }
 
 private:
     struct VGenInput {
@@ -66,7 +66,7 @@ private:
         Value value;
     };
 
-    std::shared_ptr<const VGen> m_vgen;
+    std::shared_ptr<const AbstractVGen> m_abstractVGen;
     std::vector<VGenInput> m_inputs;
 };
 

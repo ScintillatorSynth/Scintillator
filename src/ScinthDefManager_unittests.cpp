@@ -3,7 +3,7 @@
 #include "FileSystem.hpp"
 #include "ScinthDef.hpp"
 #include "ScinthDefManager.hpp"
-#include "VGen.hpp"
+#include "core/AbstractVGen.hpp"
 #include "VGenInstance.hpp"
 #include "VGenManager.hpp"
 
@@ -115,7 +115,7 @@ TEST(ScinthDefManagerTest, ValidYAMLStrings) {
     ASSERT_EQ(1, manager.numberOfScinthDefs());
     std::shared_ptr<const ScinthDef> scinthDef = manager.getScinthDefNamed("firstScinth");
     ASSERT_EQ(1, scinthDef->numberOfInstances());
-    EXPECT_EQ("NoInput", scinthDef->instanceAt(0).vgen()->name());
+    EXPECT_EQ("NoInput", scinthDef->instanceAt(0).abstractVGen()->name());
     EXPECT_EQ(0, scinthDef->instanceAt(0).numberOfInputs());
 
     EXPECT_EQ(2,
@@ -150,7 +150,7 @@ TEST(ScinthDefManagerTest, ValidYAMLStrings) {
 
     scinthDef = manager.getScinthDefNamed("firstScinth");
     ASSERT_EQ(2, scinthDef->numberOfInstances());
-    EXPECT_EQ("OneInput", scinthDef->instanceAt(0).vgen()->name());
+    EXPECT_EQ("OneInput", scinthDef->instanceAt(0).abstractVGen()->name());
     ASSERT_EQ(1, scinthDef->instanceAt(0).numberOfInputs());
     float inputValue = 0.0f;
     int vgenIndex = -1;
@@ -158,7 +158,7 @@ TEST(ScinthDefManagerTest, ValidYAMLStrings) {
     EXPECT_FALSE(scinthDef->instanceAt(0).getInputVGenIndex(0, vgenIndex));
     EXPECT_EQ(-123.0f, inputValue);
     EXPECT_EQ(-1, vgenIndex); // vgenIndex should remain unmodified as the input is a constant.
-    EXPECT_EQ("TwoInput", scinthDef->instanceAt(1).vgen()->name());
+    EXPECT_EQ("TwoInput", scinthDef->instanceAt(1).abstractVGen()->name());
     ASSERT_EQ(2, scinthDef->instanceAt(1).numberOfInputs());
     EXPECT_FALSE(scinthDef->instanceAt(1).getInputConstantValue(0, inputValue));
     EXPECT_TRUE(scinthDef->instanceAt(1).getInputVGenIndex(0, vgenIndex));
@@ -167,7 +167,7 @@ TEST(ScinthDefManagerTest, ValidYAMLStrings) {
 
     scinthDef = manager.getScinthDefNamed("secondScinth");
     ASSERT_EQ(1, scinthDef->numberOfInstances());
-    EXPECT_EQ("ThreeInput", scinthDef->instanceAt(0).vgen()->name());
+    EXPECT_EQ("ThreeInput", scinthDef->instanceAt(0).abstractVGen()->name());
     EXPECT_TRUE(scinthDef->instanceAt(0).getInputConstantValue(0, inputValue));
     EXPECT_EQ(1.0f, inputValue);
     EXPECT_TRUE(scinthDef->instanceAt(0).getInputConstantValue(1, inputValue));
