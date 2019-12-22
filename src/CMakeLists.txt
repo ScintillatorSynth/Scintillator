@@ -4,6 +4,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 add_library(scintillator_core STATIC
     FileSystem.hpp
+    LogLevels.cpp
+    LogLevels.hpp
     Scinth.cpp
     Scinth.hpp
     ScinthDef.cpp
@@ -19,6 +21,7 @@ add_library(scintillator_core STATIC
 )
 
 target_link_libraries(scintillator_core
+    gflags
     spdlog
     yaml-cpp
     stdc++fs
@@ -34,8 +37,6 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
 set(scintillator_synth_files
     "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp"
     "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
-    LogLevels.cpp
-    LogLevels.hpp
     OscHandler.cpp
     OscHandler.hpp
     scinsynth.cpp
@@ -153,6 +154,9 @@ if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
     )
     add_custom_target(coverage_report
         DEPENDS scinsynth_coverage.json
+        COMMAND ${LLVM_COV} report ./run_unittests -instr-profile=scinsynth_coverage.profdata
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        VERBATIM
     )
 endif()
 

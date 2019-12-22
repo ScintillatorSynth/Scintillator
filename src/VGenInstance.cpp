@@ -16,8 +16,8 @@ void VGenInstance::addVGenInput(int index) { m_inputs.emplace_back(VGenInput(ind
 
 bool VGenInstance::validate() {
     if (m_inputs.size() != m_vgen->inputs().size()) {
-        spdlog::warn("input size mismatch for VGen {}, expected {}, got {}", m_vgen->name(), m_vgen->inputs().size(),
-                     m_inputs.size());
+        spdlog::error("input size mismatch for VGen {}, expected {}, got {}", m_vgen->name(), m_vgen->inputs().size(),
+                      m_inputs.size());
         return false;
     }
 

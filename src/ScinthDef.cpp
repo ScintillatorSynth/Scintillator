@@ -14,7 +14,7 @@ ScinthDef::~ScinthDef() {}
 
 bool ScinthDef::buildShaders(bool keepSources) {
     // Vertex shader is constant for the moment as we focus on fragment shaders.
-    return false;
+    return true;
 }
 
 } // namespace scin
