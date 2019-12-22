@@ -3,7 +3,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 add_library(scintillator_core STATIC
-    FileSystem.hpp
+    core/FileSystem.hpp
     LogLevels.cpp
     LogLevels.hpp
     Scinth.cpp

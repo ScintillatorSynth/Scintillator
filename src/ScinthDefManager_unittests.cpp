@@ -1,10 +1,10 @@
 #include "gtest/gtest.h"
 
-#include "FileSystem.hpp"
 #include "ScinthDef.hpp"
 #include "ScinthDefManager.hpp"
 #include "VGenManager.hpp"
 #include "core/AbstractVGen.hpp"
+#include "core/FileSystem.hpp"
 #include "core/VGen.hpp"
 
 #include <fstream>

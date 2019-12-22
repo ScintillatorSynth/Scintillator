@@ -1,8 +1,8 @@
 #include "gtest/gtest.h"
 
-#include "FileSystem.hpp"
-#include "core/AbstractVGen.hpp"
 #include "VGenManager.hpp"
+#include "core/AbstractVGen.hpp"
+#include "core/FileSystem.hpp"
 
 #include <fstream>
 
