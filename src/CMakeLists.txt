@@ -4,8 +4,16 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 add_library(scintillator_core STATIC
     FileSystem.hpp
+    Scinth.cpp
+    Scinth.hpp
+    ScinthDef.cpp
+    ScinthDef.hpp
+    ScinthDefManager.cpp
+    ScinthDefManager.hpp
     VGen.cpp
     VGen.hpp
+    VGenInstance.cpp
+    VGenInstance.hpp
     VGenManager.cpp
     VGenManager.hpp
 )
@@ -89,6 +97,7 @@ if(SCIN_VALIDATE_VULKAN)
 endif()
 
 add_executable(run_unittests
+    ScinthDefManager_unittests.cpp
     VGenManager_unittests.cpp
     VGen_unittests.cpp
 
