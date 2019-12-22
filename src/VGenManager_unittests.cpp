@@ -4,7 +4,6 @@
 #include "VGen.hpp"
 #include "VGenManager.hpp"
 
-#include <array>
 #include <fstream>
 
 namespace {
