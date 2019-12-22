@@ -19,6 +19,9 @@ def main(argv):
     for file_dict in json_in['data'][0]['files']:
         filename = file_dict['filename']
         if filename.startswith(argv[1]):
+            # no fair double-dipping with unit test code (which always has 100% coverage)
+            if filename.endswith("_unittests.cpp"):
+                continue
             file_counts[filename] = file_dict['summary']['lines']
             total_lines += file_dict['summary']['lines']['count']
             total_covered += file_dict['summary']['lines']['covered']
@@ -30,6 +33,9 @@ def main(argv):
             base, ext = os.path.splitext(filename)
             # skip files that aren't source files
             if ext not in ['.cpp', '.hpp']:
+                continue
+            # also skip unittests here so they don't count as uncovered files.
+            if filename.endswith("_unittests.cpp"):
                 continue
             filename = os.path.join(root, filename)
             if filename not in file_counts:
