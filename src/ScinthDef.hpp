@@ -11,8 +11,15 @@ class VGenInstance;
  */
 class ScinthDef {
 public:
+    /*! Copy the supplied list of VGenInstances into self and construct a ScinthDef.
+     */
     ScinthDef(const std::vector<VGenInstance>& instances);
+
+    /*! Destructs a ScinthDef and all associated resources.
+     */
     ~ScinthDef();
+
+    bool buildShaders(bool keepSources);
 
     const VGenInstance& instanceAt(int index) const { return m_instances[index]; }
     size_t numberOfInstances() const { return m_instances.size(); }

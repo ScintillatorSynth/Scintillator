@@ -152,11 +152,16 @@ bool ScinthDefManager::extractFromNode(const YAML::Node& node) {
     }
 
     std::shared_ptr<ScinthDef> scinthDef(new ScinthDef(instances));
+    if (!scinthDef->buildShaders(false)) {
+        spdlog::error("ScinthDef {} failed to build shaders.", name);
+        return false;
+    }
 
     {
         std::lock_guard<std::mutex> lock(m_mutex);
         m_scinthDefs.insert_or_assign(name, scinthDef);
     }
+    spdlog::info("ScinthDef {} parsed, validated, and added to manager.", name);
     return true;
 }
 

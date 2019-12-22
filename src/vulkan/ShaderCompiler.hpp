@@ -12,21 +12,37 @@ namespace scin { namespace vk {
 class Device;
 class ShaderSource;
 
-// The shader compiler provided by libshaderc consumes some memory resources
-// when loaded, so this object wraps the code needed by the shader compiler
-// to control loading and unloading as well as compilation.
+/*! Provides a wrapper around the libshaderc compiler.
+ *
+ * The shader compiler provided by libshaderc consumes some memory resources when loaded, so this object wraps the code
+ * needed by the shader compiler to control loading and unloading as well as compilation.
+ */
 class ShaderCompiler {
 public:
     ShaderCompiler();
     ~ShaderCompiler();
 
-    bool LoadCompiler();
-    void ReleaseCompiler();
+    /*! Loads the shader compiler in to memory.
+     */
+    bool loadCompiler();
 
-    std::unique_ptr<Shader> Compile(std::shared_ptr<Device> device, ShaderSource* source, Shader::Kind kind);
+    /*! Releases the shader compiler from memory.
+     *
+     * \note Subsequent calls to compile() will re-load the compiler, adding time to compilation as it loads.
+     */
+    void releaseCompiler();
+
+    /*! Compile the provided shader source code into a usable Shader on the provided Device.
+     *
+     * \param device A shared pointer to the specific Vulkan Device to compile this Shader for.
+     * \param source The source code of the shader to compile.
+     * \param kind The kind of shader to compile this as, e.g. Shader::kVertex or Shader::kFragment.
+     * \return A pointer to the compiled Shader, or nullptr on error.
+     */
+    std::unique_ptr<Shader> compile(std::shared_ptr<Device> device, ShaderSource* source, Shader::Kind kind);
 
 private:
-    shaderc_compiler_t compiler_;
+    shaderc_compiler_t m_compiler;
 };
 
 } // namespace vk
