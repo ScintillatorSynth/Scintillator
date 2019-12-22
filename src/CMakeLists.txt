@@ -3,9 +3,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 add_library(scintillator_core STATIC
-    core/FileSystem.hpp
-    LogLevels.cpp
-    LogLevels.hpp
     Scinth.cpp
     Scinth.hpp
     ScinthDef.cpp
@@ -16,6 +13,9 @@ add_library(scintillator_core STATIC
     VGenManager.hpp
     core/AbstractVGen.cpp
     core/AbstractVGen.hpp
+    core/FileSystem.hpp
+    core/LogLevels.cpp
+    core/LogLevels.hpp
     core/VGen.cpp
     core/VGen.hpp
 )

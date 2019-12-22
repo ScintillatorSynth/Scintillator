@@ -1,4 +1,4 @@
-#include "LogLevels.hpp"
+#include "core/LogLevels.hpp"
 #include "OscHandler.hpp"
 #include "VGenManager.hpp"
 #include "Version.hpp"
