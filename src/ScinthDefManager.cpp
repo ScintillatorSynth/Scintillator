@@ -1,9 +1,9 @@
 #include "ScinthDefManager.hpp"
 
-#include "core/AbstractVGen.hpp"
-#include "VGenInstance.hpp"
-#include "VGenManager.hpp"
 #include "ScinthDef.hpp"
+#include "VGenManager.hpp"
+#include "core/AbstractVGen.hpp"
+#include "core/VGen.hpp"
 
 #include "spdlog/spdlog.h"
 #include "yaml-cpp/exceptions.h"
@@ -86,7 +86,7 @@ bool ScinthDefManager::extractFromNode(const YAML::Node& node) {
         return false;
     }
 
-    std::vector<VGenInstance> instances;
+    std::vector<VGen> instances;
     for (auto vgen : node["vgens"]) {
         // className, rate, inputs (can be optional)
         if (!vgen.IsMap()) {
@@ -106,7 +106,7 @@ bool ScinthDefManager::extractFromNode(const YAML::Node& node) {
 
         // TODO: parse rate key
 
-        VGenInstance instance(vgenClass);
+        VGen instance(vgenClass);
         if (vgen["inputs"]) {
             for (auto input : vgen["inputs"]) {
                 if (!input.IsMap()) {

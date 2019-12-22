@@ -5,15 +5,15 @@
 
 namespace scin {
 
-class VGenInstance;
+class VGen;
 
-/*! Maintains a topologically sorted signal graph of VGenInstance objecs and can produce Scinth instances.
+/*! Maintains a topologically sorted signal graph of VGen objects and can produce Scinth instances.
  */
 class ScinthDef {
 public:
-    /*! Copy the supplied list of VGenInstances into self and construct a ScinthDef.
+    /*! Copy the supplied list of VGens into self and construct a ScinthDef.
      */
-    ScinthDef(const std::vector<VGenInstance>& instances);
+    ScinthDef(const std::vector<VGen>& instances);
 
     /*! Destructs a ScinthDef and all associated resources.
      */
@@ -21,11 +21,11 @@ public:
 
     bool buildShaders(bool keepSources);
 
-    const VGenInstance& instanceAt(int index) const { return m_instances[index]; }
+    const VGen& instanceAt(int index) const { return m_instances[index]; }
     size_t numberOfInstances() const { return m_instances.size(); }
 
 private:
-    std::vector<VGenInstance> m_instances;
+    std::vector<VGen> m_instances;
 };
 
 } // namespace scin

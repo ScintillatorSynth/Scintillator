@@ -1,4 +1,4 @@
-#include "VGenInstance.hpp"
+#include "core/VGen.hpp"
 
 #include "core/AbstractVGen.hpp"
 
@@ -6,15 +6,15 @@
 
 namespace scin {
 
-VGenInstance::VGenInstance(std::shared_ptr<const AbstractVGen> abstractVGen): m_abstractVGen(abstractVGen) {}
+VGen::VGen(std::shared_ptr<const AbstractVGen> abstractVGen): m_abstractVGen(abstractVGen) {}
 
-VGenInstance::~VGenInstance() {}
+VGen::~VGen() {}
 
-void VGenInstance::addConstantInput(float constantValue) { m_inputs.emplace_back(VGenInput(constantValue)); }
+void VGen::addConstantInput(float constantValue) { m_inputs.emplace_back(VGenInput(constantValue)); }
 
-void VGenInstance::addVGenInput(int index) { m_inputs.emplace_back(VGenInput(index)); }
+void VGen::addVGenInput(int index) { m_inputs.emplace_back(VGenInput(index)); }
 
-bool VGenInstance::validate() {
+bool VGen::validate() {
     if (m_inputs.size() != m_abstractVGen->inputs().size()) {
         spdlog::error("input size mismatch for VGen {}, expected {}, got {}", m_abstractVGen->name(),
                       m_abstractVGen->inputs().size(), m_inputs.size());
@@ -24,7 +24,7 @@ bool VGenInstance::validate() {
     return true;
 }
 
-bool VGenInstance::getInputConstantValue(int index, float& outValue) const {
+bool VGen::getInputConstantValue(int index, float& outValue) const {
     if (index >= 0 && index < numberOfInputs()) {
         if (m_inputs[index].type == VGenInput::kConstant) {
             outValue = m_inputs[index].value.constant;
@@ -34,7 +34,7 @@ bool VGenInstance::getInputConstantValue(int index, float& outValue) const {
     return false;
 }
 
-bool VGenInstance::getInputVGenIndex(int index, int& outIndex) const {
+bool VGen::getInputVGenIndex(int index, int& outIndex) const {
     if (index >= 0 && index < numberOfInputs()) {
         if (m_inputs[index].type == VGenInput::kVGen) {
             outIndex = m_inputs[index].value.vgenIndex;

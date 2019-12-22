@@ -1,10 +1,10 @@
 #include "ScinthDef.hpp"
 
-#include "VGenInstance.hpp"
+#include "core/VGen.hpp"
 
 namespace scin {
 
-ScinthDef::ScinthDef(const std::vector<VGenInstance>& instances): m_instances(instances) {}
+ScinthDef::ScinthDef(const std::vector<VGen>& instances): m_instances(instances) {}
 
 ScinthDef::~ScinthDef() {}
 

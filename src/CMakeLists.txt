@@ -12,12 +12,12 @@ add_library(scintillator_core STATIC
     ScinthDef.hpp
     ScinthDefManager.cpp
     ScinthDefManager.hpp
-    VGenInstance.cpp
-    VGenInstance.hpp
     VGenManager.cpp
     VGenManager.hpp
     core/AbstractVGen.cpp
     core/AbstractVGen.hpp
+    core/VGen.cpp
+    core/VGen.hpp
 )
 
 target_link_libraries(scintillator_core

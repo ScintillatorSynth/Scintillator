@@ -1,5 +1,5 @@
-#ifndef SRC_VGEN_INSTANCE_HPP_
-#define SRC_VGEN_INSTANCE_HPP_
+#ifndef SRC_CORE_VGEN_HPP_
+#define SRC_CORE_VGEN_HPP_
 
 #include <memory>
 #include <vector>
@@ -8,12 +8,12 @@ namespace scin {
 
 class AbstractVGen;
 
-/*! Represents a single node in the signal flow graph of a ScinthDef. Combines a VGen and inputs.
+/*! Represents a single node in the signal flow graph of a ScinthDef. Combines an AbstractVGen and inputs.
  */
-class VGenInstance {
+class VGen {
 public:
-    VGenInstance(std::shared_ptr<const AbstractVGen> abstractVGen);
-    ~VGenInstance();
+    VGen(std::shared_ptr<const AbstractVGen> abstractVGen);
+    ~VGen();
 
     /*! Adds a constant-valued input.
      *
@@ -72,4 +72,4 @@ private:
 
 } // namespace scin
 
-#endif // SRC_VGEN_INSTANCE_HPP_
+#endif // SRC_CORE_VGEN_HPP_

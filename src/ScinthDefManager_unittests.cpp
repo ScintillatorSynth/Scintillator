@@ -3,9 +3,9 @@
 #include "FileSystem.hpp"
 #include "ScinthDef.hpp"
 #include "ScinthDefManager.hpp"
-#include "core/AbstractVGen.hpp"
-#include "VGenInstance.hpp"
 #include "VGenManager.hpp"
+#include "core/AbstractVGen.hpp"
+#include "core/VGen.hpp"
 
 #include <fstream>
 #include <memory>
