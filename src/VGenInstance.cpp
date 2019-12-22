@@ -6,7 +6,7 @@
 
 namespace scin {
 
-VGenInstance::VGenInstance(std::shared_ptr<VGen> vgen): m_vgen(vgen) {}
+VGenInstance::VGenInstance(std::shared_ptr<const VGen> vgen): m_vgen(vgen) {}
 
 VGenInstance::~VGenInstance() {}
 
@@ -22,6 +22,26 @@ bool VGenInstance::validate() {
     }
 
     return true;
+}
+
+bool VGenInstance::getInputConstantValue(int index, float& outValue) const {
+    if (index >= 0 && index < numberOfInputs()) {
+        if (m_inputs[index].type == VGenInput::kConstant) {
+            outValue = m_inputs[index].value.constant;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool VGenInstance::getInputVGenIndex(int index, int& outIndex) const {
+    if (index >= 0 && index < numberOfInputs()) {
+        if (m_inputs[index].type == VGenInput::kVGen) {
+            outIndex = m_inputs[index].value.vgenIndex;
+            return true;
+        }
+    }
+    return false;
 }
 
 } // namespace scin

@@ -48,14 +48,12 @@ int VGenManager::extractFromNodes(const std::vector<YAML::Node>& nodes) {
     return numberOfValidElements;
 }
 
-std::shared_ptr<VGen> VGenManager::getVGenNamed(const std::string& name) {
-    std::shared_ptr<VGen> vgen;
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        auto it = m_VGens.find(name);
-        if (it != m_VGens.end()) {
-            vgen = it->second;
-        }
+std::shared_ptr<const VGen> VGenManager::getVGenNamed(const std::string& name) {
+    std::shared_ptr<const VGen> vgen;
+    std::lock_guard<std::mutex> lock(m_mutex);
+    auto it = m_VGens.find(name);
+    if (it != m_VGens.end()) {
+        vgen = it->second;
     }
     return vgen;
 }
@@ -68,12 +66,12 @@ size_t VGenManager::numberOfVGens() {
 bool VGenManager::extractFromNode(YAML::Node& node) {
     // Top level structure expected is a Map.
     if (!node.IsMap()) {
-        spdlog::warn("Top-level yaml node is not a map.");
+        spdlog::error("Top-level yaml node is not a map.");
         return false;
     }
     // Two currently required tags are "name" and "fragment", check they exist.
     if (!node["name"] || !node["fragment"]) {
-        spdlog::warn("Missing either name or fragment tag.");
+        spdlog::error("Missing either name or fragment tag.");
         return false;
     }
 

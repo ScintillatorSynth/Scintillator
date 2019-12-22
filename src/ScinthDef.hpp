@@ -7,12 +7,15 @@ namespace scin {
 
 class VGenInstance;
 
-/*! Maintains a signal graph of VGen objects and can produce Scinth instances.
+/*! Maintains a topologically sorted signal graph of VGenInstance objecs and can produce Scinth instances.
  */
 class ScinthDef {
 public:
     ScinthDef(const std::vector<VGenInstance>& instances);
     ~ScinthDef();
+
+    const VGenInstance& instanceAt(int index) const { return m_instances[index]; }
+    size_t numberOfInstances() const { return m_instances.size(); }
 
 private:
     std::vector<VGenInstance> m_instances;

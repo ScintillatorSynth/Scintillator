@@ -45,7 +45,7 @@ public:
      * \param name The unique name of the VGen to find.
      * \return A pointer to the VGen object found, or nullptr if no object found under that name.
      */
-    std::shared_ptr<VGen> getVGenNamed(const std::string& name);
+    std::shared_ptr<const VGen> getVGenNamed(const std::string& name);
 
     /*! The size of the current VGen dictionary.
      *
@@ -69,7 +69,7 @@ private:
     bool extractFromNode(YAML::Node& node);
 
     std::mutex m_mutex;
-    std::unordered_map<std::string, std::shared_ptr<VGen>> m_VGens;
+    std::unordered_map<std::string, std::shared_ptr<const VGen>> m_VGens;
 };
 
 } // namespace scin

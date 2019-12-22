@@ -12,7 +12,7 @@ class VGen;
  */
 class VGenInstance {
 public:
-    VGenInstance(std::shared_ptr<VGen> vgen);
+    VGenInstance(std::shared_ptr<const VGen> vgen);
     ~VGenInstance();
 
     /*! Adds a constant-valued input.
@@ -33,18 +33,40 @@ public:
      */
     bool validate();
 
+    /*! If the input at index is a constant, return true and store the constant value in outValue.
+     *
+     * \param index The index of the input in question.
+     * \param outValue Will be set to the value of the constant on successful completion of the function.
+     * \return true if the input at index is a constant, false otherwise.
+     */
+    bool getInputConstantValue(int index, float& outValue) const;
+
+    /*! If the input at index is a VGen, return true and store the vgen index value in outIndex.
+     *
+     * \param index The index of the input in question.
+     * \param outIndex Will be set to the value of the index of VGen input on successful completion of the function.
+     * \return true if the input at index is a VGen, false otherwise.
+     */
+    bool getInputVGenIndex(int index, int& outIndex) const;
+
+    int numberOfInputs() const { return m_inputs.size(); }
+    std::shared_ptr<const VGen> vgen() const { return m_vgen; }
+
 private:
     struct VGenInput {
         enum InputType { kConstant, kVGen };
-        explicit VGenInput(float constantValue): type(kConstant), constant(constantValue), vgenIndex(-1) {}
-        explicit VGenInput(int index): type(kVGen), constant(0.0f), vgenIndex(index) {}
+        explicit VGenInput(float constantValue): type(kConstant) { value.constant = constantValue; }
+        explicit VGenInput(int index): type(kVGen) { value.vgenIndex = index; }
 
         InputType type;
-        float constant;
-        int vgenIndex;
+        union Value {
+            float constant;
+            int vgenIndex;
+        };
+        Value value;
     };
 
-    std::shared_ptr<VGen> m_vgen;
+    std::shared_ptr<const VGen> m_vgen;
     std::vector<VGenInput> m_inputs;
 };
 

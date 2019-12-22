@@ -41,6 +41,21 @@ int ScinthDefManager::parseFromString(const std::string& yaml) {
     return extractFromNodes(nodes);
 }
 
+std::shared_ptr<const ScinthDef> ScinthDefManager::getScinthDefNamed(const std::string& name) {
+    std::shared_ptr<const ScinthDef> scinthDef;
+    std::lock_guard<std::mutex> lock(m_mutex);
+    auto it = m_scinthDefs.find(name);
+    if (it != m_scinthDefs.end()) {
+        scinthDef = it->second;
+    }
+    return scinthDef;
+}
+
+size_t ScinthDefManager::numberOfScinthDefs() {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_scinthDefs.size();
+}
+
 int ScinthDefManager::extractFromNodes(const std::vector<YAML::Node>& nodes) {
     int numberOfValidElements = 0;
     for (auto node : nodes) {
@@ -53,20 +68,20 @@ int ScinthDefManager::extractFromNodes(const std::vector<YAML::Node>& nodes) {
 
 bool ScinthDefManager::extractFromNode(const YAML::Node& node) {
     if (!node.IsMap()) {
-        spdlog::warn("Top-level yaml node is not a map.");
+        spdlog::error("Top-level yaml node is not a map.");
         return false;
     }
 
     // Two currently required tags are "name" and "vgens", check they exist.
     if (!node["name"]) {
-        spdlog::warn("Missing ScinthDef name tag.");
+        spdlog::error("Missing ScinthDef name tag.");
         return false;
     }
 
     std::string name = node["name"].as<std::string>();
 
     if (!node["vgens"] || !node["vgens"].IsSequence()) {
-        spdlog::warn("ScinthDef named {} missing or not sequence vgens key", name);
+        spdlog::error("ScinthDef named {} missing or not sequence vgens key", name);
         return false;
     }
 
@@ -74,61 +89,62 @@ bool ScinthDefManager::extractFromNode(const YAML::Node& node) {
     for (auto vgen : node["vgens"]) {
         // className, rate, inputs (can be optional)
         if (!vgen.IsMap()) {
-            spdlog::warn("ScinthDef {} has vgen that is not a map.", name);
+            spdlog::error("ScinthDef {} has vgen that is not a map.", name);
             return false;
         }
-        if (!node["className"]) {
-            spdlog::warn("ScinthDef {} has vgen with no className key.", name);
+        if (!vgen["className"]) {
+            spdlog::error("ScinthDef {} has vgen with no className key.", name);
             return false;
         }
-        std::string className = node["className"].as<std::string>();
-        std::shared_ptr<VGen> vgenClass = m_vgenManager->getVGenNamed(className);
+        std::string className = vgen["className"].as<std::string>();
+        std::shared_ptr<const VGen> vgenClass = m_vgenManager->getVGenNamed(className);
         if (!vgenClass) {
-            spdlog::warn("ScinthDef {} has vgen with VGen {} not defined.", name, className);
+            spdlog::error("ScinthDef {} has vgen with VGen {} not defined.", name, className);
+            return false;
         }
 
         // TODO: parse rate key
 
         VGenInstance instance(vgenClass);
-        if (node["inputs"]) {
-            for (auto input : node["inputs"]) {
+        if (vgen["inputs"]) {
+            for (auto input : vgen["inputs"]) {
                 if (!input.IsMap()) {
-                    spdlog::warn("ScinthDef {} has VGen {} with non-map input.", name, className);
+                    spdlog::error("ScinthDef {} has VGen {} with non-map input.", name, className);
                     return false;
                 }
                 if (!input["type"]) {
-                    spdlog::warn("ScinthDef {} has VGen {} with no type key.", name, className);
+                    spdlog::error("ScinthDef {} has VGen {} with no type key.", name, className);
                     return false;
                 }
                 std::string inputType = input["type"].as<std::string>();
                 if (inputType == "constant") {
                     if (!input["value"]) {
-                        spdlog::warn("ScinthDef {} has VGen {} constant input with no value key.", name, className);
+                        spdlog::error("ScinthDef {} has VGen {} constant input with no value key.", name, className);
                         return false;
                     }
                     float constantValue = input["value"].as<float>();
                     instance.addConstantInput(constantValue);
                 } else if (inputType == "vgen") {
                     if (!input["vgenIndex"]) {
-                        spdlog::warn("ScinthDef {} has VGen {} vgen input with no vgenIndex key.", name, className);
+                        spdlog::error("ScinthDef {} has VGen {} vgen input with no vgenIndex key.", name, className);
                         return false;
                     }
                     int index = input["vgenIndex"].as<int>();
                     if (index < 0 || index > instances.size()) {
-                        spdlog::warn("ScinthDef {} has VGen {} vgen input with invalid index {}.", name, className,
-                                     index);
+                        spdlog::error("ScinthDef {} has VGen {} vgen input with invalid index {}.", name, className,
+                                      index);
                         return false;
                     }
                     instance.addVGenInput(index);
                 } else {
-                    spdlog::warn("ScinthDef {} has VGen {} with undefined input type {}.", name, className, inputType);
+                    spdlog::error("ScinthDef {} has VGen {} with undefined input type {}.", name, className, inputType);
                     return false;
                 }
             }
         }
 
         if (!instance.validate()) {
-            spdlog::warn("ScinthDef {} has invalid VGen {}.", name, className);
+            spdlog::error("ScinthDef {} has invalid VGen {}.", name, className);
             return false;
         }
 
