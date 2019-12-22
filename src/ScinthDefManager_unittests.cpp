@@ -81,8 +81,7 @@ TEST(ScinthDefManagerTest, InvalidYAMLStrings) {
                                       "        value: 200.0\n"));
 
     // Bad sort of vgen inputs.
-    EXPECT_EQ(0,
-              manager.parseFromString(""));
+    EXPECT_EQ(0, manager.parseFromString(""));
 
     EXPECT_EQ(0, manager.numberOfScinthDefs());
 }
@@ -103,35 +102,35 @@ TEST(ScinthDefManagerTest, ValidYAMLStrings) {
     EXPECT_EQ("NoInput", scinthDef->instanceAt(0).vgen()->name());
     EXPECT_EQ(0, scinthDef->instanceAt(0).numberOfInputs());
 
-    EXPECT_EQ(2, manager.parseFromString("---\n"
-                                         "name: firstScinth\n"
-                                         "vgens:\n"
-                                         "  - className: OneInput\n"
-                                         "    rate: fragment\n"
-                                         "    inputs:\n"
-                                         "      - type: constant\n"
-                                         "        value: -123.0\n"
-                                         "  - className: TwoInput\n"
-                                         "    rate: fragment\n"
-                                         "    inputs:\n"
-                                         "      - type: vgen\n"
-                                         "        vgenIndex: 0\n"
-                                         "      - type: constant\n"
-                                         "        value: 0.0\n"
-                                         "---\n"
-                                         "name: secondScinth\n"
-                                         "vgens: \n"
-                                         "  - className: ThreeInput\n"
-                                         "    rate: fragment\n"
-                                         "    inputs: \n"
-                                         "      - type: constant\n"
-                                         "        value: 1\n"
-                                         "      - type: constant\n"
-                                         "        value: 2\n"
-                                         "      - type: constant\n"
-                                         "        value: 3\n"));
+    EXPECT_EQ(2,
+              manager.parseFromString("---\n"
+                                      "name: firstScinth\n"
+                                      "vgens:\n"
+                                      "  - className: OneInput\n"
+                                      "    rate: fragment\n"
+                                      "    inputs:\n"
+                                      "      - type: constant\n"
+                                      "        value: -123.0\n"
+                                      "  - className: TwoInput\n"
+                                      "    rate: fragment\n"
+                                      "    inputs:\n"
+                                      "      - type: vgen\n"
+                                      "        vgenIndex: 0\n"
+                                      "      - type: constant\n"
+                                      "        value: 0.0\n"
+                                      "---\n"
+                                      "name: secondScinth\n"
+                                      "vgens: \n"
+                                      "  - className: ThreeInput\n"
+                                      "    rate: fragment\n"
+                                      "    inputs: \n"
+                                      "      - type: constant\n"
+                                      "        value: 1\n"
+                                      "      - type: constant\n"
+                                      "        value: 2\n"
+                                      "      - type: constant\n"
+                                      "        value: 3\n"));
     EXPECT_EQ(2, manager.numberOfScinthDefs());
-
 }
 
 } // namespace scin
