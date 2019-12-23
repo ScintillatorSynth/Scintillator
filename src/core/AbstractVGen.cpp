@@ -7,18 +7,18 @@
 namespace scin {
 
 AbstractVGen::AbstractVGen(const std::string& name, const std::string& fragment, const std::vector<std::string>& inputs,
-                           const std::vector<std::string>& parameters, const std::vector<std::string>& intermediates):
+                           const std::vector<std::string>& intrinsics, const std::vector<std::string>& intermediates):
     m_name(name),
     m_fragment(fragment),
     m_inputs(inputs),
-    m_parameters(parameters),
+    m_intrinsics(intrinsics),
     m_intermediates(intermediates),
     m_valid(false) {}
 
 AbstractVGen::~AbstractVGen() {}
 
 bool AbstractVGen::prepareTemplate() {
-    // First build a map of all parameters (also verifying uniqueness of names in the process)
+    // First build a map of all intrinsics (also verifying uniqueness of names in the process)
     std::unordered_map<std::string, Parameter> parameterMap;
     for (auto i = 0; i < m_inputs.size(); ++i) {
         if (parameterMap.find(m_inputs[i]) != parameterMap.end()) {
@@ -27,16 +27,16 @@ bool AbstractVGen::prepareTemplate() {
         }
         parameterMap.insert({ m_inputs[i], Parameter(Parameter::Kind::kInput, i) });
     }
-    for (auto i = 0; i < m_parameters.size(); ++i) {
-        if (parameterMap.find(m_parameters[i]) != parameterMap.end()) {
-            spdlog::error("VGen {} has a duplicate parameter name {}", m_name, m_parameters[i]);
+    for (auto i = 0; i < m_intrinsics.size(); ++i) {
+        if (parameterMap.find(m_intrinsics[i]) != parameterMap.end()) {
+            spdlog::error("VGen {} has a duplicate parameter name {}", m_name, m_intrinsics[i]);
             return false;
         }
-        parameterMap.insert({ m_parameters[i], Parameter(Parameter::Kind::kIntrinsic, i) });
+        parameterMap.insert({ m_intrinsics[i], Parameter(Parameter::Kind::kIntrinsic, i) });
     }
     for (auto i = 0; i < m_intermediates.size(); ++i) {
         if (parameterMap.find(m_intermediates[i]) != parameterMap.end()) {
-            spdlog::error("VGen {} has a duplicate parameter name {}", m_name, m_parameters[i]);
+            spdlog::error("VGen {} has a duplicate parameter name {}", m_name, m_intrinsics[i]);
             return false;
         }
         parameterMap.insert({ m_intermediates[i], Parameter(Parameter::Kind::kIntermediate, i) });

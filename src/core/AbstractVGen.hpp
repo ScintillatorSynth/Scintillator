@@ -16,8 +16,7 @@ class AbstractVGen {
 public:
     AbstractVGen(const std::string& name, const std::string& fragment,
                  const std::vector<std::string>& inputs = std::vector<std::string>(),
-                 const std::vector<std::string>& parameters =
-                     std::vector<std::string>(), // TODO: unfortunate name, consider intrinsic
+                 const std::vector<std::string>& intrinsics = std::vector<std::string>(),
                  const std::vector<std::string>& intermediates = std::vector<std::string>());
     ~AbstractVGen();
 
@@ -30,7 +29,7 @@ public:
     const std::string& name() const { return m_name; }
     const std::string& fragment() const { return m_fragment; }
     const std::vector<std::string>& inputs() const { return m_inputs; }
-    const std::vector<std::string>& parameters() const { return m_parameters; }
+    const std::vector<std::string>& intrinsics() const { return m_intrinsics; }
     const std::vector<std::string>& intermediates() const { return m_intermediates; }
     bool valid() const { return m_valid; }
 
@@ -45,7 +44,7 @@ private:
     std::string m_name;
     std::string m_fragment;
     std::vector<std::string> m_inputs;
-    std::vector<std::string> m_parameters;
+    std::vector<std::string> m_intrinsics;
     std::vector<std::string> m_intermediates;
 
     bool m_valid;

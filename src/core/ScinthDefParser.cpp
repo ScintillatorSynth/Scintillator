@@ -234,10 +234,10 @@ int ScinthDefParser::extractAbstractVGensFromNodes(const std::vector<YAML::Node>
                 inputs.push_back(input.as<std::string>());
             }
         }
-        std::vector<std::string> parameters;
-        if (node["parameters"] && node["parameters"].IsSequence()) {
-            for (auto parameter : node["parameters"]) {
-                parameters.push_back(parameter.as<std::string>());
+        std::vector<std::string> intrinsics;
+        if (node["intrinsics"] && node["intrinsics"].IsSequence()) {
+            for (auto parameter : node["intrinsics"]) {
+                intrinsics.push_back(parameter.as<std::string>());
             }
         }
         std::vector<std::string> intermediates;
@@ -247,7 +247,7 @@ int ScinthDefParser::extractAbstractVGensFromNodes(const std::vector<YAML::Node>
             }
         }
 
-        std::shared_ptr<AbstractVGen> vgen(new AbstractVGen(name, fragment, inputs, parameters, intermediates));
+        std::shared_ptr<AbstractVGen> vgen(new AbstractVGen(name, fragment, inputs, intrinsics, intermediates));
         {
             std::lock_guard<std::mutex> lock(m_vgensMutex);
             m_abstractVGens.insert_or_assign(name, vgen);

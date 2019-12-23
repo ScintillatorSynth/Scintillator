@@ -201,7 +201,7 @@ TEST(ScinthDefParserTest, InvalidAbstractVGenYamlStrings) {
                                                   "  - b\n"));
     EXPECT_EQ(0,
               parser.parseAbstractVGensFromString("---\n"
-                                                  "parameters:\n"
+                                                  "intrinsics:\n"
                                                   "  - time\n"
                                                   "fragment: \"@out = 1.0;\"\n"));
     EXPECT_EQ(0, parser.numberOfAbstractVGens());
@@ -242,7 +242,7 @@ TEST(ScinthDefParserTest, ValidAbstractVGenYamlStrings) {
     EXPECT_EQ(1,
               parser.parseAbstractVGensFromString("---\n"
                                                   "name: Overwrite\n"
-                                                  "parameters:\n"
+                                                  "intrinsics:\n"
                                                   "  - time\n"
                                                   "fragment: \"@out = @time;\"\n"));
     // Should have overwritten the first Overwrite VGen.
@@ -250,8 +250,8 @@ TEST(ScinthDefParserTest, ValidAbstractVGenYamlStrings) {
     overwrite = parser.getAbstractVGenNamed("Overwrite");
     ASSERT_TRUE(overwrite);
     EXPECT_EQ("Overwrite", overwrite->name());
-    ASSERT_EQ(1, overwrite->parameters().size());
-    EXPECT_EQ("time", overwrite->parameters()[0]);
+    ASSERT_EQ(1, overwrite->intrinsics().size());
+    EXPECT_EQ("time", overwrite->intrinsics()[0]);
     EXPECT_EQ("@out = @time;", overwrite->fragment());
 
     EXPECT_EQ(1,
@@ -264,7 +264,7 @@ TEST(ScinthDefParserTest, ValidAbstractVGenYamlStrings) {
     overwrite = parser.getAbstractVGenNamed("Overwrite");
     ASSERT_TRUE(overwrite);
     EXPECT_EQ("Overwrite", overwrite->name());
-    EXPECT_EQ(0, overwrite->parameters().size());
+    EXPECT_EQ(0, overwrite->intrinsics().size());
     ASSERT_EQ(1, overwrite->intermediates().size());
     EXPECT_EQ("fl", overwrite->intermediates()[0]);
     EXPECT_EQ("@fl = 2.0; @out = @fl;", overwrite->fragment());
