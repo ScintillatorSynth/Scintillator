@@ -105,7 +105,7 @@ TEST(ScinthDefParserTest, InvalidYAMLStrings) {
     EXPECT_EQ(0, parser->numberOfAbstractScinthDefs());
 }
 
-TEST(ScinthDefManagerTest, ValidYAMLStrings) {
+TEST(ScinthDefParserTest, ValidYAMLStrings) {
     std::shared_ptr<scin::ScinthDefParser> parser(new scin::ScinthDefParser());
     populateAbstractVGens(parser);
 

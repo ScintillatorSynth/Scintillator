@@ -95,6 +95,7 @@ if(SCIN_VALIDATE_VULKAN)
 endif()
 
 add_executable(run_unittests
+    core/AbstractVGen_unittests.cpp
     core/ScinthDefParser_unittests.cpp
     core/VGen_unittests.cpp
 
