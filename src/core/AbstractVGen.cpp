@@ -36,7 +36,7 @@ bool AbstractVGen::prepareTemplate() {
     }
     for (auto i = 0; i < m_intermediates.size(); ++i) {
         if (parameterMap.find(m_intermediates[i]) != parameterMap.end()) {
-            spdlog::error("VGen {} has a duplicate parameter name {}", m_name, m_intrinsics[i]);
+            spdlog::error("VGen {} has a duplicate parameter name {}", m_name, m_intermediates[i]);
             return false;
         }
         parameterMap.insert({ m_intermediates[i], Parameter(Parameter::Kind::kIntermediate, i) });
@@ -75,6 +75,53 @@ bool AbstractVGen::prepareTemplate() {
 
     m_valid = true;
     return true;
+}
+
+std::string AbstractVGen::parameterize(const std::vector<std::string>& inputs,
+                                       const std::vector<std::string>& intrinsics,
+                                       const std::vector<std::string>& intermediates, const std::string& out) {
+    if (!m_valid) {
+        spdlog::error("VGen {} parameterized but invalid.", m_name);
+        return "";
+    }
+    if (inputs.size() != m_inputs.size() || intrinsics.size() != m_intrinsics.size()
+        || intermediates.size() != m_intermediates.size()) {
+        spdlog::error("VGen {} parameter count mismatch.", m_name);
+        return "";
+    }
+
+    std::string frag;
+    size_t fragPos = 0;
+    for (auto param : m_fragmentParameters) {
+        if (fragPos < param.first.position()) {
+            frag += m_fragment.substr(fragPos, param.first.position() - fragPos);
+            fragPos = param.first.position();
+        }
+        switch (param.second.kind) {
+        case Parameter::Kind::kInput:
+            frag += inputs[param.second.index];
+            break;
+
+        case Parameter::Kind::kIntrinsic:
+            frag += intrinsics[param.second.index];
+            break;
+
+        case Parameter::Kind::kIntermediate:
+            frag += intermediates[param.second.index];
+            break;
+
+        case Parameter::Kind::kOut:
+            frag += out;
+            break;
+        }
+        // Advance string position past size of original parameter.
+        fragPos = fragPos + param.first.length();
+    }
+
+    // Append any remaining unsubstituted shader code to the output.
+    frag += m_fragment.substr(fragPos);
+
+    return frag;
 }
 
 } // namespace scin

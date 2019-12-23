@@ -14,6 +14,8 @@ namespace scin {
  */
 class AbstractVGen {
 public:
+    // TODO: intrinsics could be inferred, as they are reserved words and therefore can't be used as input or
+    // intermediate names, and will then be the only @ tags in the fragment without a presence in the list.
     AbstractVGen(const std::string& name, const std::string& fragment,
                  const std::vector<std::string>& inputs = std::vector<std::string>(),
                  const std::vector<std::string>& intrinsics = std::vector<std::string>(),
@@ -25,6 +27,17 @@ public:
      * \return true if this AbstractVGen is well-formed, false if it is not.
      */
     bool prepareTemplate();
+
+    /*! Build and return a fragment shader string with the supplied names substituted for the parameters.
+     *
+     *  \param inputs The list of input names to substitute in the fragment string.
+     *  \param intrinsics The list of intrinsic names to substitute in the fragment string.
+     *  \param intermediates The list of intermediate names to substitute in the fragment string.
+     *  \param out The name of the output variable to substitute in the fragment string.
+     *  \return The substituted string, or an empty string on error or invalid AbstractVGen.
+     */
+    std::string parameterize(const std::vector<std::string>& inputs, const std::vector<std::string>& intrinsics,
+                             const std::vector<std::string>& intermediates, const std::string& out);
 
     const std::string& name() const { return m_name; }
     const std::string& fragment() const { return m_fragment; }
