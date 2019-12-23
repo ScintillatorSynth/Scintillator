@@ -1,8 +1,8 @@
-#include "core/LogLevels.hpp"
 #include "OscHandler.hpp"
-#include "VGenManager.hpp"
 #include "Version.hpp"
 #include "core/FileSystem.hpp"
+#include "core/LogLevels.hpp"
+#include "core/ScinthDefParser.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
@@ -69,18 +69,18 @@ int main(int argc, char* argv[]) {
     scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
     oscHandler.run();
 
-    scin::VGenManager vgenManager;
-    auto parseVGens = std::async(std::launch::async, [&vgenManager, &quarkPath] {
+    std::shared_ptr<scin::ScinthDefParser> scinthDefParser(new scin::ScinthDefParser());
+    auto parseVGens = std::async(std::launch::async, [&scinthDefParser, &quarkPath] {
         fs::path vgens = quarkPath / "vgens";
-        spdlog::info("Parsing yaml files in {} for VGens.", vgens.string());
+        spdlog::info("Parsing yaml files in {} for AbstractVGens.", vgens.string());
         for (auto entry : fs::directory_iterator(vgens)) {
             auto p = entry.path();
             if (fs::is_regular_file(p) && p.extension() == ".yaml") {
-                spdlog::debug("Parsing VGen yaml file {}.", p.string());
-                vgenManager.loadFromFile(p.string());
+                spdlog::debug("Parsing AbstractVGen yaml file {}.", p.string());
+                scinthDefParser->loadAbstractVGensFromFile(p.string());
             }
         }
-        spdlog::info("Parsed {} unique VGens.", vgenManager.numberOfVGens());
+        spdlog::info("Parsed {} unique VGens.", scinthDefParser->numberOfAbstractVGens());
     });
 
     // ========== glfw setup.
