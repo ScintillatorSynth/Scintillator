@@ -37,7 +37,7 @@ public:
      *  \return The substituted string, or an empty string on error or invalid AbstractVGen.
      */
     std::string parameterize(const std::vector<std::string>& inputs, const std::vector<std::string>& intrinsics,
-                             const std::vector<std::string>& intermediates, const std::string& out);
+                             const std::vector<std::string>& intermediates, const std::string& out) const;
 
     const std::string& name() const { return m_name; }
     const std::string& fragment() const { return m_fragment; }

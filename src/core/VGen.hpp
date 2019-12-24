@@ -27,11 +27,11 @@ public:
      */
     void addVGenInput(int index);
 
-    /*! Check this instance data against the originating VGen.
+    /*! Check this instance data against the originating AbstractVGen.
      *
      * \return true if valid, false if not.
      */
-    bool validate();
+    bool validate() const;
 
     /*! If the input at index is a constant, return true and store the constant value in outValue.
      *

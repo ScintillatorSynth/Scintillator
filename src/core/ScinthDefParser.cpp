@@ -195,7 +195,7 @@ ScinthDefParser::extractFromNodes(const std::vector<YAML::Node>& nodes) {
             continue;
 
         std::shared_ptr<AbstractScinthDef> scinthDef(new AbstractScinthDef(instances));
-        if (!scinthDef->buildShaders(false)) {
+        if (!scinthDef->build()) {
             spdlog::error("ScinthDef {} failed to build shaders.", name);
             continue;
         }
@@ -248,6 +248,11 @@ int ScinthDefParser::extractAbstractVGensFromNodes(const std::vector<YAML::Node>
         }
 
         std::shared_ptr<AbstractVGen> vgen(new AbstractVGen(name, fragment, inputs, intrinsics, intermediates));
+        if (!vgen->prepareTemplate()) {
+            spdlog::error("VGen {} failed template preparation.", name);
+            continue;
+        }
+
         {
             std::lock_guard<std::mutex> lock(m_vgensMutex);
             m_abstractVGens.insert_or_assign(name, vgen);

@@ -8,8 +8,7 @@ AbstractScinthDef::AbstractScinthDef(const std::vector<VGen>& instances): m_inst
 
 AbstractScinthDef::~AbstractScinthDef() {}
 
-bool AbstractScinthDef::buildShaders(bool keepSources) {
-    // Vertex shader is constant for the moment as we focus on fragment shaders.
+bool AbstractScinthDef::build() {
     return true;
 }
 

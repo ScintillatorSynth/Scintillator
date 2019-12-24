@@ -5,7 +5,7 @@ inputs:
     - phase
     - mul
     - add
-parameters:
+intrinsics:
     - time
 fragment: "@out = @add + (@mul * sin((@time * @freq * 2 * pi) + @phase));"
 ---
@@ -13,7 +13,7 @@ name: VSaw
 inputs:
     - freq
     - phase
-parameters:
+intrinsics:
     - time
 intermediates:
     - temp

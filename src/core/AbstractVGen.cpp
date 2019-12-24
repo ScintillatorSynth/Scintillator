@@ -79,7 +79,7 @@ bool AbstractVGen::prepareTemplate() {
 
 std::string AbstractVGen::parameterize(const std::vector<std::string>& inputs,
                                        const std::vector<std::string>& intrinsics,
-                                       const std::vector<std::string>& intermediates, const std::string& out) {
+                                       const std::vector<std::string>& intermediates, const std::string& out) const {
     if (!m_valid) {
         spdlog::error("VGen {} parameterized but invalid.", m_name);
         return "";

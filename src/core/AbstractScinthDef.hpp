@@ -20,7 +20,7 @@ public:
      */
     ~AbstractScinthDef();
 
-    bool buildShaders(bool keepSources);
+    bool build();
 
     const VGen& instanceAt(int index) const { return m_instances[index]; }
     size_t numberOfInstances() const { return m_instances.size(); }
