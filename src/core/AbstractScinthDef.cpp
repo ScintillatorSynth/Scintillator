@@ -8,8 +8,6 @@ AbstractScinthDef::AbstractScinthDef(const std::vector<VGen>& instances): m_inst
 
 AbstractScinthDef::~AbstractScinthDef() {}
 
-bool AbstractScinthDef::build() {
-    return true;
-}
+bool AbstractScinthDef::build() { return true; }
 
 } // namespace scin
