@@ -1,0 +1,14 @@
+---
+name: RGBOut
+inputs:
+    - red
+    - blue
+    - green
+fragColor: true
+fragment: "@out = float4(@red, @blue, @green, 1.0);"
+---
+name: BWOut
+inputs:
+    - value
+fragColor: true
+fragment: "@out = float4(@value, @value, @value, 1.0);"

@@ -194,7 +194,7 @@ ScinthDefParser::extractFromNodes(const std::vector<YAML::Node>& nodes) {
         if (parseError)
             continue;
 
-        std::shared_ptr<AbstractScinthDef> scinthDef(new AbstractScinthDef(instances));
+        std::shared_ptr<AbstractScinthDef> scinthDef(new AbstractScinthDef(name, instances));
         if (!scinthDef->build()) {
             spdlog::error("ScinthDef {} failed to build shaders.", name);
             continue;

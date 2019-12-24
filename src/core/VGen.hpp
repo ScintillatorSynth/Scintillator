@@ -23,7 +23,7 @@ public:
 
     /*! Add output from another VGen as input.
      *
-     * \param index The index of the VGen within the ScinthDesc that will provide input.
+     * \param index The index of the VGen within the ScinthDef that will provide input.
      */
     void addVGenInput(int index);
 
