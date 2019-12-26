@@ -88,8 +88,8 @@ std::string AbstractVGen::parameterize(const std::vector<std::string>& inputs,
         spdlog::error("VGen {} parameterized but invalid.", m_name);
         return "";
     }
-    if (inputs.size() != m_inputs.size() || intrinsics.size() != m_intrinsics.size() ||
-            outputs.size() != m_outputs.size()) {
+    if (inputs.size() != m_inputs.size() || intrinsics.size() != m_intrinsics.size()
+        || outputs.size() != m_outputs.size()) {
         spdlog::error("VGen {} parameter count mismatch.", m_name);
         return "";
     }
