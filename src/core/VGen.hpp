@@ -28,9 +28,12 @@ public:
 
     /*! Add output from another VGen as input.
      *
-     * \param index The index of the VGen within the ScinthDef that will provide input.
+     * \note  These values are not validated as they require knowledge outside of this VGen to validate.
+     * \param vgenIndex The index of the VGen within the ScinthDef that will provide input.
+     * \param outputIndex The index of the output from the VGen use as input.
+     * \param dimension The dimension of the input.
      */
-    void addVGenInput(int index, int dimension);
+    void addVGenInput(int vgenIndex, int outputIndex, int dimension);
 
     /*! Check this instance data against the originating AbstractVGen.
      *
@@ -68,7 +71,9 @@ private:
         explicit VGenInput(glm::vec2 c): type(kConstant), dimension(2) { value.constant2 = c; }
         explicit VGenInput(glm::vec3 c): type(kConstant), dimension(3) { value.constant3 = c; }
         explicit VGenInput(glm::vec4 c): type(kConstant), dimension(4) { value.constant4 = c; }
-        explicit VGenInput(int index, int out): type(kVGen) { value.vgen = glm::ivec2(index, out); }
+        explicit VGenInput(int index, int out, int dim): type(kVGen), dimension(dim) {
+            value.vgen = glm::ivec2(index, out);
+        }
 
         InputType type;
         int dimension;

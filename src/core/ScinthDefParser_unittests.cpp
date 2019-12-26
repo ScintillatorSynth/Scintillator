@@ -3,6 +3,7 @@
 #include "core/AbstractScinthDef.hpp"
 #include "core/AbstractVGen.hpp"
 #include "core/FileSystem.hpp"
+#include "core/Intrinsic.hpp"
 #include "core/ScinthDefParser.hpp"
 #include "core/VGen.hpp"
 
@@ -161,14 +162,16 @@ TEST(ScinthDefParserTest, ValidYAMLStrings) {
     ASSERT_EQ(1, scinthDef->instanceAt(0).numberOfInputs());
     float inputValue = 0.0f;
     int vgenIndex = -1;
+    int outputIndex = -2;
     EXPECT_TRUE(scinthDef->instanceAt(0).getInputConstantValue(0, inputValue));
-    EXPECT_FALSE(scinthDef->instanceAt(0).getInputVGenIndex(0, vgenIndex));
+    EXPECT_FALSE(scinthDef->instanceAt(0).getInputVGenIndex(0, vgenIndex, outputIndex));
     EXPECT_EQ(-123.0f, inputValue);
     EXPECT_EQ(-1, vgenIndex); // vgenIndex should remain unmodified as the input is a constant.
+    EXPECT_EQ(-2, outputIndex);
     EXPECT_EQ("TwoInput", scinthDef->instanceAt(1).abstractVGen()->name());
     ASSERT_EQ(2, scinthDef->instanceAt(1).numberOfInputs());
     EXPECT_FALSE(scinthDef->instanceAt(1).getInputConstantValue(0, inputValue));
-    EXPECT_TRUE(scinthDef->instanceAt(1).getInputVGenIndex(0, vgenIndex));
+    EXPECT_TRUE(scinthDef->instanceAt(1).getInputVGenIndex(0, vgenIndex, outputIndex));
     EXPECT_EQ(-123.0f, inputValue); // inputValue should remain unmodified as the input is a VGen.
     EXPECT_EQ(0, vgenIndex);
 
@@ -225,17 +228,17 @@ TEST(ScinthDefParserTest, ValidAbstractVGenYamlStrings) {
     std::shared_ptr<const AbstractVGen> justNameAndFragment = parser.getAbstractVGenNamed("JustNameAndFragment");
     ASSERT_TRUE(justNameAndFragment);
     EXPECT_EQ("JustNameAndFragment", justNameAndFragment->name());
-    EXPECT_EQ("@out = 1.0;", justNameAndFragment->fragment());
+    EXPECT_EQ("@out = 1.0;", justNameAndFragment->shader());
     std::shared_ptr<const AbstractVGen> addInput = parser.getAbstractVGenNamed("AddInput");
     ASSERT_TRUE(addInput);
     EXPECT_EQ("AddInput", addInput->name());
     ASSERT_EQ(1, addInput->inputs().size());
     EXPECT_EQ("a", addInput->inputs()[0]);
-    EXPECT_EQ("@out = @a;", addInput->fragment());
+    EXPECT_EQ("@out = @a;", addInput->shader());
     std::shared_ptr<const AbstractVGen> overwrite = parser.getAbstractVGenNamed("Overwrite");
     ASSERT_TRUE(overwrite);
     EXPECT_EQ("Overwrite", overwrite->name());
-    EXPECT_EQ("@out = 0.0;", overwrite->fragment());
+    EXPECT_EQ("@out = 0.0;", overwrite->shader());
 
     EXPECT_FALSE(parser.getAbstractVGenNamed("Nonexistent"));
 
@@ -251,8 +254,8 @@ TEST(ScinthDefParserTest, ValidAbstractVGenYamlStrings) {
     ASSERT_TRUE(overwrite);
     EXPECT_EQ("Overwrite", overwrite->name());
     ASSERT_EQ(1, overwrite->intrinsics().size());
-    EXPECT_EQ("time", overwrite->intrinsics()[0]);
-    EXPECT_EQ("@out = @time;", overwrite->fragment());
+    ASSERT_FALSE(true); // validate intrinsic membership
+    EXPECT_EQ("@out = @time;", overwrite->shader());
 
     EXPECT_EQ(1,
               parser.parseAbstractVGensFromString("---\n"
@@ -265,9 +268,7 @@ TEST(ScinthDefParserTest, ValidAbstractVGenYamlStrings) {
     ASSERT_TRUE(overwrite);
     EXPECT_EQ("Overwrite", overwrite->name());
     EXPECT_EQ(0, overwrite->intrinsics().size());
-    ASSERT_EQ(1, overwrite->intermediates().size());
-    EXPECT_EQ("fl", overwrite->intermediates()[0]);
-    EXPECT_EQ("@fl = 2.0; @out = @fl;", overwrite->fragment());
+    EXPECT_EQ("@fl = 2.0; @out = @fl;", overwrite->shader());
 }
 
 TEST(ScinthDefParserTest, ParseAbstractVGenFromFile) {

@@ -57,12 +57,12 @@ bool AbstractVGen::prepareTemplate() {
             if (param->second.kind == Parameter::Kind::kOutput) {
                 outFound = true;
             }
-            m_parameters.push_back({*i, param->second});
+            m_parameters.push_back({ *i, param->second });
         } else {
             // Parameter could be an intrinsic, check there.
             Intrinsic intrinsic = getIntrinsicNamed(i->str().substr(1));
             if (intrinsic != Intrinsic::kNotFound) {
-                m_parameters.push_back({*i, Parameter(intrinsic)});
+                m_parameters.push_back({ *i, Parameter(intrinsic) });
             } else {
                 spdlog::error("VGen {} parsed unidentified parameter {} at position {} in shader '{}'", m_name,
                               i->str(), i->position(), m_shader);

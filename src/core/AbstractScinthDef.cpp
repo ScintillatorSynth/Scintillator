@@ -64,18 +64,17 @@ bool AbstractScinthDef::build() {
     std::unordered_map<Intrinsic, std::string> intrinsics;
     for (Intrinsic intrinsic : m_intrinsics) {
         switch (intrinsic) {
-            case kNormPos:
-                intrinsics.insert({ kNormPos, "normPos" });  // TODO: has a different name in the vertex shader
-                break;
+        case kNormPos:
+            intrinsics.insert({ kNormPos, "normPos" }); // TODO: has a different name in the vertex shader
+            break;
 
-            case kTime:
-                intrinsics.insert({ kTime, m_uniquePrefix + "_ubo.time" });
-                break;
+        case kTime:
+            intrinsics.insert({ kTime, m_uniquePrefix + "_ubo.time" });
+            break;
 
-            default:
-                spdlog::error("Unknown intrinsic in AbstractScinthDesc {}", m_name);
-                return false;
-
+        default:
+            spdlog::error("Unknown intrinsic in AbstractScinthDesc {}", m_name);
+            return false;
         }
     }
 

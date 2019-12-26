@@ -15,7 +15,9 @@ void VGen::addConstantInput(glm::vec2 constantValue) { m_inputs.emplace_back(VGe
 void VGen::addConstantInput(glm::vec3 constantValue) { m_inputs.emplace_back(VGenInput(constantValue)); }
 void VGen::addConstantInput(glm::vec4 constantValue) { m_inputs.emplace_back(VGenInput(constantValue)); }
 
-void VGen::addVGenInput(int index, int dimension) { m_inputs.emplace_back(VGenInput(index, dimension)); }
+void VGen::addVGenInput(int vgenIndex, int outputIndex, int dimension) {
+    m_inputs.emplace_back(VGenInput(vgenIndex, outputIndex, dimension));
+}
 
 bool VGen::validate() const {
     if (m_inputs.size() != m_abstractVGen->inputs().size()) {

@@ -143,19 +143,27 @@ ScinthDefParser::extractFromNodes(const std::vector<YAML::Node>& nodes) {
                         parseError = true;
                         break;
                     }
-                    if (!input["type"]) {
-                        spdlog::error("ScinthDef {} has VGen {} with no type key.", name, className);
+                    if (!input["type"] || !input["type"].IsScalar()) {
+                        spdlog::error("ScinthDef {} has VGen {} input with absent or malformed type key.", name,
+                                      className);
                         parseError = true;
                         break;
                     }
                     std::string inputType = input["type"].as<std::string>();
+                    if (!input["dimension"] || !input["dimension"].IsScalar()) {
+                        spdlog::error("ScinthDef {} has VGen {} input with absent or malformed dimension key.", name,
+                                      className);
+                        parseError = true;
+                        break;
+                    }
+                    int dimension = input["dimension"].as<int>();
                     if (inputType == "constant") {
                         if (!input["value"]) {
                             spdlog::error("ScinthDef {} has VGen {} constant input with no value key.", name,
                                           className);
                             parseError = true;
                             break;
-                        }
+                        } // TODO: higher-dimensional constants.
                         float constantValue = input["value"].as<float>();
                         instance.addConstantInput(constantValue);
                     } else if (inputType == "vgen") {
@@ -179,7 +187,7 @@ ScinthDefParser::extractFromNodes(const std::vector<YAML::Node>& nodes) {
                             parseError = true;
                             break;
                         }
-                        instance.addVGenInput(vgenIndex, outputIndex);
+                        instance.addVGenInput(vgenIndex, outputIndex, dimension);
                     } else {
                         spdlog::error("ScinthDef {} has VGen {} with undefined input type {}.", name, className,
                                       inputType);
@@ -339,8 +347,8 @@ int ScinthDefParser::extractAbstractVGensFromNodes(const std::vector<YAML::Node>
             }
         }
 
-        std::shared_ptr<AbstractVGen> vgen(new AbstractVGen(name, inputs, outputs, inputDimensions, outputDimensions,
-                                                            shader));
+        std::shared_ptr<AbstractVGen> vgen(
+            new AbstractVGen(name, inputs, outputs, inputDimensions, outputDimensions, shader));
         if (!vgen->prepareTemplate()) {
             spdlog::error("VGen {} failed template preparation.", name);
             continue;
