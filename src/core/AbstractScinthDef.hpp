@@ -39,11 +39,17 @@ public:
      */
     std::string nameForVGenOutput(int vgenIndex, int outputIndex) const;
 
-
     const VGen& instanceAt(int index) const { return m_instances[index]; }
     size_t numberOfInstances() const { return m_instances.size(); }
 
+    const std::unordered_set<Intrinsic> intrinsics() const { return m_intrinsics; }
+    const std::string& vertexShader() const { return m_vertexShader; }
+    const std::string& fragmentShader() const { return m_fragmentShader; }
+
 private:
+    bool buildParameters();
+    bool buildShaders();
+
     std::string m_name;
     std::vector<VGen> m_instances;
 
