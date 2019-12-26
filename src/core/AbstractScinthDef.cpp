@@ -30,6 +30,7 @@ bool AbstractScinthDef::build() {
     // Build the parameters for all VGens.
     m_intrinsics.clear();
     m_inputs.clear();
+    m_outputs.clear();
     int intermediatesCount = 0;
 
     for (auto i = 0; i < m_instances.size(); ++i) {
@@ -58,6 +59,13 @@ bool AbstractScinthDef::build() {
         for (auto intrinsic : m_instances[i].abstractVGen()->intrinsics()) {
             m_intrinsics.insert(intrinsic);
         }
+
+        // Generate all output names.
+        std::vector<std::string> vgenOutputs;
+        for (auto j = 0; j < m_instances[i].abstractVGen()->outputs().size(); ++j) {
+            vgenOutputs.push_back(nameForVGenOutput(i, j));
+        }
+        m_outputs.push_back(vgenOutputs);
     }
 
     // For now, all intrinsics are global, so we can define a single map with all of their substitutions.

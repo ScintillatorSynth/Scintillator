@@ -71,8 +71,8 @@ TEST(AbstractVGenTest, ParameterizeValid) {
               passthrough.parameterize({ "passthrough_11_in" }, {}, { "passthrough_11_out" }));
 
     AbstractVGen moreComplex("moreComplex", { "freq", "phase", "mul", "add" }, { "out" }, { { 1, 1, 1, 1 } }, { { 4 } },
-                             "float a = @add + @mul * (sin((@time * 2.0 * pi * @freq) + @phase));\n"
-                             "@out = float4(a, a, a, 1.0);\n");
+                             "float temp = @add + @mul * (sin((@time * 2.0 * pi * @freq) + @phase));\n"
+                             "@out = float4(temp, temp, temp, 1.0);\n");
     EXPECT_TRUE(moreComplex.prepareTemplate());
     EXPECT_TRUE(moreComplex.valid());
     EXPECT_EQ("float temp = 0.5f + ubo.moreComplex_mul * (sin((time * 2.0 * pi * otherVGen_out) + normPos.x));\n"

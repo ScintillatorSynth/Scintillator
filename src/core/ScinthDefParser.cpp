@@ -268,15 +268,15 @@ int ScinthDefParser::extractAbstractVGensFromNodes(const std::vector<YAML::Node>
             }
         }
 
-        if (!node["dimension"] || !node["dimension"].IsSequence()) {
-            spdlog::error("VGen {} dimension tag absent or not a sequence.", name);
+        if (!node["dimensions"] || !node["dimensions"].IsSequence()) {
+            spdlog::error("VGen {} dimensions tag absent or not a sequence.", name);
             continue;
         }
         std::vector<std::vector<int>> inputDimensions;
         std::vector<std::vector<int>> outputDimensions;
-        for (auto dim : node["dimension"]) {
+        for (auto dim : node["dimensions"]) {
             if (!dim.IsMap()) {
-                spdlog::error("VGen {} has dimension list element that is not a map.", name);
+                spdlog::error("VGen {} has dimensions list element that is not a map.", name);
                 break;
             }
 

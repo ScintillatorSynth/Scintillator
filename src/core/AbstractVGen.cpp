@@ -63,6 +63,7 @@ bool AbstractVGen::prepareTemplate() {
             Intrinsic intrinsic = getIntrinsicNamed(i->str().substr(1));
             if (intrinsic != Intrinsic::kNotFound) {
                 m_parameters.push_back({ *i, Parameter(intrinsic) });
+                m_intrinsics.insert(intrinsic);
             } else {
                 spdlog::error("VGen {} parsed unidentified parameter {} at position {} in shader '{}'", m_name,
                               i->str(), i->position(), m_shader);
@@ -87,7 +88,8 @@ std::string AbstractVGen::parameterize(const std::vector<std::string>& inputs,
         spdlog::error("VGen {} parameterized but invalid.", m_name);
         return "";
     }
-    if (inputs.size() != m_inputs.size() || intrinsics.size() != m_intrinsics.size()) {
+    if (inputs.size() != m_inputs.size() || intrinsics.size() != m_intrinsics.size() ||
+            outputs.size() != m_outputs.size()) {
         spdlog::error("VGen {} parameter count mismatch.", m_name);
         return "";
     }
