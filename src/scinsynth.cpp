@@ -1,8 +1,8 @@
-#include "FileSystem.hpp"
-#include "LogLevels.hpp"
 #include "OscHandler.hpp"
-#include "VGenManager.hpp"
 #include "Version.hpp"
+#include "core/FileSystem.hpp"
+#include "core/LogLevels.hpp"
+#include "core/ScinthDefParser.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
@@ -69,18 +69,18 @@ int main(int argc, char* argv[]) {
     scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
     oscHandler.run();
 
-    scin::VGenManager vgenManager;
-    auto parseVGens = std::async(std::launch::async, [&vgenManager, &quarkPath] {
+    std::shared_ptr<scin::ScinthDefParser> scinthDefParser(new scin::ScinthDefParser());
+    auto parseVGens = std::async(std::launch::async, [&scinthDefParser, &quarkPath] {
         fs::path vgens = quarkPath / "vgens";
-        spdlog::info("Parsing yaml files in {} for VGens.", vgens.string());
+        spdlog::info("Parsing yaml files in {} for AbstractVGens.", vgens.string());
         for (auto entry : fs::directory_iterator(vgens)) {
             auto p = entry.path();
             if (fs::is_regular_file(p) && p.extension() == ".yaml") {
-                spdlog::debug("Parsing VGen yaml file {}.", p.string());
-                vgenManager.loadFromFile(p.string());
+                spdlog::debug("Parsing AbstractVGen yaml file {}.", p.string());
+                scinthDefParser->loadAbstractVGensFromFile(p.string());
             }
         }
-        spdlog::info("Parsed {} unique VGens.", vgenManager.numberOfVGens());
+        spdlog::info("Parsed {} unique VGens.", scinthDefParser->numberOfAbstractVGens());
     });
 
     // ========== glfw setup.
@@ -113,32 +113,32 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    scin::vk::ShaderCompiler shader_compiler;
-    if (!shader_compiler.LoadCompiler()) {
+    std::shared_ptr<scin::vk::ShaderCompiler> shaderCompiler(new scin::vk::ShaderCompiler);
+    if (!shaderCompiler->loadCompiler()) {
         spdlog::error("unable to load shader compiler.");
         return EXIT_FAILURE;
     }
 
-    scin::vk::ShaderSource vertex_source("vertex shader",
-                                         "#version 450\n"
-                                         "#extension GL_ARB_separate_shader_objects : enable\n"
-                                         "\n"
-                                         "layout(location = 0) in vec2 inPosition;\n"
-                                         "layout(location = 1) in vec2 inNormPosition;\n"
-                                         "\n"
-                                         "layout(location = 0) out vec2 normPos;\n"
-                                         "\n"
-                                         "void main() {\n"
-                                         "   gl_Position = vec4(inPosition, 0.0, 1.0);\n"
-                                         "  normPos = inNormPosition;\n"
-                                         "}\n");
-    std::unique_ptr<scin::vk::Shader> vertex_shader =
-        shader_compiler.Compile(device, &vertex_source, scin::vk::Shader::kVertex);
-    if (!vertex_shader) {
+    scin::vk::ShaderSource vertexSource("vertex shader",
+                                        "#version 450\n"
+                                        "#extension GL_ARB_separate_shader_objects : enable\n"
+                                        "\n"
+                                        "layout(location = 0) in vec2 inPosition;\n"
+                                        "layout(location = 1) in vec2 inNormPosition;\n"
+                                        "\n"
+                                        "layout(location = 0) out vec2 normPos;\n"
+                                        "\n"
+                                        "void main() {\n"
+                                        "   gl_Position = vec4(inPosition, 0.0, 1.0);\n"
+                                        "  normPos = inNormPosition;\n"
+                                        "}\n");
+    std::unique_ptr<scin::vk::Shader> vertexShader =
+        shaderCompiler->compile(device, &vertexSource, scin::vk::Shader::kVertex);
+    if (!vertexShader) {
         return EXIT_FAILURE;
     }
 
-    scin::vk::ShaderSource fragment_source(
+    scin::vk::ShaderSource fragmentSource(
         "fragment shader",
         "#version 450\n"
         "#extension GL_ARB_separate_shader_objects : enable\n"
@@ -155,14 +155,12 @@ int main(int argc, char* argv[]) {
         "   float fragRad = 0.5 + (0.5 * sin((ubo.time * 2.0) - (3.0 * length(normPos))));\n"
         "   outColor = vec4(fragRad, fragRad, fragRad, 1.0);\n"
         "}\n");
-    std::unique_ptr<scin::vk::Shader> fragment_shader =
-        shader_compiler.Compile(device, &fragment_source, scin::vk::Shader::kFragment);
-    if (!fragment_shader) {
+    std::unique_ptr<scin::vk::Shader> fragmentShader =
+        shaderCompiler->compile(device, &fragmentSource, scin::vk::Shader::kFragment);
+    if (!fragmentShader) {
         spdlog::error("error in fragment shader.");
         return EXIT_FAILURE;
     }
-
-    shader_compiler.ReleaseCompiler();
 
     struct Vertex {
         glm::vec2 pos;
@@ -177,7 +175,7 @@ int main(int argc, char* argv[]) {
     scin::vk::Uniform uniform(device, sizeof(scin::vk::GlobalUniform));
     uniform.createLayout();
 
-    if (!pipeline.Create(vertex_shader.get(), fragment_shader.get(), &swapchain, &uniform)) {
+    if (!pipeline.Create(vertexShader.get(), fragmentShader.get(), &swapchain, &uniform)) {
         spdlog::error("error in pipeline creation.");
         return EXIT_FAILURE;
     }
@@ -263,8 +261,8 @@ int main(int argc, char* argv[]) {
     swapchain.DestroyFramebuffers();
     pipeline.Destroy();
     uniform.destroy();
-    vertex_shader->Destroy();
-    fragment_shader->Destroy();
+    vertexShader->Destroy();
+    fragmentShader->Destroy();
     swapchain.Destroy();
     device->Destroy();
     window.Destroy();

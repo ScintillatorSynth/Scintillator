@@ -3,6 +3,7 @@
 #define BUILD_SRC_OSCCOMMAND_HPP_
 
 // Generated file, please edit original file at src/OscMessageTags.h.in
+// TODO: follow cpp/hpp pattern established in core/Intrinsic.cpp.in
 #include <cstring>
 
 namespace scin {

@@ -7,6 +7,7 @@ namespace scin { namespace vk {
 
 // Wrapper object for source code for a shader, allowing for programmatic
 // assembly of the shader source code.
+// TODO: seems like a useless abstraction. Deprecate.
 class ShaderSource {
 public:
     ShaderSource(std::string name, std::string source);

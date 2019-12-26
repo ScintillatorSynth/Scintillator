@@ -2,23 +2,34 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/core")
+
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp"
+    COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/core/Intrinsic.cpp.in"
+    MAIN_DEPENDENCY core/Intrinsic.cpp.in
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/core"
+)
+
 add_library(scintillator_core STATIC
-    FileSystem.hpp
+    "${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp"
     Scinth.cpp
     Scinth.hpp
-    ScinthDef.cpp
-    ScinthDef.hpp
-    ScinthDefManager.cpp
-    ScinthDefManager.hpp
-    VGen.cpp
-    VGen.hpp
-    VGenInstance.cpp
-    VGenInstance.hpp
-    VGenManager.cpp
-    VGenManager.hpp
+    core/AbstractScinthDef.cpp
+    core/AbstractScinthDef.hpp
+    core/AbstractVGen.cpp
+    core/AbstractVGen.hpp
+    core/FileSystem.hpp
+    core/Intrinsic.hpp
+    core/LogLevels.cpp
+    core/LogLevels.hpp
+    core/ScinthDefParser.cpp
+    core/ScinthDefParser.hpp
+    core/VGen.cpp
+    core/VGen.hpp
 )
 
 target_link_libraries(scintillator_core
+    glm
     spdlog
     yaml-cpp
     stdc++fs
@@ -34,8 +45,6 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
 set(scintillator_synth_files
     "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp"
     "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
-    LogLevels.cpp
-    LogLevels.hpp
     OscHandler.cpp
     OscHandler.hpp
     scinsynth.cpp
@@ -97,14 +106,17 @@ if(SCIN_VALIDATE_VULKAN)
 endif()
 
 add_executable(run_unittests
-    ScinthDefManager_unittests.cpp
-    VGenManager_unittests.cpp
-    VGen_unittests.cpp
+    core/AbstractScinthDef_unittests.cpp
+    core/AbstractVGen_unittests.cpp
+    core/ScinthDefParser_unittests.cpp
+    core/VGen_unittests.cpp
 
     run_unittests.cpp
 )
 
 target_link_libraries(run_unittests
+    gflags
+    glm
     gtest
     scintillator_core
     stdc++fs
@@ -153,6 +165,9 @@ if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
     )
     add_custom_target(coverage_report
         DEPENDS scinsynth_coverage.json
+        COMMAND ${LLVM_COV} report ./run_unittests -instr-profile=scinsynth_coverage.profdata
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        VERBATIM
     )
 endif()
 

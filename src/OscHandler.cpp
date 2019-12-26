@@ -1,6 +1,6 @@
 #include "OscHandler.hpp"
 
-#include "LogLevels.hpp"
+#include "core/LogLevels.hpp"
 #include "OscCommand.hpp"
 #include "Version.hpp"
 

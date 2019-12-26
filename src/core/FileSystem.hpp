@@ -1,5 +1,5 @@
-#ifndef SRC_FILE_SYSTEM_HPP_
-#define SRC_FILE_SYSTEM_HPP_
+#ifndef SRC_CORE_FILE_SYSTEM_HPP_
+#define SRC_CORE_FILE_SYSTEM_HPP_
 
 #if __has_include(<filesystem>)
 #    include <filesystem>
@@ -9,4 +9,4 @@ namespace fs = std::filesystem;
 namespace fs = std::experimental::filesystem;
 #endif
 
-#endif // SRC_FILE_SYSTEM_HPP_
+#endif // SRC_CORE_FILE_SYSTEM_HPP_

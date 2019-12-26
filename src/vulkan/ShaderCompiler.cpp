@@ -4,44 +4,44 @@
 #include "vulkan/Shader.hpp"
 #include "vulkan/ShaderSource.hpp"
 
-#include <iostream>
+#include "spdlog/spdlog.h"
 
 namespace scin { namespace vk {
 
-ShaderCompiler::ShaderCompiler(): compiler_(nullptr) {}
+ShaderCompiler::ShaderCompiler(): m_compiler(nullptr) {}
 
-ShaderCompiler::~ShaderCompiler() { ReleaseCompiler(); }
+ShaderCompiler::~ShaderCompiler() { releaseCompiler(); }
 
-bool ShaderCompiler::LoadCompiler() {
-    if (compiler_ == nullptr) {
-        compiler_ = shaderc_compiler_initialize();
+bool ShaderCompiler::loadCompiler() {
+    if (m_compiler == nullptr) {
+        m_compiler = shaderc_compiler_initialize();
     }
-    return (compiler_ != nullptr);
+    return (m_compiler != nullptr);
 }
 
-void ShaderCompiler::ReleaseCompiler() {
-    if (compiler_ != nullptr) {
-        shaderc_compiler_release(compiler_);
-        compiler_ = nullptr;
+void ShaderCompiler::releaseCompiler() {
+    if (m_compiler != nullptr) {
+        shaderc_compiler_release(m_compiler);
+        m_compiler = nullptr;
     }
 }
 
-std::unique_ptr<Shader> ShaderCompiler::Compile(std::shared_ptr<Device> device, ShaderSource* source,
+std::unique_ptr<Shader> ShaderCompiler::compile(std::shared_ptr<Device> device, ShaderSource* source,
                                                 Shader::Kind kind) {
-    if (compiler_ == nullptr) {
-        if (!LoadCompiler()) {
+    if (m_compiler == nullptr) {
+        if (!loadCompiler()) {
             return std::unique_ptr<Shader>();
         }
     }
 
-    shaderc_shader_kind shader_kind;
+    shaderc_shader_kind shaderKind;
     switch (kind) {
     case Shader::kVertex:
-        shader_kind = shaderc_vertex_shader;
+        shaderKind = shaderc_vertex_shader;
         break;
 
     case Shader::kFragment:
-        shader_kind = shaderc_fragment_shader;
+        shaderKind = shaderc_fragment_shader;
         break;
     }
 
@@ -51,7 +51,7 @@ std::unique_ptr<Shader> ShaderCompiler::Compile(std::shared_ptr<Device> device, 
     }
 
     shaderc_compilation_result_t result = shaderc_compile_into_spv(
-        compiler_, source->get(), source->size(), shader_kind, source->name(), source->entry_point(), options);
+        m_compiler, source->get(), source->size(), shaderKind, source->name(), source->entry_point(), options);
 
     std::unique_ptr<Shader> shader(nullptr);
     shaderc_compilation_status status = shaderc_result_get_compilation_status(result);
@@ -60,10 +60,13 @@ std::unique_ptr<Shader> ShaderCompiler::Compile(std::shared_ptr<Device> device, 
         size_t byte_size = shaderc_result_get_length(result);
         shader.reset(new Shader(kind, device, source->entry_point()));
         if (!shader->Create(spv_bytes, byte_size)) {
+            spdlog::error("error creating shader from compiled source {}.", source->name());
             shader.reset(nullptr);
+        } else {
+            spdlog::info("successfully compiled shader source {}.", source->name());
         }
     } else {
-        std::cerr << shaderc_result_get_error_message(result) << std::endl;
+        spdlog::error("error compiling shader {}: {}", source->name(), shaderc_result_get_error_message(result));
     }
 
     shaderc_result_release(result);

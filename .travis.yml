@@ -9,10 +9,11 @@ addons:
         update: true
         packages: &common_packages
             - build-essential
-            - doxygen
             - clang-8
             - clang-format-8
             - cmake
+            - doxygen
+            - gperf
             - libc++-8-dev
             - libc++abi-8-dev
             - libxcursor-dev

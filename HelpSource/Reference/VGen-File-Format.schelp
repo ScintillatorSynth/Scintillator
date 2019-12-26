@@ -8,9 +8,44 @@ section::File Format
 A VGen file may contain multiple VGen definitions. Each definition at top level is a yaml dictionary with required and optional keys.
 
 table::
-## strong::name:: || string || strong::required:: || The name of the VGen, must be unique. Used to identify this VGen in ScinthDef descriptions.
-## strong::inputs:: || list || optional || A list of strings identifying input names in the fragment program. The ordering of inputs here must match the ordering of inputs on the ScinthDef, as those inputs are unnamed.
-## strong::parameters:: || list || optional || A list of strings identifying names of predefined parameters provided to all Scinths when running (TODO: make list of these, "time" is the first one)
-## strong::intermediates:: || list || optional || A list of strings identifying names of intermediate variables, broken out here so the uniqueness of their names can be identified.
-## strong::fragment:: || string || strong::required:: || The GLSL fragment program, with inputs, parameters, and intermediates, as well as the keyword "@out" prefixed with @ symbols.
+## strong::key name:: || strong::type:: || strong::required or optional:: || strong::description::
+## code::name:: || string || strong::required:: || The name of the VGen, must be unique. Used to identify this VGen in ScinthDef descriptions.
+## code::inputs:: || list || optional || A list of strings identifying input names in the shader program. The ordering of inputs here must match the ordering of inputs on the ScinthDef, as those inputs are sometimes supplied unnamed.
+## code::outputs:: || list || strong::required:: || A list of strings identifying names of output parameters. At least one element must exist in this list.
+## code::dimensions:: || list || strong::required:: || A list of dictionaries of keys mapping dimension on inputs to dimension on outputs of the VGen (see below).
+## code::shader:: || string || strong::required:: || The GLSL shader program, with inputs, intrinsics, and intermediates, as well as exactly one instance of the keyword "@out" prefixed with @ symbols.
 ::
+
+subsection::dimensions list
+
+The dimensions list enumerates the valid dimensions of input to, and output from, the VGen. As shader programs rely heavily on SIMD this means that many different configurations of output and input dimensions are typically supported by the built-in functions. The code::dimension:: key must be present in a valid VGen and contain a list with one or more dictionary elements with the following keys:
+
+table::
+## strong::key name:: || strong::type:: || strong::required or optional:: || strong::description::
+## code::inputs:: || list or integer (see note) || strong::required:: if VGen has inputs || Describes the dimensionality of each input signal.
+## code::outputs:: || list or integer (see note) || strong::required:: || Describes the dimensionality of each output signal.
+::
+
+note::If a list, must have the same number of integer elements as there are number of inputs or outputs, each integer describing the dimensionality of inputs or outputs in order. If a single integer, all inputs or outputs are assumed to have that dimensionality.::
+
+section::Input and Output Dimensions
+
+Current VGen design assumes zero or more inputs, and exactly one output from each VGen. VGen inputs and outputs each have a emphasis::dimension:: value from 1 to 4.
+
+section::Intrinsics
+
+Some @names are reserved and will be automatically supplied to the VGen at compilation or runtime. They are described in short table form, with detailed descriptions below.
+
+table::
+## strong::name:: || strong::dimensons:: || strong::brief description::
+## code::@normPos:: || 2 || Position of vertex or fragment in normalized space.
+## code::@time:: || 1 || The runtime of the Scinth instance in seconds.
+::
+
+subsection::@normPos
+
+The emphasis::normalized:: position of the vertex or fragment. This is computed to allow for image coordinates with a 1:1 aspect ratio even though the output window or framebuffer might be rectangular. The @normPos is always a 2 dimensional value and sets up coordinate systems such that the image in smaller of width or height will run from -1.0 to 1.0 in normPos space, with the larger size running under -1.0 and over 1.0. So, for instance, if the image is a tall rectangle with height twice that of width, the normPos will run from -1.0 to 1.0 in width, and -2.0 to 2.0 in height.
+
+subsection::@time
+
+The VGen will receive a upated value every frame which contains the elapsed time in seconds from when the Scinth instance started. The time intrinsic is always 1 dimensional.

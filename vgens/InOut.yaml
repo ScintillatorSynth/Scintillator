@@ -1,0 +1,35 @@
+---
+name: RGBOut
+inputs:
+    - red
+    - blue
+    - green
+outputs:
+    - rgba
+dimensions:
+    - inputs: 1
+      outputs: 4
+shader: "@rgba = float4(@red, @blue, @green, 1.0);"
+---
+name: BWOut
+inputs:
+    - value
+outputs:
+    - rgba
+dimensions:
+    - inputs: 1
+      outputs: 4
+shader: "@rgba = float4(@value, @value, @value, 1.0);"
+---
+name: RGBAOut
+inputs:
+    - red
+    - blue
+    - green
+    - alpha
+outputs:
+    - rgba
+dimensions:
+    - inputs: 1
+      outputs: 4
+shader: "@rgba = float4(@red, @blue, @green, @alpha);"
