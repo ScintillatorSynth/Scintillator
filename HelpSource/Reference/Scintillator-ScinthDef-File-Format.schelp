@@ -42,6 +42,7 @@ Inputs to VGens are polymorphic, and takes on a different structure depending on
 table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
 ## code::name:: || string || An emphasis::optional:: string, provided for readability
+## code::dimension:: || integer || The dimensionality of the input
 ## code::type:: || string || An enumerated type, for possible values see below
 ::
 
@@ -73,15 +74,11 @@ Intrinsics right now are being treated like normal VGens.
 
 subsection::VGen Output Dictionary Spec
 
-Outputs from VGens typically only specify output rates.
-
-note::
-For the moment since all rates are assumed to be fragment rate, and all VGens are thought to be single-output, this section is omitted.
-::
+Output entries specify dimensions on each output.
 
 table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
-## code::rate:: || One of code::fragment:: or code::vertex::
+## code::dimension:: || integer || The dimension of this output.
 ::
 
 section::Example
@@ -106,13 +103,19 @@ code::
       rate: fragment
       inputs:
         - type: constant
+          dimension: 1
           value: 200.0
         - type: constant
+          dimension: 1
           value: 0.0
         - type: constant
+          dimension: 1
           value: 0.9
         - type: constant
+          dimension: 1
           value: 0.2
+      outputs:
+        - dimension: 1
     - className: VOut
       rate: fragment
       inputs:

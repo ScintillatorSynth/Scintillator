@@ -2,7 +2,16 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/core")
+
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp"
+    COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/core/Intrinsic.cpp.in"
+    MAIN_DEPENDENCY core/Intrinsic.cpp.in
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/core"
+)
+
 add_library(scintillator_core STATIC
+    "${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp"
     Scinth.cpp
     Scinth.hpp
     core/AbstractScinthDef.cpp
@@ -10,6 +19,7 @@ add_library(scintillator_core STATIC
     core/AbstractVGen.cpp
     core/AbstractVGen.hpp
     core/FileSystem.hpp
+    core/Intrinsic.hpp
     core/LogLevels.cpp
     core/LogLevels.hpp
     core/ScinthDefParser.cpp
@@ -19,6 +29,7 @@ add_library(scintillator_core STATIC
 )
 
 target_link_libraries(scintillator_core
+    glm
     spdlog
     yaml-cpp
     stdc++fs
@@ -105,6 +116,7 @@ add_executable(run_unittests
 
 target_link_libraries(run_unittests
     gflags
+    glm
     gtest
     scintillator_core
     stdc++fs

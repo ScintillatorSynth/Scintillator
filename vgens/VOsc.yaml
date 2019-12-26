@@ -1,24 +1,36 @@
----
 name: ScinOsc
 inputs:
     - freq
     - phase
     - mul
     - add
-intrinsics:
-    - time
-fragment: "@out = @add + (@mul * sin((@time * @freq * 2 * pi) + @phase));"
+outputs:
+    - out
+dimensions:
+    - inputs: 1
+      outputs: 1
+    - inputs: 2
+      outputs: 2
+    - inputs: 3
+      outputs: 3
+    - inputs: 4
+      outputs: 4
+shader: "@out = @add + (@mul * sin((@time * @freq * 2 * pi) + @phase));"
 ---
 name: VSaw
 inputs:
     - freq
     - phase
-intrinsics:
-    - time
-intermediates:
-    - temp
-fragment: "
-float @temp = (@time + @phase) * @freq;
-@out = @temp - floor(@temp);
-"
+outputs:
+    - out
+dimensions:
+    - inputs: 1
+      outputs: 1
+    - inputs: 2
+      outputs: 2
+    - inputs: 3
+      outputs: 3
+    - inputs: 4
+      outputs: 4
+shader: "@out = frac((@time + @phase) * @freq);"
 

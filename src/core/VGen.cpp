@@ -11,8 +11,11 @@ VGen::VGen(std::shared_ptr<const AbstractVGen> abstractVGen): m_abstractVGen(abs
 VGen::~VGen() {}
 
 void VGen::addConstantInput(float constantValue) { m_inputs.emplace_back(VGenInput(constantValue)); }
+void VGen::addConstantInput(glm::vec2 constantValue) { m_inputs.emplace_back(VGenInput(constantValue)); }
+void VGen::addConstantInput(glm::vec3 constantValue) { m_inputs.emplace_back(VGenInput(constantValue)); }
+void VGen::addConstantInput(glm::vec4 constantValue) { m_inputs.emplace_back(VGenInput(constantValue)); }
 
-void VGen::addVGenInput(int index) { m_inputs.emplace_back(VGenInput(index)); }
+void VGen::addVGenInput(int index, int dimension) { m_inputs.emplace_back(VGenInput(index, dimension)); }
 
 bool VGen::validate() const {
     if (m_inputs.size() != m_abstractVGen->inputs().size()) {
@@ -26,18 +29,49 @@ bool VGen::validate() const {
 
 bool VGen::getInputConstantValue(int index, float& outValue) const {
     if (index >= 0 && index < numberOfInputs()) {
-        if (m_inputs[index].type == VGenInput::kConstant) {
-            outValue = m_inputs[index].value.constant;
+        if (m_inputs[index].type == VGenInput::kConstant && m_inputs[index].dimension == 1) {
+            outValue = m_inputs[index].value.constant1;
             return true;
         }
     }
     return false;
 }
 
-bool VGen::getInputVGenIndex(int index, int& outIndex) const {
+bool VGen::getInputConstantValue(int index, glm::vec2& outValue) const {
+    if (index >= 0 && index < numberOfInputs()) {
+        if (m_inputs[index].type == VGenInput::kConstant && m_inputs[index].dimension == 2) {
+            outValue = m_inputs[index].value.constant2;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool VGen::getInputConstantValue(int index, glm::vec3& outValue) const {
+    if (index >= 0 && index < numberOfInputs()) {
+        if (m_inputs[index].type == VGenInput::kConstant && m_inputs[index].dimension == 3) {
+            outValue = m_inputs[index].value.constant3;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool VGen::getInputConstantValue(int index, glm::vec4& outValue) const {
+    if (index >= 0 && index < numberOfInputs()) {
+        if (m_inputs[index].type == VGenInput::kConstant && m_inputs[index].dimension == 4) {
+            outValue = m_inputs[index].value.constant4;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool VGen::getInputVGenIndex(int index, int& outIndex, int& outOutput) const {
     if (index >= 0 && index < numberOfInputs()) {
         if (m_inputs[index].type == VGenInput::kVGen) {
-            outIndex = m_inputs[index].value.vgenIndex;
+            outIndex = m_inputs[index].value.vgen.x;
+            outOutput = m_inputs[index].value.vgen.y;
             return true;
         }
     }

@@ -159,20 +159,27 @@ ScinthDefParser::extractFromNodes(const std::vector<YAML::Node>& nodes) {
                         float constantValue = input["value"].as<float>();
                         instance.addConstantInput(constantValue);
                     } else if (inputType == "vgen") {
-                        if (!input["vgenIndex"]) {
-                            spdlog::error("ScinthDef {} has VGen {} vgen input with no vgenIndex key.", name,
-                                          className);
+                        if (!input["vgenIndex"] || !input["outputIndex"]) {
+                            spdlog::error("ScinthDef {} has VGen {} vgen input with no vgenIndex or outputIndex key.",
+                                          name, className);
                             parseError = true;
                             break;
                         }
-                        int index = input["vgenIndex"].as<int>();
-                        if (index < 0 || index > instances.size()) {
+                        int vgenIndex = input["vgenIndex"].as<int>();
+                        if (vgenIndex < 0 || vgenIndex > instances.size()) {
                             spdlog::error("ScinthDef {} has VGen {} vgen input with invalid index {}.", name, className,
-                                          index);
+                                          vgenIndex);
                             parseError = true;
                             break;
                         }
-                        instance.addVGenInput(index);
+                        int outputIndex = input["outputIndex"].as<int>();
+                        if (outputIndex < 0 || outputIndex >= instances[vgenIndex].abstractVGen()->outputs().size()) {
+                            spdlog::error("ScinthDef {} has VGen {} vgen input with invalid output index {}.", name,
+                                          className, outputIndex);
+                            parseError = true;
+                            break;
+                        }
+                        instance.addVGenInput(vgenIndex, outputIndex);
                     } else {
                         spdlog::error("ScinthDef {} has VGen {} with undefined input type {}.", name, className,
                                       inputType);
@@ -219,27 +226,112 @@ int ScinthDefParser::extractAbstractVGensFromNodes(const std::vector<YAML::Node>
             spdlog::error("Top-level abstract VGen yaml node is not a map.");
             continue;
         }
-        // Two currently required tags are "name" and "fragment", check they exist.
-        if (!node["name"] || !node["fragment"]) {
-            spdlog::error("Missing either name or fragment tag.");
+        // Required tags are "name", "outputs", "dimension", and "shader".
+        if (!node["name"] || !node["name"].IsScalar()) {
+            spdlog::error("VGen name tag either absent or not a scalar.");
+            continue;
+        }
+        std::string name = node["name"].as<std::string>();
+
+        if (!node["outputs"] || !node["outputs"].IsSequence()) {
+            spdlog::error("VGen {} output tag either absent or not a sequence.", name);
+            continue;
+        }
+        std::vector<std::string> outputs;
+        for (auto output : node["outputs"]) {
+            outputs.push_back(output.as<std::string>());
+        }
+        if (outputs.size() == 0) {
+            spdlog::error("VGen {} has no outputs.", name);
             continue;
         }
 
-        std::string name = node["name"].as<std::string>();
-        std::string fragment = node["fragment"].as<std::string>();
+        if (!node["shader"] || !node["shader"].IsScalar()) {
+            spdlog::error("VGen {} shader tag absent or not a scalar.", name);
+            continue;
+        }
+        std::string shader = node["shader"].as<std::string>();
 
+        // Check for inputs (optional) first, to get an input count to validate dimension data.
         std::vector<std::string> inputs;
         if (node["inputs"] && node["inputs"].IsSequence()) {
             for (auto input : node["inputs"]) {
                 inputs.push_back(input.as<std::string>());
             }
         }
-        std::vector<std::string> intrinsics;
-        if (node["intrinsics"] && node["intrinsics"].IsSequence()) {
-            for (auto parameter : node["intrinsics"]) {
-                intrinsics.push_back(parameter.as<std::string>());
+
+        if (!node["dimension"] || !node["dimension"].IsSequence()) {
+            spdlog::error("VGen {} dimension tag absent or not a sequence.", name);
+            continue;
+        }
+        std::vector<std::vector<int>> inputDimensions;
+        std::vector<std::vector<int>> outputDimensions;
+        for (auto dim : node["dimension"]) {
+            if (!dim.IsMap()) {
+                spdlog::error("VGen {} has dimension list element that is not a map.", name);
+                break;
+            }
+
+            // The input tag is optional for those VGens that don't have inputs.
+            std::vector<int> inputDims;
+            if (dim["inputs"]) {
+                // If only a single number provided use that as dimension for all inputs.
+                if (dim["inputs"].IsScalar()) {
+                    inputDims.insert(inputDims.begin(), inputs.size(), dim["inputs"].as<int>());
+                } else if (dim["inputs"].IsSequence()) {
+                    for (auto inDim : dim["inputs"]) {
+                        inputDims.push_back(inDim.as<int>());
+                    }
+                } else {
+                    spdlog::error("VGen {} has malformed inputs tag inside of dimension list.", name);
+                    break;
+                }
+            }
+            inputDimensions.push_back(inputDims);
+
+            // The output tag is required, for all VGens have outputs.
+            if (!dim["outputs"]) {
+                spdlog::error("VGen {} missing output tag inside of dimension list.", name);
+                break;
+            }
+            std::vector<int> outputDims;
+            if (dim["outputs"].IsScalar()) {
+                outputDims.insert(outputDims.begin(), outputs.size(), dim["outputs"].as<int>());
+            } else if (dim["outputs"].IsSequence()) {
+                for (auto outDim : dim["outputs"]) {
+                    outputDims.push_back(outDim.as<int>());
+                }
+            } else {
+                spdlog::error("VGen {} has malformed outputs tag inside of dimension list.", name);
+                break;
+            }
+            outputDimensions.push_back(outputDims);
+        }
+
+        // Validate output and input dimensions as parsed. There should be at least one entry and the same number of
+        // entries in both output and input dimensions arrays.
+        if (outputDimensions.size() != inputDimensions.size() || outputDimensions.size() == 0) {
+            spdlog::error("VGen {} has mismatched or empty dimensions lists.", name);
+            continue;
+        }
+        // Each entry in input dimensions list should match the number of inputs, and same with outputs.
+        bool dimensionsValid = true;
+        for (auto i = 0; i < outputDimensions.size(); ++i) {
+            if (outputDimensions[i].size() != outputs.size()) {
+                spdlog::error("VGen {} has output dimensions list of unequal size to the number of outputs.", name);
+                dimensionsValid = false;
+                break;
+            }
+            if (inputDimensions[i].size() != inputs.size()) {
+                spdlog::error("VGen {} has input dimensions list of unequal size to the number of inputs.", name);
+                dimensionsValid = false;
+                break;
             }
         }
+        if (!dimensionsValid) {
+            continue;
+        }
+
         std::vector<std::string> intermediates;
         if (node["intermediates"] && node["intermediates"].IsSequence()) {
             for (auto intermediate : node["intermediates"]) {
@@ -247,7 +339,8 @@ int ScinthDefParser::extractAbstractVGensFromNodes(const std::vector<YAML::Node>
             }
         }
 
-        std::shared_ptr<AbstractVGen> vgen(new AbstractVGen(name, fragment, inputs, intrinsics, intermediates));
+        std::shared_ptr<AbstractVGen> vgen(new AbstractVGen(name, inputs, outputs, inputDimensions, outputDimensions,
+                                                            shader));
         if (!vgen->prepareTemplate()) {
             spdlog::error("VGen {} failed template preparation.", name);
             continue;

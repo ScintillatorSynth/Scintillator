@@ -4,6 +4,8 @@
 #include <memory>
 #include <vector>
 
+#include "glm/glm.hpp"
+
 namespace scin {
 
 class AbstractVGen;
@@ -15,17 +17,20 @@ public:
     VGen(std::shared_ptr<const AbstractVGen> abstractVGen);
     ~VGen();
 
-    /*! Adds a constant-valued input.
+    /*! Adds a single-dimensional constant-valued input.
      *
      * \param constantValue The value of the constant to supply to this input.
      */
     void addConstantInput(float constantValue);
+    void addConstantInput(glm::vec2 constantValue);
+    void addConstantInput(glm::vec3 constantValue);
+    void addConstantInput(glm::vec4 constantValue);
 
     /*! Add output from another VGen as input.
      *
      * \param index The index of the VGen within the ScinthDef that will provide input.
      */
-    void addVGenInput(int index);
+    void addVGenInput(int index, int dimension);
 
     /*! Check this instance data against the originating AbstractVGen.
      *
@@ -40,14 +45,18 @@ public:
      * \return true if the input at index is a constant, false otherwise.
      */
     bool getInputConstantValue(int index, float& outValue) const;
+    bool getInputConstantValue(int index, glm::vec2& outValue) const;
+    bool getInputConstantValue(int index, glm::vec3& outValue) const;
+    bool getInputConstantValue(int index, glm::vec4& outValue) const;
 
     /*! If the input at index is a VGen, return true and store the vgen index value in outIndex.
      *
      * \param index The index of the input in question.
-     * \param outIndex Will be set to the value of the index of VGen input on successful completion of the function.
+     * \param outIndex Will be set to the value of the index of VGen's output on successful completion of the function.
+     * \param outOutput Will be set to the value of the index of the output on the selected VGen.
      * \return true if the input at index is a VGen, false otherwise.
      */
-    bool getInputVGenIndex(int index, int& outIndex) const;
+    bool getInputVGenIndex(int index, int& outIndex, int& outOutput) const;
 
     int numberOfInputs() const { return m_inputs.size(); }
     std::shared_ptr<const AbstractVGen> abstractVGen() const { return m_abstractVGen; }
@@ -55,13 +64,20 @@ public:
 private:
     struct VGenInput {
         enum InputType { kConstant, kVGen };
-        explicit VGenInput(float constantValue): type(kConstant) { value.constant = constantValue; }
-        explicit VGenInput(int index): type(kVGen) { value.vgenIndex = index; }
+        explicit VGenInput(float c): type(kConstant), dimension(1) { value.constant1 = c; }
+        explicit VGenInput(glm::vec2 c): type(kConstant), dimension(2) { value.constant2 = c; }
+        explicit VGenInput(glm::vec3 c): type(kConstant), dimension(3) { value.constant3 = c; }
+        explicit VGenInput(glm::vec4 c): type(kConstant), dimension(4) { value.constant4 = c; }
+        explicit VGenInput(int index, int out): type(kVGen) { value.vgen = glm::ivec2(index, out); }
 
         InputType type;
+        int dimension;
         union Value {
-            float constant;
-            int vgenIndex;
+            float constant1;
+            glm::vec2 constant2;
+            glm::vec3 constant3;
+            glm::vec4 constant4;
+            glm::ivec2 vgen;
         };
         Value value;
     };

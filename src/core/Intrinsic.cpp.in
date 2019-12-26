@@ -1,0 +1,31 @@
+%{
+// Generated file, please edit original file at src/core/Intrinsic.cpp.in
+// TODO: lint generated file, copy diff back to this one.
+#include "core/Intrinsic.hpp"
+
+#include <cstring>
+
+namespace {
+
+%}
+%language=C++
+%struct-type
+struct IntrinsicPair { const char* name; scin::Intrinsic intrinsic; };
+%%
+normPos,    scin::Intrinsic::kNormPos
+time,       scin::Intrinsic::kTime
+%%
+
+} // namespace
+
+namespace scin {
+
+Intrinsic getIntrinsicNamed(const std::string& name) {
+    const IntrinsicPair* pair = Perfect_Hash::in_word_set(name.data(), name.size());
+    if (!pair) {
+        return Intrinsic::kNotFound;
+    }
+    return pair->intrinsic;
+}
+
+} // namespace scin
