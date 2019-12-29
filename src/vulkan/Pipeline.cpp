@@ -183,7 +183,7 @@ bool Pipeline::Create(Shader* vertex_shader, Shader* fragment_shader, Swapchain*
     pipeline_info.pColorBlendState = &color_blending;
     pipeline_info.pDynamicState = nullptr;
     pipeline_info.layout = pipeline_layout_;
-    pipeline_info.renderPass = render_pass_;
+    pipeline_info.renderPass = render_pass_; // could get from Swapchain?
     pipeline_info.subpass = 0;
     pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
     pipeline_info.basePipelineIndex = -1;
@@ -201,6 +201,7 @@ void Pipeline::Destroy() {
     DestroyRenderPass();
 }
 
+// TODO: could this be a part of Swapchain?
 bool Pipeline::CreateRenderPass(Swapchain* swapchain) {
     VkAttachmentDescription color_attachment = {};
     color_attachment.format = swapchain->surface_format().format;

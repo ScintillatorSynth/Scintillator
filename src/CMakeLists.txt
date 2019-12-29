@@ -45,8 +45,14 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
 set(scintillator_synth_files
     "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp"
     "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
+    Compositor.cpp
+    Compositor.hpp
     OscHandler.cpp
     OscHandler.hpp
+    Scinth.cpp
+    Scinth.hpp
+    ScinthDef.cpp
+    ScinthDef.hpp
     scinsynth.cpp
 
     vulkan/Buffer.cpp

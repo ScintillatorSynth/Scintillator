@@ -113,6 +113,8 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    // ===== START of Scinth-specific state.
+
     std::shared_ptr<scin::vk::ShaderCompiler> shaderCompiler(new scin::vk::ShaderCompiler);
     if (!shaderCompiler->loadCompiler()) {
         spdlog::error("unable to load shader compiler.");
