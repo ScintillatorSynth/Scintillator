@@ -6,6 +6,7 @@
 namespace scin {
 
 ScinthDef::ScinthDef(std::shared_ptr<const AbstractScinthDef> abstractScinthDef) {
+
 }
 
 ScinthDef::~ScinthDef() {

@@ -14,7 +14,7 @@ class Device;
 class Buffer {
 public:
     enum Kind { kIndex, kUniform, kVertex };
-    Buffer(Kind kind, std::shared_ptr<Device> device);
+    Buffer(Kind kind, bool requiresHostAccess, std::shared_ptr<Device> device);
     ~Buffer();
 
     bool create(size_t size);

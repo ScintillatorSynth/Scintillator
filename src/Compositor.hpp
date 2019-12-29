@@ -2,11 +2,13 @@
 #define SRC_COMPOSITOR_HPP_
 
 #include <memory>
+#include <string>
 #include <unordered_map>
 
 namespace scin {
 
 namespace vk {
+    class CommandPool;
     class Device;
     class ShaderCompiler;
 } // namespace vk
@@ -25,6 +27,8 @@ public:
 
     bool create();
 
+    bool buildScinthDef(std::shared_ptr<const AbstractScinthDef> abstractScinthDef);
+
     /*! Unload the shader compiler, releasing the resources associated with it.
      *
      * This can be used to save some memory by releasing the shader compiler, at the cost of increased latency in
@@ -34,7 +38,10 @@ public:
 
 private:
     std::shared_ptr<vk::Device> m_device;
-    std::shared_ptr<vk::ShaderCompiler> m_shaderCompiler;
+
+    std::unique_ptr<vk::ShaderCompiler> m_shaderCompiler;
+    std::unique_ptr<vk::CommandPool> m_commandPool;
+    std::unordered_map<std::string, std::shared_ptr<const ScinthDef>> m_scinthDefs;
 };
 
 } // namespace scin
