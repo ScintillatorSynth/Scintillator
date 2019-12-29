@@ -32,6 +32,12 @@ public:
      */
     void releaseCompiler();
 
+    /*! Returns true if compiler is loaded, false if not.
+     *
+     * \return True if compiler currently loaded. False if not.
+     */
+    bool compilerLoaded() const { return m_compiler != nullptr; }
+
     /*! Compile the provided shader source code into a usable Shader on the provided Device.
      *
      * \param device A shared pointer to the specific Vulkan Device to compile this Shader for.

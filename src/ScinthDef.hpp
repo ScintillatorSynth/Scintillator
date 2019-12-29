@@ -11,7 +11,7 @@ class AbstractScinthDef;
  */
 class ScinthDef {
 public:
-    ScinthDef(std::unique_ptr<AbstractScinthDef> abstractScinthDef);
+    ScinthDef(std::shared_ptr<const AbstractScinthDef> abstractScinthDef);
     ~ScinthDef();
 
 private:

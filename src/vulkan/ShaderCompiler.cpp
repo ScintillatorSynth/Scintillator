@@ -13,14 +13,14 @@ ShaderCompiler::ShaderCompiler(): m_compiler(nullptr) {}
 ShaderCompiler::~ShaderCompiler() { releaseCompiler(); }
 
 bool ShaderCompiler::loadCompiler() {
-    if (m_compiler == nullptr) {
+    if (!compilerLoaded()) {
         m_compiler = shaderc_compiler_initialize();
     }
     return (m_compiler != nullptr);
 }
 
 void ShaderCompiler::releaseCompiler() {
-    if (m_compiler != nullptr) {
+    if (compilerLoaded()) {
         shaderc_compiler_release(m_compiler);
         m_compiler = nullptr;
     }
@@ -28,7 +28,7 @@ void ShaderCompiler::releaseCompiler() {
 
 std::unique_ptr<Shader> ShaderCompiler::compile(std::shared_ptr<Device> device, ShaderSource* source,
                                                 Shader::Kind kind) {
-    if (m_compiler == nullptr) {
+    if (!compilerLoaded()) {
         if (!loadCompiler()) {
             return std::unique_ptr<Shader>();
         }
