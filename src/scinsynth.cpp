@@ -2,7 +2,7 @@
 #include "Version.hpp"
 #include "core/FileSystem.hpp"
 #include "core/LogLevels.hpp"
-#include "core/ScinthDefParser.hpp"
+#include "core/Archetypes.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
     scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
     oscHandler.run();
 
-    std::shared_ptr<scin::ScinthDefParser> scinthDefParser(new scin::ScinthDefParser());
+    std::shared_ptr<scin::Archetypes> scinthDefParser(new scin::Archetypes());
     auto parseVGens = std::async(std::launch::async, [&scinthDefParser, &quarkPath] {
         fs::path vgens = quarkPath / "vgens";
         spdlog::info("Parsing yaml files in {} for AbstractVGens.", vgens.string());

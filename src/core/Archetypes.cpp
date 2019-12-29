@@ -1,4 +1,4 @@
-#include "core/ScinthDefParser.hpp"
+#include "core/Archetypes.hpp"
 
 #include "core/AbstractScinthDef.hpp"
 #include "core/AbstractVGen.hpp"
@@ -10,20 +10,20 @@
 
 namespace scin {
 
-ScinthDefParser::ScinthDefParser() {}
-ScinthDefParser::~ScinthDefParser() {}
+Archetypes::Archetypes() {}
+Archetypes::~Archetypes() {}
 
-std::vector<std::shared_ptr<const AbstractScinthDef>> ScinthDefParser::loadFromFile(const std::string& fileName) {
+std::vector<std::shared_ptr<const AbstractScinthDef>> Archetypes::loadFromFile(const std::string& fileName) {
     std::vector<YAML::Node> nodes = parseYAMLFile(fileName);
     return extractFromNodes(nodes);
 }
 
-std::vector<std::shared_ptr<const AbstractScinthDef>> ScinthDefParser::parseFromString(const std::string& yaml) {
+std::vector<std::shared_ptr<const AbstractScinthDef>> Archetypes::parseFromString(const std::string& yaml) {
     std::vector<YAML::Node> nodes = parseYAMLString(yaml);
     return extractFromNodes(nodes);
 }
 
-std::shared_ptr<const AbstractScinthDef> ScinthDefParser::getAbstractScinthDefNamed(const std::string& name) {
+std::shared_ptr<const AbstractScinthDef> Archetypes::getAbstractScinthDefNamed(const std::string& name) {
     std::shared_ptr<const AbstractScinthDef> scinthDef;
     std::lock_guard<std::mutex> lock(m_mutex);
     auto it = m_scinthDefs.find(name);
@@ -33,22 +33,22 @@ std::shared_ptr<const AbstractScinthDef> ScinthDefParser::getAbstractScinthDefNa
     return scinthDef;
 }
 
-size_t ScinthDefParser::numberOfAbstractScinthDefs() {
+size_t Archetypes::numberOfAbstractScinthDefs() {
     std::lock_guard<std::mutex> lock(m_mutex);
     return m_scinthDefs.size();
 }
 
-int ScinthDefParser::loadAbstractVGensFromFile(const std::string& fileName) {
+int Archetypes::loadAbstractVGensFromFile(const std::string& fileName) {
     std::vector<YAML::Node> nodes = parseYAMLFile(fileName);
     return extractAbstractVGensFromNodes(nodes);
 }
 
-int ScinthDefParser::parseAbstractVGensFromString(const std::string& yaml) {
+int Archetypes::parseAbstractVGensFromString(const std::string& yaml) {
     std::vector<YAML::Node> nodes = parseYAMLString(yaml);
     return extractAbstractVGensFromNodes(nodes);
 }
 
-std::shared_ptr<const AbstractVGen> ScinthDefParser::getAbstractVGenNamed(const std::string& name) {
+std::shared_ptr<const AbstractVGen> Archetypes::getAbstractVGenNamed(const std::string& name) {
     std::shared_ptr<const AbstractVGen> vgen;
     std::lock_guard<std::mutex> lock(m_vgensMutex);
     auto it = m_abstractVGens.find(name);
@@ -58,12 +58,12 @@ std::shared_ptr<const AbstractVGen> ScinthDefParser::getAbstractVGenNamed(const 
     return vgen;
 }
 
-size_t ScinthDefParser::numberOfAbstractVGens() {
+size_t Archetypes::numberOfAbstractVGens() {
     std::lock_guard<std::mutex> lock(m_vgensMutex);
     return m_abstractVGens.size();
 }
 
-std::vector<YAML::Node> ScinthDefParser::parseYAMLFile(const std::string& fileName) {
+std::vector<YAML::Node> Archetypes::parseYAMLFile(const std::string& fileName) {
     std::vector<YAML::Node> nodes;
     try {
         nodes = YAML::LoadAllFromFile(fileName);
@@ -77,7 +77,7 @@ std::vector<YAML::Node> ScinthDefParser::parseYAMLFile(const std::string& fileNa
     return nodes;
 }
 
-std::vector<YAML::Node> ScinthDefParser::parseYAMLString(const std::string& yaml) {
+std::vector<YAML::Node> Archetypes::parseYAMLString(const std::string& yaml) {
     std::vector<YAML::Node> nodes;
     try {
         nodes = YAML::LoadAll(yaml);
@@ -90,7 +90,7 @@ std::vector<YAML::Node> ScinthDefParser::parseYAMLString(const std::string& yaml
 
 
 std::vector<std::shared_ptr<const AbstractScinthDef>>
-ScinthDefParser::extractFromNodes(const std::vector<YAML::Node>& nodes) {
+Archetypes::extractFromNodes(const std::vector<YAML::Node>& nodes) {
     std::vector<std::shared_ptr<const AbstractScinthDef>> scinthDefs;
     for (auto node : nodes) {
         if (!node.IsMap()) {
@@ -226,7 +226,7 @@ ScinthDefParser::extractFromNodes(const std::vector<YAML::Node>& nodes) {
     return scinthDefs;
 }
 
-int ScinthDefParser::extractAbstractVGensFromNodes(const std::vector<YAML::Node>& nodes) {
+int Archetypes::extractAbstractVGensFromNodes(const std::vector<YAML::Node>& nodes) {
     int numberOfValidElements = 0;
     for (auto node : nodes) {
         // Top level structure expected is a Map.

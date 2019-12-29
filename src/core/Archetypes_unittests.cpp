@@ -4,14 +4,14 @@
 #include "core/AbstractVGen.hpp"
 #include "core/FileSystem.hpp"
 #include "core/Intrinsic.hpp"
-#include "core/ScinthDefParser.hpp"
+#include "core/Archetypes.hpp"
 #include "core/VGen.hpp"
 
 #include <fstream>
 
 namespace {
 
-void populateAbstractVGens(std::shared_ptr<scin::ScinthDefParser> parser) {
+void populateAbstractVGens(std::shared_ptr<scin::Archetypes> parser) {
     parser->parseAbstractVGensFromString("---\n"
                                          "name: NoInput\n"
                                          "outputs: [ out ]\n"
@@ -60,8 +60,8 @@ void clobberFileWithString(const fs::path& filePath, const std::string& contents
 
 namespace scin {
 
-TEST(ScinthDefParserTest, InvalidAbstractVGenYamlStrings) {
-    ScinthDefParser parser;
+TEST(ArchetypesTest, InvalidAbstractVGenYamlStrings) {
+    Archetypes parser;
     EXPECT_EQ(0, parser.parseAbstractVGensFromString(""));
     EXPECT_EQ(0, parser.parseAbstractVGensFromString("xxzz"));
     EXPECT_EQ(0, parser.parseAbstractVGensFromString("[ 1 2 3 4 ]"));
@@ -84,8 +84,8 @@ TEST(ScinthDefParserTest, InvalidAbstractVGenYamlStrings) {
     EXPECT_EQ(0, parser.numberOfAbstractVGens());
 }
 
-TEST(ScinthDefParserTest, ValidAbstractVGenYamlStrings) {
-    ScinthDefParser parser;
+TEST(ArchetypesTest, ValidAbstractVGenYamlStrings) {
+    Archetypes parser;
     EXPECT_EQ(3,
               parser.parseAbstractVGensFromString("---\n"
                                                   "name: JustNameAndFragment\n"
@@ -156,13 +156,13 @@ TEST(ScinthDefParserTest, ValidAbstractVGenYamlStrings) {
     EXPECT_EQ("float fl = 2.0; @out = fl;", overwrite->shader());
 }
 
-TEST(ScinthDefParserTest, ParseAbstractVGenFromFile) {
-    fs::path tempFile = fs::temp_directory_path() / "ScinthDefParser_FileTest.yaml";
+TEST(ArchetypesTest, ParseAbstractVGenFromFile) {
+    fs::path tempFile = fs::temp_directory_path() / "Archetypes_FileTest.yaml";
     if (fs::exists(tempFile)) {
         ASSERT_TRUE(fs::remove(tempFile));
     }
 
-    ScinthDefParser parser;
+    Archetypes parser;
     // Nonexistent file should not parse.
     EXPECT_EQ(0, parser.loadAbstractVGensFromFile(tempFile));
 
@@ -182,8 +182,8 @@ TEST(ScinthDefParserTest, ParseAbstractVGenFromFile) {
     ASSERT_TRUE(fs::remove(tempFile));
 }
 
-TEST(ScinthDefParserTest, InvalidYAMLStrings) {
-    std::shared_ptr<scin::ScinthDefParser> parser(new scin::ScinthDefParser());
+TEST(ArchetypesTest, InvalidYAMLStrings) {
+    std::shared_ptr<scin::Archetypes> parser(new scin::Archetypes());
     populateAbstractVGens(parser);
     EXPECT_EQ(0, parser->parseFromString("").size());
     EXPECT_EQ(0, parser->parseFromString("abcd").size());
@@ -242,8 +242,8 @@ TEST(ScinthDefParserTest, InvalidYAMLStrings) {
     EXPECT_EQ(0, parser->numberOfAbstractScinthDefs());
 }
 
-TEST(ScinthDefParserTest, ValidYAMLStrings) {
-    std::shared_ptr<scin::ScinthDefParser> parser(new scin::ScinthDefParser());
+TEST(ArchetypesTest, ValidYAMLStrings) {
+    std::shared_ptr<scin::Archetypes> parser(new scin::Archetypes());
     populateAbstractVGens(parser);
 
     EXPECT_EQ(1,

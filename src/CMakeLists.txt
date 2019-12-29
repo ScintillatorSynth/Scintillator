@@ -22,8 +22,8 @@ add_library(scintillator_core STATIC
     core/Intrinsic.hpp
     core/LogLevels.cpp
     core/LogLevels.hpp
-    core/ScinthDefParser.cpp
-    core/ScinthDefParser.hpp
+    core/Archetypes.cpp
+    core/Archetypes.hpp
     core/VGen.cpp
     core/VGen.hpp
 )
@@ -114,7 +114,7 @@ endif()
 add_executable(run_unittests
     core/AbstractScinthDef_unittests.cpp
     core/AbstractVGen_unittests.cpp
-    core/ScinthDefParser_unittests.cpp
+    core/Archetypes_unittests.cpp
     core/VGen_unittests.cpp
 
     run_unittests.cpp

@@ -17,10 +17,10 @@ class AbstractVGen;
 
 /*! Parses input yaml to produce AbstractScinthDef and AbstractVGen objects.
  */
-class ScinthDefParser {
+class Archetypes {
 public:
-    ScinthDefParser();
-    ~ScinthDefParser();
+    Archetypes();
+    ~Archetypes();
 
     /* Parse ScinthDefs from the supplied yaml file.
      *
