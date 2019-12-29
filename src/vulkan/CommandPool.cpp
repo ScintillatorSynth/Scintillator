@@ -10,9 +10,9 @@ namespace scin { namespace vk {
 
 CommandPool::CommandPool(std::shared_ptr<Device> device): device_(device), command_pool_(VK_NULL_HANDLE) {}
 
-CommandPool::~CommandPool() { Destroy(); }
+CommandPool::~CommandPool() { destroy(); }
 
-bool CommandPool::Create() {
+bool CommandPool::create() {
     VkCommandPoolCreateInfo pool_info = {};
     pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     pool_info.queueFamilyIndex = device_->graphics_family_index();
@@ -20,14 +20,14 @@ bool CommandPool::Create() {
     return (vkCreateCommandPool(device_->get(), &pool_info, nullptr, &command_pool_) == VK_SUCCESS);
 }
 
-void CommandPool::Destroy() {
+void CommandPool::destroy() {
     if (command_pool_ != VK_NULL_HANDLE) {
         vkDestroyCommandPool(device_->get(), command_pool_, nullptr);
         command_pool_ = VK_NULL_HANDLE;
     }
 }
 
-bool CommandPool::CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline, Buffer* vertex_buffer,
+bool CommandPool::createCommandBuffers(Swapchain* swapchain, Pipeline* pipeline, Buffer* vertex_buffer,
                                        Buffer* indexBuffer, Uniform* uniform) {
     command_buffers_.resize(swapchain->image_count());
 

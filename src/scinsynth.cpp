@@ -188,7 +188,7 @@ int main(int argc, char* argv[]) {
     }
 
     scin::vk::CommandPool command_pool(device);
-    if (!command_pool.Create()) {
+    if (!command_pool.create()) {
         spdlog::error("error creating command pool.");
         return EXIT_FAILURE;
     }
@@ -224,16 +224,16 @@ int main(int argc, char* argv[]) {
         { { 1.0f, -1.0f }, { normPosX, -normPosY } },
     };
 
-    scin::vk::Buffer vertexBuffer(scin::vk::Buffer::kVertex, device);
-    if (!vertexBuffer.create(sizeof(Vertex) * vertices.size())) {
+    scin::vk::HostBuffer vertexBuffer(scin::vk::Buffer::kVertex, sizeof(Vertex) * vertices.size(), device);
+    if (!vertexBuffer.create()) {
         spdlog::error("error creating vertex buffer.");
         return EXIT_FAILURE;
     }
     vertexBuffer.copyToGPU(vertices.data());
 
     const std::vector<uint16_t> indices = { 0, 1, 2, 3 };
-    scin::vk::Buffer indexBuffer(scin::vk::Buffer::kIndex, device);
-    if (!indexBuffer.create(sizeof(uint16_t) * indices.size())) {
+    scin::vk::HostBuffer indexBuffer(scin::vk::Buffer::kIndex, sizeof(uint16_t) * indices.size(), device);
+    if (!indexBuffer.create()) {
         spdlog::error("error creating index buffer.");
         return EXIT_FAILURE;
     }
@@ -241,7 +241,7 @@ int main(int argc, char* argv[]) {
 
     uniform.createBuffers(&swapchain);
 
-    if (!command_pool.CreateCommandBuffers(&swapchain, &pipeline, &vertexBuffer, &indexBuffer, &uniform)) {
+    if (!command_pool.createCommandBuffers(&swapchain, &pipeline, &vertexBuffer, &indexBuffer, &uniform)) {
         spdlog::error("error creating command buffers.");
         return EXIT_FAILURE;
     }
@@ -257,7 +257,7 @@ int main(int argc, char* argv[]) {
 
     // ========== Vulkan cleanup.
     window.DestroySyncObjects(device.get());
-    command_pool.Destroy();
+    command_pool.destroy();
     indexBuffer.destroy();
     vertexBuffer.destroy();
     swapchain.DestroyFramebuffers();

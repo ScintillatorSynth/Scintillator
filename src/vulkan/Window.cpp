@@ -87,7 +87,7 @@ void Window::Run(Device* device, Swapchain* swapchain, CommandPool* command_pool
         auto currentTime = std::chrono::steady_clock::now();
         GlobalUniform gbo;
         gbo.time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-        std::shared_ptr<Buffer> uniformBuffer = uniform->buffer(image_index);
+        std::shared_ptr<HostBuffer> uniformBuffer = uniform->buffer(image_index);
         uniformBuffer->copyToGPU(&gbo);
 
         VkSemaphore wait_semaphores[] = { image_available_semaphores_[current_frame] };

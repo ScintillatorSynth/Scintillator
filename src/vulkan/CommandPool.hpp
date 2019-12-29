@@ -19,10 +19,10 @@ public:
     CommandPool(std::shared_ptr<Device> device);
     ~CommandPool();
 
-    bool Create();
-    void Destroy();
+    bool create();
+    void destroy();
 
-    bool CreateCommandBuffers(Swapchain* swapchain, Pipeline* pipeline, Buffer* vertex_buffer, Buffer* indexBuffer,
+    bool createCommandBuffers(Swapchain* swapchain, Pipeline* pipeline, Buffer* vertex_buffer, Buffer* indexBuffer,
                               Uniform* uniform);
 
     VkCommandBuffer command_buffer(size_t i) { return command_buffers_[i]; }
