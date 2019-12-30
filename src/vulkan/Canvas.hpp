@@ -9,25 +9,30 @@ namespace scin {
 
 namespace vk {
 
+class Device;
+class Images;
+
 /*! Contains the data and state required to render to a set of Vulkan Images.
  *
  * Can be provided to the Compositor as either an output target or an intermediate target for rendering.
  */
 class Canvas {
 public:
-    Canvas(size_t width, size_t height);
+    Canvas(std::shared_ptr<Device> device);
     ~Canvas();
 
     /*! Makes a set of ImageViews, a Render Pass, and then a set of Framebuffers.
      *
-     * \param images An array of one or more images to make corresponding ImageViews and FrameBuffers for.
-     * \param format The format of the provided images.
+     * \param images A pointer to an Images class.
+     * \return true on success, false on failure.
      */
-    bool create(const std::vector<VkImage> images, VkFormat format); // TODO: consider abstracting to like an ImageSet
-                                                                     // or something? ImageSet could know its own width,
-                                                                     // height, and format.
+    bool create(Images* images);
+
+
 private:
+    std::shared_ptr<Device> m_device;
     std::vector<VkImageView> m_imageViews;
+    VkRenderPass m_renderPass;
     std::vector<VkFramebuffer> m_framebuffers;
 };
 

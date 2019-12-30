@@ -1,6 +1,7 @@
 #include "vulkan/Swapchain.hpp"
 
 #include "vulkan/Device.hpp"
+#include "vulkan/Images.hpp"
 #include "vulkan/Pipeline.hpp"
 #include "vulkan/Window.hpp"
 
@@ -10,7 +11,8 @@
 
 namespace scin { namespace vk {
 
-Swapchain::Swapchain(std::shared_ptr<Device> device): device_(device), image_count_(0), swapchain_(VK_NULL_HANDLE) {}
+Swapchain::Swapchain(std::shared_ptr<Device> device): device_(device), image_count_(0), swapchain_(VK_NULL_HANDLE),
+    m_images(new Images(device)) {}
 
 Swapchain::~Swapchain() { Destroy(); }
 
@@ -109,35 +111,9 @@ bool Swapchain::Create(Window* window) {
         return false;
     }
 
-    // Retrieve images from swap chain. Note it may be possible that Vulkan
-    // has allocated more images than requested by the create call, so we
-    // query first for the actual image count.
-    vkGetSwapchainImagesKHR(device_->get(), swapchain_, &image_count_, nullptr);
-    images_.resize(image_count_);
-    vkGetSwapchainImagesKHR(device_->get(), swapchain_, &image_count_, images_.data());
+    image_count_ = m_images->getFromSwapchain(this, image_count_);
 
-    // Create image views to access each image.
-    image_views_.resize(image_count_);
-    for (size_t i = 0; i < images_.size(); ++i) {
-        VkImageViewCreateInfo view_create_info = {};
-        view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        view_create_info.image = images_[i];
-        view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        view_create_info.format = surface_format_.format;
-        view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-        view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-        view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-        view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-        view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        view_create_info.subresourceRange.baseMipLevel = 0;
-        view_create_info.subresourceRange.levelCount = 1;
-        view_create_info.subresourceRange.baseArrayLayer = 0;
-        view_create_info.subresourceRange.layerCount = 1;
-        if (vkCreateImageView(device_->get(), &view_create_info, nullptr, &image_views_[i]) != VK_SUCCESS) {
-            std::cerr << "failed to create image view." << std::endl;
-            return false;
-        }
-    }
+    // FIXME: canvas creation right here.
 
     return true;
 }
@@ -145,46 +121,10 @@ bool Swapchain::Create(Window* window) {
 void Swapchain::Destroy() {
     DestroyFramebuffers();
 
-    for (auto view : image_views_) {
-        vkDestroyImageView(device_->get(), view, nullptr);
-    }
-    image_views_.clear();
-
     if (swapchain_ != VK_NULL_HANDLE) {
         vkDestroySwapchainKHR(device_->get(), swapchain_, nullptr);
         swapchain_ = VK_NULL_HANDLE;
     }
-}
-
-bool Swapchain::CreateFramebuffers(Pipeline* pipeline) {
-    framebuffers_.resize(image_count_);
-
-    for (size_t i = 0; i < image_views_.size(); ++i) {
-        VkImageView attachments[] = { image_views_[i] };
-
-        VkFramebufferCreateInfo framebuffer_info = {};
-        framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebuffer_info.renderPass = pipeline->render_pass();
-        framebuffer_info.attachmentCount = 1;
-        framebuffer_info.pAttachments = attachments;
-        framebuffer_info.width = extent_.width;
-        framebuffer_info.height = extent_.height;
-        framebuffer_info.layers = 1;
-
-        if (vkCreateFramebuffer(device_->get(), &framebuffer_info, nullptr, &framebuffers_[i]) != VK_SUCCESS) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-void Swapchain::DestroyFramebuffers() {
-    for (auto framebuffer : framebuffers_) {
-        vkDestroyFramebuffer(device_->get(), framebuffer, nullptr);
-    }
-
-    framebuffers_.clear();
 }
 
 } // namespace vk

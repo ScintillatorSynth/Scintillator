@@ -9,6 +9,7 @@
 namespace scin { namespace vk {
 
 class Device;
+class Images;
 class Pipeline;
 class Window;
 
@@ -36,7 +37,8 @@ private:
     VkExtent2D extent_;
     uint32_t image_count_;
     VkSwapchainKHR swapchain_;
-    std::vector<VkImage> images_;
+    std::unique_ptr<Images> m_images;
+
     std::vector<VkImageView> image_views_;
     std::vector<VkFramebuffer> framebuffers_;
 };

@@ -26,15 +26,11 @@ public:
     VkPipelineLayout layout() { return m_pipelineLayout; }
 
 private:
-    bool createRenderPass(Swapchain* swapchain);
-    void destroyRenderPass();
-
     bool createPipelineLayout(Uniform* uniform);
     void destroyPipelineLayout();
 
     std::shared_ptr<Device> m_device;
 
-    VkRenderPass m_renderPass;
     VkPipelineLayout m_pipelineLayout;
     VkPipeline m_pipeline;
 };
