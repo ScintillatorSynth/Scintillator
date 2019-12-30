@@ -57,12 +57,16 @@ set(scintillator_synth_files
 
     vulkan/Buffer.cpp
     vulkan/Buffer.hpp
+    vulkan/Canvas.cpp
+    vulkan/Canvas.hpp
     vulkan/CommandBuffer.cpp
     vulkan/CommandBuffer.hpp
     vulkan/CommandPool.cpp
     vulkan/CommandPool.hpp
     vulkan/Device.cpp
     vulkan/Device.hpp
+    vulkan/Images.cpp
+    vulkan/Images.hpp
     vulkan/Instance.cpp
     vulkan/Instance.hpp
     vulkan/Pipeline.cpp
@@ -71,8 +75,6 @@ set(scintillator_synth_files
     vulkan/Shader.hpp
     vulkan/ShaderCompiler.cpp
     vulkan/ShaderCompiler.hpp
-    vulkan/ShaderSource.cpp
-    vulkan/ShaderSource.hpp
     vulkan/Swapchain.cpp
     vulkan/Swapchain.hpp
     vulkan/Uniform.cpp
