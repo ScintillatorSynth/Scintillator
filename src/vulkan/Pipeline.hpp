@@ -18,36 +18,25 @@ public:
     Pipeline(std::shared_ptr<Device> device);
     ~Pipeline();
 
-    enum VertexType { kFloat, kVec2, kVec3, kVec4, kIVec2, kUVec4, kDouble };
+    bool create(const Manifest& vertexManifest, Shader* vertexShader, Shader* fragmentShader, Uniform* uniform);
+    void destroy();
 
-    // Call these methods before calling Create().
-    void SetVertexStride(size_t size) { vertex_stride_ = size; }
-    void AddVertexAttribute(VertexType type, size_t offset) {
-        vertex_attributes_.push_back(std::make_pair(type, offset));
-    }
-
-    bool Create(Shader* vertex_shader, Shader* fragment_shader, Swapchain* swapchain, Uniform* uniform);
-    void Destroy();
-
-    VkRenderPass render_pass() { return render_pass_; }
-    VkPipeline get() { return pipeline_; }
-    VkPipelineLayout layout() { return pipeline_layout_; }
+    VkRenderPass renderPass() { return m_renderPass; }
+    VkPipeline get() { return m_pipeline; }
+    VkPipelineLayout layout() { return m_pipelineLayout; }
 
 private:
-    bool CreateRenderPass(Swapchain* swapchain);
-    void DestroyRenderPass();
+    bool createRenderPass(Swapchain* swapchain);
+    void destroyRenderPass();
 
-    bool CreatePipelineLayout(Uniform* uniform);
-    void DestroyPipelineLayout();
+    bool createPipelineLayout(Uniform* uniform);
+    void destroyPipelineLayout();
 
-    std::shared_ptr<Device> device_;
+    std::shared_ptr<Device> m_device;
 
-    size_t vertex_stride_;
-    std::vector<std::pair<VertexType, size_t>> vertex_attributes_;
-
-    VkRenderPass render_pass_;
-    VkPipelineLayout pipeline_layout_;
-    VkPipeline pipeline_;
+    VkRenderPass m_renderPass;
+    VkPipelineLayout m_pipelineLayout;
+    VkPipeline m_pipeline;
 };
 
 } // namespace vk

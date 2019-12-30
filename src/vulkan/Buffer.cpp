@@ -63,22 +63,18 @@ bool Buffer::createVulkanBuffer(bool hostAccessRequired) {
     return true;
 }
 
-DeviceBuffer::DeviceBuffer(Buffer::Kind kind, size_t size, std::shared_ptr<Device> device): Buffer(kind, size, device) {
-}
+DeviceBuffer::DeviceBuffer(Buffer::Kind kind, size_t size, std::shared_ptr<Device> device):
+    Buffer(kind, size, device) {}
 
-DeviceBuffer::~DeviceBuffer() { }
+DeviceBuffer::~DeviceBuffer() {}
 
-bool DeviceBuffer::create() {
-    return createVulkanBuffer(false);
-}
+bool DeviceBuffer::create() { return createVulkanBuffer(false); }
 
 HostBuffer::HostBuffer(Buffer::Kind kind, size_t size, std::shared_ptr<Device> device): Buffer(kind, size, device) {}
 
 HostBuffer::~HostBuffer() {}
 
-bool HostBuffer::create() {
-    return createVulkanBuffer(true);
-}
+bool HostBuffer::create() { return createVulkanBuffer(true); }
 
 void HostBuffer::copyToGPU(const void* source) {
     void* mappedAddress = nullptr;

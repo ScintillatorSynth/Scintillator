@@ -6,11 +6,12 @@
 #include "vulkan/Shader.hpp"
 
 #include <memory>
+#include <string>
 
 namespace scin { namespace vk {
 
 class Device;
-class ShaderSource;
+class Shader;
 
 /*! Provides a wrapper around the libshaderc compiler.
  *
@@ -42,10 +43,13 @@ public:
      *
      * \param device A shared pointer to the specific Vulkan Device to compile this Shader for.
      * \param source The source code of the shader to compile.
+     * \param name The name of the source program to compile.
+     * \param entryPoint The name of the function to call as the entry point to the shader program (typically "main").
      * \param kind The kind of shader to compile this as, e.g. Shader::kVertex or Shader::kFragment.
      * \return A pointer to the compiled Shader, or nullptr on error.
      */
-    std::unique_ptr<Shader> compile(std::shared_ptr<Device> device, ShaderSource* source, Shader::Kind kind);
+    std::unique_ptr<Shader> compile(std::shared_ptr<Device> device, const std::string& source, const std::string& name,
+            const std::string& entryPoint, Shader::Kind kind);
 
 private:
     shaderc_compiler_t m_compiler;

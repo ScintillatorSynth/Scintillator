@@ -1,8 +1,6 @@
 #include "vulkan/ShaderCompiler.hpp"
 
 #include "vulkan/Device.hpp"
-#include "vulkan/Shader.hpp"
-#include "vulkan/ShaderSource.hpp"
 
 #include "spdlog/spdlog.h"
 
@@ -26,7 +24,8 @@ void ShaderCompiler::releaseCompiler() {
     }
 }
 
-std::unique_ptr<Shader> ShaderCompiler::compile(std::shared_ptr<Device> device, ShaderSource* source,
+std::unique_ptr<Shader> ShaderCompiler::compile(std::shared_ptr<Device> device, const std::string& source,
+                                                const std::string& name, const std::string& entryPoint,
                                                 Shader::Kind kind) {
     if (!compilerLoaded()) {
         if (!loadCompiler()) {
@@ -51,22 +50,22 @@ std::unique_ptr<Shader> ShaderCompiler::compile(std::shared_ptr<Device> device, 
     }
 
     shaderc_compilation_result_t result = shaderc_compile_into_spv(
-        m_compiler, source->get(), source->size(), shaderKind, source->name(), source->entry_point(), options);
+        m_compiler, source.data(), source.size(), shaderKind, name.data(), entryPoint.data(), options);
 
     std::unique_ptr<Shader> shader(nullptr);
     shaderc_compilation_status status = shaderc_result_get_compilation_status(result);
     if (status == shaderc_compilation_status_success) {
         const char* spv_bytes = shaderc_result_get_bytes(result);
         size_t byte_size = shaderc_result_get_length(result);
-        shader.reset(new Shader(kind, device, source->entry_point()));
-        if (!shader->Create(spv_bytes, byte_size)) {
-            spdlog::error("error creating shader from compiled source {}.", source->name());
+        shader.reset(new Shader(kind, device, entryPoint));
+        if (!shader->create(spv_bytes, byte_size)) {
+            spdlog::error("error creating shader from compiled source {}.", name);
             shader.reset(nullptr);
         } else {
-            spdlog::info("successfully compiled shader source {}.", source->name());
+            spdlog::info("successfully compiled shader source {}.", name);
         }
     } else {
-        spdlog::error("error compiling shader {}: {}", source->name(), shaderc_result_get_error_message(result));
+        spdlog::error("error compiling shader {}: {}", name, shaderc_result_get_error_message(result));
     }
 
     shaderc_result_release(result);

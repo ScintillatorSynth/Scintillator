@@ -8,15 +8,14 @@
 namespace scin { namespace vk {
 
 Pipeline::Pipeline(std::shared_ptr<Device> device):
-    device_(device),
-    vertex_stride_(0),
-    render_pass_(VK_NULL_HANDLE),
-    pipeline_layout_(VK_NULL_HANDLE),
-    pipeline_(VK_NULL_HANDLE) {}
+    m_device(device),
+    m_renderPass(VK_NULL_HANDLE),
+    m_pipelineLayout(VK_NULL_HANDLE),
+    m_pipeline(VK_NULL_HANDLE) {}
 
 Pipeline::~Pipeline() { Destroy(); }
 
-bool Pipeline::Create(Shader* vertex_shader, Shader* fragment_shader, Swapchain* swapchain, Uniform* uniform) {
+bool Pipeline::create(const Manifest& vertexManifest, Shader* vertexShader, Shader* fragmentShader, Uniform* uniform) {
     if (!CreateRenderPass(swapchain)) {
         return false;
     }
@@ -49,21 +48,6 @@ bool Pipeline::Create(Shader* vertex_shader, Shader* fragment_shader, Swapchain*
             format = VK_FORMAT_R32G32B32A32_SFLOAT;
             break;
 
-        case kIVec2:
-            format = VK_FORMAT_R32G32_SINT;
-            break;
-
-        case kUVec4:
-            format = VK_FORMAT_R32G32B32A32_UINT;
-            break;
-
-        case kDouble:
-            format = VK_FORMAT_R64_SFLOAT;
-            break;
-
-        default:
-            format = VK_FORMAT_UNDEFINED;
-            break;
         }
         vertex_attribute_descriptions[i].format = format;
         vertex_attribute_descriptions[i].offset = vertex_attributes_[i].second;

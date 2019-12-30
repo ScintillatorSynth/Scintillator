@@ -10,7 +10,6 @@
 #include "vulkan/Pipeline.hpp"
 #include "vulkan/Shader.hpp"
 #include "vulkan/ShaderCompiler.hpp"
-#include "vulkan/ShaderSource.hpp"
 #include "vulkan/Swapchain.hpp"
 #include "vulkan/Uniform.hpp"
 #include "vulkan/Vulkan.hpp"
@@ -35,7 +34,7 @@ DEFINE_int32(log_level, 3,
 
 DEFINE_string(quark_dir, "..", "Root directory of the Scintillator Quark, for finding dependent files.");
 
-DEFINE_int32(window_width, 800, "Viewable width in pixles of window to create. Ignored if --fullscreen is supplied.");
+DEFINE_int32(window_width, 800, "Viewable width in pixels of window to create. Ignored if --fullscreen is supplied.");
 DEFINE_int32(window_height, 600, "Viewable height in pixels of window to create. Ignored if --fullscreen is supplied.");
 
 int main(int argc, char* argv[]) {
@@ -114,7 +113,7 @@ int main(int argc, char* argv[]) {
     }
 
     // ===== START of Scinth-specific state.
-
+/*  FIXME
     std::shared_ptr<scin::vk::ShaderCompiler> shaderCompiler(new scin::vk::ShaderCompiler);
     if (!shaderCompiler->loadCompiler()) {
         spdlog::error("unable to load shader compiler.");
@@ -163,7 +162,7 @@ int main(int argc, char* argv[]) {
         spdlog::error("error in fragment shader.");
         return EXIT_FAILURE;
     }
-
+*/
     struct Vertex {
         glm::vec2 pos;
         glm::vec2 normPos;
@@ -241,11 +240,12 @@ int main(int argc, char* argv[]) {
 
     uniform.createBuffers(&swapchain);
 
+/* FIXME
     if (!command_pool.createCommandBuffers(&swapchain, &pipeline, &vertexBuffer, &indexBuffer, &uniform)) {
         spdlog::error("error creating command buffers.");
         return EXIT_FAILURE;
     }
-
+*/
     if (!window.CreateSyncObjects(device.get())) {
         spdlog::error("error creating device semaphores.");
         return EXIT_FAILURE;
@@ -263,8 +263,8 @@ int main(int argc, char* argv[]) {
     swapchain.DestroyFramebuffers();
     pipeline.Destroy();
     uniform.destroy();
-    vertexShader->Destroy();
-    fragmentShader->Destroy();
+//    vertexShader->Destroy();
+//    fragmentShader->Destroy();
     swapchain.Destroy();
     device->Destroy();
     window.Destroy();

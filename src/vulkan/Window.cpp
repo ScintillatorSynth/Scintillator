@@ -92,7 +92,7 @@ void Window::Run(Device* device, Swapchain* swapchain, CommandPool* command_pool
 
         VkSemaphore wait_semaphores[] = { image_available_semaphores_[current_frame] };
         VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        VkCommandBuffer command_buffer = command_pool->command_buffer(image_index);
+        VkCommandBuffer command_buffer = VK_NULL_HANDLE; // FIXME command_pool->command_buffer(image_index);
         VkSemaphore signal_semaphores[] = { render_finished_semaphores_[current_frame] };
 
         VkSubmitInfo submit_info = {};

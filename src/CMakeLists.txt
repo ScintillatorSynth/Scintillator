@@ -12,18 +12,18 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp"
 
 add_library(scintillator_core STATIC
     "${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp"
-    Scinth.cpp
-    Scinth.hpp
     core/AbstractScinthDef.cpp
     core/AbstractScinthDef.hpp
     core/AbstractVGen.cpp
     core/AbstractVGen.hpp
+    core/Archetypes.cpp
+    core/Archetypes.hpp
     core/FileSystem.hpp
     core/Intrinsic.hpp
     core/LogLevels.cpp
     core/LogLevels.hpp
-    core/Archetypes.cpp
-    core/Archetypes.hpp
+    core/Manifest.cpp
+    core/Manifest.hpp
     core/VGen.cpp
     core/VGen.hpp
 )
@@ -57,6 +57,8 @@ set(scintillator_synth_files
 
     vulkan/Buffer.cpp
     vulkan/Buffer.hpp
+    vulkan/CommandBuffer.cpp
+    vulkan/CommandBuffer.hpp
     vulkan/CommandPool.cpp
     vulkan/CommandPool.hpp
     vulkan/Device.cpp

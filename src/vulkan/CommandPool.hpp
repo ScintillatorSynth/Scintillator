@@ -8,11 +8,8 @@
 
 namespace scin { namespace vk {
 
-class Buffer;
+class CommandBuffer;
 class Device;
-class Pipeline;
-class Swapchain;
-class Uniform;
 
 class CommandPool {
 public:
@@ -20,17 +17,24 @@ public:
     ~CommandPool();
 
     bool create();
+
+    /*! Destroy the CommandPool and all associated CommandBuffers.
+     *
+     *  \note This will invalidate all CommandBuffer objects that this CommandPool created.
+     */
     void destroy();
 
-    bool createCommandBuffers(Swapchain* swapchain, Pipeline* pipeline, Buffer* vertex_buffer, Buffer* indexBuffer,
-                              Uniform* uniform);
+    /*! Allocate and return a set of CommandBuffer objects for use in recording GPU commands.
+     *
+     * \param count The number of buffers to allocate.
+     * \return The CommandBuffer object, or nullptr on error.
+     */
+    std::unique_ptr<CommandBuffer> createBuffers(size_t count);
 
-    VkCommandBuffer command_buffer(size_t i) { return command_buffers_[i]; }
-
+    VkCommandPool get() { return m_commandPool; }
 private:
-    std::shared_ptr<Device> device_;
-    VkCommandPool command_pool_;
-    std::vector<VkCommandBuffer> command_buffers_;
+    std::shared_ptr<Device> m_device;
+    VkCommandPool m_commandPool;
 };
 
 } // namespace vk

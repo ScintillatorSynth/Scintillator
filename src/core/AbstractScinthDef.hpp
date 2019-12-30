@@ -2,6 +2,7 @@
 #define SRC_CORE_ABSTRACT_SCINTHDEF_HPP_
 
 #include "Intrinsic.hpp"
+#include "Manifest.hpp"
 
 #include <unordered_set>
 #include <string>
@@ -39,12 +40,16 @@ public:
      */
     std::string nameForVGenOutput(int vgenIndex, int outputIndex) const;
 
+    const std::string& name() const { return m_name; }
     const VGen& instanceAt(int index) const { return m_instances[index]; }
     size_t numberOfInstances() const { return m_instances.size(); }
-
     const std::unordered_set<Intrinsic> intrinsics() const { return m_intrinsics; }
+    const std::string& uniquePrefix() const { return m_uniquePrefix; }
     const std::string& vertexShader() const { return m_vertexShader; }
     const std::string& fragmentShader() const { return m_fragmentShader; }
+    const Manifest& vertexManifest() const { return m_vertexManifest; }
+    const Manifest& vertexUniformManifest() const { return m_vertexUniformManifest; }
+    const Manifest& fragmentUniformManifest() const { return m_fragmentUniformManifest; }
 
 private:
     bool buildParameters();
@@ -59,6 +64,9 @@ private:
     std::vector<std::vector<std::string>> m_outputs;
     std::string m_vertexShader;
     std::string m_fragmentShader;
+    Manifest m_vertexManifest;
+    Manifest m_vertexUniformManifest;
+    Manifest m_fragmentUniformManifest;
 };
 
 } // namespace scin

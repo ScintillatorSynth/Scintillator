@@ -3,6 +3,9 @@
 
 namespace scin {
 
+namespace vk {
+}
+
 /*! Represents a running, controllable instance of a ScinthDef.
  */
 class Scinth {
