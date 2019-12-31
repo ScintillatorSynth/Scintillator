@@ -45,11 +45,17 @@ public:
     uint32_t sizeInBytes() const { return 0; }
     // Returns offset in units of bytes.
     uint32_t offsetForElement(const std::string& name) const { return 0; }
-    const std::string& nameForElement(size_t index) const { return ""; }
+    uint32_t sizeForElement(const std::string& name) const;
+    const std::string& nameForElement(size_t index) const { return m_names[index]; }
 
 private:
-    size_t m_numberOfElements;
-    size_t m_size;
+    void packFloats(uint32_t& padding, std::vector<std::string>& floatElements);
+
+    std::unordered_map<std::string, ElementType> m_types;
+    uint32_t m_size;
+    std::unordered_map<std::string. uint32_t> m_offsets;
+    // names of elements in order.
+    std::vector<std::string> m_names;
 };
 
 } // namespace scin
