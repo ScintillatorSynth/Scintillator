@@ -10,11 +10,12 @@ Manifest::Manifest(): m_size(0) {}
 Manifest::~Manifest() {}
 
 bool Manifest::addElement(const std::string& name, ElementType type) {
-    if (m_names.find(name) != m_names.end()) {
+    if (m_types.find(name) != m_types.end()) {
         spdlog::error("duplicate addition to Manifest of {}", name);
         return false;
     }
 
+    m_types.insert({ name, type });
     return true;
 }
 
@@ -25,22 +26,22 @@ void Manifest::pack() {
     std::vector<std::string> vec3Elements;
     std::vector<std::string> vec4Elements;
 
-    for (auto it : m_names) {
-        switch (it->second) {
+    for (auto it : m_types) {
+        switch (it.second) {
             case kFloat:
-                floatElements.push_back(it->first);
+                floatElements.push_back(it.first);
                 break;
 
             case kVec2:
-                vec2Elements.push_back(it->first);
+                vec2Elements.push_back(it.first);
                 break;
 
             case kVec3:
-                vec3Elements.push_back(it->first);
+                vec3Elements.push_back(it.first);
                 break;
 
             case kVec4:
-                vec4Elements.push_back(it->first);
+                vec4Elements.push_back(it.first);
                 break;
         }
     }
@@ -58,7 +59,7 @@ void Manifest::pack() {
         if (padding < sizeof(glm::vec3)) {
             // We can pack a vec2 in the padding if there's room and it's aligned.
             if (padding >= sizeof(glm::vec2) && ((m_size % sizeof(glm::vec2)) == 0) && vec2Elements.size()) {
-                m_names.push_back(element);
+                m_names.push_back(*vec2Elements.rbegin());
                 m_offsets.insert({ *vec2Elements.rbegin(), m_size });
                 vec2Elements.pop_back();
                 m_size += sizeof(glm::vec2);
@@ -82,7 +83,7 @@ void Manifest::pack() {
             m_size += padding;
         }
         for (auto element : vec2Elements) {
-            m_offset.insert({ element, m_size });
+            m_offsets.insert({ element, m_size });
             m_size += sizeof(glm::vec2);
         }
     }
@@ -94,7 +95,7 @@ void Manifest::pack() {
     }
 }
 
-const std::string typeNameForElement(size_t index) const {
+const std::string Manifest::typeNameForElement(size_t index) const {
     ElementType type = typeForElement(index);
     switch (type) {
         case kFloat:
@@ -115,7 +116,7 @@ const std::string typeNameForElement(size_t index) const {
 
 void Manifest::packFloats(uint32_t& padding, std::vector<std::string>& floatElements) {
     while (padding >= sizeof(float) && ((m_size % sizeof(float)) == 0) && floatElements.size()) {
-        m_names.push_back(element);
+        m_names.push_back(*floatElements.rbegin());
         m_offsets.insert({ *floatElements.rbegin(), m_size });
         floatElements.pop_back();
         m_size += sizeof(float);

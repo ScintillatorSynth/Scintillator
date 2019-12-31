@@ -17,10 +17,12 @@ public:
 };
 
 class Quad : public Shape {
+public:
     Quad();
     virtual ~Quad();
 
     Manifest::ElementType elementType() override;
+    uint32_t numberOfVertices() override;
 };
 
 }

@@ -46,7 +46,7 @@ public:
     const VGen& instanceAt(int index) const { return m_instances[index]; }
     size_t numberOfInstances() const { return m_instances.size(); }
     const std::unordered_set<Intrinsic> intrinsics() const { return m_intrinsics; }
-    const std::string& uniquePrefix() const { return m_uniquePrefix; }
+    const std::string& prefix() const { return m_prefix; }
     const std::string& vertexShader() const { return m_vertexShader; }
     const std::string& fragmentShader() const { return m_fragmentShader; }
     const Manifest& vertexManifest() const { return m_vertexManifest; }
@@ -62,7 +62,7 @@ private:
     std::vector<VGen> m_instances;
     std::unique_ptr<Shape> m_shape;
 
-    std::string m_uniquePrefix;
+    std::string m_prefix;
     std::unordered_set<Intrinsic> m_intrinsics;
     std::vector<std::vector<std::string>> m_inputs;
     std::vector<std::vector<std::string>> m_outputs;

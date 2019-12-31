@@ -46,17 +46,17 @@ public:
     size_t numberOfElements() const { return m_types.size(); }
     uint32_t sizeInBytes() const { return m_size; }
     // Returns offset in units of bytes.
-    uint32_t offsetForElement(const std::string& name) const { return m_offsets[name]; }
+    uint32_t offsetForElement(const std::string& name) const { return m_offsets.find(name)->second; }
     const std::string& nameForElement(size_t index) const { return m_names[index]; }
-    ElementType typeForElement(size_t index) const { return m_names.find(m_names[index])->second; }
+    ElementType typeForElement(size_t index) const { return m_types.find(m_names[index])->second; }
 
 private:
     void packFloats(uint32_t& padding, std::vector<std::string>& floatElements);
 
-    std::unordered_map<std::string, ElementType> m_types;
     uint32_t m_size;
-    std::unordered_map<std::string. uint32_t> m_offsets;
-    // names of elements in order.
+    std::unordered_map<std::string, ElementType> m_types;
+    std::unordered_map<std::string, uint32_t> m_offsets;
+    // Names of elements in order as packed.
     std::vector<std::string> m_names;
 };
 

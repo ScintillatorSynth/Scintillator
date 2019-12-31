@@ -31,6 +31,7 @@ add_library(scintillator_core STATIC
 )
 
 target_link_libraries(scintillator_core
+    fmt
     glm
     spdlog
     yaml-cpp

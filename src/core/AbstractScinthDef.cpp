@@ -1,6 +1,7 @@
 #include "core/AbstractScinthDef.hpp"
 
 #include "core/AbstractVGen.hpp"
+#include "core/Shape.hpp"
 #include "core/VGen.hpp"
 
 #include "fmt/core.h"
@@ -20,7 +21,7 @@ AbstractScinthDef::~AbstractScinthDef() {}
 
 bool AbstractScinthDef::build() {
     std::random_device randomDevice;
-    m_uniquePrefix = fmt::format("{}_{:8x}", m_name, randomDevice());
+    m_prefix = fmt::format("{}_{:8x}", m_name, randomDevice());
 
     if (!buildNames()) { return false; }
     if (!buildManifests()) { return false; }
@@ -37,7 +38,7 @@ std::string AbstractScinthDef::nameForVGenOutput(int vgenIndex, int outputIndex)
     if (vgenIndex == m_instances.size() - 1) {
         return std::string("gl_FragColor");
     }
-    return fmt::format("{}_out_{}_{}", m_uniquePrefix, vgenIndex, outputIndex);
+    return fmt::format("{}_out_{}_{}", m_prefix, vgenIndex, outputIndex);
 }
 
 bool AbstractScinthDef::buildNames() {
@@ -81,23 +82,28 @@ bool AbstractScinthDef::buildNames() {
 
 bool AbstractScinthDef::buildManifests() {
     // At minimum the vertex manifest must have the position data from the associated Shape.
-    m_vertexManifest.addElement(m_uniqueName + "_inPosition", m_shape->elementType());
+    m_vertexManifest.addElement(m_prefix + "_inPosition", m_shape->elementType());
 
     // Other Intrinsics have manifest dependencies, process each in turn.
     for (Intrinsic intrinsic : m_intrinsics) {
         switch (intrinsic) {
         case kNormPos:
-            m_vertexManifest.addElement(m_uniqueName + "_normPos", Manifest::ElementType::kVec2);
+            m_vertexManifest.addElement(m_prefix + "_normPos", Manifest::ElementType::kVec2);
             break;
 
         case kTime:
             m_uniformManifest.addElement("time", Manifest::ElementType::kFloat);
             break;
+
+        default:
+            spdlog::error("invalid intrinsic while building manifest");
+            return false;
         }
     }
 
     m_vertexManifest.pack();
     m_uniformManifest.pack();
+    return true;
 }
 
 bool AbstractScinthDef::buildVertexShader() {
@@ -117,7 +123,7 @@ bool AbstractScinthDef::buildVertexShader() {
     m_vertexShader += "\n"
                       "// --- vertex shader outputs\n";
 
-    std::string positionName = m_uniqueName + "_inPosition";
+    std::string positionName = m_prefix + "_inPosition";
     // Now produce the vertex shader outputs. TODO: allowing vertex shader VGens will require more data here. But for
     // now we just copy everything to the fragment shader except for the _inPosition, which gets assigned to the
     // keyword gl_Position.
@@ -136,19 +142,19 @@ bool AbstractScinthDef::buildVertexShader() {
     for (auto i = 0; i < m_vertexManifest.numberOfElements(); ++i) {
         if (m_vertexManifest.nameForElement(i) == positionName) {
             switch (m_vertexManifest.typeForElement(i)) {
-                case kFloat:
+                case Manifest::ElementType::kFloat:
                     m_vertexShader += fmt::format("    gl_Position = vec4({}, 0.0f, 0.0f, 1.0f);\n", positionName);
                     break;
 
-                case kVec2:
+                case Manifest::ElementType::kVec2:
                     m_vertexShader += fmt::format("    gl_Position = vec4({}, 0.0f, 1.0f);\n", positionName);
                     break;
 
-                case kVec3:
+                case Manifest::ElementType::kVec3:
                     m_vertexShader += fmt::format("    gl_Position = vec4({}, 1.0f);\n", positionName);
                     break;
 
-                case kVec4:
+                case Manifest::ElementType::kVec4:
                     m_vertexShader += fmt::format("    gl_Position = {};\n", positionName);
                     break;
             }
@@ -171,7 +177,7 @@ bool AbstractScinthDef::buildFragmentShader() {
             break;
 
         case kTime:
-            intrinsicNames.insert({ kTime, m_uniquePrefix + "_ubo.time" });
+            intrinsicNames.insert({ kTime, m_prefix + "_ubo.time" });
             break;
 
         default:
@@ -193,7 +199,7 @@ bool AbstractScinthDef::buildFragmentShader() {
         m_fragmentShader += "layout(binding = 0) uniform UBO {\n"
                             "  float time;\n"
                             "} "
-            + m_uniquePrefix + "_ubo;\n\n";
+            + m_prefix + "_ubo;\n\n";
     }
 
     for (auto i = 0; i < m_instances.size(); ++i) {

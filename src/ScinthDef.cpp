@@ -4,6 +4,7 @@
 #include "core/AbstractScinthDef.hpp"
 #include "core/VGen.hpp"
 #include "vulkan/CommandPool.hpp"
+#include "vulkan/Pipeline.hpp"
 #include "vulkan/ShaderCompiler.hpp"
 
 #include "spdlog/spdlog.h"
@@ -18,14 +19,14 @@ ScinthDef::~ScinthDef() {}
 
 bool ScinthDef::build(std::shared_ptr<vk::ShaderCompiler> compiler) {
     m_vertexShader = compiler->compile(m_device, m_abstractScinthDef->vertexShader(),
-            m_abstractScinthDef->uniquePrefix() + "_vertexShader", "main", vk::Shader::kVertex);
+            m_abstractScinthDef->prefix() + "_vertexShader", "main", vk::Shader::kVertex);
     if (!m_vertexShader) {
         spdlog::error("error compiling vertex shader for ScinthDef {}.", m_abstractScinthDef->name());
         return false;
     }
 
     m_fragmentShader = compiler->compile(m_device, m_abstractScinthDef->fragmentShader(),
-            m_abstractScinthDef->uniquePrefix() + "_fragmentShader", "main", vk::Shader::kFragment);
+            m_abstractScinthDef->prefix() + "_fragmentShader", "main", vk::Shader::kFragment);
     if (!m_fragmentShader) {
         spdlog::error("error compiling fragment shader for ScinthDef {}", m_abstractScinthDef->name());
         return false;

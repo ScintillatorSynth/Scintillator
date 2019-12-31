@@ -10,37 +10,37 @@
 #if defined(SCIN_VALIDATE_VULKAN)
 namespace {
 
-VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
-                                      const VkAllocationCallbacks* pAllocator,
-                                      VkDebugUtilsMessengerEXT* pDebugMessenger) {
+VkResult createDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* createInfo,
+                                      const VkAllocationCallbacks* allocator,
+                                      VkDebugUtilsMessengerEXT* debugMessenger) {
     auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
         vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
     if (func != nullptr) {
-        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+        return func(instance, createInfo, allocator, debugMessenger);
     } else {
         return VK_ERROR_EXTENSION_NOT_PRESENT;
     }
 }
 
-void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger,
-                                   const VkAllocationCallbacks* pAllocator) {
+void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger,
+                                   const VkAllocationCallbacks* allocator) {
     auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
         vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
     if (func != nullptr) {
-        func(instance, debugMessenger, pAllocator);
+        func(instance, debugMessenger, allocator);
     }
 }
 
-const std::vector<const char*> validation_layers = { "VK_LAYER_LUNARG_standard_validation" };
+const std::vector<const char*> validationLayers = { "VK_LAYER_LUNARG_standard_validation" };
 
-bool CheckValidationLayerSupport() {
+bool checkValidationLayerSupport() {
     uint32_t layerCount;
     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
     std::vector<VkLayerProperties> availableLayers(layerCount);
     vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-    for (const char* layerName : validation_layers) {
+    for (auto layerName : validationLayers) {
         bool layerFound = false;
 
         for (const auto& layerProperties : availableLayers) {
@@ -58,26 +58,26 @@ bool CheckValidationLayerSupport() {
     return true;
 }
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT severity,
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT severity,
                                                     VkDebugUtilsMessageTypeFlagsEXT type,
-                                                    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-                                                    void* pUserData) {
+                                                    const VkDebugUtilsMessengerCallbackDataEXT* callbackData,
+                                                    void* userData) {
     // The Severity bits can be combined, so we key log severity off of the most severe bit.
     if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
-        spdlog::error("Vulkan validation error: {}", pCallbackData->pMessage);
+        spdlog::error("Vulkan validation error: {}", callbackData->pMessage);
     } else if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
-        spdlog::warn("Vulkan validation warning: {}", pCallbackData->pMessage);
+        spdlog::warn("Vulkan validation warning: {}", callbackData->pMessage);
     } else if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) {
         // Vulkan validation info is quite extensive, so we lower the spdlog level to debug to better match the use of
         // info/debug log levels in the rest of Scintillator.
-        spdlog::debug("Vulkan validation info: {}", pCallbackData->pMessage);
+        spdlog::debug("Vulkan validation info: {}", callbackData->pMessage);
     } else {
-        spdlog::trace("Vulkan validation verbose: {}", pCallbackData->pMessage);
+        spdlog::trace("Vulkan validation verbose: {}", callbackData->pMessage);
     }
     return VK_FALSE;
 }
 
-bool SetupDebugMessenger(VkInstance instance, VkDebugUtilsMessengerEXT* debugMessenger) {
+bool setupDebugMessenger(VkInstance instance, VkDebugUtilsMessengerEXT* debugMessenger) {
     VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
     createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
@@ -85,9 +85,9 @@ bool SetupDebugMessenger(VkInstance instance, VkDebugUtilsMessengerEXT* debugMes
         | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
     createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
         | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-    createInfo.pfnUserCallback = DebugCallback;
+    createInfo.pfnUserCallback = debugCallback;
 
-    if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, debugMessenger) != VK_SUCCESS) {
+    if (createDebugUtilsMessengerEXT(instance, &createInfo, nullptr, debugMessenger) != VK_SUCCESS) {
         return false;
     }
 
@@ -100,52 +100,52 @@ bool SetupDebugMessenger(VkInstance instance, VkDebugUtilsMessengerEXT* debugMes
 
 namespace scin { namespace vk {
 
-Instance::Instance(): instance_(VK_NULL_HANDLE) {}
+Instance::Instance(): m_instance(VK_NULL_HANDLE) {}
 
 Instance::~Instance() {
-    if (instance_ != VK_NULL_HANDLE) {
+    if (m_instance != VK_NULL_HANDLE) {
         Destroy();
     }
 }
 
-bool Instance::Create() {
-    VkApplicationInfo app_info = {};
-    app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    app_info.pApplicationName = "scinsynth";
-    app_info.applicationVersion = VK_MAKE_VERSION(kScinVersionMajor, kScinVersionMinor, kScinVersionPatch);
-    app_info.pEngineName = "Scintillator";
-    app_info.engineVersion = VK_MAKE_VERSION(kScinVersionMajor, kScinVersionMinor, kScinVersionPatch);
-    app_info.apiVersion = VK_API_VERSION_1_0;
+bool Instance::create() {
+    VkApplicationInfo appInfo = {};
+    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    appInfo.pApplicationName = "scinsynth";
+    appInfo.applicationVersion = VK_MAKE_VERSION(kScinVersionMajor, kScinVersionMinor, kScinVersionPatch);
+    appInfo.pEngineName = "Scintillator";
+    appInfo.engineVersion = VK_MAKE_VERSION(kScinVersionMajor, kScinVersionMinor, kScinVersionPatch);
+    appInfo.apiVersion = VK_API_VERSION_1_0;
 
-    VkInstanceCreateInfo create_info = {};
-    create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    create_info.pApplicationInfo = &app_info;
+    VkInstanceCreateInfo createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    createInfo.pApplicationInfo = &appInfo;
 
-    uint32_t glfw_extension_count = 0;
-    const char** glfw_extensions;
-    glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
+    uint32_t glfwExtensionCount = 0;
+    const char** glfwExtensions;
+    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-    std::vector<const char*> extensions(glfw_extensions, glfw_extensions + glfw_extension_count);
+    std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
 #if defined(SCIN_VALIDATE_VULKAN)
     extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
-    create_info.enabledLayerCount = static_cast<uint32_t>(validation_layers.size());
-    create_info.ppEnabledLayerNames = validation_layers.data();
+    createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+    createInfo.ppEnabledLayerNames = validationLayers.data();
 #else
-    create_info.enabledLayerCount = 0;
+    createInfo.enabledLayerCount = 0;
 #endif
 
-    create_info.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-    create_info.ppEnabledExtensionNames = extensions.data();
+    createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+    createInfo.ppEnabledExtensionNames = extensions.data();
 
-    if (vkCreateInstance(&create_info, nullptr, &instance_) != VK_SUCCESS) {
+    if (vkCreateInstance(&createInfo, nullptr, &m_instance) != VK_SUCCESS) {
         spdlog::error("Failed to create Vulkan instance.");
         return false;
     }
 
 #if defined(SCIN_VALIDATE_VULKAN)
-    if (!SetupDebugMessenger(instance_, &debug_messenger_)) {
+    if (!setupDebugMessenger(m_instance, &m_debugMessenger)) {
         spdlog::error("Failed to create Vulkan Validation debug messenger.");
         return false;
     }
@@ -154,12 +154,12 @@ bool Instance::Create() {
     return true;
 }
 
-void Instance::Destroy() {
+void Instance::destroy() {
 #if defined(SCIN_VALIDATE_VULKAN)
-    DestroyDebugUtilsMessengerEXT(instance_, debug_messenger_, nullptr);
+    destroyDebugUtilsMessengerEXT(m_instance, m_debugMessenger, nullptr);
 #endif
-    vkDestroyInstance(instance_, nullptr);
-    instance_ = VK_NULL_HANDLE;
+    vkDestroyInstance(m_instance, nullptr);
+    m_instance = VK_NULL_HANDLE;
 }
 
 } // namespace vk

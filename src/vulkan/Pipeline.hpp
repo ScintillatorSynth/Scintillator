@@ -1,6 +1,7 @@
 #ifndef SRC_VULKAN_PIPELINE_HPP_
 #define SRC_VULKAN_PIPELINE_HPP_
 
+#include "core/Manifest.hpp"
 #include "vulkan/Vulkan.hpp"
 
 #include <memory>
