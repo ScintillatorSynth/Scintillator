@@ -41,3 +41,6 @@
 [submodule "third_party/swiftshader"]
 	path = third_party/swiftshader
 	url = https://github.com/google/swiftshader
+[submodule "third_party/fmt"]
+	path = third_party/fmt
+	url = https://github.com/fmtlib/fmt.git

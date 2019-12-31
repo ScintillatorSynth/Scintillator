@@ -94,6 +94,25 @@ void Manifest::pack() {
     }
 }
 
+const std::string typeNameForElement(size_t index) const {
+    ElementType type = typeForElement(index);
+    switch (type) {
+        case kFloat:
+            return std::string("float");
+
+        case kVec2:
+            return std::string("vec2");
+
+        case kVec3:
+            return std::string("vec3");
+
+        case kVec4:
+            return std::string("vec4");
+    }
+
+    return "unknown type";
+}
+
 void Manifest::packFloats(uint32_t& padding, std::vector<std::string>& floatElements) {
     while (padding >= sizeof(float) && ((m_size % sizeof(float)) == 0) && floatElements.size()) {
         m_names.push_back(element);

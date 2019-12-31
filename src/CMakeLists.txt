@@ -24,6 +24,8 @@ add_library(scintillator_core STATIC
     core/LogLevels.hpp
     core/Manifest.cpp
     core/Manifest.hpp
+    core/Shape.cpp
+    core/Shape.hpp
     core/VGen.cpp
     core/VGen.hpp
 )

@@ -40,13 +40,15 @@ public:
      */
     void pack();
 
+    const std::string typeNameForElement(size_t index) const;
+
     // Things we need to know:
-    size_t numberOfElements() const { return 0; }
-    uint32_t sizeInBytes() const { return 0; }
+    size_t numberOfElements() const { return m_types.size(); }
+    uint32_t sizeInBytes() const { return m_size; }
     // Returns offset in units of bytes.
-    uint32_t offsetForElement(const std::string& name) const { return 0; }
-    uint32_t sizeForElement(const std::string& name) const;
+    uint32_t offsetForElement(const std::string& name) const { return m_offsets[name]; }
     const std::string& nameForElement(size_t index) const { return m_names[index]; }
+    ElementType typeForElement(size_t index) const { return m_names.find(m_names[index])->second; }
 
 private:
     void packFloats(uint32_t& padding, std::vector<std::string>& floatElements);

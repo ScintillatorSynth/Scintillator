@@ -7,9 +7,11 @@
 #include <unordered_set>
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace scin {
 
+class Shape;
 class VGen;
 
 /*! Maintains a topologically sorted signal graph of VGens and constructs shaders and requirements for the graphical
@@ -48,15 +50,17 @@ public:
     const std::string& vertexShader() const { return m_vertexShader; }
     const std::string& fragmentShader() const { return m_fragmentShader; }
     const Manifest& vertexManifest() const { return m_vertexManifest; }
-    const Manifest& vertexUniformManifest() const { return m_vertexUniformManifest; }
-    const Manifest& fragmentUniformManifest() const { return m_fragmentUniformManifest; }
+    const Manifest& uniformManifest() const { return m_uniformManifest; }
 
 private:
-    bool buildParameters();
-    bool buildShaders();
+    bool buildNames();
+    bool buildManifests();
+    bool buildVertexShader();
+    bool buildFragmentShader();
 
     std::string m_name;
     std::vector<VGen> m_instances;
+    std::unique_ptr<Shape> m_shape;
 
     std::string m_uniquePrefix;
     std::unordered_set<Intrinsic> m_intrinsics;
@@ -65,8 +69,7 @@ private:
     std::string m_vertexShader;
     std::string m_fragmentShader;
     Manifest m_vertexManifest;
-    Manifest m_vertexUniformManifest;
-    Manifest m_fragmentUniformManifest;
+    Manifest m_uniformManifest;
 };
 
 } // namespace scin
