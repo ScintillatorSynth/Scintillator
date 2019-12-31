@@ -1,3 +1,4 @@
+#include "Compositor.hpp"  // TODO: audit includes
 #include "OscHandler.hpp"
 #include "Version.hpp"
 #include "core/FileSystem.hpp"
@@ -64,23 +65,36 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    // Start listening for incoming OSC commands on UDP.
-    scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
-    oscHandler.run();
-
-    std::shared_ptr<scin::Archetypes> scinthDefParser(new scin::Archetypes());
-    auto parseVGens = std::async(std::launch::async, [&scinthDefParser, &quarkPath] {
+    // Parse any built-in VGens and ScinthDefs first.
+    std::shared_ptr<scin::Archetypes> archetypes(new scin::Archetypes());
+    //   TODO: do serially for now
+//    auto parseVGens = std::async(std::launch::async, [&archetypes, &quarkPath] {
         fs::path vgens = quarkPath / "vgens";
         spdlog::info("Parsing yaml files in {} for AbstractVGens.", vgens.string());
         for (auto entry : fs::directory_iterator(vgens)) {
             auto p = entry.path();
             if (fs::is_regular_file(p) && p.extension() == ".yaml") {
                 spdlog::debug("Parsing AbstractVGen yaml file {}.", p.string());
-                scinthDefParser->loadAbstractVGensFromFile(p.string());
+                archetypes->loadAbstractVGensFromFile(p.string());
             }
         }
-        spdlog::info("Parsed {} unique VGens.", scinthDefParser->numberOfAbstractVGens());
-    });
+        spdlog::info("Parsed {} unique VGens.", archetypes->numberOfAbstractVGens());
+
+        fs::path scinthDefs = quarkPath / "scinthdefs";
+        spdlog::info("Parsing yaml files in {} for ScinthDefs.", scinthDefs.string());
+        for (auto entry : fs::directory_iterator(scinthDefs)) {
+            auto p = entry.path();
+            if (fs::is_regular_file(p) && p.extension() == ".yaml") {
+                spdlog::debug("Parsing ScinthDef yaml file {}.", p.string());
+                archetypes->loadFromFile(p.string());
+            }
+        }
+        spdlog::info("Parsed {} unique ScinthDefs.", archetypes->numberOfAbstractScinthDefs());
+//    });
+
+    // Start listening for incoming OSC commands on UDP.
+    scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
+    oscHandler.run();
 
     // ========== glfw setup.
     glfwInit();
@@ -93,182 +107,52 @@ int main(int argc, char* argv[]) {
     }
 
     scin::vk::Window window(instance);
-    if (!window.Create(FLAGS_window_width, FLAGS_window_height)) {
+    if (!window.create(FLAGS_window_width, FLAGS_window_height)) {
         spdlog::error("unable to create glfw window.");
         return EXIT_FAILURE;
     }
 
     // Create Vulkan physical and logical device.
     std::shared_ptr<scin::vk::Device> device(new scin::vk::Device(instance));
-    if (!device->Create(&window)) {
+    if (!device->create(&window)) {
         spdlog::error("unable to create Vulkan device.");
         return EXIT_FAILURE;
     }
 
-    // Configure swap chain based on device and surface capabilities.
+    window.setDevice(device);
+
+    // Configure swap chain based on Device and Window surface configuration.
     scin::vk::Swapchain swapchain(device);
-    if (!swapchain.Create(&window)) {
+    if (!swapchain.create(&window)) {
         spdlog::error("unable to create Vulkan swapchain.");
         return EXIT_FAILURE;
     }
 
-    // ===== START of Scinth-specific state.
-/*  FIXME
-    std::shared_ptr<scin::vk::ShaderCompiler> shaderCompiler(new scin::vk::ShaderCompiler);
-    if (!shaderCompiler->loadCompiler()) {
-        spdlog::error("unable to load shader compiler.");
+    std::shared_ptr<scin::Compositor> compositor(new scin::Compositor(device, swapchain->canvas()));
+    if (!compositor->create()) {
+        spdlog::error("unable to create Compositor.");
         return EXIT_FAILURE;
     }
 
-    scin::vk::ShaderSource vertexSource("vertex shader",
-                                        "#version 450\n"
-                                        "#extension GL_ARB_separate_shader_objects : enable\n"
-                                        "\n"
-                                        "layout(location = 0) in vec2 inPosition;\n"
-                                        "layout(location = 1) in vec2 inNormPosition;\n"
-                                        "\n"
-                                        "layout(location = 0) out vec2 normPos;\n"
-                                        "\n"
-                                        "void main() {\n"
-                                        "   gl_Position = vec4(inPosition, 0.0, 1.0);\n"
-                                        "  normPos = inNormPosition;\n"
-                                        "}\n");
-    std::unique_ptr<scin::vk::Shader> vertexShader =
-        shaderCompiler->compile(device, &vertexSource, scin::vk::Shader::kVertex);
-    if (!vertexShader) {
-        return EXIT_FAILURE;
-    }
+    std::shared_ptr<const AbstractScinthDef> testScinthDef = archetypes->getAbstractScinthDefNamed("TestScinthDef");
+    compositor->buildScinthDef(testScinthDef);
 
-    scin::vk::ShaderSource fragmentSource(
-        "fragment shader",
-        "#version 450\n"
-        "#extension GL_ARB_separate_shader_objects : enable\n"
-        "\n"
-        "layout(binding = 0) uniform UBO {\n"
-        "   float time;\n"
-        "} ubo;\n"
-        "\n"
-        "layout(location = 0) in vec2 normPos;\n"
-        "\n"
-        "layout(location = 0) out vec4 outColor;\n"
-        "\n"
-        "void main() {\n"
-        "   float fragRad = 0.5 + (0.5 * sin((ubo.time * 2.0) - (3.0 * length(normPos))));\n"
-        "   outColor = vec4(fragRad, fragRad, fragRad, 1.0);\n"
-        "}\n");
-    std::unique_ptr<scin::vk::Shader> fragmentShader =
-        shaderCompiler->compile(device, &fragmentSource, scin::vk::Shader::kFragment);
-    if (!fragmentShader) {
-        spdlog::error("error in fragment shader.");
-        return EXIT_FAILURE;
-    }
-*/
-    struct Vertex {
-        glm::vec2 pos;
-        glm::vec2 normPos;
-    };
-
-    scin::vk::Pipeline pipeline(device);
-    pipeline.SetVertexStride(sizeof(Vertex));
-    pipeline.AddVertexAttribute(scin::vk::Pipeline::kVec2, offsetof(Vertex, pos));
-    pipeline.AddVertexAttribute(scin::vk::Pipeline::kVec2, offsetof(Vertex, normPos));
-
-    scin::vk::Uniform uniform(device, sizeof(scin::vk::GlobalUniform));
-    uniform.createLayout();
-
-    if (!pipeline.Create(vertexShader.get(), fragmentShader.get(), &swapchain, &uniform)) {
-        spdlog::error("error in pipeline creation.");
-        return EXIT_FAILURE;
-    }
-
-    if (!swapchain.CreateFramebuffers(&pipeline)) {
-        spdlog::error("error creating framebuffers..");
-        return EXIT_FAILURE;
-    }
-
-    scin::vk::CommandPool command_pool(device);
-    if (!command_pool.create()) {
-        spdlog::error("error creating command pool.");
-        return EXIT_FAILURE;
-    }
-
-    float normPosX, normPosY;
-    if (FLAGS_window_width > FLAGS_window_height) {
-        normPosX = static_cast<float>(FLAGS_window_width) / static_cast<float>(FLAGS_window_height);
-        normPosY = 1.0f;
-    } else {
-        normPosX = 1.0f;
-        normPosY = static_cast<float>(FLAGS_window_height) / static_cast<float>(FLAGS_window_width);
-    }
-
-    // Vulkan coordinate system setup:
-    //
-    //        ^ -y
-    //        |
-    //   -x   |    +x
-    // <------+------>
-    //        |
-    //        | +y
-    //        V
-    //
-    // The axis is in the center of the frame, and frame edges are at +/-1.0 Triangles must be wound clockwise.
-    const std::vector<Vertex> vertices = {
-        // Lower left
-        { { -1.0f, 1.0f }, { -normPosX, normPosY } },
-        // Upper left
-        { { -1.0f, -1.0f }, { -normPosX, -normPosY } },
-        // Lower Right
-        { { 1.0f, 1.0f }, { normPosX, normPosY } },
-        // Upper right
-        { { 1.0f, -1.0f }, { normPosX, -normPosY } },
-    };
-
-    scin::vk::HostBuffer vertexBuffer(scin::vk::Buffer::kVertex, sizeof(Vertex) * vertices.size(), device);
-    if (!vertexBuffer.create()) {
-        spdlog::error("error creating vertex buffer.");
-        return EXIT_FAILURE;
-    }
-    vertexBuffer.copyToGPU(vertices.data());
-
-    const std::vector<uint16_t> indices = { 0, 1, 2, 3 };
-    scin::vk::HostBuffer indexBuffer(scin::vk::Buffer::kIndex, sizeof(uint16_t) * indices.size(), device);
-    if (!indexBuffer.create()) {
-        spdlog::error("error creating index buffer.");
-        return EXIT_FAILURE;
-    }
-    indexBuffer.copyToGPU(indices.data());
-
-    uniform.createBuffers(&swapchain);
-
-/* FIXME
-    if (!command_pool.createCommandBuffers(&swapchain, &pipeline, &vertexBuffer, &indexBuffer, &uniform)) {
-        spdlog::error("error creating command buffers.");
-        return EXIT_FAILURE;
-    }
-*/
-    if (!window.CreateSyncObjects(device.get())) {
+    if (!window.createSyncObjects()) {
         spdlog::error("error creating device semaphores.");
         return EXIT_FAILURE;
     }
 
     // ========== Main loop.
     oscHandler.setQuitHandler([&window] { window.stop(); });
-    window.Run(device.get(), &swapchain, &command_pool, &uniform);
+    window.run(compositor);
 
     // ========== Vulkan cleanup.
-    window.DestroySyncObjects(device.get());
-    command_pool.destroy();
-    indexBuffer.destroy();
-    vertexBuffer.destroy();
-    swapchain.DestroyFramebuffers();
-    pipeline.Destroy();
-    uniform.destroy();
-//    vertexShader->Destroy();
-//    fragmentShader->Destroy();
-    swapchain.Destroy();
-    device->Destroy();
-    window.Destroy();
-    instance->Destroy();
+    window.destroySyncObjects(device.get());
+    compositor->destroy();
+    swapchain.destroy();
+    device->destroy();
+    window.destroy();
+    instance->destroy();
 
     // ========== glfw cleanup.
     glfwTerminate();

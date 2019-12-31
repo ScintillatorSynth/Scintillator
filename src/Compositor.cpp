@@ -3,6 +3,7 @@
 #include "ScinthDef.hpp"
 #include "core/AbstractScinthDef.hpp"
 #include "core/VGen.hpp"
+#include "vulkan/Canvas.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/ShaderCompiler.hpp"
 
@@ -10,8 +11,9 @@
 
 namespace scin {
 
-Compositor::Compositor(std::shared_ptr<vk::Device> device):
+Compositor::Compositor(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Canvas> canvas):
     m_device(device),
+    m_canvas(canvace),
     m_shaderCompiler(new scin::vk::ShaderCompiler()),
     m_commandPool(new scin::vk::CommandPool(device)) {}
 
@@ -47,6 +49,8 @@ bool Compositor::buildScinthDef(std::shared_ptr<const AbstractScinthDef> abstrac
 
 void Compositor::releaseCompiler() { m_shaderCompiler->releaseCompiler(); }
 
-void Compositor::destroy() {}
+void Compositor::destroy() {
+    m_commandPool->destroy();
+}
 
 } // namespace scin

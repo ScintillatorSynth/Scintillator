@@ -21,7 +21,6 @@ public:
     bool create(const Manifest& vertexManifest, Shader* vertexShader, Shader* fragmentShader, Uniform* uniform);
     void destroy();
 
-    VkRenderPass renderPass() { return m_renderPass; }
     VkPipeline get() { return m_pipeline; }
     VkPipelineLayout layout() { return m_pipelineLayout; }
 

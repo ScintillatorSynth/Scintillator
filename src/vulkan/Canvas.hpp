@@ -28,6 +28,9 @@ public:
      */
     bool create(Images* images);
 
+    /*! Reclaims the Vukan resources associated with the Canvas.
+     */
+    void destroy();
 
 private:
     std::shared_ptr<Device> m_device;

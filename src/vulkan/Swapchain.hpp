@@ -8,6 +8,7 @@
 
 namespace scin { namespace vk {
 
+class Canvas;
 class Device;
 class Images;
 class Pipeline;
@@ -18,29 +19,24 @@ public:
     Swapchain(std::shared_ptr<Device> device);
     ~Swapchain();
 
-    bool Create(Window* window);
-    void Destroy();
+    bool create(Window* window);
+    void destroy();
 
-    bool CreateFramebuffers(Pipeline* pipeline);
-    void DestroyFramebuffers();
-
-    VkSurfaceFormatKHR surface_format() { return surface_format_; }
-    VkExtent2D extent() { return extent_; }
-    uint32_t image_count() const { return image_count_; }
-    VkSwapchainKHR get() { return swapchain_; }
-    VkFramebuffer framebuffer(size_t i) { return framebuffers_[i]; }
+    VkSurfaceFormatKHR surfaceFormat() { return m_surfaceFormat; }
+    VkExtent2D extent() { return m_extent; }
+    uint32_t imageCount() const { return m_imageCount; }
+    VkSwapchainKHR get() { return m_swapchain; }
+    std::shared_ptr<Canvas> canvas() { return m_canvas; }
 
 private:
-    std::shared_ptr<Device> device_;
-    VkSurfaceFormatKHR surface_format_;
-    VkPresentModeKHR present_mode_;
-    VkExtent2D extent_;
-    uint32_t image_count_;
-    VkSwapchainKHR swapchain_;
+    std::shared_ptr<Device> m_device;
+    VkSurfaceFormatKHR m_surfaceFormat;
+    VkPresentModeKHR m_presentMode;
+    VkExtent2D m_extent;
+    uint32_t m_imageCount;
+    VkSwapchainKHR m_swapchain;
     std::unique_ptr<Images> m_images;
-
-    std::vector<VkImageView> image_views_;
-    std::vector<VkFramebuffer> framebuffers_;
+    std::shared_ptr<Canvas> m_canvas;
 };
 
 } // namespace vk

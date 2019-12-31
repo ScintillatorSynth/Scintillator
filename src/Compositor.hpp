@@ -9,23 +9,22 @@
 namespace scin {
 
 namespace vk {
+class Canvas;
 class CommandPool;
 class Device;
-class HostBuffer;
 class ShaderCompiler;
 } // namespace vk
 
 class AbstractScinthDef;
 class ScinthDef;
 
-/*! A Compositor keeps the ScinthDef instance dictionary as well as all running Scinths. It can render on command to a
- * supplied FrameBuffer, which is typically owned by either a Window/SwapChain combination or an Offscreen render pass
- * in the case of non-realtime rendering. The Compositor keeps many shared device-specific graphics resources, like
- * a CommandPool and the ShaderCompiler.
+/*! A Compositor keeps the ScinthDef instance dictionary as well as all running Scinths. It can render to a supplied
+ * supplied Canvas, which is typically owned by either a Window/SwapChain combination or an Offscreen render pass. The
+ * Compositor keeps shared device-specific graphics resources, like a CommandPool and the ShaderCompiler.
  */
 class Compositor {
 public:
-    Compositor(std::shared_ptr<vk::Device> device);
+    Compositor(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Canvas> canvas);
     ~Compositor();
 
     bool create();
@@ -43,9 +42,11 @@ public:
 
 private:
     std::shared_ptr<vk::Device> m_device;
+    std::shared_ptr<vk::Canvas> m_canvas;
 
     std::unique_ptr<vk::ShaderCompiler> m_shaderCompiler;
     std::unique_ptr<vk::CommandPool> m_commandPool;
+
     std::mutex m_mutex;
     std::unordered_map<std::string, std::unique_ptr<const ScinthDef>> m_scinthDefs;
 };

@@ -31,7 +31,14 @@ bool ScinthDef::build(std::shared_ptr<vk::ShaderCompiler> compiler) {
         return false;
     }
 
+    // Need to build a Uniform from Manifest.
+
     m_pipeline.reset(new vk::Pipeline(m_device));
+    if (!m_pipeline->create(abstractScinthDef->vertexManifest(), m_vertexShader.get(), m_fragmentShader.get(),
+            m_uniform.get())) {
+        spdlog::error("error creating pipeline for ScinthDef {}", m_abstractScinthDef->name());
+        return false;
+    }
 
     return true;
 }

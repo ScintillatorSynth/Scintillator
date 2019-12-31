@@ -1,0 +1,44 @@
+---
+name: TestScinthDef
+vgens:
+    - className: NormPos
+      rate: fragment
+      outputs:
+        - dimension: 2
+    - className: Length
+      rate: fragment
+      inputs:
+        - type: vgen
+          dimension: 1
+          vgenIndex: 0
+          outputIndex: 0
+      outputs:
+        - dimension: 1
+    - className: ScinOsc
+      rate: fragment
+      inputs:
+        - type: constant
+          dimension: 1
+          value: 2.0
+        - type: vgen
+          dimension: 1
+          vgenIndex: 1
+          outputIndex: 0
+        - type: constant
+          dimension: 1
+          value: 0.5
+        - type: constant
+          dimension: 1
+          value: 0.5
+      outputs:
+        - dimension: 1
+    - className: BWOut
+      rate: fragment
+      inputs:
+          - type: vgen
+            dimension: 1
+            vgenIndex: 2
+            outputIndex 0
+      outputs:
+        - dimension: 4
+
