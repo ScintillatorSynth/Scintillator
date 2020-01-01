@@ -18,8 +18,8 @@ Device::Device(std::shared_ptr<Instance> instance):
     m_instance(instance),
     m_physicalDevice(VK_NULL_HANDLE),
     m_allocator(VK_NULL_HANDLE),
-    m_graphicsFamilyIndex_(-1),
-    m_presentFamilyIndex_(-1),
+    m_graphicsFamilyIndex(-1),
+    m_presentFamilyIndex(-1),
     m_device(VK_NULL_HANDLE) {}
 
 Device::~Device() {
@@ -86,7 +86,7 @@ bool Device::findPhysicalDevice(Window* window) {
         vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
         std::vector<VkExtensionProperties> availableExtensions(extensionCount);
         vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
-        std::set<std::string> requiredExtensions(m_deviceextensions.begin(), m_deviceextensions.end());
+        std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
         for (const auto& extension : availableExtensions) {
             requiredExtensions.erase(extension.extensionName);
         }
@@ -147,22 +147,22 @@ bool Device::create(Window* window) {
     deviceCreateInfo.pQueueCreateInfos = queue_create_infos.data();
     deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size());
     deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
-    deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(m_deviceextensions.size());
-    deviceCreateInfo.ppEnabledExtensionNames = m_deviceextensions.data();
+    deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+    deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
     if (vkCreateDevice(m_physicalDevice, &deviceCreateInfo, nullptr, &m_device) != VK_SUCCESS) {
-        std::cerr << "failed to create logical device." << std::endl;
+        spdlog::error("failed to create logical device.");
         return false;
     }
 
-    vkGetDeviceQueue(m_device, m_graphicsFamilyIndex, 0, &graphics_queue_);
-    vkGetDeviceQueue(m_device, m_presentFamilyIndex, 0, &present_queue_);
+    vkGetDeviceQueue(m_device, m_graphicsFamilyIndex, 0, &m_graphicsQueue);
+    vkGetDeviceQueue(m_device, m_presentFamilyIndex, 0, &m_presentQueue);
 
     // Initialize memory allocator.
     VmaAllocatorCreateInfo allocatorInfo = {};
     allocatorInfo.physicalDevice = m_physicalDevice;
     allocatorInfo.device = m_device;
-    vmaCreateAllocator(&m_allocatorInfo, &m_allocator);
+    vmaCreateAllocator(&allocatorInfo, &m_allocator);
 
     return true;
 }

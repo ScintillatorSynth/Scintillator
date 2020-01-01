@@ -21,9 +21,9 @@ Swapchain::~Swapchain() { destroy(); }
 bool Swapchain::create(Window* window) {
     // Pick swap chain format from available options.
     uint32_t formatCount;
-    vkGetPhysicalDeviceSurfaceFormatsKHR(m_device->get_physical(), window->get_surface(), &formatCount, nullptr);
+    vkGetPhysicalDeviceSurfaceFormatsKHR(m_device->getPhysical(), window->getSurface(), &formatCount, nullptr);
     std::vector<VkSurfaceFormatKHR> formats(formatCount);
-    vkGetPhysicalDeviceSurfaceFormatsKHR(m_device->get_physical(), window->get_surface(), &formatCount, formats.data());
+    vkGetPhysicalDeviceSurfaceFormatsKHR(m_device->getPhysical(), window->getSurface(), &formatCount, formats.data());
     // If the only entry returned is UNDEFINED that means the surface supports all formats equally, pick preferred
     // BGRA format.
     if (formats.size() == 1 && formats[0].format == VK_FORMAT_UNDEFINED) {
@@ -42,10 +42,10 @@ bool Swapchain::create(Window* window) {
 
     // Pick present mode, with preference for MAILBOX if supported, which allows for lower-latency renders.
     uint32_t presentModeCount;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(m_device->get_physical(), window->get_surface(), &presentModeCount,
+    vkGetPhysicalDeviceSurfacePresentModesKHR(m_device->getPhysical(), window->getSurface(), &presentModeCount,
                                               nullptr);
     std::vector<VkPresentModeKHR> presentModes(presentModeCount);
-    vkGetPhysicalDeviceSurfacePresentModesKHR(m_device->get_physical(), window->get_surface(), &presentModeCount,
+    vkGetPhysicalDeviceSurfacePresentModesKHR(m_device->getPhysical(), window->getSurface(), &presentModeCount,
                                               presentModes.data());
     m_presentMode = VK_PRESENT_MODE_FIFO_KHR;
     for (const auto& mode : presentModes) {
@@ -57,7 +57,7 @@ bool Swapchain::create(Window* window) {
 
     // Choose swap extent, pixel dimensions of swap chain.
     VkSurfaceCapabilitiesKHR capabilities;
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_device->get_physical(), window->get_surface(), &capabilities);
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_device->getPhysical(), window->getSurface(), &capabilities);
     // If the currentExtent field is set to MAX_UINT this means we can pick the size of the extent we want, otherwise
     // we should use the size provided in the capabilities struct.
     if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
@@ -79,7 +79,7 @@ bool Swapchain::create(Window* window) {
     // Populate Swap Chain create info structure.
     VkSwapchainCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = window->get_surface();
+    createInfo.surface = window->getSurface();
     createInfo.minImageCount = m_imageCount;
     createInfo.imageFormat = m_surfaceFormat.format;
     createInfo.imageColorSpace = m_surfaceFormat.colorSpace;
@@ -87,10 +87,10 @@ bool Swapchain::create(Window* window) {
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    uint32_t queueFamilyIndices[] = { static_cast<uint32_t>(m_device->graphics_family_index()),
-                                      static_cast<uint32_t>(m_device->present_family_index()) };
+    uint32_t queueFamilyIndices[] = { static_cast<uint32_t>(m_device->graphicsFamilyIndex()),
+                                      static_cast<uint32_t>(m_device->presentFamilyIndex()) };
 
-    if (m_device->graphics_family_index() != m_device->present_family_index()) {
+    if (m_device->graphicsFamilyIndex() != m_device->presentFamilyIndex()) {
         createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         createInfo.queueFamilyIndexCount = 2;
         createInfo.pQueueFamilyIndices = queueFamilyIndices;
@@ -122,7 +122,6 @@ bool Swapchain::create(Window* window) {
 
 void Swapchain::destroy() {
     m_canvas->destroy();
-    m_images->destroy();
 
     if (m_swapchain != VK_NULL_HANDLE) {
         vkDestroySwapchainKHR(m_device->get(), m_swapchain, nullptr);

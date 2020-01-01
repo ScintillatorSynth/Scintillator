@@ -20,9 +20,10 @@ public:
     bool create();
     void destroy();
 
-    VkDescriptorSetLayout get() const { return m_layout; }
+    const VkDescriptorSetLayout* get() const { return &m_layout; }
 
 private:
+    std::shared_ptr<Device> m_device;
     VkDescriptorSetLayout m_layout;
 };
 

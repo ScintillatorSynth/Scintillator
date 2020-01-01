@@ -102,11 +102,7 @@ namespace scin { namespace vk {
 
 Instance::Instance(): m_instance(VK_NULL_HANDLE) {}
 
-Instance::~Instance() {
-    if (m_instance != VK_NULL_HANDLE) {
-        Destroy();
-    }
-}
+Instance::~Instance() { destroy(); }
 
 bool Instance::create() {
     VkApplicationInfo appInfo = {};
@@ -155,11 +151,13 @@ bool Instance::create() {
 }
 
 void Instance::destroy() {
+    if (m_instance != VK_NULL_HANDLE) {
 #if defined(SCIN_VALIDATE_VULKAN)
-    destroyDebugUtilsMessengerEXT(m_instance, m_debugMessenger, nullptr);
+        destroyDebugUtilsMessengerEXT(m_instance, m_debugMessenger, nullptr);
 #endif
-    vkDestroyInstance(m_instance, nullptr);
-    m_instance = VK_NULL_HANDLE;
+        vkDestroyInstance(m_instance, nullptr);
+        m_instance = VK_NULL_HANDLE;
+    }
 }
 
 } // namespace vk

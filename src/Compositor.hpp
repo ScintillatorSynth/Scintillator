@@ -42,7 +42,7 @@ public:
      * \param imageIndex The index of the imageView in the Canvas we will be rendering in to.
      * \return A list of CommandBuffer objects to be scheduled for graphics queue submission.
      */
-    std::vector<std::shared_ptr<CommandBuffer>> buildFrame(uint32_t imageIndex);
+    std::vector<std::shared_ptr<vk::CommandBuffer>> buildFrame(uint32_t imageIndex);
 
     /*! Unload the shader compiler, releasing the resources associated with it.
      *

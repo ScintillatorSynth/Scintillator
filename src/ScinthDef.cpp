@@ -3,6 +3,7 @@
 #include "Scinth.hpp"
 #include "core/AbstractScinthDef.hpp"
 #include "core/VGen.hpp"
+#include "vulkan/Canvas.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Pipeline.hpp"
 #include "vulkan/ShaderCompiler.hpp"
@@ -18,7 +19,7 @@ ScinthDef::ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<const A
 
 ScinthDef::~ScinthDef() {}
 
-bool ScinthDef::build(std::shared_ptr<vk::ShaderCompiler> compiler) {
+bool ScinthDef::build(vk::ShaderCompiler* compiler, vk::Canvas* canvas) {
     m_vertexShader = compiler->compile(m_device, m_abstractScinthDef->vertexShader(),
             m_abstractScinthDef->prefix() + "_vertexShader", "main", vk::Shader::kVertex);
     if (!m_vertexShader) {
@@ -38,8 +39,8 @@ bool ScinthDef::build(std::shared_ptr<vk::ShaderCompiler> compiler) {
     }
 
     m_pipeline.reset(new vk::Pipeline(m_device));
-    if (!m_pipeline->create(abstractScinthDef->vertexManifest(), abstractScinthDef->shape(), m_vertexShader.get(),
-            m_fragmentShader.get(), m_uniformLayout.get())) {
+    if (!m_pipeline->create(m_abstractScinthDef->vertexManifest(), m_abstractScinthDef->shape(), canvas,
+            m_vertexShader.get(), m_fragmentShader.get(), m_uniformLayout.get())) {
         spdlog::error("error creating pipeline for ScinthDef {}", m_abstractScinthDef->name());
         return false;
     }

@@ -33,8 +33,14 @@ public:
      */
     void destroy();
 
+    VkExtent2D extent() const { return m_extent; }
+    uint32_t width() const { return m_extent.width; }
+    uint32_t height() const { return m_extent.height; }
+    VkRenderPass renderPass() { return m_renderPass; }
+
 private:
     std::shared_ptr<Device> m_device;
+    VkExtent2D m_extent;
     std::vector<VkImageView> m_imageViews;
     VkRenderPass m_renderPass;
     std::vector<VkFramebuffer> m_framebuffers;

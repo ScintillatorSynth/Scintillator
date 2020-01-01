@@ -1,5 +1,6 @@
 #include "vulkan/Images.hpp"
 
+#include "vulkan/Device.hpp"
 #include "vulkan/Swapchain.hpp"
 
 namespace scin { namespace vk {

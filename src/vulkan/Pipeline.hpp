@@ -16,7 +16,7 @@ namespace vk {
 class Canvas;
 class Device;
 class Shader;
-class Uniform;
+class UniformLayout;
 
 class Pipeline {
 public:
@@ -24,7 +24,7 @@ public:
     ~Pipeline();
 
     bool create(const Manifest& vertexManifest, const Shape* shape, Canvas* canvas, Shader* vertexShader,
-            Shader* fragmentShader, Uniform* uniform);
+            Shader* fragmentShader, UniformLayout* uniformLayout);
     void destroy();
 
     VkPipeline get() { return m_pipeline; }

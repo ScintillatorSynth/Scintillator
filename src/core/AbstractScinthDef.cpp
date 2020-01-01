@@ -165,6 +165,7 @@ bool AbstractScinthDef::buildVertexShader() {
     }
 
     m_vertexShader += "}\n";
+    return true;
 }
 
 bool AbstractScinthDef::buildFragmentShader() {

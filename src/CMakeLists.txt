@@ -46,8 +46,8 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
 )
 
 set(scintillator_synth_files
-    "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp"
     "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
+    "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp"
     Compositor.cpp
     Compositor.hpp
     OscHandler.cpp
@@ -82,6 +82,8 @@ set(scintillator_synth_files
     vulkan/Swapchain.hpp
     vulkan/Uniform.cpp
     vulkan/Uniform.hpp
+    vulkan/UniformLayout.cpp
+    vulkan/UniformLayout.hpp
     vulkan/Vulkan.hpp
     vulkan/Window.cpp
     vulkan/Window.hpp

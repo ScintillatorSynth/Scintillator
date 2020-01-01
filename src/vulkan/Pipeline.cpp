@@ -4,7 +4,7 @@
 #include "vulkan/Canvas.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Shader.hpp"
-#include "vulkan/Uniform.hpp"
+#include "vulkan/UniformLayout.hpp"
 
 namespace scin { namespace vk {
 
@@ -16,14 +16,14 @@ Pipeline::Pipeline(std::shared_ptr<Device> device):
 Pipeline::~Pipeline() { destroy(); }
 
 bool Pipeline::create(const Manifest& vertexManifest, const Shape* shape, Canvas* canvas, Shader* vertexShader,
-        Shader* fragmentShader, Uniform* uniform) {
+        Shader* fragmentShader, UniformLayout* uniformLayout) {
 
     VkVertexInputBindingDescription vertexBindingDescription = {};
     vertexBindingDescription.binding = 0;
     vertexBindingDescription.stride = vertexManifest.sizeInBytes();
     vertexBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-    std::vector<VkVertexInputAttributeDescription> vertexAttributes(vertex_attributes_.size());
+    std::vector<VkVertexInputAttributeDescription> vertexAttributes(vertexManifest.numberOfElements());
     for (auto i = 0; i < vertexManifest.numberOfElements(); ++i) {
         vertexAttributes[i].binding = 0;
         vertexAttributes[i].location = i;
@@ -134,18 +134,18 @@ bool Pipeline::create(const Manifest& vertexManifest, const Shape* shape, Canvas
     colorBlending.blendConstants[3] = 0.0f;
 
     // Pipeline Layout
-    VkPipelineLayoutCreateInfo m_pipelineLayoutinfo = {};
-    m_pipelineLayoutinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    if (uniform) {
-        m_pipelineLayoutinfo.setLayoutCount = 1;
-        m_pipelineLayoutinfo.pSetLayouts = uniform->layout();
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    if (uniformLayout) {
+        pipelineLayoutInfo.setLayoutCount = 1;
+        pipelineLayoutInfo.pSetLayouts = uniformLayout->get();
     } else {
-        m_pipelineLayoutinfo.setLayoutCount = 0;
-        m_pipelineLayoutinfo.pSetLayouts = nullptr;
+        pipelineLayoutInfo.setLayoutCount = 0;
+        pipelineLayoutInfo.pSetLayouts = nullptr;
     }
-    m_pipelineLayoutinfo.pushConstantRangeCount = 0;
-    m_pipelineLayoutinfo.pPushConstantRanges = nullptr;
-    if (vkCreatePipelineLayout(device_->get(), &m_pipelineLayoutinfo, nullptr, &m_pipelineLayout) != VK_SUCCESS) {
+    pipelineLayoutInfo.pushConstantRangeCount = 0;
+    pipelineLayoutInfo.pPushConstantRanges = nullptr;
+    if (vkCreatePipelineLayout(m_device->get(), &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS) {
         return false;
     }
 
@@ -154,13 +154,13 @@ bool Pipeline::create(const Manifest& vertexManifest, const Shape* shape, Canvas
     vertexStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertexStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
     vertexStageInfo.module = vertexShader->get();
-    vertexStageInfo.pName = vertexShader->entry_point();
+    vertexStageInfo.pName = vertexShader->entryPoint();
 
     VkPipelineShaderStageCreateInfo fragmentStageInfo = {};
     fragmentStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     fragmentStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
     fragmentStageInfo.module = fragmentShader->get();
-    fragmentStageInfo.pName = fragmentShader->entry_point();
+    fragmentStageInfo.pName = fragmentShader->entryPoint();
 
     VkPipelineShaderStageCreateInfo shaderStages[] = { vertexStageInfo, fragmentStageInfo };
 
@@ -192,7 +192,7 @@ void Pipeline::destroy() {
         vkDestroyPipelineLayout(m_device->get(), m_pipelineLayout, nullptr);
         m_pipelineLayout = VK_NULL_HANDLE;
     }
-    if (pipeline_ != VK_NULL_HANDLE) {
+    if (m_pipeline != VK_NULL_HANDLE) {
         vkDestroyPipeline(m_device->get(), m_pipeline, nullptr);
         m_pipeline = VK_NULL_HANDLE;
     }

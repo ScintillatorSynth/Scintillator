@@ -14,7 +14,7 @@ namespace scin {
 
 Compositor::Compositor(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Canvas> canvas):
     m_device(device),
-    m_canvas(canvace),
+    m_canvas(canvas),
     m_shaderCompiler(new scin::vk::ShaderCompiler()),
     m_commandPool(new scin::vk::CommandPool(device)) {}
 
@@ -36,7 +36,7 @@ bool Compositor::create() {
 
 bool Compositor::buildScinthDef(std::shared_ptr<const AbstractScinthDef> abstractScinthDef) {
     std::unique_ptr<ScinthDef> scinthDef(new ScinthDef(m_device, abstractScinthDef));
-    if (!scinthDef->build(m_shaderCompiler)) {
+    if (!scinthDef->build(m_shaderCompiler.get(), m_canvas.get())) {
         return false;
     }
 
@@ -53,7 +53,7 @@ bool Compositor::play(const std::string& scinthDefName) {
     return false;
 }
 
-std::vector<std::shared_ptr<vk::CommandBuffer>> Compositor::buildFrame() {
+std::vector<std::shared_ptr<vk::CommandBuffer>> Compositor::buildFrame(uint32_t imageIndex) {
     std::vector<std::shared_ptr<vk::CommandBuffer>> buffers;
     spdlog::critical("write me");
     return buffers;

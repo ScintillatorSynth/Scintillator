@@ -14,9 +14,9 @@ public:
 
     enum Topology { kTriangleStrip };
 
-    virtual Manifest::ElementType elementType() = 0;
-    virtual uint32_t numberOfVertices() = 0;
-    virtual Topology topology() = 0;
+    virtual Manifest::ElementType elementType() const = 0;
+    virtual uint32_t numberOfVertices() const = 0;
+    virtual Topology topology() const = 0;
 };
 
 class Quad : public Shape {
@@ -24,9 +24,9 @@ public:
     Quad();
     virtual ~Quad();
 
-    Manifest::ElementType elementType() override;
-    uint32_t numberOfVertices() override;
-    Shape::Topology topology() override;
+    Manifest::ElementType elementType() const override;
+    uint32_t numberOfVertices() const override;
+    Shape::Topology topology() const override;
 };
 
 }

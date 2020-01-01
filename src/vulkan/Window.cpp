@@ -82,18 +82,18 @@ void Window::run(std::shared_ptr<Compositor> compositor) {
     while (!m_stop && !glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
 
-        vkWaitForFences(device->get(), 1, &m_inFlightFences[currentFrame], VK_TRUE,
+        vkWaitForFences(m_device->get(), 1, &m_inFlightFences[currentFrame], VK_TRUE,
                         std::numeric_limits<uint64_t>::max());
 
         uint32_t imageIndex;
-        vkAcquireNextImageKHR(device->get(), m_swapchain->get(), std::numeric_limits<uint64_t>::max(),
+        vkAcquireNextImageKHR(m_device->get(), m_swapchain->get(), std::numeric_limits<uint64_t>::max(),
                               m_imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
         VkSemaphore waitSemaphores[] = { m_imageAvailableSemaphores[currentFrame] };
         VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
         m_commandBuffers[currentFrame] = compositor->buildFrame(imageIndex);
         std::vector<VkCommandBuffer> commandBuffers;
-        for (command : m_commandBuffers[currentFrame]) {
+        for (auto command : m_commandBuffers[currentFrame]) {
             commandBuffers.push_back(command->buffer(imageIndex));
         }
         VkSemaphore signalSemaphores[] = { m_renderFinishedSemaphores[currentFrame] };
@@ -108,9 +108,9 @@ void Window::run(std::shared_ptr<Compositor> compositor) {
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
 
-        vkResetFences(device->get(), 1, &m_inFlightFences[currentFrame]);
+        vkResetFences(m_device->get(), 1, &m_inFlightFences[currentFrame]);
 
-        if (vkQueueSubmit(device->graphicsQueue(), 1, &submitInfo, m_inFlightFences[currentFrame]) != VK_SUCCESS) {
+        if (vkQueueSubmit(m_device->graphicsQueue(), 1, &submitInfo, m_inFlightFences[currentFrame]) != VK_SUCCESS) {
             break;
         }
 
@@ -123,27 +123,27 @@ void Window::run(std::shared_ptr<Compositor> compositor) {
         presentInfo.pSwapchains = swapchains;
         presentInfo.pImageIndices = &imageIndex;
         presentInfo.pResults = nullptr;
-        vkQueuePresentKHR(device->presentQueue(), &presentInfo);
+        vkQueuePresentKHR(m_device->presentQueue(), &presentInfo);
 
         currentFrame = (currentFrame + 1) % kMaxFramesInFlight;
     }
 
-    vkDeviceWaitIdle(device->get());
+    vkDeviceWaitIdle(m_device->get());
 }
 
-void Window::destroySyncObjects(Device* device) {
+void Window::destroySyncObjects() {
     for (auto semaphore : m_imageAvailableSemaphores) {
-        vkDestroySemaphore(device->get(), semaphore, nullptr);
+        vkDestroySemaphore(m_device->get(), semaphore, nullptr);
     }
     m_imageAvailableSemaphores.clear();
 
     for (auto semaphore : m_renderFinishedSemaphores) {
-        vkDestroySemaphore(device->get(), semaphore, nullptr);
+        vkDestroySemaphore(m_device->get(), semaphore, nullptr);
     }
     m_renderFinishedSemaphores.clear();
 
     for (auto fence : m_inFlightFences) {
-        vkDestroyFence(device->get(), fence, nullptr);
+        vkDestroyFence(m_device->get(), fence, nullptr);
     }
     m_inFlightFences.clear();
 }

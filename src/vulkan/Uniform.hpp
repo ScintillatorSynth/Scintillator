@@ -17,7 +17,7 @@ public:
     ~Uniform();
 
     bool createLayout();
-    bool createBuffers(Swapchain* swapchain);
+    bool createBuffers(size_t numberOfImages);
 
     void destroy();
 

@@ -14,7 +14,9 @@ Canvas::Canvas(std::shared_ptr<Device> device): m_device(device), m_renderPass(V
 Canvas::~Canvas() { destroy(); }
 
 bool Canvas::create(Images* images) {
-    // First create vkImageViews, one per image.
+    m_extent = images->extent();
+
+    // Create vkImageViews, one per image.
     m_imageViews.resize(images->count());
     for (auto i = 0; i < images->count(); ++i) {
         VkImageViewCreateInfo viewCreateInfo = {};
@@ -98,6 +100,8 @@ bool Canvas::create(Images* images) {
             return false;
         }
     }
+
+    return true;
 }
 
 void Canvas::destroy() {
