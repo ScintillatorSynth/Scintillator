@@ -1,30 +1,26 @@
 #include "vulkan/Pipeline.hpp"
 
+#include "vulkan/Canvas.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Shader.hpp"
-#include "vulkan/Swapchain.hpp"
 #include "vulkan/Uniform.hpp"
 
 namespace scin { namespace vk {
 
 Pipeline::Pipeline(std::shared_ptr<Device> device):
     m_device(device),
-    m_renderPass(VK_NULL_HANDLE),
     m_pipelineLayout(VK_NULL_HANDLE),
     m_pipeline(VK_NULL_HANDLE) {}
 
-Pipeline::~Pipeline() { Destroy(); }
+Pipeline::~Pipeline() { destroy(); }
 
-bool Pipeline::create(const Manifest& vertexManifest, Shader* vertexShader, Shader* fragmentShader, Uniform* uniform) {
-    if (!CreateRenderPass(swapchain)) {
-        return false;
-    }
+bool Pipeline::create(Canvas* canvas, const Manifest& vertexManifest, Shader* vertexShader, Shader* fragmentShader,
+        Uniform* uniform) {
 
-    // Vertex Input Info - note we assume there's always exactly one vertex buffer.
-    VkVertexInputBindingDescription vertex_binding_description = {};
-    vertex_binding_description.binding = 0;
-    vertex_binding_description.stride = vertex_stride_;
-    vertex_binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    VkVertexInputBindingDescription vertexBindingDescription = {};
+    vertexBindingDescription.binding = 0;
+    vertexBindingDescription.stride = vertexManifest.sizeInBytes();
+    vertexBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
     std::vector<VkVertexInputAttributeDescription> vertex_attribute_descriptions(vertex_attributes_.size());
     for (size_t i = 0; i < vertex_attributes_.size(); ++i) {
@@ -56,7 +52,7 @@ bool Pipeline::create(const Manifest& vertexManifest, Shader* vertexShader, Shad
     VkPipelineVertexInputStateCreateInfo vertex_input_info = {};
     vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertex_input_info.vertexBindingDescriptionCount = 1;
-    vertex_input_info.pVertexBindingDescriptions = &vertex_binding_description;
+    vertex_input_info.pVertexBindingDescriptions = &vertexBindingDescription;
     vertex_input_info.vertexAttributeDescriptionCount = vertex_attribute_descriptions.size();
     vertex_input_info.pVertexAttributeDescriptions = vertex_attribute_descriptions.data();
 
@@ -134,84 +130,72 @@ bool Pipeline::create(const Manifest& vertexManifest, Shader* vertexShader, Shad
     color_blending.blendConstants[3] = 0.0f;
 
     // Pipeline Layout
-    if (!CreatePipelineLayout(uniform)) {
+    VkPipelineLayoutCreateInfo m_pipelineLayoutinfo = {};
+    m_pipelineLayoutinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    if (uniform) {
+        m_pipelineLayoutinfo.setLayoutCount = 1;
+        m_pipelineLayoutinfo.pSetLayouts = uniform->pLayout();
+    } else {
+        m_pipelineLayoutinfo.setLayoutCount = 0;
+        m_pipelineLayoutinfo.pSetLayouts = nullptr;
+    }
+    m_pipelineLayoutinfo.pushConstantRangeCount = 0;
+    m_pipelineLayoutinfo.pPushConstantRanges = nullptr;
+    if (vkCreatePipelineLayout(device_->get(), &m_pipelineLayoutinfo, nullptr, &m_pipelineLayout) != VK_SUCCESS) {
         return false;
     }
 
     // Shader stages
-    VkPipelineShaderStageCreateInfo vertex_stage_info = {};
-    vertex_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    vertex_stage_info.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertex_stage_info.module = vertex_shader->get();
-    vertex_stage_info.pName = vertex_shader->entry_point();
+    VkPipelineShaderStageCreateInfo vertexStageInfo = {};
+    vertexStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    vertexStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+    vertexStageInfo.module = vertex_shader->get();
+    vertexStageInfo.pName = vertex_shader->entry_point();
 
-    VkPipelineShaderStageCreateInfo fragment_stage_info = {};
-    fragment_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    fragment_stage_info.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    fragment_stage_info.module = fragment_shader->get();
-    fragment_stage_info.pName = fragment_shader->entry_point();
+    VkPipelineShaderStageCreateInfo fragmentStageInfo = {};
+    fragmentStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    fragmentStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    fragmentStageInfo.module = fragment_shader->get();
+    fragmentStageInfo.pName = fragment_shader->entry_point();
 
-    VkPipelineShaderStageCreateInfo shader_stages[] = { vertex_stage_info, fragment_stage_info };
+    VkPipelineShaderStageCreateInfo shaderStages[] = { vertexStageInfo, fragmentStageInfo };
 
     // Pipeline
-    VkGraphicsPipelineCreateInfo pipeline_info = {};
-    pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipeline_info.stageCount = 2;
-    pipeline_info.pStages = shader_stages;
-    pipeline_info.pVertexInputState = &vertex_input_info;
-    pipeline_info.pInputAssemblyState = &input_assembly;
-    pipeline_info.pViewportState = &viewport_state;
-    pipeline_info.pRasterizationState = &rasterizer;
-    pipeline_info.pMultisampleState = &multisampling;
-    pipeline_info.pDepthStencilState = nullptr;
-    pipeline_info.pColorBlendState = &color_blending;
-    pipeline_info.pDynamicState = nullptr;
-    pipeline_info.layout = pipeline_layout_;
-    pipeline_info.renderPass = render_pass_; // could get from Swapchain?
-    pipeline_info.subpass = 0;
-    pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
-    pipeline_info.basePipelineIndex = -1;
+    VkGraphicsPipelineCreateInfo pipelineInfo = {};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipelineInfo.stageCount = 2;
+    pipelineInfo.pStages = shaderStages;
+    pipelineInfo.pVertexInputState = &vertex_input_info;
+    pipelineInfo.pInputAssemblyState = &input_assembly;
+    pipelineInfo.pViewportState = &viewport_state;
+    pipelineInfo.pRasterizationState = &rasterizer;
+    pipelineInfo.pMultisampleState = &multisampling;
+    pipelineInfo.pDepthStencilState = nullptr;
+    pipelineInfo.pColorBlendState = &color_blending;
+    pipelineInfo.pDynamicState = nullptr;
+    pipelineInfo.layout = m_pipelineLayout;
+    pipelineInfo.renderPass = render_pass_; // could get from Swapchain?
+    pipelineInfo.subpass = 0;
+    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+    pipelineInfo.basePipelineIndex = -1;
 
-    return (vkCreateGraphicsPipelines(device_->get(), VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &pipeline_)
+    return (vkCreateGraphicsPipelines(device_->get(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline_)
             == VK_SUCCESS);
 }
 
 void Pipeline::Destroy() {
+    if (m_pipelineLayout != VK_NULL_HANDLE) {
+        vkDestroyPipelineLayout(device_->get(), m_pipelineLayout, nullptr);
+        m_pipelineLayout = VK_NULL_HANDLE;
+    }
     if (pipeline_ != VK_NULL_HANDLE) {
         vkDestroyPipeline(device_->get(), pipeline_, nullptr);
         pipeline_ = VK_NULL_HANDLE;
     }
-    DestroyPipelineLayout();
-    DestroyRenderPass();
 }
 
-void Pipeline::DestroyRenderPass() {
-    if (render_pass_ != VK_NULL_HANDLE) {
-        vkDestroyRenderPass(device_->get(), render_pass_, nullptr);
-        render_pass_ = VK_NULL_HANDLE;
-    }
-}
-
-bool Pipeline::CreatePipelineLayout(Uniform* uniform) {
-    VkPipelineLayoutCreateInfo pipeline_layout_info = {};
-    pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    if (uniform) {
-        pipeline_layout_info.setLayoutCount = 1;
-        pipeline_layout_info.pSetLayouts = uniform->pLayout();
-    } else {
-        pipeline_layout_info.setLayoutCount = 0;
-        pipeline_layout_info.pSetLayouts = nullptr;
-    }
-    pipeline_layout_info.pushConstantRangeCount = 0;
-    pipeline_layout_info.pPushConstantRanges = nullptr;
-    return (vkCreatePipelineLayout(device_->get(), &pipeline_layout_info, nullptr, &pipeline_layout_) == VK_SUCCESS);
-}
 
 void Pipeline::DestroyPipelineLayout() {
-    if (pipeline_layout_ != VK_NULL_HANDLE) {
-        vkDestroyPipelineLayout(device_->get(), pipeline_layout_, nullptr);
-        pipeline_layout_ = VK_NULL_HANDLE;
-    }
 }
 
 } // namespace vk

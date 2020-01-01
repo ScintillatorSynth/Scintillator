@@ -4,6 +4,7 @@
 #include "core/AbstractScinthDef.hpp"
 #include "core/VGen.hpp"
 #include "vulkan/Canvas.hpp"
+#include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/ShaderCompiler.hpp"
 
@@ -45,6 +46,17 @@ bool Compositor::buildScinthDef(std::shared_ptr<const AbstractScinthDef> abstrac
     }
 
     return true;
+}
+
+bool Compositor::play(const std::string& scinthDefName) {
+    spdlog::critical("write me");
+    return false;
+}
+
+std::vector<std::shared_ptr<vk::CommandBuffer>> buildFrame() {
+    std::vector<std::shared_ptr<vk::CommandBuffer>>> buffers;
+    spdlog::critical("write me");
+    return buffers;
 }
 
 void Compositor::releaseCompiler() { m_shaderCompiler->releaseCompiler(); }

@@ -119,16 +119,12 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    window.setDevice(device);
-
-    // Configure swap chain based on Device and Window surface configuration.
-    scin::vk::Swapchain swapchain(device);
-    if (!swapchain.create(&window)) {
+    if (!window.createSwapchain(device)) {
         spdlog::error("unable to create Vulkan swapchain.");
         return EXIT_FAILURE;
     }
 
-    std::shared_ptr<scin::Compositor> compositor(new scin::Compositor(device, swapchain->canvas()));
+    std::shared_ptr<scin::Compositor> compositor(new scin::Compositor(device, window->canvas()));
     if (!compositor->create()) {
         spdlog::error("unable to create Compositor.");
         return EXIT_FAILURE;
@@ -147,9 +143,8 @@ int main(int argc, char* argv[]) {
     window.run(compositor);
 
     // ========== Vulkan cleanup.
-    window.destroySyncObjects(device.get());
+    window.destroySyncObjects();
     compositor->destroy();
-    swapchain.destroy();
     device->destroy();
     window.destroy();
     instance->destroy();

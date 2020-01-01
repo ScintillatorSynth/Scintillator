@@ -9,9 +9,9 @@
 
 namespace scin { namespace vk {
 
+class Canvas;
 class Device;
 class Shader;
-class Swapchain;
 class Uniform;
 
 class Pipeline {
@@ -19,16 +19,14 @@ public:
     Pipeline(std::shared_ptr<Device> device);
     ~Pipeline();
 
-    bool create(const Manifest& vertexManifest, Shader* vertexShader, Shader* fragmentShader, Uniform* uniform);
+    bool create(Canvas* canvas, const Manifest& vertexManifest, Shader* vertexShader, Shader* fragmentShader,
+            Uniform* uniform);
     void destroy();
 
     VkPipeline get() { return m_pipeline; }
     VkPipelineLayout layout() { return m_pipelineLayout; }
 
 private:
-    bool createPipelineLayout(Uniform* uniform);
-    void destroyPipelineLayout();
-
     std::shared_ptr<Device> m_device;
 
     VkPipelineLayout m_pipelineLayout;

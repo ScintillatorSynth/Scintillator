@@ -7,13 +7,17 @@
 #include <memory>
 #include <vector>
 
-namespace scin { namespace vk {
+namespace scin {
 
-class CommandPool;
+class Compositor;
+
+namespace vk {
+
+class Canvas;
+class CommandBuffer;
 class Device;
 class Instance;
 class Swapchain;
-class Uniform;
 
 /* While technically more a GLFW object than a Vulkan one, Window also maintains a VkSurfaceKHR handle, so lives with
  * the rest of the Vulkan objects.
@@ -28,9 +32,9 @@ public:
     // aren't rendering to an onscreen window a surface will have to be provided to Device some other way, and perhaps
     // Device will have a different create() function for that context.
     bool create(int width, int height);
-    void setDevice(std::shared_ptr<Device> device);
+    void createSwapchain(std::shared_ptr<Device> device);
     bool createSyncObjects();
-    void run();
+    void run(std::shared_ptr<Compositor> compositor);
     void destroySyncObjects();
     void destroy();
 
@@ -42,6 +46,7 @@ public:
     VkSurfaceKHR getSurface() { return m_surface; }
     int width() const { return m_width; }
     int height() const { return m_height; }
+    std::shared_ptr<Canvas> canvas();
 
 private:
     std::shared_ptr<Instance> m_instance;
@@ -50,9 +55,14 @@ private:
     int m_height;
     GLFWwindow* m_window;
     VkSurfaceKHR m_surface;
+    std::shared_ptr<Swapchain> m_swapchain;
     std::vector<VkSemaphore> m_imageAvailableSemaphores;
     std::vector<VkSemaphore> m_renderFinishedSemaphores;
     std::vector<VkFence> m_inFlightFences;
+    // We keep the shared pointers to the command buffers until the frame is being re-rendered. This allows
+    // the Compositor to change command buffers arbitrarily, and they won't get reclaimed by the system until
+    // they are known finished rendering.
+    std::vector<std::vector<std::shared_ptr<CommandBuffer>>> m_commandBuffers;
     std::atomic<bool> m_stop;
 };
 

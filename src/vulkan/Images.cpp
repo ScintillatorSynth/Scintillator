@@ -2,7 +2,7 @@
 
 #include "vulkan/Swapchain.hpp"
 
-namespace scin {
+namespace scin { namespace vk {
 
 Images::Images(std::shared_ptr<Device> device): m_device(device), m_format(VK_FORMAT_UNDEFINED) {}
 
@@ -12,8 +12,8 @@ Images::~Images() {
     // for the moment.
 }
 
-uint32_t Images::getFromSwapChain(Swapchain* swapchain, uint32_t imageCount) {
-    m_format = swapchain->surface_format().format;
+uint32_t Images::getFromSwapchain(Swapchain* swapchain, uint32_t imageCount) {
+    m_format = swapchain->surfaceFormat().format;
     m_extent = swapchain->extent();
     // Retrieve images from swap chain. Note it may be possible that Vulkan has allocated more images than requested by
     // the create call, so we query first for the actual image count.
@@ -23,5 +23,7 @@ uint32_t Images::getFromSwapChain(Swapchain* swapchain, uint32_t imageCount) {
     vkGetSwapchainImagesKHR(m_device->get(), swapchain->get(), &actualImageCount, m_images.data());
     return actualImageCount;
 }
+
+} // namespace vk
 
 } // namespace scin

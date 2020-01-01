@@ -1,11 +1,12 @@
 #include "vulkan/Window.hpp"
 
-#include "vulkan/Buffer.hpp"
+#include "Compositor.hpp"
+#include "vulkan/Canvas.hpp"
+#include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Instance.hpp"
 #include "vulkan/Swapchain.hpp"
-#include "vulkan/Uniform.hpp"
 
 #include "spdlog/spdlog.h"
 
@@ -41,14 +42,17 @@ bool Window::create(int width, int height) {
     return true;
 }
 
-bool Window::setDevice(std::shared_ptr<Device> device) {
+bool Window::createSwapchain(std::shared_ptr<Device> device) {
     m_device = device;
+    m_swapchain.reset(new Swapchain(m_device));
+    return m_swapchain->create(this);
 }
 
 bool Window::createSyncObjects() {
     m_imageAvailableSemaphores.resize(kMaxFramesInFlight);
     m_renderFinishedSemaphores.resize(kMaxFramesInFlight);
     m_inFlightFences.resize(kMaxFramesInFlight);
+    m_commandBuffers.resize(kMaxFramesInFlight);
 
     VkSemaphoreCreateInfo semaphoreInfo = {};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -72,60 +76,56 @@ bool Window::createSyncObjects() {
     return true;
 }
 
-void Window::run() {
-    size_t current_frame = 0;
-    auto startTime = std::chrono::steady_clock::now();
+void Window::run(std::shared_ptr<Compositor> compositor) {
+    size_t currentFrame = 0;
 
     while (!m_stop && !glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
 
-        vkWaitForFences(device->get(), 1, &m_inFlightFences[current_frame], VK_TRUE,
+        vkWaitForFences(device->get(), 1, &m_inFlightFences[currentFrame], VK_TRUE,
                         std::numeric_limits<uint64_t>::max());
 
-        uint32_t image_index;
-        vkAcquireNextImageKHR(device->get(), swapchain->get(), std::numeric_limits<uint64_t>::max(),
-                              m_imageAvailableSemaphores[current_frame], VK_NULL_HANDLE, &image_index);
+        uint32_t imageIndex;
+        vkAcquireNextImageKHR(device->get(), m_swapchain->get(), std::numeric_limits<uint64_t>::max(),
+                              m_imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
-        // Update time uniform.
-        auto currentTime = std::chrono::steady_clock::now();
-        GlobalUniform gbo;
-        gbo.time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-        std::shared_ptr<HostBuffer> uniformBuffer = uniform->buffer(image_index);
-        uniformBuffer->copyToGPU(&gbo);
+        VkSemaphore waitSemaphores[] = { m_imageAvailableSemaphores[currentFrame] };
+        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        m_commandBuffers[currentFrame] = compositor->buildFrame(imageIndex);
+        std::vector<VkCommandBuffer> commandBuffers;
+        for (command : m_commandBuffers[currentFrame]) {
+            commandBuffers.push_back(command->buffer(imageIndex));
+        }
+        VkSemaphore signalSemaphores[] = { m_renderFinishedSemaphores[currentFrame] };
 
-        VkSemaphore wait_semaphores[] = { m_imageAvailableSemaphores[current_frame] };
-        VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        VkCommandBuffer command_buffer = VK_NULL_HANDLE; // FIXME command_pool->command_buffer(image_index);
-        VkSemaphore signal_semaphores[] = { m_renderFinishedSemaphores[current_frame] };
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = waitSemaphores;
+        submitInfo.pWaitDstStageMask = waitStages;
+        submitInfo.commandBufferCount = commandBuffers.size();
+        submitInfo.pCommandBuffers = commandBuffers.data();
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = signalSemaphores;
 
-        VkSubmitInfo submit_info = {};
-        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submit_info.waitSemaphoreCount = 1;
-        submit_info.pWaitSemaphores = wait_semaphores;
-        submit_info.pWaitDstStageMask = wait_stages;
-        submit_info.commandBufferCount = 1;
-        submit_info.pCommandBuffers = &command_buffer;
-        submit_info.signalSemaphoreCount = 1;
-        submit_info.pSignalSemaphores = signal_semaphores;
+        vkResetFences(device->get(), 1, &m_inFlightFences[currentFrame]);
 
-        vkResetFences(device->get(), 1, &m_inFlightFences[current_frame]);
-
-        if (vkQueueSubmit(device->graphics_queue(), 1, &submit_info, m_inFlightFences[current_frame]) != VK_SUCCESS) {
+        if (vkQueueSubmit(device->graphicsQueue(), 1, &submitInfo, m_inFlightFences[currentFrame]) != VK_SUCCESS) {
             break;
         }
 
-        VkPresentInfoKHR present_info = {};
-        present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        present_info.waitSemaphoreCount = 1;
-        present_info.pWaitSemaphores = signal_semaphores;
-        VkSwapchainKHR swapchains[] = { swapchain->get() };
-        present_info.swapchainCount = 1;
-        present_info.pSwapchains = swapchains;
-        present_info.pImageIndices = &image_index;
-        present_info.pResults = nullptr;
-        vkQueuePresentKHR(device->present_queue(), &present_info);
+        VkPresentInfoKHR presentInfo = {};
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores = signalSemaphores;
+        VkSwapchainKHR swapchains[] = { m_swapchain->get() };
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = swapchains;
+        presentInfo.pImageIndices = &imageIndex;
+        presentInfo.pResults = nullptr;
+        vkQueuePresentKHR(device->presentQueue(), &presentInfo);
 
-        current_frame = (current_frame + 1) % kMaxFramesInFlight;
+        currentFrame = (currentFrame + 1) % kMaxFramesInFlight;
     }
 
     vkDeviceWaitIdle(device->get());
@@ -151,6 +151,10 @@ void Window::destroySyncObjects(Device* device) {
 void Window::destroy() {
     vkDestroySurfaceKHR(m_instance->get(), m_surface, nullptr);
     glfwDestroyWindow(m_window);
+}
+
+std::shared_ptr<Canvas> Window::canvas() {
+    return m_swapchain->canvas();
 }
 
 } // namespace vk

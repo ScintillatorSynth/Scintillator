@@ -5,11 +5,13 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace scin {
 
 namespace vk {
 class Canvas;
+class CommandBuffer;
 class CommandPool;
 class Device;
 class ShaderCompiler;
@@ -31,12 +33,24 @@ public:
 
     bool buildScinthDef(std::shared_ptr<const AbstractScinthDef> abstractScinthDef);
 
+    bool play(const std::string& scinthDefName);
+
+    /*! Prepare and return a set of CommandBuffers that when executed in order will render the current frame.
+     *
+     * \note Must always return at least one CommandBuffer.
+     *
+     * \param imageIndex The index of the imageView in the Canvas we will be rendering in to.
+     * \return A list of CommandBuffer objects to be scheduled for graphics queue submission.
+     */
+    std::vector<std::shared_ptr<CommandBuffer>> buildFrame(uint32_t imageIndex);
+
     /*! Unload the shader compiler, releasing the resources associated with it.
      *
      * This can be used to save some memory by releasing the shader compiler, at the cost of increased latency in
      * defining new ScinthDefs, as the compiler will have to be loaded again first.
      */
     void releaseCompiler();
+
 
     void destroy();
 

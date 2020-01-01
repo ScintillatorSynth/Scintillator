@@ -13,7 +13,7 @@ CommandPool::~CommandPool() { destroy(); }
 bool CommandPool::create() {
     VkCommandPoolCreateInfo poolInfo = {};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    poolInfo.queueFamilyIndex = m_device->graphics_family_index();
+    poolInfo.queueFamilyIndex = m_device->graphicsFamilyIndex();
     poolInfo.flags = 0;
     return (vkCreateCommandPool(m_device->get(), &poolInfo, nullptr, &m_commandPool) == VK_SUCCESS);
 }

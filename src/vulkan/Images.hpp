@@ -4,11 +4,13 @@
 #include "vulkan/Vulkan.hpp"
 
 #include <memory>
+#include <vector>
 
 namespace scin {
 
 namespace vk {
 
+class Device;
 class Swapchain;
 
 /*! Wraps one or more Vulkan VkImage objects, and associated metadata.
@@ -29,7 +31,7 @@ public:
     size_t count() const { return m_images.size(); }
     const std::vector<VkImage>& get() const { return m_images; }
     VkFormat format() const { return m_format; }
-    VKExtent2D extent() const { return m_extent; }
+    VkExtent2D extent() const { return m_extent; }
     uint32_t width() const { return m_extent.width; }
     uint32_t height() const { return m_extent.height; }
 
