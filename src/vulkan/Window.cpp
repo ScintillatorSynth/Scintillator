@@ -148,6 +148,10 @@ void Window::destroySyncObjects(Device* device) {
     m_inFlightFences.clear();
 }
 
+void Window::destroySwapchain() {
+    m_swapchain->destroy();
+}
+
 void Window::destroy() {
     vkDestroySurfaceKHR(m_instance->get(), m_surface, nullptr);
     glfwDestroyWindow(m_window);

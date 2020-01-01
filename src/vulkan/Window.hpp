@@ -36,6 +36,7 @@ public:
     bool createSyncObjects();
     void run(std::shared_ptr<Compositor> compositor);
     void destroySyncObjects();
+    void destroySwapchain();
     void destroy();
 
     /*! Typically called on another thread, will exit the run() loop on next iteration.

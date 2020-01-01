@@ -145,6 +145,7 @@ int main(int argc, char* argv[]) {
     // ========== Vulkan cleanup.
     window.destroySyncObjects();
     compositor->destroy();
+    window.destroySwapchain();
     device->destroy();
     window.destroy();
     instance->destroy();
