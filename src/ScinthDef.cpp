@@ -6,6 +6,7 @@
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Pipeline.hpp"
 #include "vulkan/ShaderCompiler.hpp"
+#include "vulkan/UniformLayout.hpp"
 
 #include "spdlog/spdlog.h"
 
@@ -32,11 +33,13 @@ bool ScinthDef::build(std::shared_ptr<vk::ShaderCompiler> compiler) {
         return false;
     }
 
-    // Need to build a Uniform from Manifest.
+    if (m_abstractScinthDef->uniformManifest().sizeInBytes()) {
+        m_uniformLayout.reset(new vk::UniformLayout(m_device));
+    }
 
     m_pipeline.reset(new vk::Pipeline(m_device));
-    if (!m_pipeline->create(abstractScinthDef->vertexManifest(), m_vertexShader.get(), m_fragmentShader.get(),
-            m_uniform.get())) {
+    if (!m_pipeline->create(abstractScinthDef->vertexManifest(), abstractScinthDef->shape(), m_vertexShader.get(),
+            m_fragmentShader.get(), m_uniformLayout.get())) {
         spdlog::error("error creating pipeline for ScinthDef {}", m_abstractScinthDef->name());
         return false;
     }

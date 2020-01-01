@@ -16,4 +16,8 @@ uint32_t Quad::numberOfVertices() {
     return 4;
 }
 
+Shape::Topology Quad::topology() {
+    return kTriangleStrip;
+}
+
 } // namespace scin

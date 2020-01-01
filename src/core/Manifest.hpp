@@ -42,11 +42,10 @@ public:
 
     const std::string typeNameForElement(size_t index) const;
 
-    // Things we need to know:
     size_t numberOfElements() const { return m_types.size(); }
     uint32_t sizeInBytes() const { return m_size; }
     // Returns offset in units of bytes.
-    uint32_t offsetForElement(const std::string& name) const { return m_offsets.find(name)->second; }
+    uint32_t offsetForElement(size_t index) const { return m_offsets.find(m_names[index])->second; }
     const std::string& nameForElement(size_t index) const { return m_names[index]; }
     ElementType typeForElement(size_t index) const { return m_types.find(m_names[index])->second; }
 

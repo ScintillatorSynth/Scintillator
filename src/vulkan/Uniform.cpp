@@ -16,6 +16,7 @@ Uniform::Uniform(std::shared_ptr<Device> device, size_t size):
 
 Uniform::~Uniform() {}
 
+// TODO: move to UniformLayout
 bool Uniform::createLayout() {
     VkDescriptorSetLayoutBinding binding = {};
     binding.binding = 0;

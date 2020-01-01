@@ -11,6 +11,7 @@ class Device;
 class Pipeline;
 class Shader;
 class ShaderCompiler;
+class Uniform;
 }
 
 class AbstractScinthDef;
@@ -37,6 +38,7 @@ private:
     std::shared_ptr<const AbstractScinthDef> m_abstractScinthDef;
     std::unique_ptr<vk::Shader> m_vertexShader;
     std::unique_ptr<vk::Shader> m_fragmentShader;
+    std::unique_ptr<vk::Uniform> m_uniform;
     std::unique_ptr<vk::Pipeline> m_pipeline;
 };
 

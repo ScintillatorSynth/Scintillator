@@ -7,7 +7,11 @@
 #include <memory>
 #include <vector>
 
-namespace scin { namespace vk {
+namespace scin {
+
+class Shape;
+
+namespace vk {
 
 class Canvas;
 class Device;
@@ -19,8 +23,8 @@ public:
     Pipeline(std::shared_ptr<Device> device);
     ~Pipeline();
 
-    bool create(Canvas* canvas, const Manifest& vertexManifest, Shader* vertexShader, Shader* fragmentShader,
-            Uniform* uniform);
+    bool create(const Manifest& vertexManifest, const Shape* shape, Canvas* canvas, Shader* vertexShader,
+            Shader* fragmentShader, Uniform* uniform);
     void destroy();
 
     VkPipeline get() { return m_pipeline; }

@@ -53,8 +53,8 @@ bool Compositor::play(const std::string& scinthDefName) {
     return false;
 }
 
-std::vector<std::shared_ptr<vk::CommandBuffer>> buildFrame() {
-    std::vector<std::shared_ptr<vk::CommandBuffer>>> buffers;
+std::vector<std::shared_ptr<vk::CommandBuffer>> Compositor::buildFrame() {
+    std::vector<std::shared_ptr<vk::CommandBuffer>> buffers;
     spdlog::critical("write me");
     return buffers;
 }

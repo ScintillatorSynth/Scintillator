@@ -45,6 +45,7 @@ public:
     const std::string& name() const { return m_name; }
     const VGen& instanceAt(int index) const { return m_instances[index]; }
     size_t numberOfInstances() const { return m_instances.size(); }
+    const Shape* shape() const { return m_shape.get(); }
     const std::unordered_set<Intrinsic> intrinsics() const { return m_intrinsics; }
     const std::string& prefix() const { return m_prefix; }
     const std::string& vertexShader() const { return m_vertexShader; }

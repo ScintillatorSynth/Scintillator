@@ -10,11 +10,6 @@ namespace scin { namespace vk {
 
 class HostBuffer;
 class Device;
-class Swapchain;
-
-struct GlobalUniform {
-    alignas(16) float time;
-};
 
 class Uniform {
 public:
@@ -26,7 +21,7 @@ public:
 
     void destroy();
 
-    VkDescriptorSetLayout* pLayout() { return &m_layout; }
+    VkDescriptorSetLayout* layout() { return &m_layout; }
     std::shared_ptr<HostBuffer> buffer(int index) { return m_buffers[index]; }
     VkDescriptorSet* set(int index) { return &m_sets[index]; }
 

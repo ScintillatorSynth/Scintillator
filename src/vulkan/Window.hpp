@@ -32,7 +32,7 @@ public:
     // aren't rendering to an onscreen window a surface will have to be provided to Device some other way, and perhaps
     // Device will have a different create() function for that context.
     bool create(int width, int height);
-    void createSwapchain(std::shared_ptr<Device> device);
+    bool createSwapchain(std::shared_ptr<Device> device);
     bool createSyncObjects();
     void run(std::shared_ptr<Compositor> compositor);
     void destroySyncObjects();

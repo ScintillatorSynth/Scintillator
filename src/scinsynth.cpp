@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
 
     // ========== Vulkan setup.
     std::shared_ptr<scin::vk::Instance> instance(new scin::vk::Instance());
-    if (!instance->Create()) {
+    if (!instance->create()) {
         spdlog::error("unable to create Vulkan instance.");
         return EXIT_FAILURE;
     }
@@ -124,13 +124,14 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    std::shared_ptr<scin::Compositor> compositor(new scin::Compositor(device, window->canvas()));
+    std::shared_ptr<scin::Compositor> compositor(new scin::Compositor(device, window.canvas()));
     if (!compositor->create()) {
         spdlog::error("unable to create Compositor.");
         return EXIT_FAILURE;
     }
 
-    std::shared_ptr<const AbstractScinthDef> testScinthDef = archetypes->getAbstractScinthDefNamed("TestScinthDef");
+    std::shared_ptr<const scin::AbstractScinthDef> testScinthDef = archetypes->getAbstractScinthDefNamed(
+            "TestScinthDef");
     compositor->buildScinthDef(testScinthDef);
 
     if (!window.createSyncObjects()) {
