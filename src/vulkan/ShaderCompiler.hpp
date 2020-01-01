@@ -49,7 +49,7 @@ public:
      * \return A pointer to the compiled Shader, or nullptr on error.
      */
     std::unique_ptr<Shader> compile(std::shared_ptr<Device> device, const std::string& source, const std::string& name,
-            const std::string& entryPoint, Shader::Kind kind);
+                                    const std::string& entryPoint, Shader::Kind kind);
 
 private:
     shaderc_compiler_t m_compiler;

@@ -5,9 +5,7 @@
 
 #include "spdlog/spdlog.h"
 
-namespace scin {
-
-namespace vk {
+namespace scin { namespace vk {
 
 Canvas::Canvas(std::shared_ptr<Device> device): m_device(device), m_renderPass(VK_NULL_HANDLE) {}
 

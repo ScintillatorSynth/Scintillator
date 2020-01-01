@@ -5,8 +5,7 @@
 
 namespace scin { namespace vk {
 
-CommandPool::CommandPool(std::shared_ptr<Device> device): m_device(device),
-    m_commandPool(VK_NULL_HANDLE) {}
+CommandPool::CommandPool(std::shared_ptr<Device> device): m_device(device), m_commandPool(VK_NULL_HANDLE) {}
 
 CommandPool::~CommandPool() { destroy(); }
 

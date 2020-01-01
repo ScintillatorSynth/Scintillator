@@ -7,7 +7,8 @@
 
 namespace scin { namespace vk {
 
-CommandBuffer::CommandBuffer(const std::shared_ptr<Device> device, CommandPool* commandPool): m_device(device),
+CommandBuffer::CommandBuffer(const std::shared_ptr<Device> device, CommandPool* commandPool):
+    m_device(device),
     m_commandPool(commandPool) {}
 
 CommandBuffer::~CommandBuffer() { destroy(); }

@@ -148,18 +148,14 @@ void Window::destroySyncObjects() {
     m_inFlightFences.clear();
 }
 
-void Window::destroySwapchain() {
-    m_swapchain->destroy();
-}
+void Window::destroySwapchain() { m_swapchain->destroy(); }
 
 void Window::destroy() {
     vkDestroySurfaceKHR(m_instance->get(), m_surface, nullptr);
     glfwDestroyWindow(m_window);
 }
 
-std::shared_ptr<Canvas> Window::canvas() {
-    return m_swapchain->canvas();
-}
+std::shared_ptr<Canvas> Window::canvas() { return m_swapchain->canvas(); }
 
 } // namespace vk
 

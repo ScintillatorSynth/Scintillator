@@ -49,8 +49,8 @@ std::unique_ptr<Shader> ShaderCompiler::compile(std::shared_ptr<Device> device, 
         return std::unique_ptr<Shader>();
     }
 
-    shaderc_compilation_result_t result = shaderc_compile_into_spv(
-        m_compiler, source.data(), source.size(), shaderKind, name.data(), entryPoint.data(), options);
+    shaderc_compilation_result_t result = shaderc_compile_into_spv(m_compiler, source.data(), source.size(), shaderKind,
+                                                                   name.data(), entryPoint.data(), options);
 
     std::unique_ptr<Shader> shader(nullptr);
     shaderc_compilation_status status = shaderc_result_get_compilation_status(result);

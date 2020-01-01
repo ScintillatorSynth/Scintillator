@@ -21,14 +21,15 @@ ScinthDef::~ScinthDef() {}
 
 bool ScinthDef::build(vk::ShaderCompiler* compiler, vk::Canvas* canvas) {
     m_vertexShader = compiler->compile(m_device, m_abstractScinthDef->vertexShader(),
-            m_abstractScinthDef->prefix() + "_vertexShader", "main", vk::Shader::kVertex);
+                                       m_abstractScinthDef->prefix() + "_vertexShader", "main", vk::Shader::kVertex);
     if (!m_vertexShader) {
         spdlog::error("error compiling vertex shader for ScinthDef {}.", m_abstractScinthDef->name());
         return false;
     }
 
-    m_fragmentShader = compiler->compile(m_device, m_abstractScinthDef->fragmentShader(),
-            m_abstractScinthDef->prefix() + "_fragmentShader", "main", vk::Shader::kFragment);
+    m_fragmentShader =
+        compiler->compile(m_device, m_abstractScinthDef->fragmentShader(),
+                          m_abstractScinthDef->prefix() + "_fragmentShader", "main", vk::Shader::kFragment);
     if (!m_fragmentShader) {
         spdlog::error("error compiling fragment shader for ScinthDef {}", m_abstractScinthDef->name());
         return false;
@@ -40,7 +41,7 @@ bool ScinthDef::build(vk::ShaderCompiler* compiler, vk::Canvas* canvas) {
 
     m_pipeline.reset(new vk::Pipeline(m_device));
     if (!m_pipeline->create(m_abstractScinthDef->vertexManifest(), m_abstractScinthDef->shape(), canvas,
-            m_vertexShader.get(), m_fragmentShader.get(), m_uniformLayout.get())) {
+                            m_vertexShader.get(), m_fragmentShader.get(), m_uniformLayout.get())) {
         spdlog::error("error creating pipeline for ScinthDef {}", m_abstractScinthDef->name());
         return false;
     }

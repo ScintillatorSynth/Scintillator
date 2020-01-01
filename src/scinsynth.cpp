@@ -1,4 +1,4 @@
-#include "Compositor.hpp"  // TODO: audit includes
+#include "Compositor.hpp" // TODO: audit includes
 #include "OscHandler.hpp"
 #include "Version.hpp"
 #include "core/FileSystem.hpp"
@@ -68,29 +68,29 @@ int main(int argc, char* argv[]) {
     // Parse any built-in VGens and ScinthDefs first.
     std::shared_ptr<scin::Archetypes> archetypes(new scin::Archetypes());
     //   TODO: do serially for now
-//    auto parseVGens = std::async(std::launch::async, [&archetypes, &quarkPath] {
-        fs::path vgens = quarkPath / "vgens";
-        spdlog::info("Parsing yaml files in {} for AbstractVGens.", vgens.string());
-        for (auto entry : fs::directory_iterator(vgens)) {
-            auto p = entry.path();
-            if (fs::is_regular_file(p) && p.extension() == ".yaml") {
-                spdlog::debug("Parsing AbstractVGen yaml file {}.", p.string());
-                archetypes->loadAbstractVGensFromFile(p.string());
-            }
+    //    auto parseVGens = std::async(std::launch::async, [&archetypes, &quarkPath] {
+    fs::path vgens = quarkPath / "vgens";
+    spdlog::info("Parsing yaml files in {} for AbstractVGens.", vgens.string());
+    for (auto entry : fs::directory_iterator(vgens)) {
+        auto p = entry.path();
+        if (fs::is_regular_file(p) && p.extension() == ".yaml") {
+            spdlog::debug("Parsing AbstractVGen yaml file {}.", p.string());
+            archetypes->loadAbstractVGensFromFile(p.string());
         }
-        spdlog::info("Parsed {} unique VGens.", archetypes->numberOfAbstractVGens());
+    }
+    spdlog::info("Parsed {} unique VGens.", archetypes->numberOfAbstractVGens());
 
-        fs::path scinthDefs = quarkPath / "scinthdefs";
-        spdlog::info("Parsing yaml files in {} for ScinthDefs.", scinthDefs.string());
-        for (auto entry : fs::directory_iterator(scinthDefs)) {
-            auto p = entry.path();
-            if (fs::is_regular_file(p) && p.extension() == ".yaml") {
-                spdlog::debug("Parsing ScinthDef yaml file {}.", p.string());
-                archetypes->loadFromFile(p.string());
-            }
+    fs::path scinthDefs = quarkPath / "scinthdefs";
+    spdlog::info("Parsing yaml files in {} for ScinthDefs.", scinthDefs.string());
+    for (auto entry : fs::directory_iterator(scinthDefs)) {
+        auto p = entry.path();
+        if (fs::is_regular_file(p) && p.extension() == ".yaml") {
+            spdlog::debug("Parsing ScinthDef yaml file {}.", p.string());
+            archetypes->loadFromFile(p.string());
         }
-        spdlog::info("Parsed {} unique ScinthDefs.", archetypes->numberOfAbstractScinthDefs());
-//    });
+    }
+    spdlog::info("Parsed {} unique ScinthDefs.", archetypes->numberOfAbstractScinthDefs());
+    //    });
 
     // Start listening for incoming OSC commands on UDP.
     scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
@@ -130,8 +130,8 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    std::shared_ptr<const scin::AbstractScinthDef> testScinthDef = archetypes->getAbstractScinthDefNamed(
-            "TestScinthDef");
+    std::shared_ptr<const scin::AbstractScinthDef> testScinthDef =
+        archetypes->getAbstractScinthDefNamed("TestScinthDef");
     compositor->buildScinthDef(testScinthDef);
 
     if (!window.createSyncObjects()) {

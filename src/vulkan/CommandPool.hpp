@@ -32,6 +32,7 @@ public:
     std::unique_ptr<CommandBuffer> createBuffers(size_t count);
 
     VkCommandPool get() { return m_commandPool; }
+
 private:
     std::shared_ptr<Device> m_device;
     VkCommandPool m_commandPool;

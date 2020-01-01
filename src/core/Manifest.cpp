@@ -28,21 +28,21 @@ void Manifest::pack() {
 
     for (auto it : m_types) {
         switch (it.second) {
-            case kFloat:
-                floatElements.push_back(it.first);
-                break;
+        case kFloat:
+            floatElements.push_back(it.first);
+            break;
 
-            case kVec2:
-                vec2Elements.push_back(it.first);
-                break;
+        case kVec2:
+            vec2Elements.push_back(it.first);
+            break;
 
-            case kVec3:
-                vec3Elements.push_back(it.first);
-                break;
+        case kVec3:
+            vec3Elements.push_back(it.first);
+            break;
 
-            case kVec4:
-                vec4Elements.push_back(it.first);
-                break;
+        case kVec4:
+            vec4Elements.push_back(it.first);
+            break;
         }
     }
 
@@ -98,17 +98,17 @@ void Manifest::pack() {
 const std::string Manifest::typeNameForElement(size_t index) const {
     ElementType type = typeForElement(index);
     switch (type) {
-        case kFloat:
-            return std::string("float");
+    case kFloat:
+        return std::string("float");
 
-        case kVec2:
-            return std::string("vec2");
+    case kVec2:
+        return std::string("vec2");
 
-        case kVec3:
-            return std::string("vec3");
+    case kVec3:
+        return std::string("vec3");
 
-        case kVec4:
-            return std::string("vec4");
+    case kVec4:
+        return std::string("vec4");
     }
 
     return "unknown type";

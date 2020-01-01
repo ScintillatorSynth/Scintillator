@@ -24,7 +24,7 @@ public:
     ~Pipeline();
 
     bool create(const Manifest& vertexManifest, const Shape* shape, Canvas* canvas, Shader* vertexShader,
-            Shader* fragmentShader, UniformLayout* uniformLayout);
+                Shader* fragmentShader, UniformLayout* uniformLayout);
     void destroy();
 
     VkPipeline get() { return m_pipeline; }

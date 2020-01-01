@@ -6,9 +6,7 @@
 #include <memory>
 #include <vector>
 
-namespace scin {
-
-namespace vk {
+namespace scin { namespace vk {
 
 class Device;
 class Images;

@@ -22,9 +22,7 @@ Device::Device(std::shared_ptr<Instance> instance):
     m_presentFamilyIndex(-1),
     m_device(VK_NULL_HANDLE) {}
 
-Device::~Device() {
-    destroy();
-}
+Device::~Device() { destroy(); }
 
 bool Device::findPhysicalDevice(Window* window) {
     uint32_t deviceCount = 0;
@@ -129,7 +127,7 @@ bool Device::create(Window* window) {
 
     std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
     std::set<uint32_t> unique_queueFamilies = { static_cast<uint32_t>(m_graphicsFamilyIndex),
-                                                 static_cast<uint32_t>(m_presentFamilyIndex) };
+                                                static_cast<uint32_t>(m_presentFamilyIndex) };
 
     float queue_priority = 1.0;
     for (uint32_t queue_family : unique_queueFamilies) {

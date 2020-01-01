@@ -61,8 +61,6 @@ std::vector<std::shared_ptr<vk::CommandBuffer>> Compositor::buildFrame(uint32_t 
 
 void Compositor::releaseCompiler() { m_shaderCompiler->releaseCompiler(); }
 
-void Compositor::destroy() {
-    m_commandPool->destroy();
-}
+void Compositor::destroy() { m_commandPool->destroy(); }
 
 } // namespace scin

@@ -8,10 +8,7 @@
 
 namespace scin { namespace vk {
 
-Uniform::Uniform(std::shared_ptr<Device> device, size_t size):
-    m_device(device),
-    m_size(size),
-    m_pool(VK_NULL_HANDLE) {}
+Uniform::Uniform(std::shared_ptr<Device> device, size_t size): m_device(device), m_size(size), m_pool(VK_NULL_HANDLE) {}
 
 Uniform::~Uniform() {}
 

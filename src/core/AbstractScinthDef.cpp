@@ -15,7 +15,7 @@ namespace scin {
 AbstractScinthDef::AbstractScinthDef(const std::string& name, const std::vector<VGen>& instances):
     m_name(name),
     m_instances(instances),
-    m_shape(new Quad()) { }
+    m_shape(new Quad()) {}
 
 AbstractScinthDef::~AbstractScinthDef() {}
 
@@ -23,10 +23,18 @@ bool AbstractScinthDef::build() {
     std::random_device randomDevice;
     m_prefix = fmt::format("{}_{:8x}", m_name, randomDevice());
 
-    if (!buildNames()) { return false; }
-    if (!buildManifests()) { return false; }
-    if (!buildVertexShader()) { return false; }
-    if (!buildFragmentShader()) { return false; }
+    if (!buildNames()) {
+        return false;
+    }
+    if (!buildManifests()) {
+        return false;
+    }
+    if (!buildVertexShader()) {
+        return false;
+    }
+    if (!buildFragmentShader()) {
+        return false;
+    }
     return true;
 }
 
@@ -117,7 +125,7 @@ bool AbstractScinthDef::buildVertexShader() {
     for (auto i = 0; i < m_vertexManifest.numberOfElements(); ++i) {
         // TODO: hard-coded assumption that all inputs take 1 slot
         m_vertexShader += fmt::format("layout(location = {}) in {} in_{};\n", i, m_vertexManifest.typeNameForElement(i),
-                m_vertexManifest.nameForElement(i));
+                                      m_vertexManifest.nameForElement(i));
     }
 
     m_vertexShader += "\n"
@@ -128,9 +136,11 @@ bool AbstractScinthDef::buildVertexShader() {
     // now we just copy everything to the fragment shader except for the _inPosition, which gets assigned to the
     // keyword gl_Position.
     for (auto i = 0; i < m_vertexManifest.numberOfElements(); ++i) {
-        if (m_vertexManifest.nameForElement(i) == positionName) { continue; }
-        m_vertexShader += fmt::format("layout(location = {}) out {} out_{};\n", i, m_vertexManifest.typeNameForElement(i),
-                m_vertexManifest.nameForElement(i));
+        if (m_vertexManifest.nameForElement(i) == positionName) {
+            continue;
+        }
+        m_vertexShader += fmt::format("layout(location = {}) out {} out_{};\n", i,
+                                      m_vertexManifest.typeNameForElement(i), m_vertexManifest.nameForElement(i));
     }
 
     // TODO: uniform is fragment-only for now.
@@ -142,25 +152,25 @@ bool AbstractScinthDef::buildVertexShader() {
     for (auto i = 0; i < m_vertexManifest.numberOfElements(); ++i) {
         if (m_vertexManifest.nameForElement(i) == positionName) {
             switch (m_vertexManifest.typeForElement(i)) {
-                case Manifest::ElementType::kFloat:
-                    m_vertexShader += fmt::format("    gl_Position = vec4({}, 0.0f, 0.0f, 1.0f);\n", positionName);
-                    break;
+            case Manifest::ElementType::kFloat:
+                m_vertexShader += fmt::format("    gl_Position = vec4({}, 0.0f, 0.0f, 1.0f);\n", positionName);
+                break;
 
-                case Manifest::ElementType::kVec2:
-                    m_vertexShader += fmt::format("    gl_Position = vec4({}, 0.0f, 1.0f);\n", positionName);
-                    break;
+            case Manifest::ElementType::kVec2:
+                m_vertexShader += fmt::format("    gl_Position = vec4({}, 0.0f, 1.0f);\n", positionName);
+                break;
 
-                case Manifest::ElementType::kVec3:
-                    m_vertexShader += fmt::format("    gl_Position = vec4({}, 1.0f);\n", positionName);
-                    break;
+            case Manifest::ElementType::kVec3:
+                m_vertexShader += fmt::format("    gl_Position = vec4({}, 1.0f);\n", positionName);
+                break;
 
-                case Manifest::ElementType::kVec4:
-                    m_vertexShader += fmt::format("    gl_Position = {};\n", positionName);
-                    break;
+            case Manifest::ElementType::kVec4:
+                m_vertexShader += fmt::format("    gl_Position = {};\n", positionName);
+                break;
             }
         } else {
             m_vertexShader += fmt::format("    out_{} = in_{};\n", m_vertexManifest.nameForElement(i),
-                    m_vertexManifest.nameForElement(i));
+                                          m_vertexManifest.nameForElement(i));
         }
     }
 

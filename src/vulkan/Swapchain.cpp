@@ -13,8 +13,12 @@
 
 namespace scin { namespace vk {
 
-Swapchain::Swapchain(std::shared_ptr<Device> device): m_device(device), m_imageCount(0), m_swapchain(VK_NULL_HANDLE),
-    m_images(new Images(device)), m_canvas(new Canvas(device)) {}
+Swapchain::Swapchain(std::shared_ptr<Device> device):
+    m_device(device),
+    m_imageCount(0),
+    m_swapchain(VK_NULL_HANDLE),
+    m_images(new Images(device)),
+    m_canvas(new Canvas(device)) {}
 
 Swapchain::~Swapchain() { destroy(); }
 
@@ -65,7 +69,7 @@ bool Swapchain::create(Window* window) {
     } else {
         m_extent = { static_cast<uint32_t>(window->width()), static_cast<uint32_t>(window->height()) };
         m_extent.width = std::max(capabilities.minImageExtent.width,
-                                 std::min(capabilities.maxImageExtent.width, static_cast<uint32_t>(window->width())));
+                                  std::min(capabilities.maxImageExtent.width, static_cast<uint32_t>(window->width())));
         m_extent.height =
             std::max(capabilities.minImageExtent.height,
                      std::min(capabilities.maxImageExtent.height, static_cast<uint32_t>(window->height())));

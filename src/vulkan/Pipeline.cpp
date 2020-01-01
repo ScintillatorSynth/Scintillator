@@ -16,8 +16,7 @@ Pipeline::Pipeline(std::shared_ptr<Device> device):
 Pipeline::~Pipeline() { destroy(); }
 
 bool Pipeline::create(const Manifest& vertexManifest, const Shape* shape, Canvas* canvas, Shader* vertexShader,
-        Shader* fragmentShader, UniformLayout* uniformLayout) {
-
+                      Shader* fragmentShader, UniformLayout* uniformLayout) {
     VkVertexInputBindingDescription vertexBindingDescription = {};
     vertexBindingDescription.binding = 0;
     vertexBindingDescription.stride = vertexManifest.sizeInBytes();
@@ -44,7 +43,6 @@ bool Pipeline::create(const Manifest& vertexManifest, const Shape* shape, Canvas
         case Manifest::ElementType::kVec4:
             format = VK_FORMAT_R32G32B32A32_SFLOAT;
             break;
-
         }
         vertexAttributes[i].format = format;
         vertexAttributes[i].offset = vertexManifest.offsetForElement(i) / sizeof(float);
