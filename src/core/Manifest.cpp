@@ -48,9 +48,7 @@ void Manifest::pack() {
 
     // Pack elements biggest to smallest.
     for (auto element : vec4Elements) {
-        m_names.push_back(element);
-        m_offsets.insert({ element, m_size });
-        m_size += sizeof(glm::vec4);
+        packElement(element, sizeof(glm::vec4));
     }
 
     if (vec3Elements.size()) {
@@ -59,10 +57,8 @@ void Manifest::pack() {
         if (padding < sizeof(glm::vec3)) {
             // We can pack a vec2 in the padding if there's room and it's aligned.
             if (padding >= sizeof(glm::vec2) && ((m_size % sizeof(glm::vec2)) == 0) && vec2Elements.size()) {
-                m_names.push_back(*vec2Elements.rbegin());
-                m_offsets.insert({ *vec2Elements.rbegin(), m_size });
+                packElement(*vec2Elements.rbegin(), sizeof(glm::vec2));
                 vec2Elements.pop_back();
-                m_size += sizeof(glm::vec2);
                 padding -= sizeof(glm::vec2);
             }
             // See if there's room and available floats to pack in as well (could be as many as two).
@@ -70,9 +66,7 @@ void Manifest::pack() {
             m_size += padding;
         }
         for (auto element : vec3Elements) {
-            m_names.push_back(element);
-            m_offsets.insert({ element, m_size });
-            m_size += sizeof(glm::vec3);
+            packElement(element, sizeof(glm::vec3));
         }
     }
 
@@ -83,15 +77,12 @@ void Manifest::pack() {
             m_size += padding;
         }
         for (auto element : vec2Elements) {
-            m_offsets.insert({ element, m_size });
-            m_size += sizeof(glm::vec2);
+            packElement(element, sizeof(glm::vec2));
         }
     }
 
     for (auto element : floatElements) {
-        m_names.push_back(element);
-        m_offsets.insert({ element, m_size });
-        m_size += sizeof(float);
+        packElement(element, sizeof(float));
     }
 }
 
@@ -116,12 +107,16 @@ const std::string Manifest::typeNameForElement(size_t index) const {
 
 void Manifest::packFloats(uint32_t& padding, std::vector<std::string>& floatElements) {
     while (padding >= sizeof(float) && ((m_size % sizeof(float)) == 0) && floatElements.size()) {
-        m_names.push_back(*floatElements.rbegin());
-        m_offsets.insert({ *floatElements.rbegin(), m_size });
+        packElement(*floatElements.rbegin(), sizeof(float));
         floatElements.pop_back();
-        m_size += sizeof(float);
         padding -= sizeof(float);
     }
+}
+
+void Manifest::packElement(const std::string& name, uint32_t size) {
+    m_names.push_back(name);
+    m_offsets.insert({ name, m_size });
+    m_size += size;
 }
 
 } // namespace scin

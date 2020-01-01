@@ -10,25 +10,22 @@ namespace scin { namespace vk {
 
 class HostBuffer;
 class Device;
+class UniformLayout;
 
 class Uniform {
 public:
-    Uniform(std::shared_ptr<Device> device, size_t size);
+    Uniform(std::shared_ptr<Device> device);
     ~Uniform();
 
-    bool createLayout();
-    bool createBuffers(size_t numberOfImages);
+    bool createBuffers(UniformLayout* layout, size_t size, size_t numberOfImages);
 
     void destroy();
 
-    VkDescriptorSetLayout* layout() { return &m_layout; }
     std::shared_ptr<HostBuffer> buffer(int index) { return m_buffers[index]; }
     VkDescriptorSet* set(int index) { return &m_sets[index]; }
 
 private:
     std::shared_ptr<Device> m_device;
-    size_t m_size;
-    VkDescriptorSetLayout m_layout;
 
     std::vector<std::shared_ptr<HostBuffer>> m_buffers;
     VkDescriptorPool m_pool;

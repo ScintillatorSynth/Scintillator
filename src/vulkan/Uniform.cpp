@@ -3,18 +3,19 @@
 #include "vulkan/Buffer.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Swapchain.hpp"
+#include "vulkan/UniformLayout.hpp"
 
 #include "spdlog/spdlog.h"
 
 namespace scin { namespace vk {
 
-Uniform::Uniform(std::shared_ptr<Device> device, size_t size): m_device(device), m_size(size), m_pool(VK_NULL_HANDLE) {}
+Uniform::Uniform(std::shared_ptr<Device> device): m_device(device), m_pool(VK_NULL_HANDLE) {}
 
 Uniform::~Uniform() {}
 
-bool Uniform::createBuffers(size_t numberOfImages) {
+bool Uniform::createBuffers(UniformLayout* layout, size_t size, size_t numberOfImages) {
     for (auto i = 0; i < numberOfImages; ++i) {
-        std::shared_ptr<HostBuffer> buffer(new HostBuffer(Buffer::Kind::kUniform, m_size, m_device));
+        std::shared_ptr<HostBuffer> buffer(new HostBuffer(Buffer::Kind::kUniform, size, m_device));
         if (!buffer->create()) {
             spdlog::error("error creating uniform buffer");
             return false;
@@ -36,7 +37,7 @@ bool Uniform::createBuffers(size_t numberOfImages) {
         return false;
     }
 
-    std::vector<VkDescriptorSetLayout> layouts(numberOfImages, m_layout);
+    std::vector<VkDescriptorSetLayout> layouts(numberOfImages, layout->get());
     VkDescriptorSetAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfo.descriptorPool = m_pool;
@@ -53,7 +54,7 @@ bool Uniform::createBuffers(size_t numberOfImages) {
         VkDescriptorBufferInfo bufferInfo = {};
         bufferInfo.buffer = m_buffers[i]->buffer();
         bufferInfo.offset = 0;
-        bufferInfo.range = m_size;
+        bufferInfo.range = size;
 
         VkWriteDescriptorSet write = {};
         write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
