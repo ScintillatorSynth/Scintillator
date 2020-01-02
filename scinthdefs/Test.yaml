@@ -38,7 +38,7 @@ vgens:
           - type: vgen
             dimension: 1
             vgenIndex: 2
-            outputIndex 0
+            outputIndex: 0
       outputs:
         - dimension: 4
 

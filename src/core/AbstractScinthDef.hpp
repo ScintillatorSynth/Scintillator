@@ -52,6 +52,7 @@ public:
     const std::string& fragmentShader() const { return m_fragmentShader; }
     const Manifest& vertexManifest() const { return m_vertexManifest; }
     const Manifest& uniformManifest() const { return m_uniformManifest; }
+    const std::string& vertexPositionElementName() const { return m_vertexPositionElementName; }
 
 private:
     bool buildNames();
@@ -71,6 +72,7 @@ private:
     std::string m_fragmentShader;
     Manifest m_vertexManifest;
     Manifest m_uniformManifest;
+    std::string m_vertexPositionElementName;
 };
 
 } // namespace scin

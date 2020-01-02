@@ -5,18 +5,19 @@
 
 namespace scin {
 
+class AbstractScinthDef;
+class Scinth;
+
 namespace vk {
 class Canvas;
 class CommandPool;
 class Device;
+class HostBuffer;
 class Pipeline;
 class Shader;
 class ShaderCompiler;
 class UniformLayout;
 }
-
-class AbstractScinthDef;
-class Scinth;
 
 /*! A ScinthDef encapsulates all of the graphics state that can be reused across individual instances of Scinths.
  */
@@ -38,11 +39,15 @@ public:
     std::unique_ptr<Scinth> play(std::shared_ptr<vk::CommandPool> commandPool);
 
 private:
+    bool buildVertexData(vk::Canvas* canvas);
+
     std::shared_ptr<vk::Device> m_device;
     std::shared_ptr<const AbstractScinthDef> m_abstractScinthDef;
+    std::unique_ptr<vk::HostBuffer> m_vertexBuffer;
+    std::unique_ptr<vk::HostBuffer> m_indexBuffer;
     std::unique_ptr<vk::Shader> m_vertexShader;
     std::unique_ptr<vk::Shader> m_fragmentShader;
-    std::unique_ptr<vk::UniformLayout> m_uniformLayout; // TODO - generic enough could move to compositor?
+    std::unique_ptr<vk::UniformLayout> m_uniformLayout;
     std::unique_ptr<vk::Pipeline> m_pipeline;
 };
 

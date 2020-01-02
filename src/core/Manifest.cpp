@@ -9,13 +9,14 @@ Manifest::Manifest(): m_size(0) {}
 
 Manifest::~Manifest() {}
 
-bool Manifest::addElement(const std::string& name, ElementType type) {
+bool Manifest::addElement(const std::string& name, ElementType type, Intrinsic intrinsic) {
     if (m_types.find(name) != m_types.end()) {
         spdlog::error("duplicate addition to Manifest of {}", name);
         return false;
     }
 
     m_types.insert({ name, type });
+    m_intrinsics.insert({ name, intrinsic });
     return true;
 }
 
@@ -103,6 +104,13 @@ const std::string Manifest::typeNameForElement(size_t index) const {
     }
 
     return "unknown type";
+}
+
+uint32_t Manifest::strideForElement(size_t index) const {
+    if (index == m_names.size() - 1) {
+        return m_size - offsetForElement(index);
+    }
+    return offsetForElement(index + 1) - offsetForElement(index);
 }
 
 void Manifest::packFloats(uint32_t& padding, std::vector<std::string>& floatElements) {

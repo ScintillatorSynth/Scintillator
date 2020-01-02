@@ -90,17 +90,23 @@ bool AbstractScinthDef::buildNames() {
 
 bool AbstractScinthDef::buildManifests() {
     // At minimum the vertex manifest must have the position data from the associated Shape.
-    m_vertexManifest.addElement(m_prefix + "_inPosition", m_shape->elementType());
+    m_vertexPositionElementName = m_prefix + "_inPosition";
+    m_vertexManifest.addElement(m_vertexPositionElementName, m_shape->elementType());
 
     // Other Intrinsics have manifest dependencies, process each in turn.
     for (Intrinsic intrinsic : m_intrinsics) {
         switch (intrinsic) {
         case kNormPos:
-            m_vertexManifest.addElement(m_prefix + "_normPos", Manifest::ElementType::kVec2);
+            // Double-check that this a 2D shape, normpos only works for 2D vertices.
+            if (m_shape->elementType() != Manifest::ElementType::kVec2) {
+                spdlog::error("normpos intrinsic only supported for 2D shapes in ScinthDef {}.", m_name);
+                return false;
+            }
+            m_vertexManifest.addElement(m_prefix + "_normPos", Manifest::ElementType::kVec2, Intrinsic::kNormPos);
             break;
 
         case kTime:
-            m_uniformManifest.addElement("time", Manifest::ElementType::kFloat);
+            m_uniformManifest.addElement("time", Manifest::ElementType::kFloat, Intrinsic::kTime);
             break;
 
         default:
@@ -131,12 +137,11 @@ bool AbstractScinthDef::buildVertexShader() {
     m_vertexShader += "\n"
                       "// --- vertex shader outputs\n";
 
-    std::string positionName = m_prefix + "_inPosition";
     // Now produce the vertex shader outputs. TODO: allowing vertex shader VGens will require more data here. But for
     // now we just copy everything to the fragment shader except for the _inPosition, which gets assigned to the
     // keyword gl_Position.
     for (auto i = 0; i < m_vertexManifest.numberOfElements(); ++i) {
-        if (m_vertexManifest.nameForElement(i) == positionName) {
+        if (m_vertexManifest.nameForElement(i) == m_vertexPositionElementName) {
             continue;
         }
         m_vertexShader += fmt::format("layout(location = {}) out {} out_{};\n", i,
@@ -150,22 +155,23 @@ bool AbstractScinthDef::buildVertexShader() {
 
     // Assign all input elements to their respective output elements.
     for (auto i = 0; i < m_vertexManifest.numberOfElements(); ++i) {
-        if (m_vertexManifest.nameForElement(i) == positionName) {
+        if (m_vertexManifest.nameForElement(i) == m_vertexPositionElementName) {
             switch (m_vertexManifest.typeForElement(i)) {
             case Manifest::ElementType::kFloat:
-                m_vertexShader += fmt::format("    gl_Position = vec4({}, 0.0f, 0.0f, 1.0f);\n", positionName);
+                m_vertexShader +=
+                    fmt::format("    gl_Position = vec4({}, 0.0f, 0.0f, 1.0f);\n", m_vertexPositionElementName);
                 break;
 
             case Manifest::ElementType::kVec2:
-                m_vertexShader += fmt::format("    gl_Position = vec4({}, 0.0f, 1.0f);\n", positionName);
+                m_vertexShader += fmt::format("    gl_Position = vec4({}, 0.0f, 1.0f);\n", m_vertexPositionElementName);
                 break;
 
             case Manifest::ElementType::kVec3:
-                m_vertexShader += fmt::format("    gl_Position = vec4({}, 1.0f);\n", positionName);
+                m_vertexShader += fmt::format("    gl_Position = vec4({}, 1.0f);\n", m_vertexPositionElementName);
                 break;
 
             case Manifest::ElementType::kVec4:
-                m_vertexShader += fmt::format("    gl_Position = {};\n", positionName);
+                m_vertexShader += fmt::format("    gl_Position = {};\n", m_vertexPositionElementName);
                 break;
             }
         } else {

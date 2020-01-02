@@ -67,11 +67,11 @@ std::vector<YAML::Node> Archetypes::parseYAMLFile(const std::string& fileName) {
     std::vector<YAML::Node> nodes;
     try {
         nodes = YAML::LoadAllFromFile(fileName);
-    } catch (const YAML::ParserException&) {
-        spdlog::error("error parsing yaml file {}", fileName);
+    } catch (const YAML::ParserException& e) {
+        spdlog::error("error parsing yaml file {}: {}", fileName, e.what());
         return std::vector<YAML::Node>();
-    } catch (const YAML::BadFile&) {
-        spdlog::error("bad yaml file {}", fileName);
+    } catch (const YAML::BadFile& e) {
+        spdlog::error("bad yaml file {}: {}", fileName, e.what());
         return std::vector<YAML::Node>();
     }
     return nodes;
@@ -81,13 +81,12 @@ std::vector<YAML::Node> Archetypes::parseYAMLString(const std::string& yaml) {
     std::vector<YAML::Node> nodes;
     try {
         nodes = YAML::LoadAll(yaml);
-    } catch (const YAML::ParserException&) {
-        spdlog::error("error parsing yaml string {}", yaml);
+    } catch (const YAML::ParserException& e) {
+        spdlog::error("error parsing yaml string {}: {}", yaml, e.what());
         return std::vector<YAML::Node>();
     }
     return nodes;
 }
-
 
 std::vector<std::shared_ptr<const AbstractScinthDef>>
 Archetypes::extractFromNodes(const std::vector<YAML::Node>& nodes) {
