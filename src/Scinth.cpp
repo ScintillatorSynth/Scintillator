@@ -1,6 +1,8 @@
 #include "Scinth.hpp"
 
+#include "core/AbstractScinthDef.hpp"
 #include "core/Shape.hpp"
+#include "core/VGen.hpp"
 #include "vulkan/Canvas.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
@@ -12,13 +14,30 @@
 
 namespace scin {
 
-Scinth::Scinth(const std::string& name): m_name(name) {}
+Scinth::Scinth(std::shared_ptr<vk::Device> device, const std::string& name,
+               std::shared_ptr<const AbstractScinthDef> abstractScinthDef):
+    m_device(device),
+    m_name(name),
+    m_abstractScinthDef(abstractScinthDef) {}
 
 Scinth::~Scinth() {}
 
-// could be called multiple times? like with parameter change?
-bool Scinth::build(vk::CommandPool* commandPool, vk::Canvas* canvas, vk::Buffer* vertexBuffer, vk::Buffer* indexBuffer,
-                   vk::Pipeline* pipeline, vk::Uniform* uniform, Shape* shape) {
+bool Scinth::create(const TimePoint& startTime, vk::UniformLayout* uniformLayout, size_t numberOfImages) {
+    m_startTime = startTime;
+    if (uniformLayout) {
+        m_uniform.reset(new vk::Uniform(m_device));
+        if (!m_uniform->createBuffers(uniformLayout, m_abstractScinthDef->uniformManifest().sizeInBytes(),
+                                      numberOfImages)) {
+            spdlog::error("failed creating uniform buffers for Scinth {}", m_name);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool Scinth::buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, vk::Buffer* vertexBuffer,
+                          vk::Buffer* indexBuffer, vk::Pipeline* pipeline) {
     m_commands = commandPool->createBuffers(canvas->numberOfImages());
     if (!m_commands) {
         spdlog::error("failed creating command buffers for Scinth {}", m_name);
@@ -50,12 +69,12 @@ bool Scinth::build(vk::CommandPool* commandPool, vk::Canvas* canvas, vk::Buffer*
         vkCmdBindVertexBuffers(m_commands->buffer(i), 0, 1, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(m_commands->buffer(i), indexBuffer->buffer(), 0, VK_INDEX_TYPE_UINT16);
 
-        if (uniform) {
+        if (m_uniform) {
             vkCmdBindDescriptorSets(m_commands->buffer(i), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->layout(), 0, 1,
-                                    uniform->set(i), 0, nullptr);
+                                    m_uniform->set(i), 0, nullptr);
         }
 
-        vkCmdDrawIndexed(m_commands->buffer(i), shape->numberOfIndices(), 1, 0, 0, 0);
+        vkCmdDrawIndexed(m_commands->buffer(i), m_abstractScinthDef->shape()->numberOfIndices(), 1, 0, 0, 0);
         vkCmdEndRenderPass(m_commands->buffer(i));
         if (vkEndCommandBuffer(m_commands->buffer(i)) != VK_SUCCESS) {
             spdlog::error("failed ending command buffer {} for Scinth {}", i, m_name);
@@ -64,6 +83,36 @@ bool Scinth::build(vk::CommandPool* commandPool, vk::Canvas* canvas, vk::Buffer*
     }
 
     return true;
+}
+
+std::shared_ptr<vk::CommandBuffer> Scinth::buildFrame(size_t imageIndex, const TimePoint& frameTime) {
+    // Update the Uniform buffer at imageIndex, if needed.
+    if (m_uniform) {
+        std::unique_ptr<float[]> uniformData(
+            new float[m_abstractScinthDef->uniformManifest().sizeInBytes() / sizeof(float)]);
+        float* uniform = uniformData.get();
+        for (auto i = 0; i < m_abstractScinthDef->uniformManifest().numberOfElements(); ++i) {
+            switch (m_abstractScinthDef->uniformManifest().intrinsicForElement(i)) {
+            case kNormPos:
+                spdlog::error("normPos is not a valid intrinsic for a Uniform in Scinth {}", m_name);
+                return nullptr;
+
+            case kTime:
+                *uniform = std::chrono::duration<float, std::chrono::seconds::period>(frameTime - m_startTime).count();
+                break;
+
+            case kNotFound:
+                spdlog::error("unknown uniform Intrinsic in Scinth {}", m_name);
+                return nullptr;
+            }
+
+            uniform += (m_abstractScinthDef->uniformManifest().strideForElement(i) / sizeof(float));
+        }
+
+        m_uniform->buffer(imageIndex)->copyToGPU(uniformData.get());
+    }
+
+    return m_commands;
 }
 
 } // namespace scin

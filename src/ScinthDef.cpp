@@ -118,7 +118,7 @@ bool ScinthDef::buildVertexData(vk::Canvas* canvas) {
             }
 
             // Advance vertex pointer to next element.
-            vertex += (m_abstractScinthDef->vertexManifest().strideForElement(j) / 4);
+            vertex += (m_abstractScinthDef->vertexManifest().strideForElement(j) / sizeof(float));
         }
     }
 
