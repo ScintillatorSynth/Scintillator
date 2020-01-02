@@ -13,10 +13,11 @@ Canvas::~Canvas() { destroy(); }
 
 bool Canvas::create(Images* images) {
     m_extent = images->extent();
+    m_numberOfImages = images->count();
 
     // Create vkImageViews, one per image.
-    m_imageViews.resize(images->count());
-    for (auto i = 0; i < images->count(); ++i) {
+    m_imageViews.resize(m_numberOfImages);
+    for (auto i = 0; i < m_numberOfImages; ++i) {
         VkImageViewCreateInfo viewCreateInfo = {};
         viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         viewCreateInfo.image = images->get()[i];
@@ -80,8 +81,8 @@ bool Canvas::create(Images* images) {
     }
 
     // Lastly create the Framebuffers, one per image.
-    m_framebuffers.resize(images->count());
-    for (auto i = 0; i < images->count(); ++i) {
+    m_framebuffers.resize(m_numberOfImages);
+    for (auto i = 0; i < m_numberOfImages; ++i) {
         VkImageView attachments[] = { m_imageViews[i] };
 
         VkFramebufferCreateInfo framebufferInfo = {};

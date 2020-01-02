@@ -29,7 +29,7 @@ public:
      * \param count The number of buffers to allocate.
      * \return The CommandBuffer object, or nullptr on error.
      */
-    std::unique_ptr<CommandBuffer> createBuffers(size_t count);
+    std::shared_ptr<CommandBuffer> createBuffers(size_t count);
 
     VkCommandPool get() { return m_commandPool; }
 

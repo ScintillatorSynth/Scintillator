@@ -26,9 +26,8 @@ uint32_t Quad::numberOfIndices() const { return quadIndices.size(); }
 Shape::Topology Quad::topology() const { return kTriangleStrip; }
 
 size_t Quad::storeVertexAtIndex(uint32_t index, float* store) const {
-    *store = quadVertices[index].x;
-    ++store;
-    *store = quadVertices[index].y;
+    store[0] = quadVertices[index].x;
+    store[1] = quadVertices[index].y;
     return 2;
 }
 

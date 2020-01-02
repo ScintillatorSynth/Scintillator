@@ -1,6 +1,7 @@
 #ifndef SRC_COMPOSITOR_HPP_
 #define SRC_COMPOSITOR_HPP_
 
+#include <forward_list>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -18,6 +19,7 @@ class ShaderCompiler;
 } // namespace vk
 
 class AbstractScinthDef;
+class Scinth;
 class ScinthDef;
 
 /*! A Compositor keeps the ScinthDef instance dictionary as well as all running Scinths. It can render to a supplied
@@ -33,7 +35,7 @@ public:
 
     bool buildScinthDef(std::shared_ptr<const AbstractScinthDef> abstractScinthDef);
 
-    bool play(const std::string& scinthDefName);
+    bool play(const std::string& scinthDefName, const std::string& scinthName);
 
     /*! Prepare and return a set of CommandBuffers that when executed in order will render the current frame.
      *
@@ -61,8 +63,15 @@ private:
     std::unique_ptr<vk::ShaderCompiler> m_shaderCompiler;
     std::unique_ptr<vk::CommandPool> m_commandPool;
 
-    std::mutex m_mutex;
-    std::unordered_map<std::string, std::unique_ptr<const ScinthDef>> m_scinthDefs;
+    std::mutex m_scinthDefMutex;
+    std::unordered_map<std::string, std::shared_ptr<const ScinthDef>> m_scinthDefs;
+
+    // Protects m_scinths and m_scinthMap.
+    std::mutex m_scinthMutex;
+    // A list, in order of evaluation, of all currently running Scinths.
+    std::forward_list<std::shared_ptr<Scinth>> m_scinths;
+    // A map from Scinth instance names to elements in the running instance list.
+    std::unordered_map<std::string, std::forward_list<std::shared_ptr<Scinth>>::iterator> m_scinthMap;
 };
 
 } // namespace scin

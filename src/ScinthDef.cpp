@@ -89,6 +89,7 @@ bool ScinthDef::buildVertexData(vk::Canvas* canvas) {
     // Build the vertex data based on the manifest and the shape.
     size_t numberOfFloats = m_abstractScinthDef->shape()->numberOfVertices()
         * (m_abstractScinthDef->vertexManifest().sizeInBytes() / sizeof(float));
+    // TODO: memalign on vec4?
     std::unique_ptr<float[]> vertexData(new float[numberOfFloats]);
     float* vertex = vertexData.get();
     for (auto i = 0; i < m_abstractScinthDef->shape()->numberOfVertices(); ++i) {
@@ -137,6 +138,7 @@ bool ScinthDef::buildVertexData(vk::Canvas* canvas) {
         return false;
     }
     m_indexBuffer->copyToGPU(m_abstractScinthDef->shape()->getIndices());
+    // TODO: investigate if device-only copies of these buffers are faster?
 
     return true;
 }

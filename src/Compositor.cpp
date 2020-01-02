@@ -1,5 +1,6 @@
 #include "Compositor.hpp"
 
+#include "Scinth.hpp"
 #include "ScinthDef.hpp"
 #include "core/AbstractScinthDef.hpp"
 #include "core/VGen.hpp"
@@ -35,27 +36,33 @@ bool Compositor::create() {
 }
 
 bool Compositor::buildScinthDef(std::shared_ptr<const AbstractScinthDef> abstractScinthDef) {
-    std::unique_ptr<ScinthDef> scinthDef(new ScinthDef(m_device, abstractScinthDef));
+    std::shared_ptr<ScinthDef> scinthDef(new ScinthDef(m_device, abstractScinthDef));
     if (!scinthDef->build(m_shaderCompiler.get(), m_canvas.get())) {
         return false;
     }
 
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
+        std::lock_guard<std::mutex> lock(m_scinthDefMutex);
         m_scinthDefs.insert_or_assign(abstractScinthDef->name(), std::move(scinthDef));
     }
 
     return true;
 }
 
-bool Compositor::play(const std::string& scinthDefName) {
+bool Compositor::play(const std::string& scinthDefName, const std::string& scinthName) {
+    std::shared_ptr<const ScinthDef> scinthDef;
+    { std::lock_guard<std::mutex> lock(m_scinthDefMutex); }
+
     spdlog::critical("write me");
     return false;
 }
 
 std::vector<std::shared_ptr<vk::CommandBuffer>> Compositor::buildFrame(uint32_t imageIndex) {
+    // TODO: clearColor is a command buffer argument. Opacity culling.
     std::vector<std::shared_ptr<vk::CommandBuffer>> buffers;
     spdlog::critical("write me");
+
+
     return buffers;
 }
 

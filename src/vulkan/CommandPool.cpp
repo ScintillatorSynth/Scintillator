@@ -24,8 +24,8 @@ void CommandPool::destroy() {
     }
 }
 
-std::unique_ptr<CommandBuffer> CommandPool::createBuffers(size_t count) {
-    std::unique_ptr<CommandBuffer> commandBuffer(new CommandBuffer(m_device, this));
+std::shared_ptr<CommandBuffer> CommandPool::createBuffers(size_t count) {
+    std::shared_ptr<CommandBuffer> commandBuffer(new CommandBuffer(m_device, this));
     if (!commandBuffer->create(count)) {
         return nullptr;
     }
