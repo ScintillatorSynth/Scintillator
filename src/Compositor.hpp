@@ -79,7 +79,7 @@ private:
     glm::vec3 m_clearColor;
 
     std::unique_ptr<vk::ShaderCompiler> m_shaderCompiler;
-    std::unique_ptr<vk::CommandPool> m_commandPool;
+    std::shared_ptr<vk::CommandPool> m_commandPool;
     std::atomic<bool> m_commandBufferDirty;
 
     std::mutex m_scinthDefMutex;

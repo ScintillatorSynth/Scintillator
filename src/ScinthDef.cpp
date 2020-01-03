@@ -20,9 +20,11 @@
 namespace scin {
 
 ScinthDef::ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Canvas> canvas,
+                     std::shared_ptr<vk::CommandPool> commandPool,
                      std::shared_ptr<const AbstractScinthDef> abstractScinthDef):
     m_device(device),
     m_canvas(canvas),
+    m_commandPool(commandPool),
     m_abstractScinthDef(abstractScinthDef) {}
 
 ScinthDef::~ScinthDef() {}
@@ -53,6 +55,10 @@ bool ScinthDef::build(vk::ShaderCompiler* compiler) {
 
     if (m_abstractScinthDef->uniformManifest().sizeInBytes()) {
         m_uniformLayout.reset(new vk::UniformLayout(m_device));
+        if (!m_uniformLayout->create()) {
+            spdlog::error("failed creating uniform layout for ScinthDef {}", m_abstractScinthDef->name());
+            return false;
+        }
     }
 
     m_pipeline.reset(new vk::Pipeline(m_device));
@@ -69,6 +75,12 @@ std::unique_ptr<Scinth> ScinthDef::play(const std::string& scinthName, const Tim
     std::unique_ptr<Scinth> scinth(new Scinth(m_device, scinthName, m_abstractScinthDef));
     if (!scinth->create(startTime, m_uniformLayout.get(), m_canvas->numberOfImages())) {
         spdlog::error("failed to create Scinth {} from ScinthDef {}", scinthName, m_abstractScinthDef->name());
+        return nullptr;
+    }
+    if (!scinth->buildBuffers(m_commandPool.get(), m_canvas.get(), m_vertexBuffer.get(), m_indexBuffer.get(),
+                              m_pipeline.get())) {
+        spdlog::error("failed to build command buffers on Scinth {} from ScinthDef {}", scinthName,
+                      m_abstractScinthDef->name());
         return nullptr;
     }
     return scinth;
@@ -95,7 +107,7 @@ bool ScinthDef::buildVertexData() {
     // Build the vertex data based on the manifest and the shape.
     size_t numberOfFloats = m_abstractScinthDef->shape()->numberOfVertices()
         * (m_abstractScinthDef->vertexManifest().sizeInBytes() / sizeof(float));
-    // TODO: memalign on vec4?
+    // TODO: memalign or std::align?
     std::unique_ptr<float[]> vertexData(new float[numberOfFloats]);
     float* vertex = vertexData.get();
     for (auto i = 0; i < m_abstractScinthDef->shape()->numberOfVertices(); ++i) {
@@ -103,13 +115,13 @@ bool ScinthDef::buildVertexData() {
             // If this is the Shape position vertex data get from the Shape, otherwise build from Intrinsics.
             if (m_abstractScinthDef->vertexManifest().nameForElement(j)
                 == m_abstractScinthDef->vertexPositionElementName()) {
-                m_abstractScinthDef->shape()->storeVertexAtIndex(j, vertex);
+                m_abstractScinthDef->shape()->storeVertexAtIndex(i, vertex);
             } else {
                 switch (m_abstractScinthDef->vertexManifest().intrinsicForElement(j)) {
                 case kNormPos: { // TODO: would it be faster/easier to just provide normPosScale in UBO and do this on
                                  // the vertex shader?
                     std::array<float, 2> verts;
-                    m_abstractScinthDef->shape()->storeVertexAtIndex(j, verts.data());
+                    m_abstractScinthDef->shape()->storeVertexAtIndex(i, verts.data());
                     vertex[0] = verts[0] * normPosScale.x;
                     vertex[1] = verts[1] * normPosScale.y;
                 } break;
@@ -135,6 +147,8 @@ bool ScinthDef::buildVertexData() {
         spdlog::error("error creating vertex buffer for ScinthDef {}", m_abstractScinthDef->name());
         return false;
     }
+    spdlog::info("copying {} bytes of vertex data to GPU for ScinthDef {}", m_vertexBuffer->size(),
+                 m_abstractScinthDef->name());
     m_vertexBuffer->copyToGPU(vertexData.get());
 
     // Lastly, copy the index buffer as well.
@@ -144,9 +158,10 @@ bool ScinthDef::buildVertexData() {
         spdlog::error("error creating index buffer for ScinthDef {}", m_abstractScinthDef->name());
         return false;
     }
+    spdlog::info("copying {} bytes of index data to GPU for ScinthDef {}", m_indexBuffer->size(),
+                 m_abstractScinthDef->name());
     m_indexBuffer->copyToGPU(m_abstractScinthDef->shape()->getIndices());
     // TODO: investigate if device-only copies of these buffers are faster?
-
     return true;
 }
 

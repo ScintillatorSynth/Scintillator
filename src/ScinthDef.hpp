@@ -26,7 +26,7 @@ class UniformLayout;
 class ScinthDef {
 public:
     ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Canvas> canvas,
-              std::shared_ptr<const AbstractScinthDef> abstractScinthDef);
+              std::shared_ptr<vk::CommandPool> commandPool, std::shared_ptr<const AbstractScinthDef> abstractScinthDef);
     ~ScinthDef();
 
     /*! Given the AbstractScinthDef, build the Vulkan objects that can be re-used across all running Scinth instances
@@ -48,6 +48,7 @@ private:
 
     std::shared_ptr<vk::Device> m_device;
     std::shared_ptr<vk::Canvas> m_canvas;
+    std::shared_ptr<vk::CommandPool> m_commandPool;
     std::shared_ptr<const AbstractScinthDef> m_abstractScinthDef;
     std::unique_ptr<vk::HostBuffer> m_vertexBuffer;
     std::unique_ptr<vk::HostBuffer> m_indexBuffer;

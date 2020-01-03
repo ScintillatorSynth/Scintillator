@@ -52,7 +52,7 @@ bool Scinth::buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, vk::
         VkCommandBufferInheritanceInfo inheritanceInfo = {};
         inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
         inheritanceInfo.renderPass = canvas->renderPass();
-        inheritanceInfo.subpass = 0; // TODO: alpha-blended Scinths might need their own subpasses?
+        inheritanceInfo.subpass = 0;
         inheritanceInfo.framebuffer = canvas->framebuffer(i);
         beginInfo.pInheritanceInfo = &inheritanceInfo;
 

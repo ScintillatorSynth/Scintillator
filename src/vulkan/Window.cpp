@@ -127,6 +127,7 @@ void Window::run(std::shared_ptr<Compositor> compositor) {
     }
 
     vkDeviceWaitIdle(m_device->get());
+    m_commandBuffers.clear();
 }
 
 void Window::destroySyncObjects() {

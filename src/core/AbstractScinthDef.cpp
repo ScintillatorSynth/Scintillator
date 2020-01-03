@@ -188,7 +188,7 @@ bool AbstractScinthDef::buildVertexShader() {
     }
 
     m_vertexShader += "}\n";
-    spdlog::info("vertex shader: {} \n", m_vertexShader);
+    spdlog::info("vertex shader:\n{}", m_vertexShader);
     return true;
 }
 
@@ -244,7 +244,7 @@ bool AbstractScinthDef::buildFragmentShader() {
         m_fragmentShader += fmt::format("}} {}_ubo;\n", m_prefix);
     }
 
-    // Hard-coded one output which is color.
+    // Hard-coded single output which is color.
     m_fragmentShader += fmt::format("\nlayout(location = 0) out vec4 {};\n", m_fragmentOutputName);
 
     m_fragmentShader += "\n"
@@ -261,7 +261,7 @@ bool AbstractScinthDef::buildFragmentShader() {
 
     m_fragmentShader += "}\n";
 
-    spdlog::info("fragment shader: {}\n", m_fragmentShader);
+    spdlog::info("fragment shader:\n{}", m_fragmentShader);
     return true;
 }
 

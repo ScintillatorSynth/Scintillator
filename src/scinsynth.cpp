@@ -20,6 +20,7 @@
 #include "glm/glm.hpp"
 #include "spdlog/spdlog.h"
 
+#include <chrono>
 #include <future>
 #include <memory>
 #include <vector>
@@ -133,6 +134,7 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<const scin::AbstractScinthDef> testScinthDef =
         archetypes->getAbstractScinthDefNamed("TestScinthDef");
     compositor->buildScinthDef(testScinthDef);
+    compositor->play("TestScinthDef", "t1", std::chrono::high_resolution_clock::now());
 
     if (!window.createSyncObjects()) {
         spdlog::error("error creating device semaphores.");

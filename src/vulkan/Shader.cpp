@@ -21,7 +21,7 @@ bool Shader::create(const char* spvBytes, size_t byteSize) {
 }
 
 void Shader::destroy() {
-    if (m_shaderModule == VK_NULL_HANDLE) {
+    if (m_shaderModule != VK_NULL_HANDLE) {
         vkDestroyShaderModule(m_device->get(), m_shaderModule, nullptr);
         m_shaderModule = VK_NULL_HANDLE;
     }

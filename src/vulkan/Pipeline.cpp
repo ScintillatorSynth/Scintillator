@@ -45,7 +45,7 @@ bool Pipeline::create(const Manifest& vertexManifest, const Shape* shape, Canvas
             break;
         }
         vertexAttributes[i].format = format;
-        vertexAttributes[i].offset = vertexManifest.offsetForElement(i) / sizeof(float);
+        vertexAttributes[i].offset = vertexManifest.offsetForElement(i);
     }
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};

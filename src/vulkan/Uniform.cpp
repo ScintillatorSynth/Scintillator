@@ -11,7 +11,7 @@ namespace scin { namespace vk {
 
 Uniform::Uniform(std::shared_ptr<Device> device): m_device(device), m_pool(VK_NULL_HANDLE) {}
 
-Uniform::~Uniform() {}
+Uniform::~Uniform() { destroy(); }
 
 bool Uniform::createBuffers(UniformLayout* layout, size_t size, size_t numberOfImages) {
     for (auto i = 0; i < numberOfImages; ++i) {
@@ -74,7 +74,10 @@ bool Uniform::createBuffers(UniformLayout* layout, size_t size, size_t numberOfI
 
 void Uniform::destroy() {
     m_buffers.clear();
-    vkDestroyDescriptorPool(m_device->get(), m_pool, nullptr);
+    if (m_pool != VK_NULL_HANDLE) {
+        vkDestroyDescriptorPool(m_device->get(), m_pool, nullptr);
+        m_pool = VK_NULL_HANDLE;
+    }
 }
 
 } // namespace vk

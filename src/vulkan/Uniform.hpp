@@ -18,7 +18,6 @@ public:
     ~Uniform();
 
     bool createBuffers(UniformLayout* layout, size_t size, size_t numberOfImages);
-
     void destroy();
 
     std::shared_ptr<HostBuffer> buffer(int index) { return m_buffers[index]; }

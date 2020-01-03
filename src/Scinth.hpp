@@ -55,6 +55,8 @@ public:
      */
     bool prepareFrame(size_t imageIndex, const TimePoint& frameTime);
 
+    std::shared_ptr<vk::CommandBuffer> frameCommands() { return m_commands; }
+
 private:
     std::shared_ptr<vk::Device> m_device;
     std::string m_name;

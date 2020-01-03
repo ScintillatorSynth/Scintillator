@@ -16,7 +16,7 @@ namespace scin {
 Compositor::Compositor(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Canvas> canvas):
     m_device(device),
     m_canvas(canvas),
-    m_clearColor(1.0, 1.0, 1.0),
+    m_clearColor(0.0f, 0.0f, 0.0f),
     m_shaderCompiler(new scin::vk::ShaderCompiler()),
     m_commandPool(new scin::vk::CommandPool(device)),
     m_commandBufferDirty(true) {
@@ -41,7 +41,7 @@ bool Compositor::create() {
 }
 
 bool Compositor::buildScinthDef(std::shared_ptr<const AbstractScinthDef> abstractScinthDef) {
-    std::shared_ptr<ScinthDef> scinthDef(new ScinthDef(m_device, m_canvas, abstractScinthDef));
+    std::shared_ptr<ScinthDef> scinthDef(new ScinthDef(m_device, m_canvas, m_commandPool, abstractScinthDef));
     if (!scinthDef->build(m_shaderCompiler.get())) {
         return false;
     }
@@ -92,12 +92,18 @@ bool Compositor::play(const std::string& scinthDefName, const std::string& scint
 }
 
 std::shared_ptr<vk::CommandBuffer> Compositor::prepareFrame(uint32_t imageIndex, const TimePoint& frameTime) {
+    m_secondaryCommands.clear();
+
     {
         std::lock_guard<std::mutex> lock(m_scinthMutex);
         for (auto scinth : m_scinths) {
             scinth->prepareFrame(imageIndex, frameTime);
+            m_secondaryCommands.push_back(scinth->frameCommands());
         }
     }
+
+    m_frameCommands[imageIndex] = m_secondaryCommands;
+
     if (m_commandBufferDirty) {
         rebuildCommandBuffer();
     }
@@ -106,7 +112,26 @@ std::shared_ptr<vk::CommandBuffer> Compositor::prepareFrame(uint32_t imageIndex,
 
 void Compositor::releaseCompiler() { m_shaderCompiler->releaseCompiler(); }
 
-void Compositor::destroy() { m_commandPool->destroy(); }
+void Compositor::destroy() {
+    // Delete all command buffers outstanding first, which means emptying the Scinth map and list.
+    {
+        std::lock_guard<std::mutex> lock(m_scinthMutex);
+        m_scinthMap.clear();
+        m_scinths.clear();
+    }
+    m_primaryCommands.reset();
+    m_secondaryCommands.clear();
+    m_frameCommands.clear();
+
+    // Should be able to delete the command pool now, as all outstanding command buffers have been reclaimed.
+    m_commandPool->destroy();
+
+    // Now delete all of the ScinthDefs, which hold shared graphics resources.
+    {
+        std::lock_guard<std::mutex> lock(m_scinthDefMutex);
+        m_scinthDefs.clear();
+    }
+}
 
 // Needs to be called only from the same thread that calls prepareFrame. Assumes that m_secondaryCommands is up-to-date.
 bool Compositor::rebuildCommandBuffer() {
@@ -119,6 +144,8 @@ bool Compositor::rebuildCommandBuffer() {
     VkClearColorValue clearColor = { m_clearColor.x, m_clearColor.y, m_clearColor.z, 1.0f };
     VkClearValue clearValue = {};
     clearValue.color = clearColor;
+
+    spdlog::info("rebuilding Compositor command buffer with {} secondary command buffers", m_secondaryCommands.size());
 
     for (auto i = 0; i < m_canvas->numberOfImages(); ++i) {
         VkCommandBufferBeginInfo beginInfo = {};

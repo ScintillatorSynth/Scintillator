@@ -1,4 +1,21 @@
 ---
+name: BlueScreen
+vgens:
+    - className: RGBOut
+      rate: fragment
+      inputs:
+          - type: constant
+            dimension: 1
+            value: 0.0
+          - type: constant
+            dimension: 1
+            value: 0.0
+          - type: constant
+            dimension: 1
+            value: 1.0
+      outputs:
+          - dimension: 4
+---
 name: TestScinthDef
 vgens:
     - className: NormPos
@@ -19,7 +36,7 @@ vgens:
       inputs:
         - type: constant
           dimension: 1
-          value: 2.0
+          value: 0.5
         - type: vgen
           dimension: 1
           vgenIndex: 1

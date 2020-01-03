@@ -30,7 +30,12 @@ bool UniformLayout::create() {
     return true;
 }
 
-void UniformLayout::destroy() { vkDestroyDescriptorSetLayout(m_device->get(), m_layout, nullptr); }
+void UniformLayout::destroy() {
+    if (m_layout != VK_NULL_HANDLE) {
+        vkDestroyDescriptorSetLayout(m_device->get(), m_layout, nullptr);
+        m_layout = VK_NULL_HANDLE;
+    }
+}
 
 } // namespace vk
 
