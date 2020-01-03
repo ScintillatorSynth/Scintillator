@@ -22,30 +22,30 @@ public:
     ~Device();
 
     // Try to find a suitable physical device, returns true if one exists.
-    bool FindPhysicalDevice(Window* window);
+    bool findPhysicalDevice(Window* window);
 
     // Creates the logical device, returns false on error.
-    bool Create(Window* window);
-    void Destroy();
+    bool create(Window* window);
+    void destroy();
 
-    VkDevice get() { return device_; }
-    VkPhysicalDevice get_physical() { return physical_device_; }
-    VmaAllocator allocator() { return allocator_; }
+    VkDevice get() { return m_device; }
+    VkPhysicalDevice getPhysical() { return m_physicalDevice; }
+    VmaAllocator allocator() { return m_allocator; }
 
-    int graphics_family_index() const { return graphics_family_index_; }
-    int present_family_index() const { return present_family_index_; }
-    VkQueue graphics_queue() { return graphics_queue_; }
-    VkQueue present_queue() { return present_queue_; }
+    int graphicsFamilyIndex() const { return m_graphicsFamilyIndex; }
+    int presentFamilyIndex() const { return m_presentFamilyIndex; }
+    VkQueue graphicsQueue() { return m_graphicsQueue; }
+    VkQueue presentQueue() { return m_presentQueue; }
 
 private:
-    std::shared_ptr<Instance> instance_;
-    VkPhysicalDevice physical_device_;
-    int graphics_family_index_;
-    int present_family_index_;
-    VkDevice device_;
-    VmaAllocator allocator_;
-    VkQueue graphics_queue_;
-    VkQueue present_queue_;
+    std::shared_ptr<Instance> m_instance;
+    VkPhysicalDevice m_physicalDevice;
+    int m_graphicsFamilyIndex;
+    int m_presentFamilyIndex;
+    VkDevice m_device;
+    VmaAllocator m_allocator;
+    VkQueue m_graphicsQueue;
+    VkQueue m_presentQueue;
 };
 
 } // namespace vk

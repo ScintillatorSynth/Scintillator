@@ -50,11 +50,14 @@ public:
      *  \param intrinsics A map of intrinsic names to substitute in the shader.
      *  \param intermediates The list of intermediate names to substitute in the shader.
      *  \param outputs The names of the output variables to substitute in the shader.
+     *  \param outputDimensions The dimensions of the outputs, for defining new variables for the outputs.
+     *  \param alreadyDefined Some output variables may already be defined, include them here to avoid redefinition.
      *  \return The substituted string, or an empty string on error or invalid AbstractVGen.
      */
     std::string parameterize(const std::vector<std::string>& inputs,
                              const std::unordered_map<Intrinsic, std::string>& intrinsics,
-                             const std::vector<std::string>& outputs) const;
+                             const std::vector<std::string>& outputs, const std::vector<int>& outputDimensions,
+                             const std::unordered_set<std::string>& alreadyDefined) const;
 
     const std::string& name() const { return m_name; }
     const std::vector<std::string>& inputs() const { return m_inputs; }

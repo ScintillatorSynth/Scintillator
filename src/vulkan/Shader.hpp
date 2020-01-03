@@ -13,20 +13,20 @@ class Device;
 class Shader {
 public:
     enum Kind { kVertex, kFragment };
-    Shader(Kind kind, std::shared_ptr<Device> device, std::string entry_point);
+    Shader(Kind kind, std::shared_ptr<Device> device, const std::string& entryPoint);
     ~Shader();
 
-    bool Create(const char* spv_bytes, size_t byte_size);
-    void Destroy();
+    bool create(const char* spvBytes, size_t byteSize);
+    void destroy();
 
-    VkShaderModule get() { return shader_module_; }
-    const char* entry_point() const { return entry_point_.c_str(); }
+    VkShaderModule get() { return m_shaderModule; }
+    const char* entryPoint() const { return m_entryPoint.data(); }
 
 private:
-    Kind kind_;
-    std::shared_ptr<Device> device_;
-    std::string entry_point_;
-    VkShaderModule shader_module_;
+    Kind m_kind;
+    std::shared_ptr<Device> m_device;
+    std::string m_entryPoint;
+    VkShaderModule m_shaderModule;
 };
 
 } // namespace vk

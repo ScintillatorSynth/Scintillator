@@ -9,7 +9,7 @@ outputs:
 dimensions:
     - inputs: 1
       outputs: 4
-shader: "@rgba = float4(@red, @blue, @green, 1.0);"
+shader: "@rgba = vec4(@red, @blue, @green, 1.0);"
 ---
 name: BWOut
 inputs:
@@ -19,7 +19,7 @@ outputs:
 dimensions:
     - inputs: 1
       outputs: 4
-shader: "@rgba = float4(@value, @value, @value, 1.0);"
+shader: "@rgba = vec4(@value, @value, @value, 1.0);"
 ---
 name: RGBAOut
 inputs:
@@ -32,4 +32,4 @@ outputs:
 dimensions:
     - inputs: 1
       outputs: 4
-shader: "@rgba = float4(@red, @blue, @green, @alpha);"
+shader: "@rgba = vec4(@red, @blue, @green, @alpha);"

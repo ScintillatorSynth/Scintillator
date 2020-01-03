@@ -12,23 +12,26 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp"
 
 add_library(scintillator_core STATIC
     "${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp"
-    Scinth.cpp
-    Scinth.hpp
     core/AbstractScinthDef.cpp
     core/AbstractScinthDef.hpp
     core/AbstractVGen.cpp
     core/AbstractVGen.hpp
+    core/Archetypes.cpp
+    core/Archetypes.hpp
     core/FileSystem.hpp
     core/Intrinsic.hpp
     core/LogLevels.cpp
     core/LogLevels.hpp
-    core/ScinthDefParser.cpp
-    core/ScinthDefParser.hpp
+    core/Manifest.cpp
+    core/Manifest.hpp
+    core/Shape.cpp
+    core/Shape.hpp
     core/VGen.cpp
     core/VGen.hpp
 )
 
 target_link_libraries(scintillator_core
+    fmt
     glm
     spdlog
     yaml-cpp
@@ -43,18 +46,30 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
 )
 
 set(scintillator_synth_files
-    "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp"
     "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
+    "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp"
+    Compositor.cpp
+    Compositor.hpp
     OscHandler.cpp
     OscHandler.hpp
+    Scinth.cpp
+    Scinth.hpp
+    ScinthDef.cpp
+    ScinthDef.hpp
     scinsynth.cpp
 
     vulkan/Buffer.cpp
     vulkan/Buffer.hpp
+    vulkan/Canvas.cpp
+    vulkan/Canvas.hpp
+    vulkan/CommandBuffer.cpp
+    vulkan/CommandBuffer.hpp
     vulkan/CommandPool.cpp
     vulkan/CommandPool.hpp
     vulkan/Device.cpp
     vulkan/Device.hpp
+    vulkan/Images.cpp
+    vulkan/Images.hpp
     vulkan/Instance.cpp
     vulkan/Instance.hpp
     vulkan/Pipeline.cpp
@@ -63,12 +78,12 @@ set(scintillator_synth_files
     vulkan/Shader.hpp
     vulkan/ShaderCompiler.cpp
     vulkan/ShaderCompiler.hpp
-    vulkan/ShaderSource.cpp
-    vulkan/ShaderSource.hpp
     vulkan/Swapchain.cpp
     vulkan/Swapchain.hpp
     vulkan/Uniform.cpp
     vulkan/Uniform.hpp
+    vulkan/UniformLayout.cpp
+    vulkan/UniformLayout.hpp
     vulkan/Vulkan.hpp
     vulkan/Window.cpp
     vulkan/Window.hpp
@@ -108,7 +123,8 @@ endif()
 add_executable(run_unittests
     core/AbstractScinthDef_unittests.cpp
     core/AbstractVGen_unittests.cpp
-    core/ScinthDefParser_unittests.cpp
+    core/Archetypes_unittests.cpp
+    core/Manifest_unittests.cpp
     core/VGen_unittests.cpp
 
     run_unittests.cpp

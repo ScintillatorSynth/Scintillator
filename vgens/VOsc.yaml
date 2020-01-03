@@ -15,7 +15,7 @@ dimensions:
       outputs: 3
     - inputs: 4
       outputs: 4
-shader: "@out = @add + (@mul * sin((@time * @freq * 2 * pi) + @phase));"
+shader: "@out = @add + (@mul * sin((@time * @freq * 2.0f * 3.1415926535897932384626433832795f) + @phase));"
 ---
 name: VSaw
 inputs:

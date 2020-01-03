@@ -49,26 +49,26 @@ TEST(AbstractVGenTest, ParameterizeInvalid) {
     AbstractVGen invalid("invalid", {}, {}, {}, {}, "@out = 1.0f;");
     EXPECT_FALSE(invalid.prepareTemplate());
     EXPECT_FALSE(invalid.valid());
-    EXPECT_EQ("", invalid.parameterize({}, {}, {}));
+    EXPECT_EQ("", invalid.parameterize({}, {}, {}, {}, {}));
 
     AbstractVGen mismatch("mistmatchInput", { "in1", "in2" }, { "out" }, { { 1, 1 } }, { { 1 } },
                           "@out = @in1 + @in2 / 2.0;");
     EXPECT_TRUE(mismatch.prepareTemplate());
     EXPECT_TRUE(mismatch.valid());
-    EXPECT_EQ("", mismatch.parameterize({ "onlyOne" }, {}, { "out" }));
+    EXPECT_EQ("", mismatch.parameterize({ "onlyOne" }, {}, { "out" }, {}, {}));
 }
 
 TEST(AbstractVGenTest, ParameterizeValid) {
     AbstractVGen constant("constant", {}, { "out" }, { {} }, { { 1 } }, "@out = 2.0f;");
     EXPECT_TRUE(constant.prepareTemplate());
     EXPECT_TRUE(constant.valid());
-    EXPECT_EQ("subOut = 2.0f;", constant.parameterize({}, {}, { "subOut" }));
+    EXPECT_EQ("float subOut = 2.0f;", constant.parameterize({}, {}, { "subOut" }, { 1 }, {}));
 
     AbstractVGen passthrough("passthrough", { "in" }, { "out" }, { { 1 } }, { { 1 } }, "@out = @in;");
     EXPECT_TRUE(passthrough.prepareTemplate());
     EXPECT_TRUE(passthrough.valid());
-    EXPECT_EQ("passthrough_11_out = passthrough_11_in;",
-              passthrough.parameterize({ "passthrough_11_in" }, {}, { "passthrough_11_out" }));
+    EXPECT_EQ("float passthrough_11_out = passthrough_11_in;",
+              passthrough.parameterize({ "passthrough_11_in" }, {}, { "passthrough_11_out" }, { 1 }, {}));
 
     AbstractVGen moreComplex("moreComplex", { "freq", "phase", "mul", "add" }, { "out" }, { { 1, 1, 1, 1 } }, { { 4 } },
                              "float temp = @add + @mul * (sin((@time * 2.0 * pi * @freq) + @phase));\n"
@@ -78,7 +78,8 @@ TEST(AbstractVGenTest, ParameterizeValid) {
     EXPECT_EQ("float temp = 0.5f + ubo.moreComplex_mul * (sin((time * 2.0 * pi * otherVGen_out) + normPos.x));\n"
               "gl_FragColor = float4(temp, temp, temp, 1.0);\n",
               moreComplex.parameterize({ "otherVGen_out", "normPos.x", "ubo.moreComplex_mul", "0.5f" },
-                                       { { Intrinsic::kTime, "time" } }, { "gl_FragColor" }));
+                                       { { Intrinsic::kTime, "time" } }, { "gl_FragColor" }, { 1 },
+                                       { "gl_FragColor" }));
 }
 
 } // namespace scin

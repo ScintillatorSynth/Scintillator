@@ -1,0 +1,15 @@
+# VGens that wrap GLSL built-in functions. This is not an exhaustive list, adding things as needed.
+---
+name: Length
+inputs: [ in ]
+outputs: [ out ]
+dimensions:
+    - inputs: 1
+      outputs: 1
+    - inputs: 2
+      outputs: 1
+    - inputs: 3
+      outputs: 1
+    - inputs: 4
+      outputs: 1
+shader: "@out = length(@in);"

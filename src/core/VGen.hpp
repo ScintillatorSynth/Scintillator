@@ -35,6 +35,12 @@ public:
      */
     void addVGenInput(int vgenIndex, int outputIndex, int dimension);
 
+    /*! Add an output to this VGen with supplied dimension.
+     *
+     * \param dimension The dimension of the output.
+     */
+    void addOutput(int dimension);
+
     /*! Check this instance data against the originating AbstractVGen.
      *
      * \return true if valid, false if not.
@@ -62,6 +68,10 @@ public:
     bool getInputVGenIndex(int index, int& outIndex, int& outOutput) const;
 
     int numberOfInputs() const { return m_inputs.size(); }
+
+    int numberOfOutputs() const { return m_outputDimensions.size(); }
+    int outputDimension(int index) const { return m_outputDimensions[index]; }
+
     std::shared_ptr<const AbstractVGen> abstractVGen() const { return m_abstractVGen; }
 
 private:
@@ -89,6 +99,7 @@ private:
 
     std::shared_ptr<const AbstractVGen> m_abstractVGen;
     std::vector<VGenInput> m_inputs;
+    std::vector<int> m_outputDimensions;
 };
 
 } // namespace scin

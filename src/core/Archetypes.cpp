@@ -1,4 +1,4 @@
-#include "core/ScinthDefParser.hpp"
+#include "core/Archetypes.hpp"
 
 #include "core/AbstractScinthDef.hpp"
 #include "core/AbstractVGen.hpp"
@@ -10,20 +10,20 @@
 
 namespace scin {
 
-ScinthDefParser::ScinthDefParser() {}
-ScinthDefParser::~ScinthDefParser() {}
+Archetypes::Archetypes() {}
+Archetypes::~Archetypes() {}
 
-std::vector<std::shared_ptr<const AbstractScinthDef>> ScinthDefParser::loadFromFile(const std::string& fileName) {
+std::vector<std::shared_ptr<const AbstractScinthDef>> Archetypes::loadFromFile(const std::string& fileName) {
     std::vector<YAML::Node> nodes = parseYAMLFile(fileName);
     return extractFromNodes(nodes);
 }
 
-std::vector<std::shared_ptr<const AbstractScinthDef>> ScinthDefParser::parseFromString(const std::string& yaml) {
+std::vector<std::shared_ptr<const AbstractScinthDef>> Archetypes::parseFromString(const std::string& yaml) {
     std::vector<YAML::Node> nodes = parseYAMLString(yaml);
     return extractFromNodes(nodes);
 }
 
-std::shared_ptr<const AbstractScinthDef> ScinthDefParser::getAbstractScinthDefNamed(const std::string& name) {
+std::shared_ptr<const AbstractScinthDef> Archetypes::getAbstractScinthDefNamed(const std::string& name) {
     std::shared_ptr<const AbstractScinthDef> scinthDef;
     std::lock_guard<std::mutex> lock(m_mutex);
     auto it = m_scinthDefs.find(name);
@@ -33,22 +33,22 @@ std::shared_ptr<const AbstractScinthDef> ScinthDefParser::getAbstractScinthDefNa
     return scinthDef;
 }
 
-size_t ScinthDefParser::numberOfAbstractScinthDefs() {
+size_t Archetypes::numberOfAbstractScinthDefs() {
     std::lock_guard<std::mutex> lock(m_mutex);
     return m_scinthDefs.size();
 }
 
-int ScinthDefParser::loadAbstractVGensFromFile(const std::string& fileName) {
+int Archetypes::loadAbstractVGensFromFile(const std::string& fileName) {
     std::vector<YAML::Node> nodes = parseYAMLFile(fileName);
     return extractAbstractVGensFromNodes(nodes);
 }
 
-int ScinthDefParser::parseAbstractVGensFromString(const std::string& yaml) {
+int Archetypes::parseAbstractVGensFromString(const std::string& yaml) {
     std::vector<YAML::Node> nodes = parseYAMLString(yaml);
     return extractAbstractVGensFromNodes(nodes);
 }
 
-std::shared_ptr<const AbstractVGen> ScinthDefParser::getAbstractVGenNamed(const std::string& name) {
+std::shared_ptr<const AbstractVGen> Archetypes::getAbstractVGenNamed(const std::string& name) {
     std::shared_ptr<const AbstractVGen> vgen;
     std::lock_guard<std::mutex> lock(m_vgensMutex);
     auto it = m_abstractVGens.find(name);
@@ -58,39 +58,38 @@ std::shared_ptr<const AbstractVGen> ScinthDefParser::getAbstractVGenNamed(const 
     return vgen;
 }
 
-size_t ScinthDefParser::numberOfAbstractVGens() {
+size_t Archetypes::numberOfAbstractVGens() {
     std::lock_guard<std::mutex> lock(m_vgensMutex);
     return m_abstractVGens.size();
 }
 
-std::vector<YAML::Node> ScinthDefParser::parseYAMLFile(const std::string& fileName) {
+std::vector<YAML::Node> Archetypes::parseYAMLFile(const std::string& fileName) {
     std::vector<YAML::Node> nodes;
     try {
         nodes = YAML::LoadAllFromFile(fileName);
-    } catch (const YAML::ParserException&) {
-        spdlog::error("error parsing yaml file {}", fileName);
+    } catch (const YAML::ParserException& e) {
+        spdlog::error("error parsing yaml file {}: {}", fileName, e.what());
         return std::vector<YAML::Node>();
-    } catch (const YAML::BadFile&) {
-        spdlog::error("bad yaml file {}", fileName);
+    } catch (const YAML::BadFile& e) {
+        spdlog::error("bad yaml file {}: {}", fileName, e.what());
         return std::vector<YAML::Node>();
     }
     return nodes;
 }
 
-std::vector<YAML::Node> ScinthDefParser::parseYAMLString(const std::string& yaml) {
+std::vector<YAML::Node> Archetypes::parseYAMLString(const std::string& yaml) {
     std::vector<YAML::Node> nodes;
     try {
         nodes = YAML::LoadAll(yaml);
-    } catch (const YAML::ParserException&) {
-        spdlog::error("error parsing yaml string {}", yaml);
+    } catch (const YAML::ParserException& e) {
+        spdlog::error("error parsing yaml string {}: {}", yaml, e.what());
         return std::vector<YAML::Node>();
     }
     return nodes;
 }
 
-
 std::vector<std::shared_ptr<const AbstractScinthDef>>
-ScinthDefParser::extractFromNodes(const std::vector<YAML::Node>& nodes) {
+Archetypes::extractFromNodes(const std::vector<YAML::Node>& nodes) {
     std::vector<std::shared_ptr<const AbstractScinthDef>> scinthDefs;
     for (auto node : nodes) {
         if (!node.IsMap()) {
@@ -114,7 +113,7 @@ ScinthDefParser::extractFromNodes(const std::vector<YAML::Node>& nodes) {
         bool parseError = false;
         std::vector<VGen> instances;
         for (auto vgen : node["vgens"]) {
-            // className, rate, inputs (can be optional)
+            // className, rate, outputs, inputs (can be optional)
             if (!vgen.IsMap()) {
                 spdlog::error("ScinthDef {} has vgen that is not a map.", name);
                 parseError = true;
@@ -128,7 +127,7 @@ ScinthDefParser::extractFromNodes(const std::vector<YAML::Node>& nodes) {
             std::string className = vgen["className"].as<std::string>();
             std::shared_ptr<const AbstractVGen> vgenClass = getAbstractVGenNamed(className);
             if (!vgenClass) {
-                spdlog::error("ScinthDef {} has vgen with VGen {} not defined.", name, className);
+                spdlog::error("ScinthDef {} has vgen with className {} not defined.", name, className);
                 parseError = true;
                 break;
             }
@@ -136,6 +135,28 @@ ScinthDefParser::extractFromNodes(const std::vector<YAML::Node>& nodes) {
             // TODO: parse rate key
 
             VGen instance(vgenClass);
+
+            if (!vgen["outputs"] || !vgen["outputs"].IsSequence()) {
+                spdlog::error("ScinthDef {} has vgen with className {} with absent or malformed outputs key", name,
+                              className);
+                parseError = true;
+                break;
+            }
+            for (auto output : vgen["outputs"]) {
+                if (!output.IsMap()) {
+                    spdlog::error("ScinthDef {} has VGen {} with non-map output.", name, className);
+                    parseError = true;
+                    break;
+                }
+                if (!output["dimension"] || !output["dimension"].IsScalar()) {
+                    spdlog::error("ScinthDef {} has VGen {} with absent or malformed dimension key.", name, className);
+                    parseError = true;
+                    break;
+                }
+                instance.addOutput(output["dimension"].as<int>());
+            }
+
+
             if (!parseError && vgen["inputs"]) {
                 for (auto input : vgen["inputs"]) {
                     if (!input.IsMap()) {
@@ -226,7 +247,7 @@ ScinthDefParser::extractFromNodes(const std::vector<YAML::Node>& nodes) {
     return scinthDefs;
 }
 
-int ScinthDefParser::extractAbstractVGensFromNodes(const std::vector<YAML::Node>& nodes) {
+int Archetypes::extractAbstractVGensFromNodes(const std::vector<YAML::Node>& nodes) {
     int numberOfValidElements = 0;
     for (auto node : nodes) {
         // Top level structure expected is a Map.

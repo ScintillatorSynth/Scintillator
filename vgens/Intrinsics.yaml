@@ -1,0 +1,7 @@
+# Direct access to some of the Intrinsics within Scintillator.
+---
+name: NormPos
+outputs: [ out ]
+dimensions:
+    - outputs: 2
+shader: "@out = @normPos;"

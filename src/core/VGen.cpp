@@ -19,12 +19,16 @@ void VGen::addVGenInput(int vgenIndex, int outputIndex, int dimension) {
     m_inputs.emplace_back(VGenInput(vgenIndex, outputIndex, dimension));
 }
 
+void VGen::addOutput(int dimension) { m_outputDimensions.push_back(dimension); }
+
 bool VGen::validate() const {
     if (m_inputs.size() != m_abstractVGen->inputs().size()) {
         spdlog::error("input size mismatch for VGen {}, expected {}, got {}", m_abstractVGen->name(),
                       m_abstractVGen->inputs().size(), m_inputs.size());
         return false;
     }
+
+    // TODO: check input and output dimensions
 
     return true;
 }
