@@ -20,9 +20,6 @@ AbstractScinthDef::AbstractScinthDef(const std::string& name, const std::vector<
 AbstractScinthDef::~AbstractScinthDef() {}
 
 bool AbstractScinthDef::build() {
-    std::random_device randomDevice;
-    m_prefix = fmt::format("{}_{:8x}", m_name, randomDevice());
-
     if (!buildNames()) {
         return false;
     }
@@ -42,14 +39,18 @@ std::string AbstractScinthDef::nameForVGenOutput(int vgenIndex, int outputIndex)
     if (vgenIndex < 0 || outputIndex >= m_instances.size()) {
         return std::string("");
     }
-    // TODO: fix hard-coded assumption here about gl_FragColor
     if (vgenIndex == m_instances.size() - 1) {
-        return std::string("gl_FragColor");
+        return m_fragmentOutputName;
     }
     return fmt::format("{}_out_{}_{}", m_prefix, vgenIndex, outputIndex);
 }
 
 bool AbstractScinthDef::buildNames() {
+    std::random_device randomDevice;
+    m_prefix = fmt::format("{}_{:8x}", m_name, randomDevice());
+    m_vertexPositionElementName = m_prefix + "_inPosition";
+    m_fragmentOutputName = m_prefix + "_outColor";
+
     // Build the parameters for all VGens.
     for (auto i = 0; i < m_instances.size(); ++i) {
         // First process inputs, plugging in either constants or outputs from other VGens as necessary.
@@ -83,6 +84,13 @@ bool AbstractScinthDef::buildNames() {
             vgenOutputs.push_back(nameForVGenOutput(i, j));
         }
         m_outputs.push_back(vgenOutputs);
+
+        // Generate all output dimensions.
+        std::vector<int> vgenOutputDimensions;
+        for (auto j = 0; j < m_instances[i].numberOfOutputs(); ++j) {
+            vgenOutputDimensions.push_back(m_instances[i].outputDimension(j));
+        }
+        m_outputDimensions.push_back(vgenOutputDimensions);
     }
 
     return true;
@@ -90,7 +98,6 @@ bool AbstractScinthDef::buildNames() {
 
 bool AbstractScinthDef::buildManifests() {
     // At minimum the vertex manifest must have the position data from the associated Shape.
-    m_vertexPositionElementName = m_prefix + "_inPosition";
     m_vertexManifest.addElement(m_vertexPositionElementName, m_shape->elementType());
 
     // Other Intrinsics have manifest dependencies, process each in turn.
@@ -141,11 +148,10 @@ bool AbstractScinthDef::buildVertexShader() {
     // now we just copy everything to the fragment shader except for the _inPosition, which gets assigned to the
     // keyword gl_Position.
     for (auto i = 0; i < m_vertexManifest.numberOfElements(); ++i) {
-        if (m_vertexManifest.nameForElement(i) == m_vertexPositionElementName) {
-            continue;
+        if (m_vertexManifest.nameForElement(i) != m_vertexPositionElementName) {
+            m_vertexShader += fmt::format("layout(location = {}) out {} out_{};\n", i,
+                                          m_vertexManifest.typeNameForElement(i), m_vertexManifest.nameForElement(i));
         }
-        m_vertexShader += fmt::format("layout(location = {}) out {} out_{};\n", i,
-                                      m_vertexManifest.typeNameForElement(i), m_vertexManifest.nameForElement(i));
     }
 
     // TODO: uniform is fragment-only for now.
@@ -163,8 +169,8 @@ bool AbstractScinthDef::buildVertexShader() {
                 break;
 
             case Manifest::ElementType::kVec2:
-                m_vertexShader += fmt::format("    gl_Position = vec4(in_{}, 0.0f, 1.0f);\n",
-                                              m_vertexPositionElementName);
+                m_vertexShader +=
+                    fmt::format("    gl_Position = vec4(in_{}, 0.0f, 1.0f);\n", m_vertexPositionElementName);
                 break;
 
             case Manifest::ElementType::kVec3:
@@ -187,44 +193,73 @@ bool AbstractScinthDef::buildVertexShader() {
 }
 
 bool AbstractScinthDef::buildFragmentShader() {
-    // For now, all intrinsics are global, so we can define a single map with all of their substitutions.
+    // Start with standardized header.
+    m_fragmentShader = "#version 450\n"
+                       "#extension GL_ARB_separate_shader_objects : enable\n"
+                       "\n"
+                       "// --- fragment shader inputs from vertex shader\n";
+
+    // For now, all intrinsics are global, coming from either the vertex shader or the uniform buffer, so we can define
+    // a single map with all of their substitutions.
     std::unordered_map<Intrinsic, std::string> intrinsicNames;
-    for (Intrinsic intrinsic : m_intrinsics) {
-        switch (intrinsic) {
-        case kNormPos:
-            intrinsicNames.insert({ kNormPos, "normPos" }); // TODO: has a different name in the vertex shader
-            break;
 
-        case kTime:
-            intrinsicNames.insert({ kTime, m_prefix + "_ubo.time" });
-            break;
-
-        default:
-            spdlog::error("Unknown intrinsic in AbstractScinthDesc {}", m_name);
-            return false;
+    // Now add any inputs that might have come from the vertex shader by processing the vertex manifest.
+    for (auto i = 0; i < m_vertexManifest.numberOfElements(); ++i) {
+        if (m_vertexManifest.nameForElement(i) != m_vertexPositionElementName) {
+            m_fragmentShader += fmt::format("layout(location = {}) in {} in_{};\n", i,
+                                            m_vertexManifest.typeNameForElement(i), m_vertexManifest.nameForElement(i));
+            Intrinsic intrinsic = m_vertexManifest.intrinsicForElement(i);
+            if (intrinsic == Intrinsic::kNotFound) {
+                spdlog::warn("unknown fragment shader vertex input {}", m_vertexManifest.nameForElement(i));
+            } else {
+                intrinsicNames.insert({ intrinsic, "in_" + m_vertexManifest.nameForElement(i) });
+            }
         }
     }
 
-    // TODO: very hard-coded right now, need to make manifest-driven.
-    // Now construct a fragment shader from the parameters.
-    m_fragmentShader = "#version 450\n"
-                       "#extension GL_ARB_separate_shader_objects : enable\n\n";
+    // If there's a uniform buffer build that next.
+    if (m_uniformManifest.numberOfElements()) {
+        m_fragmentShader += "\n"
+                            "// --- fragment shader uniform buffer\n"
+                            "layout(binding = 0) uniform UBO {\n";
+        for (auto i = 0; i < m_uniformManifest.numberOfElements(); ++i) {
+            switch (m_uniformManifest.intrinsicForElement(i)) {
+            case kNormPos:
+                spdlog::error("normPos not supported as uniform buffer argument in ScinthDef {}", m_name);
+                return false;
 
-    if (m_intrinsics.count(Intrinsic::kNormPos)) {
-        m_fragmentShader += "layout(location = 0) in vec2 normPos;\n\n";
+            case kNotFound:
+                spdlog::error("undefined intrinsic in uniform buffer in ScinthDef {}", m_name);
+                return false;
+
+            default:
+                m_fragmentShader += fmt::format("    {} {};\n", m_uniformManifest.typeNameForElement(i),
+                                                m_uniformManifest.nameForElement(i));
+                intrinsicNames.insert({ m_uniformManifest.intrinsicForElement(i),
+                                        fmt::format("{}_ubo.{}", m_prefix, m_uniformManifest.nameForElement(i)) });
+                break;
+            }
+        }
+
+        m_fragmentShader += fmt::format("}} {}_ubo;\n", m_prefix);
     }
 
-    if (m_intrinsics.count(Intrinsic::kTime)) {
-        m_fragmentShader += "layout(binding = 0) uniform UBO {\n"
-                            "  float time;\n"
-                            "} "
-            + m_prefix + "_ubo;\n\n";
-    }
+    // Hard-coded one output which is color.
+    m_fragmentShader += fmt::format("\nlayout(location = 0) out vec4 {};\n", m_fragmentOutputName);
 
+    m_fragmentShader += "\n"
+                        "void main() {";
+
+    std::unordered_set<std::string> alreadyDefined({ m_fragmentOutputName });
     for (auto i = 0; i < m_instances.size(); ++i) {
-        m_fragmentShader += "\n\n// ------- " + m_instances[i].abstractVGen()->name() + "\n\n";
-        m_fragmentShader += m_instances[i].abstractVGen()->parameterize(m_inputs[i], intrinsicNames, m_outputs[i]);
+        m_fragmentShader += "\n    // --- " + m_instances[i].abstractVGen()->name() + "\n";
+        m_fragmentShader += "    "
+            + m_instances[i].abstractVGen()->parameterize(m_inputs[i], intrinsicNames, m_outputs[i],
+                                                          m_outputDimensions[i], alreadyDefined)
+            + "\n";
     }
+
+    m_fragmentShader += "}\n";
 
     spdlog::info("fragment shader: {}\n", m_fragmentShader);
     return true;

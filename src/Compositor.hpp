@@ -59,14 +59,14 @@ public:
 
     void destroy();
 
-    void setClearColor(float r, float g, float b) { m_clearColor = glm::vec3(r, g, b); }
+    void setClearColor(glm::vec3 color) { m_clearColor = color; }
 
 private:
     typedef std::list<std::shared_ptr<Scinth>> ScinthList;
     typedef std::unordered_map<std::string, ScinthList::iterator> ScinthMap;
     typedef std::vector<std::shared_ptr<vk::CommandBuffer>> Commands;
 
-    bool rebuildCommandBuffer(bool shouldClear);
+    bool rebuildCommandBuffer();
 
     /*! Removes a Scinth from playback. Requires that the m_scinthMutex has already been acquired.
      *

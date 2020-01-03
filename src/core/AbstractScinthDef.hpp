@@ -68,11 +68,13 @@ private:
     std::unordered_set<Intrinsic> m_intrinsics;
     std::vector<std::vector<std::string>> m_inputs;
     std::vector<std::vector<std::string>> m_outputs;
+    std::vector<std::vector<int>> m_outputDimensions;
     std::string m_vertexShader;
     std::string m_fragmentShader;
     Manifest m_vertexManifest;
     Manifest m_uniformManifest;
     std::string m_vertexPositionElementName;
+    std::string m_fragmentOutputName;
 };
 
 } // namespace scin

@@ -252,7 +252,9 @@ TEST(ArchetypesTest, ValidYAMLStrings) {
                                     "name: firstScinth\n"
                                     "vgens:\n"
                                     "  - className: NoInput\n"
-                                    "    rate: fragment\n")
+                                    "    rate: fragment\n"
+                                    "    outputs:\n"
+                                    "      - dimension: 1\n")
                   .size());
     ASSERT_EQ(1, parser->numberOfAbstractScinthDefs());
     std::shared_ptr<const AbstractScinthDef> scinthDef = parser->getAbstractScinthDefNamed("firstScinth");
@@ -271,6 +273,8 @@ TEST(ArchetypesTest, ValidYAMLStrings) {
                                     "      - type: constant\n"
                                     "        dimension: 1\n"
                                     "        value: -123.0\n"
+                                    "    outputs:\n"
+                                    "      - dimension: 1\n"
                                     "  - className: TwoInput\n"
                                     "    rate: fragment\n"
                                     "    inputs:\n"
@@ -281,6 +285,8 @@ TEST(ArchetypesTest, ValidYAMLStrings) {
                                     "      - type: constant\n"
                                     "        dimension: 1\n"
                                     "        value: 0.0\n"
+                                    "    outputs:\n"
+                                    "      - dimension: 1\n"
                                     "---\n"
                                     "name: secondScinth\n"
                                     "vgens: \n"
@@ -295,7 +301,9 @@ TEST(ArchetypesTest, ValidYAMLStrings) {
                                     "        value: 2\n"
                                     "      - type: constant\n"
                                     "        dimension: 1\n"
-                                    "        value: 3\n")
+                                    "        value: 3\n"
+                                    "    outputs:\n"
+                                    "      - dimension: 1\n")
                   .size());
     ASSERT_EQ(2, parser->numberOfAbstractScinthDefs());
 

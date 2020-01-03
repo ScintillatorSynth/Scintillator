@@ -36,7 +36,7 @@ bool Compositor::create() {
         return false;
     }
 
-    rebuildCommandBuffer(true);
+    rebuildCommandBuffer();
     return true;
 }
 
@@ -98,6 +98,9 @@ std::shared_ptr<vk::CommandBuffer> Compositor::prepareFrame(uint32_t imageIndex,
             scinth->prepareFrame(imageIndex, frameTime);
         }
     }
+    if (m_commandBufferDirty) {
+        rebuildCommandBuffer();
+    }
     return m_primaryCommands;
 }
 
@@ -106,7 +109,7 @@ void Compositor::releaseCompiler() { m_shaderCompiler->releaseCompiler(); }
 void Compositor::destroy() { m_commandPool->destroy(); }
 
 // Needs to be called only from the same thread that calls prepareFrame. Assumes that m_secondaryCommands is up-to-date.
-bool Compositor::rebuildCommandBuffer(bool shouldClear) {
+bool Compositor::rebuildCommandBuffer() {
     m_primaryCommands = m_commandPool->createBuffers(m_canvas->numberOfImages(), true);
     if (!m_primaryCommands) {
         spdlog::critical("failed creating primary command buffers for Compositor.");
@@ -134,34 +137,20 @@ bool Compositor::rebuildCommandBuffer(bool shouldClear) {
         renderPassInfo.framebuffer = m_canvas->framebuffer(i);
         renderPassInfo.renderArea.offset = { 0, 0 };
         renderPassInfo.renderArea.extent = m_canvas->extent();
-        renderPassInfo.clearValueCount = 0;
-        renderPassInfo.pClearValues = nullptr;
+        renderPassInfo.clearValueCount = 1;
+        renderPassInfo.pClearValues = &clearValue;
+
         if (m_secondaryCommands.size()) {
             vkCmdBeginRenderPass(m_primaryCommands->buffer(i), &renderPassInfo,
                                  VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
-        } else {
-            vkCmdBeginRenderPass(m_primaryCommands->buffer(i), &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-        }
 
-        if (shouldClear) {
-            VkClearAttachment clearAttachment = {};
-            clearAttachment.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            clearAttachment.colorAttachment = 0;
-            clearAttachment.clearValue = clearValue;
-            VkClearRect clearRect = {};
-            clearRect.rect.offset = { 0, 0 };
-            clearRect.rect.extent = m_canvas->extent();
-            clearRect.baseArrayLayer = 0;
-            clearRect.layerCount = 1;
-            vkCmdClearAttachments(m_primaryCommands->buffer(i), 1, &clearAttachment, 1, &clearRect);
-        }
-
-        if (m_secondaryCommands.size()) {
             std::vector<VkCommandBuffer> commandBuffers;
             for (auto command : m_secondaryCommands) {
                 commandBuffers.push_back(command->buffer(i));
             }
             vkCmdExecuteCommands(m_primaryCommands->buffer(i), commandBuffers.size(), commandBuffers.data());
+        } else {
+            vkCmdBeginRenderPass(m_primaryCommands->buffer(i), &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
         }
 
         vkCmdEndRenderPass(m_primaryCommands->buffer(i));
@@ -169,6 +158,8 @@ bool Compositor::rebuildCommandBuffer(bool shouldClear) {
             return false;
         }
     }
+
+    m_commandBufferDirty = false;
     return true;
 }
 

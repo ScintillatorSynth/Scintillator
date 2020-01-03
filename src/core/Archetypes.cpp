@@ -113,7 +113,7 @@ Archetypes::extractFromNodes(const std::vector<YAML::Node>& nodes) {
         bool parseError = false;
         std::vector<VGen> instances;
         for (auto vgen : node["vgens"]) {
-            // className, rate, inputs (can be optional)
+            // className, rate, outputs, inputs (can be optional)
             if (!vgen.IsMap()) {
                 spdlog::error("ScinthDef {} has vgen that is not a map.", name);
                 parseError = true;
@@ -127,7 +127,7 @@ Archetypes::extractFromNodes(const std::vector<YAML::Node>& nodes) {
             std::string className = vgen["className"].as<std::string>();
             std::shared_ptr<const AbstractVGen> vgenClass = getAbstractVGenNamed(className);
             if (!vgenClass) {
-                spdlog::error("ScinthDef {} has vgen with VGen {} not defined.", name, className);
+                spdlog::error("ScinthDef {} has vgen with className {} not defined.", name, className);
                 parseError = true;
                 break;
             }
@@ -135,6 +135,28 @@ Archetypes::extractFromNodes(const std::vector<YAML::Node>& nodes) {
             // TODO: parse rate key
 
             VGen instance(vgenClass);
+
+            if (!vgen["outputs"] || !vgen["outputs"].IsSequence()) {
+                spdlog::error("ScinthDef {} has vgen with className {} with absent or malformed outputs key", name,
+                              className);
+                parseError = true;
+                break;
+            }
+            for (auto output : vgen["outputs"]) {
+                if (!output.IsMap()) {
+                    spdlog::error("ScinthDef {} has VGen {} with non-map output.", name, className);
+                    parseError = true;
+                    break;
+                }
+                if (!output["dimension"] || !output["dimension"].IsScalar()) {
+                    spdlog::error("ScinthDef {} has VGen {} with absent or malformed dimension key.", name, className);
+                    parseError = true;
+                    break;
+                }
+                instance.addOutput(output["dimension"].as<int>());
+            }
+
+
             if (!parseError && vgen["inputs"]) {
                 for (auto input : vgen["inputs"]) {
                     if (!input.IsMap()) {
