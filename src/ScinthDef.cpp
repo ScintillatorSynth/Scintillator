@@ -19,17 +19,19 @@
 
 namespace scin {
 
-ScinthDef::ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<const AbstractScinthDef> abstractScinthDef):
+ScinthDef::ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Canvas> canvas,
+                     std::shared_ptr<const AbstractScinthDef> abstractScinthDef):
     m_device(device),
+    m_canvas(canvas),
     m_abstractScinthDef(abstractScinthDef) {}
 
 ScinthDef::~ScinthDef() {}
 
-bool ScinthDef::build(vk::ShaderCompiler* compiler, vk::Canvas* canvas) {
+bool ScinthDef::build(vk::ShaderCompiler* compiler) {
     // Build the vertex data. Because Intrinsics can add data payloads to the vertex data, each ScinthDef shares a
     // vertex buffer and index buffer across all Scinth instances, allowing for the potential unique combination
     // between Shape data and payloads.
-    if (!buildVertexData(canvas)) {
+    if (!buildVertexData()) {
         spdlog::error("error building vertex data for ScinthDef {}.", m_abstractScinthDef->name());
         return false;
     }
@@ -54,7 +56,7 @@ bool ScinthDef::build(vk::ShaderCompiler* compiler, vk::Canvas* canvas) {
     }
 
     m_pipeline.reset(new vk::Pipeline(m_device));
-    if (!m_pipeline->create(m_abstractScinthDef->vertexManifest(), m_abstractScinthDef->shape(), canvas,
+    if (!m_pipeline->create(m_abstractScinthDef->vertexManifest(), m_abstractScinthDef->shape(), m_canvas.get(),
                             m_vertexShader.get(), m_fragmentShader.get(), m_uniformLayout.get())) {
         spdlog::error("error creating pipeline for ScinthDef {}", m_abstractScinthDef->name());
         return false;
@@ -63,12 +65,16 @@ bool ScinthDef::build(vk::ShaderCompiler* compiler, vk::Canvas* canvas) {
     return true;
 }
 
-std::unique_ptr<Scinth> ScinthDef::play(std::shared_ptr<vk::CommandPool> comandPool) {
-    spdlog::critical("ScinthDef::play write me");
-    return nullptr;
+std::unique_ptr<Scinth> ScinthDef::play(const std::string& scinthName, const TimePoint& startTime) {
+    std::unique_ptr<Scinth> scinth(new Scinth(m_device, scinthName, m_abstractScinthDef));
+    if (!scinth->create(startTime, m_uniformLayout.get(), m_canvas->numberOfImages())) {
+        spdlog::error("failed to create Scinth {} from ScinthDef {}", scinthName, m_abstractScinthDef->name());
+        return nullptr;
+    }
+    return scinth;
 }
 
-bool ScinthDef::buildVertexData(vk::Canvas* canvas) {
+bool ScinthDef::buildVertexData() {
     // The kNormPos intrinsic applies a scale to the input vertices, but only makes sense for 2D verts.
     glm::vec2 normPosScale;
     if (m_abstractScinthDef->intrinsics().count(Intrinsic::kNormPos)) {
@@ -77,12 +83,12 @@ bool ScinthDef::buildVertexData(vk::Canvas* canvas) {
                           m_abstractScinthDef->name());
             return false;
         }
-        if (canvas->width() > canvas->height()) {
-            normPosScale.x = static_cast<float>(canvas->width()) / static_cast<float>(canvas->height());
+        if (m_canvas->width() > m_canvas->height()) {
+            normPosScale.x = static_cast<float>(m_canvas->width()) / static_cast<float>(m_canvas->height());
             normPosScale.y = 1.0f;
         } else {
             normPosScale.x = 1.0f;
-            normPosScale.y = static_cast<float>(canvas->height()) / static_cast<float>(canvas->width());
+            normPosScale.y = static_cast<float>(m_canvas->height()) / static_cast<float>(m_canvas->width());
         }
     }
 

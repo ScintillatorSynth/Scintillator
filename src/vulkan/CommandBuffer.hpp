@@ -18,7 +18,7 @@ public:
     CommandBuffer(const std::shared_ptr<Device> device, CommandPool* commandPool);
     ~CommandBuffer();
 
-    bool create(size_t count);
+    bool create(size_t count, bool isPrimary);
     void destroy();
 
     VkCommandBuffer buffer(size_t i) { return m_commandBuffers[i]; }

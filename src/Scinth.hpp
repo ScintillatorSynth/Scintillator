@@ -1,7 +1,8 @@
 #ifndef SRC_SCINTH_HPP_
 #define SRC_SCINTH_HPP_
 
-#include <chrono>
+#include "core/Types.hpp"
+
 #include <memory>
 #include <string>
 
@@ -19,8 +20,6 @@ class Pipeline;
 class Uniform;
 class UniformLayout;
 }
-
-typedef std::chrono::time_point<std::chrono::high_resolution_clock> TimePoint;
 
 /*! Represents a running, controllable instance of a ScinthDef within the context of a vk::Canvas.
  */
@@ -45,9 +44,16 @@ public:
     bool buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, vk::Buffer* vertexBuffer,
                       vk::Buffer* indexBuffer, vk::Pipeline* pipeline);
 
-    /*! Update the Uniform, if any, and provide the CommandBuffers to render this Scinth.
+    /*! Prepare for the next frame to render.
+     *
+     * Update the Uniform buffer associated with the imageIndex, if present, and any other operations to prepare a
+     * frame to render at the provided time.
+     *
+     * \param imageIndex which of the images to prepare to render.
+     * \param frameTime the time the frame is being prepared for.
+     * \return true if Scinth should continue running for this frame, false otherwise.
      */
-    std::shared_ptr<vk::CommandBuffer> buildFrame(size_t imageIndex, const TimePoint& frameTime);
+    bool prepareFrame(size_t imageIndex, const TimePoint& frameTime);
 
 private:
     std::shared_ptr<vk::Device> m_device;

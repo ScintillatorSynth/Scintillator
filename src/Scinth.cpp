@@ -38,31 +38,29 @@ bool Scinth::create(const TimePoint& startTime, vk::UniformLayout* uniformLayout
 
 bool Scinth::buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, vk::Buffer* vertexBuffer,
                           vk::Buffer* indexBuffer, vk::Pipeline* pipeline) {
-    m_commands = commandPool->createBuffers(canvas->numberOfImages());
+    m_commands = commandPool->createBuffers(canvas->numberOfImages(), false);
     if (!m_commands) {
         spdlog::error("failed creating command buffers for Scinth {}", m_name);
         return false;
     }
 
-    for (size_t i = 0; i < canvas->numberOfImages(); ++i) {
+    for (auto i = 0; i < canvas->numberOfImages(); ++i) {
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-        beginInfo.pInheritanceInfo = nullptr;
+        beginInfo.flags =
+            VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+        VkCommandBufferInheritanceInfo inheritanceInfo = {};
+        inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+        inheritanceInfo.renderPass = canvas->renderPass();
+        inheritanceInfo.subpass = 0; // TODO: alpha-blended Scinths might need their own subpasses?
+        inheritanceInfo.framebuffer = canvas->framebuffer(i);
+        beginInfo.pInheritanceInfo = &inheritanceInfo;
 
         if (vkBeginCommandBuffer(m_commands->buffer(i), &beginInfo) != VK_SUCCESS) {
             spdlog::error("failed beginning command buffer {} for Scinth {}", i, m_name);
             return false;
         }
 
-        VkRenderPassBeginInfo renderPassInfo = {};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = canvas->renderPass();
-        renderPassInfo.framebuffer = canvas->framebuffer(i);
-        renderPassInfo.renderArea.offset = { 0, 0 };
-        renderPassInfo.renderArea.extent = canvas->extent();
-
-        vkCmdBeginRenderPass(m_commands->buffer(i), &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
         vkCmdBindPipeline(m_commands->buffer(i), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get());
         VkBuffer vertexBuffers[] = { vertexBuffer->buffer() };
         VkDeviceSize offsets[] = { 0 };
@@ -75,7 +73,7 @@ bool Scinth::buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, vk::
         }
 
         vkCmdDrawIndexed(m_commands->buffer(i), m_abstractScinthDef->shape()->numberOfIndices(), 1, 0, 0, 0);
-        vkCmdEndRenderPass(m_commands->buffer(i));
+
         if (vkEndCommandBuffer(m_commands->buffer(i)) != VK_SUCCESS) {
             spdlog::error("failed ending command buffer {} for Scinth {}", i, m_name);
             return false;
@@ -85,7 +83,7 @@ bool Scinth::buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, vk::
     return true;
 }
 
-std::shared_ptr<vk::CommandBuffer> Scinth::buildFrame(size_t imageIndex, const TimePoint& frameTime) {
+bool Scinth::prepareFrame(size_t imageIndex, const TimePoint& frameTime) {
     // Update the Uniform buffer at imageIndex, if needed.
     if (m_uniform) {
         std::unique_ptr<float[]> uniformData(
@@ -95,7 +93,7 @@ std::shared_ptr<vk::CommandBuffer> Scinth::buildFrame(size_t imageIndex, const T
             switch (m_abstractScinthDef->uniformManifest().intrinsicForElement(i)) {
             case kNormPos:
                 spdlog::error("normPos is not a valid intrinsic for a Uniform in Scinth {}", m_name);
-                return nullptr;
+                return false;
 
             case kTime:
                 *uniform = std::chrono::duration<float, std::chrono::seconds::period>(frameTime - m_startTime).count();
@@ -103,7 +101,7 @@ std::shared_ptr<vk::CommandBuffer> Scinth::buildFrame(size_t imageIndex, const T
 
             case kNotFound:
                 spdlog::error("unknown uniform Intrinsic in Scinth {}", m_name);
-                return nullptr;
+                return false;
             }
 
             uniform += (m_abstractScinthDef->uniformManifest().strideForElement(i) / sizeof(float));
@@ -112,7 +110,7 @@ std::shared_ptr<vk::CommandBuffer> Scinth::buildFrame(size_t imageIndex, const T
         m_uniform->buffer(imageIndex)->copyToGPU(uniformData.get());
     }
 
-    return m_commands;
+    return true;
 }
 
 } // namespace scin

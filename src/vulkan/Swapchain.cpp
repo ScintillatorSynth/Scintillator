@@ -116,7 +116,7 @@ bool Swapchain::create(Window* window) {
     }
 
     m_imageCount = m_images->getFromSwapchain(this, m_imageCount);
-    if (!m_canvas->create(m_images.get())) {
+    if (!m_canvas->create(m_images)) {
         spdlog::error("error creating Canvas");
         return false;
     }

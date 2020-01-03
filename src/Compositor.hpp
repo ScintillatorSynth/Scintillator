@@ -1,7 +1,12 @@
 #ifndef SRC_COMPOSITOR_HPP_
 #define SRC_COMPOSITOR_HPP_
 
-#include <forward_list>
+#include "core/Types.hpp"
+
+#include "glm/glm.hpp"
+
+#include <atomic>
+#include <list>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -35,16 +40,15 @@ public:
 
     bool buildScinthDef(std::shared_ptr<const AbstractScinthDef> abstractScinthDef);
 
-    bool play(const std::string& scinthDefName, const std::string& scinthName);
+    bool play(const std::string& scinthDefName, const std::string& scinthName, const TimePoint& startTime);
 
-    /*! Prepare and return a set of CommandBuffers that when executed in order will render the current frame.
-     *
-     * \note Must always return at least one CommandBuffer.
+    /*! Prepare and return a CommandBuffers that when executed in order will render the current frame.
      *
      * \param imageIndex The index of the imageView in the Canvas we will be rendering in to.
-     * \return A list of CommandBuffer objects to be scheduled for graphics queue submission.
+     * \param frameTime The point in time at which to build this frame for.
+     * \return A CommandBuffer object to be scheduled for graphics queue submission.
      */
-    std::vector<std::shared_ptr<vk::CommandBuffer>> buildFrame(uint32_t imageIndex);
+    std::shared_ptr<vk::CommandBuffer> prepareFrame(uint32_t imageIndex, const TimePoint& frameTime);
 
     /*! Unload the shader compiler, releasing the resources associated with it.
      *
@@ -53,25 +57,47 @@ public:
      */
     void releaseCompiler();
 
-
     void destroy();
 
+    void setClearColor(float r, float g, float b) { m_clearColor = glm::vec3(r, g, b); }
+
 private:
+    typedef std::list<std::shared_ptr<Scinth>> ScinthList;
+    typedef std::unordered_map<std::string, ScinthList::iterator> ScinthMap;
+    typedef std::vector<std::shared_ptr<vk::CommandBuffer>> Commands;
+
+    bool rebuildCommandBuffer(bool shouldClear);
+
+    /*! Removes a Scinth from playback. Requires that the m_scinthMutex has already been acquired.
+     *
+     * \param it An iterator from m_scinthMap pointing to the desired Scinth to remove.
+     */
+    void stopScinthLockAcquired(ScinthMap::iterator it);
+
     std::shared_ptr<vk::Device> m_device;
     std::shared_ptr<vk::Canvas> m_canvas;
+    glm::vec3 m_clearColor;
 
     std::unique_ptr<vk::ShaderCompiler> m_shaderCompiler;
     std::unique_ptr<vk::CommandPool> m_commandPool;
+    std::atomic<bool> m_commandBufferDirty;
 
     std::mutex m_scinthDefMutex;
-    std::unordered_map<std::string, std::shared_ptr<const ScinthDef>> m_scinthDefs;
+    std::unordered_map<std::string, std::shared_ptr<ScinthDef>> m_scinthDefs;
 
     // Protects m_scinths and m_scinthMap.
     std::mutex m_scinthMutex;
     // A list, in order of evaluation, of all currently running Scinths.
-    std::forward_list<std::shared_ptr<Scinth>> m_scinths;
+    ScinthList m_scinths;
     // A map from Scinth instance names to elements in the running instance list.
-    std::unordered_map<std::string, std::forward_list<std::shared_ptr<Scinth>>::iterator> m_scinthMap;
+    ScinthMap m_scinthMap;
+
+    // Following should only be accessed from the same thread that calls prepareFrame.
+    std::shared_ptr<vk::CommandBuffer> m_primaryCommands;
+    // We keep the subcommand buffers referenced each frame, and make a copy of them at each image index, so that they
+    // are always valid until we are rendering a new frame over the old commands.
+    Commands m_secondaryCommands;
+    std::vector<Commands> m_frameCommands;
 };
 
 } // namespace scin

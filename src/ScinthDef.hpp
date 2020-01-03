@@ -1,6 +1,8 @@
 #ifndef SRC_SCINTHDEF_HPP_
 #define SRC_SCINTHDEF_HPP_
 
+#include "core/Types.hpp"
+
 #include <memory>
 
 namespace scin {
@@ -23,7 +25,8 @@ class UniformLayout;
  */
 class ScinthDef {
 public:
-    ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<const AbstractScinthDef> abstractScinthDef);
+    ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Canvas> canvas,
+              std::shared_ptr<const AbstractScinthDef> abstractScinthDef);
     ~ScinthDef();
 
     /*! Given the AbstractScinthDef, build the Vulkan objects that can be re-used across all running Scinth instances
@@ -32,16 +35,19 @@ public:
      * \param A pointer to the ShaderCompiler.
      * \return true on success, false on error.
      */
-    bool build(vk::ShaderCompiler* compiler, vk::Canvas* canvas);
+    bool build(vk::ShaderCompiler* compiler);
+
+    // TODO: whatever happend to create/destroy paradigm?
 
     /*! Create a running instance Scinth of this ScinthDef.
      */
-    std::unique_ptr<Scinth> play(std::shared_ptr<vk::CommandPool> commandPool);
+    std::unique_ptr<Scinth> play(const std::string& scinthName, const TimePoint& startTime);
 
 private:
-    bool buildVertexData(vk::Canvas* canvas);
+    bool buildVertexData();
 
     std::shared_ptr<vk::Device> m_device;
+    std::shared_ptr<vk::Canvas> m_canvas;
     std::shared_ptr<const AbstractScinthDef> m_abstractScinthDef;
     std::unique_ptr<vk::HostBuffer> m_vertexBuffer;
     std::unique_ptr<vk::HostBuffer> m_indexBuffer;

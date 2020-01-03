@@ -11,7 +11,8 @@ Canvas::Canvas(std::shared_ptr<Device> device): m_device(device), m_renderPass(V
 
 Canvas::~Canvas() { destroy(); }
 
-bool Canvas::create(Images* images) {
+bool Canvas::create(std::shared_ptr<Images> images) {
+    m_images = images;
     m_extent = images->extent();
     m_numberOfImages = images->count();
 
@@ -42,7 +43,7 @@ bool Canvas::create(Images* images) {
     VkAttachmentDescription colorAttachment = {};
     colorAttachment.format = images->format();
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
     colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -70,7 +71,7 @@ bool Canvas::create(Images* images) {
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     renderPassInfo.attachmentCount = 1;
     renderPassInfo.pAttachments = &colorAttachment;
-    renderPassInfo.subpassCount = 1;
+    renderPassInfo.subpassCount = 1; // TODO: alpha-blended Scinths might need their own subpasses?
     renderPassInfo.pSubpasses = &subpass;
     renderPassInfo.dependencyCount = 1;
     renderPassInfo.pDependencies = &dependency;
@@ -119,6 +120,8 @@ void Canvas::destroy() {
     }
     m_imageViews.clear();
 }
+
+VkImage Canvas::image(size_t index) { return m_images->get()[index]; }
 
 } // namespace vk
 

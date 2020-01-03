@@ -35,7 +35,7 @@ private:
     VkExtent2D m_extent;
     uint32_t m_imageCount;
     VkSwapchainKHR m_swapchain;
-    std::unique_ptr<Images> m_images;
+    std::shared_ptr<Images> m_images;
     std::shared_ptr<Canvas> m_canvas;
 };
 

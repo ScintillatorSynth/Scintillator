@@ -91,11 +91,8 @@ void Window::run(std::shared_ptr<Compositor> compositor) {
 
         VkSemaphore waitSemaphores[] = { m_imageAvailableSemaphores[currentFrame] };
         VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        m_commandBuffers[currentFrame] = compositor->buildFrame(imageIndex);
-        std::vector<VkCommandBuffer> commandBuffers;
-        for (auto command : m_commandBuffers[currentFrame]) {
-            commandBuffers.push_back(command->buffer(imageIndex));
-        }
+        m_commandBuffers[currentFrame] =
+            compositor->prepareFrame(imageIndex, std::chrono::high_resolution_clock::now());
         VkSemaphore signalSemaphores[] = { m_renderFinishedSemaphores[currentFrame] };
 
         VkSubmitInfo submitInfo = {};
@@ -103,8 +100,9 @@ void Window::run(std::shared_ptr<Compositor> compositor) {
         submitInfo.waitSemaphoreCount = 1;
         submitInfo.pWaitSemaphores = waitSemaphores;
         submitInfo.pWaitDstStageMask = waitStages;
-        submitInfo.commandBufferCount = commandBuffers.size();
-        submitInfo.pCommandBuffers = commandBuffers.data();
+        submitInfo.commandBufferCount = 1;
+        VkCommandBuffer commandBuffer = m_commandBuffers[currentFrame]->buffer(imageIndex);
+        submitInfo.pCommandBuffers = &commandBuffer;
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
 

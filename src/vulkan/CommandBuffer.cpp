@@ -13,13 +13,17 @@ CommandBuffer::CommandBuffer(const std::shared_ptr<Device> device, CommandPool* 
 
 CommandBuffer::~CommandBuffer() { destroy(); }
 
-bool CommandBuffer::create(size_t count) {
+bool CommandBuffer::create(size_t count, bool isPrimary) {
     m_commandBuffers.resize(count);
 
     VkCommandBufferAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool = m_commandPool->get();
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    if (isPrimary) {
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    } else {
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+    }
     allocInfo.commandBufferCount = count;
 
     if (vkAllocateCommandBuffers(m_device->get(), &allocInfo, m_commandBuffers.data()) != VK_SUCCESS) {

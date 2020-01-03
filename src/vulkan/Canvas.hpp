@@ -25,7 +25,7 @@ public:
      * \param images A pointer to an Images class.
      * \return true on success, false on failure.
      */
-    bool create(Images* images);
+    bool create(std::shared_ptr<Images> images);
 
     /*! Reclaims the Vukan resources associated with the Canvas.
      */
@@ -37,9 +37,11 @@ public:
     uint32_t height() const { return m_extent.height; }
     VkRenderPass renderPass() { return m_renderPass; }
     VkFramebuffer framebuffer(size_t index) { return m_framebuffers[index]; }
+    VkImage image(size_t index);
 
 private:
     std::shared_ptr<Device> m_device;
+    std::shared_ptr<Images> m_images;
     VkExtent2D m_extent;
     size_t m_numberOfImages;
     std::vector<VkImageView> m_imageViews;

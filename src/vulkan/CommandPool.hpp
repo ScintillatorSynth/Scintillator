@@ -27,9 +27,10 @@ public:
     /*! Allocate and return a set of CommandBuffer objects for use in recording GPU commands.
      *
      * \param count The number of buffers to allocate.
+     * \param isPrimary If true, allocates a primary command buffer. If false, allocates a secondary command buffer.
      * \return The CommandBuffer object, or nullptr on error.
      */
-    std::shared_ptr<CommandBuffer> createBuffers(size_t count);
+    std::shared_ptr<CommandBuffer> createBuffers(size_t count, bool isPrimary);
 
     VkCommandPool get() { return m_commandPool; }
 
