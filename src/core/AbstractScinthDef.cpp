@@ -159,19 +159,20 @@ bool AbstractScinthDef::buildVertexShader() {
             switch (m_vertexManifest.typeForElement(i)) {
             case Manifest::ElementType::kFloat:
                 m_vertexShader +=
-                    fmt::format("    gl_Position = vec4({}, 0.0f, 0.0f, 1.0f);\n", m_vertexPositionElementName);
+                    fmt::format("    gl_Position = vec4(in_{}, 0.0f, 0.0f, 1.0f);\n", m_vertexPositionElementName);
                 break;
 
             case Manifest::ElementType::kVec2:
-                m_vertexShader += fmt::format("    gl_Position = vec4({}, 0.0f, 1.0f);\n", m_vertexPositionElementName);
+                m_vertexShader += fmt::format("    gl_Position = vec4(in_{}, 0.0f, 1.0f);\n",
+                                              m_vertexPositionElementName);
                 break;
 
             case Manifest::ElementType::kVec3:
-                m_vertexShader += fmt::format("    gl_Position = vec4({}, 1.0f);\n", m_vertexPositionElementName);
+                m_vertexShader += fmt::format("    gl_Position = vec4(in_{}, 1.0f);\n", m_vertexPositionElementName);
                 break;
 
             case Manifest::ElementType::kVec4:
-                m_vertexShader += fmt::format("    gl_Position = {};\n", m_vertexPositionElementName);
+                m_vertexShader += fmt::format("    gl_Position = in_{};\n", m_vertexPositionElementName);
                 break;
             }
         } else {
@@ -181,6 +182,7 @@ bool AbstractScinthDef::buildVertexShader() {
     }
 
     m_vertexShader += "}\n";
+    spdlog::info("vertex shader: {} \n", m_vertexShader);
     return true;
 }
 
@@ -224,7 +226,7 @@ bool AbstractScinthDef::buildFragmentShader() {
         m_fragmentShader += m_instances[i].abstractVGen()->parameterize(m_inputs[i], intrinsicNames, m_outputs[i]);
     }
 
-    spdlog::info("fragshader: {}\n", m_fragmentShader);
+    spdlog::info("fragment shader: {}\n", m_fragmentShader);
     return true;
 }
 

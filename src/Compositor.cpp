@@ -16,7 +16,7 @@ namespace scin {
 Compositor::Compositor(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Canvas> canvas):
     m_device(device),
     m_canvas(canvas),
-    m_clearColor(0.0, 0.0, 0.0),
+    m_clearColor(1.0, 1.0, 1.0),
     m_shaderCompiler(new scin::vk::ShaderCompiler()),
     m_commandPool(new scin::vk::CommandPool(device)),
     m_commandBufferDirty(true) {
@@ -114,6 +114,8 @@ bool Compositor::rebuildCommandBuffer(bool shouldClear) {
     }
 
     VkClearColorValue clearColor = { m_clearColor.x, m_clearColor.y, m_clearColor.z, 1.0f };
+    VkClearValue clearValue = {};
+    clearValue.color = clearColor;
 
     for (auto i = 0; i < m_canvas->numberOfImages(); ++i) {
         VkCommandBufferBeginInfo beginInfo = {};
@@ -134,16 +136,24 @@ bool Compositor::rebuildCommandBuffer(bool shouldClear) {
         renderPassInfo.renderArea.extent = m_canvas->extent();
         renderPassInfo.clearValueCount = 0;
         renderPassInfo.pClearValues = nullptr;
-        vkCmdBeginRenderPass(m_primaryCommands->buffer(i), &renderPassInfo,
-                             VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+        if (m_secondaryCommands.size()) {
+            vkCmdBeginRenderPass(m_primaryCommands->buffer(i), &renderPassInfo,
+                                 VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+        } else {
+            vkCmdBeginRenderPass(m_primaryCommands->buffer(i), &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        }
 
         if (shouldClear) {
-            VkImageSubresourceRange imageRange = {};
-            imageRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            imageRange.levelCount = 1;
-            imageRange.layerCount = 1;
-            vkCmdClearColorImage(m_primaryCommands->buffer(i), m_canvas->image(i), VK_IMAGE_LAYOUT_GENERAL, &clearColor,
-                                 1, &imageRange);
+            VkClearAttachment clearAttachment = {};
+            clearAttachment.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            clearAttachment.colorAttachment = 0;
+            clearAttachment.clearValue = clearValue;
+            VkClearRect clearRect = {};
+            clearRect.rect.offset = { 0, 0 };
+            clearRect.rect.extent = m_canvas->extent();
+            clearRect.baseArrayLayer = 0;
+            clearRect.layerCount = 1;
+            vkCmdClearAttachments(m_primaryCommands->buffer(i), 1, &clearAttachment, 1, &clearRect);
         }
 
         if (m_secondaryCommands.size()) {
@@ -159,6 +169,7 @@ bool Compositor::rebuildCommandBuffer(bool shouldClear) {
             return false;
         }
     }
+    return true;
 }
 
 void Compositor::stopScinthLockAcquired(ScinthMap::iterator it) {
