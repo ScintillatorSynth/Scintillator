@@ -1,8 +1,9 @@
 #include "OscHandler.hpp"
 
-#include "core/LogLevels.hpp"
+#include "Async.hpp"
 #include "OscCommand.hpp"
 #include "Version.hpp"
+#include "core/LogLevels.hpp"
 
 #include "ip/UdpSocket.h"
 #include "osc/OscOutboundPacketStream.h"
@@ -13,6 +14,7 @@
 #include "spdlog/spdlog.h"
 
 #include <cstring>
+#include <deque>
 #include <string>
 
 namespace scin {
@@ -23,6 +25,7 @@ public:
         osc::OscPacketListener(),
         m_handler(handler),
         m_dumpOSC(false),
+        m_sendQuitDone(false),
         m_quitHandler([] {}) {}
 
     void ProcessMessage(const osc::ReceivedMessage& message, const IpEndpointName& endpoint) override {
@@ -51,16 +54,6 @@ public:
                 return;
             }
 
-            // couple of needs that we have here. There will be some low-latency messages that should probably not be a
-            // delegated to a std::async task, but rather should be handled directly on this thread. Or maybe that is
-            // a premature optimization. Normal thing will be to collect a std::future from a std::async launch to
-            // to handle the response. What happens to those futures? For lightweight things, like setting the quit
-            // flag, doing on a separate thread seems excessive.
-            //
-            // Separately, there should be some way to send a reply back to the sender. Again here there are two use
-            // cases, the first where some code here is executing so the context is available to send the response. The
-            // other case is when some other thread has to do work, in which case maybe completion callbacks should be
-            // the thing, and they will encapsulate the necessary information to send the thing back.
             switch (pair->number) {
             case kNone:
                 // None command means this is deliberately empty.
@@ -76,12 +69,19 @@ public:
 
             case kQuit:
                 spdlog::info("scinsynth got OSC quit command, terminating.");
-                m_quitSocket.reset(new UdpTransmitSocket(endpoint));
+                m_quitEndpoint = endpoint;
+                m_sendQuitDone = true;
                 m_quitHandler();
                 break;
 
-            case kDRecv:
-                break;
+            case kDRecv: {
+                osc::ReceivedMessage::const_iterator msg = message.ArgumentsBegin();
+                std::string yaml = (msg++)->AsString();
+                // TODO: optional message to execute?
+                m_async->scinthDefParseString(yaml, [this, endpoint](bool) {
+                        sendDoneMessage(endpoint);
+                });
+            } break;
 
             case kDumpOSC: {
                 osc::ReceivedMessage::const_iterator msg = message.ArgumentsBegin();
@@ -128,12 +128,19 @@ public:
 
     void setQuitHandler(std::function<void()> quitHandler) { m_quitHandler = quitHandler; }
 
+    void setAsync(std::shared_ptr<Async> async) { m_async = async; }
+
+    void sendDoneMessage(const IpEndpointName& endpoint) {
+        std::array<char, 32> buffer;
+        UdpTransmitSocket socket(endpoint);
+        osc::OutboundPacketStream p(buffer.data(), sizeof(buffer));
+        p << osc::BeginMessage("/scin_done") << osc::EndMessage;
+        socket.Send(p.Data(), p.Size());
+    }
+
     void sendQuitDone() {
-        if (m_quitSocket) {
-            std::array<char, 32> buffer;
-            osc::OutboundPacketStream p(buffer.data(), sizeof(buffer));
-            p << osc::BeginMessage("/scin_done") << osc::EndMessage;
-            m_quitSocket->Send(p.Data(), p.Size());
+        if (m_sendQuitDone) {
+            sendDoneMessage(m_quitEndpoint);
         }
     }
 
@@ -143,11 +150,14 @@ private:
 
     // Function to call back if a /scin_quit command is received, tells the rest of the scinsynth binary to quit.
     std::function<void()> m_quitHandler;
-    // Pointer to the sender to /scin_quit, if non-null, to which we send a /scin_done message right before shutdown.
-    std::unique_ptr<UdpTransmitSocket> m_quitSocket;
+    IpEndpointName m_quitEndpoint;
+    bool m_sendQuitDone;
+
+    std::shared_ptr<Async> m_async;
 };
 
-OscHandler::OscHandler(const std::string& bindAddress, int listenPort):
+OscHandler::OscHandler(std::shared_ptr<Async> async, const std::string& bindAddress, int listenPort):
+    m_async(async),
     m_bindAddress(bindAddress),
     m_listenPort(listenPort) {}
 
@@ -157,14 +167,16 @@ void OscHandler::setQuitHandler(std::function<void()> quitHandler) { m_listener-
 
 void OscHandler::run() {
     m_listener.reset(new OscListener(this));
+    m_listener->setAsync(m_async);
     m_listenSocket.reset(
         new UdpListeningReceiveSocket(IpEndpointName(m_bindAddress.data(), m_listenPort), m_listener.get()));
-    m_socketFuture = std::async(std::launch::async, [this] { m_listenSocket->Run(); });
+    m_socketThread = std::thread([this] { m_listenSocket->Run(); });
 }
 
 void OscHandler::shutdown() {
     m_listener->sendQuitDone();
     m_listenSocket->AsynchronousBreak();
+    m_socketThread.join();
 }
 
 } // namespace scin

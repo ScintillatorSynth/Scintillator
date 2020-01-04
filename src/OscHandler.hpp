@@ -2,9 +2,9 @@
 #define SRC_OSCHANDLER_HPP_
 
 #include <functional>
-#include <future>
 #include <memory>
 #include <string>
+#include <thread>
 
 // Forward declarations from OscPack library.
 class UdpListeningReceiveSocket;
@@ -12,9 +12,11 @@ class UdpTransmitSocket;
 
 namespace scin {
 
+class Async;
+
 class OscHandler {
 public:
-    OscHandler(const std::string& bindAddress, int listenPort);
+    OscHandler(std::shared_ptr<Async> async, const std::string& bindAddress, int listenPort);
     ~OscHandler();
 
     // Function to call if we receive an OSC /scin_quit command. When called, it should safely terminate the scinsynth
@@ -29,12 +31,12 @@ public:
 private:
     class OscListener;
 
+    std::shared_ptr<Async> m_async;
     std::string m_bindAddress;
     int m_listenPort;
-
     std::unique_ptr<OscListener> m_listener;
     std::unique_ptr<UdpListeningReceiveSocket> m_listenSocket;
-    std::future<void> m_socketFuture;
+    std::thread m_socketThread;
 };
 
 } // namespace scin

@@ -63,13 +63,13 @@ section::Scinth Definition Commands
 
 subsection::/scin_d_recv
 
-Recive a Scinth definition file.
+Recive a Scinth definition yaml file.
 
 table::
-## strong::bytes:: || buffer of data.
+## strong::string:: || A string of yaml data containing one or more ScinthDef documents.
 ## strong::bytes:: || optional, an OSC message to execute upon completion.
 ::
 
 definitionlist::
-## Asynchronous. || Replies to sender with strong::/scin_done:: just before completion.
+## Asynchronous. || Replies to sender with strong::/scin_done:: when complete.
 ::
