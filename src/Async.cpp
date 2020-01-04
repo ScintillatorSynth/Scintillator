@@ -39,7 +39,7 @@ void Async::stop() {
 void Async::vgenLoadDirectory(fs::path path, std::function<void(bool)> completion) {
     {
         std::lock_guard<std::mutex> lock(m_jobQueueMutex);
-        m_jobQueue.push_back({[this, path]() { return asyncVGenLoadDirectory(path); }, completion});
+        m_jobQueue.push_back({ [this, path]() { return asyncVGenLoadDirectory(path); }, completion });
     }
     m_jobQueueCondition.notify_one();
 }
@@ -47,7 +47,7 @@ void Async::vgenLoadDirectory(fs::path path, std::function<void(bool)> completio
 void Async::scinthDefLoadDirectory(fs::path path, std::function<void(bool)> completion) {
     {
         std::lock_guard<std::mutex> lock(m_jobQueueMutex);
-        m_jobQueue.push_back({[this, path]() { return asyncScinthDefLoadDirectory(path); }, completion});
+        m_jobQueue.push_back({ [this, path]() { return asyncScinthDefLoadDirectory(path); }, completion });
     }
     m_jobQueueCondition.notify_one();
 }
@@ -55,7 +55,7 @@ void Async::scinthDefLoadDirectory(fs::path path, std::function<void(bool)> comp
 void Async::scinthDefParseString(std::string yaml, std::function<void(bool)> completion) {
     {
         std::lock_guard<std::mutex> lock(m_jobQueueMutex);
-        m_jobQueue.push_back({[this, yaml]() { return asyncScinthDefParseString(yaml); }, completion});
+        m_jobQueue.push_back({ [this, yaml]() { return asyncScinthDefParseString(yaml); }, completion });
     }
     m_jobQueueCondition.notify_one();
 }
@@ -134,7 +134,7 @@ bool Async::asyncScinthDefLoadDirectory(fs::path path) {
         if (fs::is_regular_file(p) && p.extension() == ".yaml") {
             spdlog::debug("Parsing ScinthDef yaml file {}.", p.string());
             std::vector<std::shared_ptr<const AbstractScinthDef>> scinthDefs = m_archetypes->loadFromFile(p.string());
-            for (auto scinthDef: scinthDefs) {
+            for (auto scinthDef : scinthDefs) {
                 if (m_compositor->buildScinthDef(scinthDef)) {
                     ++parseCount;
                 }
@@ -147,7 +147,7 @@ bool Async::asyncScinthDefLoadDirectory(fs::path path) {
 
 bool Async::asyncScinthDefParseString(std::string yaml) {
     std::vector<std::shared_ptr<const AbstractScinthDef>> scinthDefs = m_archetypes->parseFromString(yaml);
-    for (auto scinthDef: scinthDefs) {
+    for (auto scinthDef : scinthDefs) {
         m_compositor->buildScinthDef(scinthDef);
     }
     return true;

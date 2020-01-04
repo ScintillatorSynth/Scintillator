@@ -78,9 +78,7 @@ public:
                 osc::ReceivedMessage::const_iterator msg = message.ArgumentsBegin();
                 std::string yaml = (msg++)->AsString();
                 // TODO: optional message to execute?
-                m_async->scinthDefParseString(yaml, [this, endpoint](bool) {
-                        sendDoneMessage(endpoint);
-                });
+                m_async->scinthDefParseString(yaml, [this, endpoint](bool) { sendDoneMessage(endpoint); });
             } break;
 
             case kDumpOSC: {

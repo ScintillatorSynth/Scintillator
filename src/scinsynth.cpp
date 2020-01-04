@@ -40,7 +40,7 @@ DEFINE_int32(window_width, 800, "Viewable width in pixels of window to create. I
 DEFINE_int32(window_height, 600, "Viewable height in pixels of window to create. Ignored if --fullscreen is supplied.");
 
 DEFINE_int32(async_worker_threads, 2,
-        "Number of threads to reserve for asynchronous operations (like loading ScinthDefs).");
+             "Number of threads to reserve for asynchronous operations (like loading ScinthDefs).");
 
 int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
@@ -109,9 +109,9 @@ int main(int argc, char* argv[]) {
 
     // Chain async calls to load VGens, then ScinthDefs, then play the test ScinthDef.
     async->vgenLoadDirectory(quarkPath / "vgens", [async, &quarkPath, compositor](bool) {
-            async->scinthDefLoadDirectory(quarkPath / "scinthdefs", [compositor](bool) {
-                compositor->play("TestScinthDef", "t1", std::chrono::high_resolution_clock::now());
-            });
+        async->scinthDefLoadDirectory(quarkPath / "scinthdefs", [compositor](bool) {
+            compositor->play("TestScinthDef", "t1", std::chrono::high_resolution_clock::now());
+        });
     });
 
     if (!window.createSyncObjects()) {
