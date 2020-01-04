@@ -80,6 +80,9 @@ public:
                 m_quitHandler();
                 break;
 
+            case kDRecv:
+                break;
+
             case kDumpOSC: {
                 osc::ReceivedMessage::const_iterator msg = message.ArgumentsBegin();
                 int dump = (msg++)->AsInt32();

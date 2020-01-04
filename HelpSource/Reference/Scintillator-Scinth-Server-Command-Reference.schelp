@@ -58,3 +58,18 @@ definitionList::
 ::
 
 It is expected that the scinsynth binary will always have the same major, minor, and patch version as the Scintillator Quark.
+
+section::Scinth Definition Commands
+
+subsection::/scin_d_recv
+
+Recive a Scinth definition file.
+
+table::
+## strong::bytes:: || buffer of data.
+## strong::bytes:: || optional, an OSC message to execute upon completion.
+::
+
+definitionlist::
+## Asynchronous. || Replies to sender with strong::/scin_done:: just before completion.
+::
