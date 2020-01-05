@@ -95,6 +95,10 @@ bool Scinth::prepareFrame(size_t imageIndex, const TimePoint& frameTime) {
                 spdlog::error("normPos is not a valid intrinsic for a Uniform in Scinth {}", m_name);
                 return false;
 
+            case kPi:
+                spdlog::error("pi not a valid Uniform intrinsic in Scinth {}", m_name);
+                return false;
+
             case kTime:
                 *uniform = std::chrono::duration<float, std::chrono::seconds::period>(frameTime - m_startTime).count();
                 break;

@@ -126,6 +126,10 @@ bool ScinthDef::buildVertexData() {
                     vertex[1] = verts[1] * normPosScale.y;
                 } break;
 
+                case kPi:
+                    spdlog::error("pi is not a valid vertex intrinsic for ScinthDef {}", m_abstractScinthDef->name());
+                    return false;
+
                 case kTime:
                     spdlog::error("time is not a valid vertex intrinsic for ScinthDef {}", m_abstractScinthDef->name());
                     return false;

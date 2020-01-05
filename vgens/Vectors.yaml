@@ -1,0 +1,118 @@
+name: Vec2
+inputs:
+    - x
+    - y
+outputs:
+    - out
+dimensions:
+    - inputs: 1
+      outputs: 2
+shader: "@out = vec2(@x, @y);"
+---
+name: Vec3
+inputs:
+    - x
+    - y
+    - z
+outputs:
+    - out
+dimensions:
+    - inputs: 1
+      outputs: 3
+shader: "@out = vec3(@x, @y, @z);"
+---
+name: Vec4
+inputs:
+    - x
+    - y
+    - z
+    - w
+outputs:
+    - out
+dimensions:
+    - inputs: 1
+      outputs: 4
+shader: "@out = vec4(@x, @y, @z, @w);"
+---
+name: VX
+inputs:
+    - vec
+outputs:
+    - out
+dimensions:
+    - inputs: 1
+      outputs: 1
+    - inputs: 2
+      outputs: 1
+    - inputs: 3
+      outputs: 1
+    - inputs: 4
+      outputs: 1
+shader: "@out = @vec.x;"
+---
+name: VY
+inputs:
+    - vec
+outputs:
+    - out
+dimensions:
+    - inputs: 2
+      outputs: 1
+    - inputs: 3
+      outputs: 1
+    - inputs: 4
+      outputs: 1
+shader: "@out = @vec.y;"
+---
+name: VZ
+inputs:
+    - vec
+outputs:
+    - out
+dimensions:
+    - inputs: 3
+      outputs: 1
+    - inputs: 4
+      outputs: 1
+shader: "@out = @vec.z;"
+---
+name: VW
+inputs:
+    - vec
+outputs:
+    - out
+dimensions:
+    - inputs: 4
+      outputs: 1
+shader: "@out = @vec.w;"
+---
+name: Splat2
+inputs:
+    - x
+outputs:
+    - out
+dimensions:
+    - inputs: 1
+      outputs: 2
+shader: "@out = vec2(@x, @x);"
+---
+name: Splat3
+inputs:
+    - x
+outputs:
+    - out
+dimensions:
+    - inputs: 1
+      outputs: 3
+shader: "@out = vec3(@x, @x, @x);"
+---
+name: Splat4
+inputs:
+    - x
+outputs:
+    - out
+dimensions:
+    - inputs: 1
+      outputs: 4
+shader: "@out = vec4(@x, @x, @x, @x);"
+

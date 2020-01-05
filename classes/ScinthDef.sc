@@ -12,6 +12,30 @@ ScinthDef {
 		func = vGenGraphFunc;
 		func.valueArray();
 		VGen.buildScinthDef = nil;
+		children.do({ |vgen, index| this.prFitDimensions(vgen) });
+	}
+
+	prFitDimensions { |vgen|
+		var dimIndex = -1;
+		// Build list of input dimensions.
+		vgen.inDims = Array.fill(vgen.inputs.size, { |i|
+			case
+			{ vgen.inputs[i].isNumber } { 1 }
+			{ vgen.inputs[i].isVGen } { children[vgen.inputs[i].scinthIndex].outDims[0] }
+		});
+
+		// Search for dimensions among list of supported input dimensions.
+		vgen.inputDimensions.do({ |dim, i|
+			if (dim == vgen.inDims, {
+				dimIndex = i;
+			});
+		});
+
+		if (dimIndex >= 0, {
+			vgen.outDims = vgen.outputDimensions[dimIndex];
+		}, {
+			"dimension mismatch on vgen % in ScinthDef %".format(vgen.name, name).postln;
+		});
 	}
 
 	asYAML { |indentDepth = 0|
@@ -27,19 +51,25 @@ ScinthDef {
 			yaml = yaml ++ depthIndent ++ "  rate: fragment\n";
 			if (vgen.inputs.size > 0, {
 				yaml = yaml ++ depthIndent ++ "  inputs:\n";
-				vgen.inputs.do({ | input, inputIndex |
+				vgen.inputs.do({ |input, inputIndex|
 					case
 					{ input.isNumber } {
 						yaml = yaml ++ secondDepth ++ "- type: constant\n";
+						yaml = yaml ++ secondDepth ++ "  dimension:" + vgen.inDims[inputIndex] ++ "\n";
 						yaml = yaml ++ secondDepth ++ "  value:" + input.asString ++ "\n";
 					}
 					{ input.isVGen } {
 						yaml = yaml ++ secondDepth ++ "- type: vgen\n";
 						yaml = yaml ++ secondDepth ++ "  vgenIndex:" + input.scinthIndex.asString ++ "\n";
 						yaml = yaml ++ secondDepth ++ "  outputIndex: 0\n";
+						yaml = yaml ++ secondDepth ++ "  dimension:" + vgen.inDims[inputIndex] ++ "\n";
 					}
 					{ this.notImplemented; }
 				});
+			});
+			yaml = yaml ++ depthIndent ++ "  outputs:\n";
+			vgen.outDims.do({ |outDim, outDimIndex|
+				yaml = yaml ++ secondDepth ++ "- dimension:" + outDim ++ "\n";
 			});
 		});
 
@@ -59,8 +89,8 @@ ScinthDef {
 	}
 
 	// VGens call these.
-	addVGen { | vGen |
-		vGen.scinthIndex = children.size;
-		children = children.add(vGen);
+	addVGen { |vgen|
+		vgen.scinthIndex = children.size;
+		children = children.add(vgen);
 	}
 }

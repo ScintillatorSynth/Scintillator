@@ -4,13 +4,15 @@ VGen : AbstractFunction {
 	var <>inputs;
 	var <>rate = \fragment;
 	var <>scinthIndex;
+	var <>inDims;
+	var <>outDims;
 
 	*singleNew { | rate ... args |
 		if (rate.isKindOf(Symbol).not or:
 			{ rate != \fragment and: { rate != \vertex } }, {
 				Error("rate must be one of 'fragment' or 'vertex'").throw;
 		});
-		^super.new.rate_(rate).addToSynth.init(*args);
+		^super.new.rate_(rate).addToScinth.init(*args);
 	}
 
 	*multiNew { | ... args |
@@ -75,7 +77,7 @@ VGen : AbstractFunction {
 		^thisMethod.notYetImplemented;
 	}
 
-	addToSynth {
+	addToScinth {
 		scinthDef = buildScinthDef;
 		if (scinthDef.notNil, {
 			scinthDef.addVGen(this);
@@ -86,17 +88,19 @@ VGen : AbstractFunction {
 	isValidVGenInput { ^true }
 	isVGen { ^true }
 	name { ^this.class.asString }
-	numOutputs { ^1 }
+	numOutputs { this.outputDimensions.length }
 
 	madd { | mul = 1.0, add = 0.0 |
 		^VMulAdd.new(this, mul, add);
 	}
-}
 
-// No side effects in PureVGens, placeholder for now but subject
-// to graph optimizations (?) in the future.
-PureVGen : VGen {
+	inputDimensions {
+		^[];
+	}
 
+	outputDimensions {
+		^[];
+	}
 }
 
 // These extensions mostly do the same as their UGen counterparts,
@@ -109,7 +113,7 @@ PureVGen : VGen {
 }
 
 + AbstractFunction {
-	asVGenInput { | for |
+	asVGenInput { |for|
 		^this.value(for);
 	}
 
@@ -117,7 +121,7 @@ PureVGen : VGen {
 }
 
 + Array {
-	asVGenInput { | for |
+	asVGenInput { |for|
 		^this.collect(_.asVGenInput(for));
 	}
 
@@ -126,4 +130,6 @@ PureVGen : VGen {
 
 + SimpleNumber {
 	isValidVGenInput { ^this.isNaN.not }
+	inputDimensions { ^[] }
+	outputDimensions { ^[[1]] }
 }

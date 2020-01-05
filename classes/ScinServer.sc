@@ -7,7 +7,7 @@ ScinServer {
 	var addr;
 
 	// For local scinsynth instances. Remote not yet supported.
-	*new { |udpPortNumber = 52210, scinBinaryPath|
+	*new { |udpPortNumber = 5511, scinBinaryPath|
 		^super.newCopyArgs(udpPortNumber, scinBinaryPath).init;
 	}
 
@@ -56,6 +56,10 @@ ScinServer {
 		if (level >= 0 and: { level <= 6 }, {
 			addr.sendMsg('/scin_logLevel', level);
 		});
+	}
+
+	sendMsg { |... msg|
+		addr.sendMsg(*msg)
 	}
 
 	prGetVersionAsync { |callback|
