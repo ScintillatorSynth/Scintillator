@@ -1,6 +1,10 @@
 ScinServer {
+	classvar <>default;
+
 	var udpPortNumber;
 	var scinBinaryPath;
+	var scinQuarkPath;
+	var logLevel;
 
 	var scinQuarkVersion;
 	var scinPid;
@@ -20,17 +24,27 @@ ScinServer {
 					scinBinaryPath = quark.localPath ++ "/build/src/scinsynth";
 				});
 				scinQuarkVersion = quark.version;
+				scinQuarkPath = quark.localPath;
 			});
 		});
+
+		logLevel = 2;
 	}
 
 	boot {
-		var commandLine = scinBinaryPath + "--udp_port_number=" ++ udpPortNumber.asString();
+		var commandLine = scinBinaryPath + "--udp_port_number=" ++ udpPortNumber.asString()
+		+ "--quark_dir=" ++ scinQuarkPath + "--log_level=" ++ logLevel.asString();
+		commandLine.postln;
+
 		scinPid = commandLine.unixCmd({ |exitCode, exitPid|
 			"*** got scinsynth exit code %".format(exitCode).postln;
 		});
 
+		if (ScinServer.default.isNil, {
+			ScinServer.default = this;
+		});
 		addr = NetAddr.new("127.0.0.1", udpPortNumber);
+		^this;
 	}
 
 	status {

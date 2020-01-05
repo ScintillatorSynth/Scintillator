@@ -205,7 +205,7 @@ bool AbstractScinthDef::buildFragmentShader() {
     // For now, all intrinsics are global, coming from either the vertex shader or the uniform buffer, so we can define
     // a single map with all of their substitutions.
     std::unordered_map<Intrinsic, std::string> intrinsicNames;
-    intrinsicNames.insert({ Intrinsic::kPi, "3.1415926535897932384626433832795f"});
+    intrinsicNames.insert({ Intrinsic::kPi, "3.1415926535897932384626433832795f" });
 
     // Now add any inputs that might have come from the vertex shader by processing the vertex manifest.
     for (auto i = 0; i < m_vertexManifest.numberOfElements(); ++i) {
@@ -225,7 +225,6 @@ bool AbstractScinthDef::buildFragmentShader() {
             case kNotFound:
                 spdlog::warn("unknown fragment shader vertex input {}", m_vertexManifest.nameForElement(i));
                 break;
-
             }
             if (intrinsic == Intrinsic::kNotFound) {
             } else {

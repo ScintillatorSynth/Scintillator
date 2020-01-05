@@ -1,11 +1,12 @@
 title:: Scintillator Scinth Server Command Reference
 summary:: A list of all OSC commands accepted by scscinth
 categories:: Quarks>Scintillator
-related:: Reference/Server-Command-Architecture
 
 section::OSC Communication Details
 
 While the SuperCollider synth programs support a variety of connection modalities and multi-user scenarios, at present scinsynth only supports a single client commnicating exclusively over UDP. For asynchronous messages the server will respond to whatever UDP address and port messages are received from.
+
+In general Scintillator attempts to follow a similar command list and structure to that of the SuperCollider sound synthesis servers, with the addition of a code::/scin_:: prefix to each OSC command and response.
 
 section::Master Controls
 

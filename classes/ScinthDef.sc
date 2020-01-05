@@ -13,6 +13,7 @@ ScinthDef {
 		func.valueArray();
 		VGen.buildScinthDef = nil;
 		children.do({ |vgen, index| this.prFitDimensions(vgen) });
+		^this;
 	}
 
 	prFitDimensions { |vgen|
@@ -22,6 +23,7 @@ ScinthDef {
 			case
 			{ vgen.inputs[i].isNumber } { 1 }
 			{ vgen.inputs[i].isVGen } { children[vgen.inputs[i].scinthIndex].outDims[0] }
+			{ this.notImplemented }
 		});
 
 		// Search for dimensions among list of supported input dimensions.
@@ -42,8 +44,8 @@ ScinthDef {
 		var yaml, indent, depthIndent, secondDepth;
 		indent = "";
 		indentDepth.do({ indent = indent ++ "    " });
-		yaml = indent ++ "- name: %\n".format(name);
-		yaml = yaml ++ indent ++ "  vgens:\n";
+		yaml = indent ++ "name: %\n".format(name);
+		yaml = yaml ++ indent ++ "vgens:\n";
 		depthIndent = indent ++ "    ";
 		secondDepth = depthIndent ++ "    ";
 		children.do({ | vgen, index |
@@ -64,7 +66,7 @@ ScinthDef {
 						yaml = yaml ++ secondDepth ++ "  outputIndex: 0\n";
 						yaml = yaml ++ secondDepth ++ "  dimension:" + vgen.inDims[inputIndex] ++ "\n";
 					}
-					{ this.notImplemented; }
+					{ this.notImplemented }
 				});
 			});
 			yaml = yaml ++ depthIndent ++ "  outputs:\n";
@@ -76,16 +78,11 @@ ScinthDef {
 		^yaml;
 	}
 
-	// Ultimately this should find the currently attached Scintillator Server, serialize it and send it
-	// to the server. But for now, it completes the YAML file spec and saves it to disk, for loading
-	// offline by the alpha server.
-	add { |filePath|
-		var file;
-		var yaml = "---\n";
-		yaml = yaml ++ this.asYAML;
-		file = File(filePath, "w");
-		file.write(yaml);
-		file.close;
+	add { |server|
+		if (server.isNil, {
+			server = ScinServer.default;
+		});
+		server.sendMsg('/scin_d_recv', this.asYAML);
 	}
 
 	// VGens call these.
