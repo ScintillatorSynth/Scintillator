@@ -18,12 +18,14 @@ Scinth::Scinth(std::shared_ptr<vk::Device> device, int nodeID,
                std::shared_ptr<const AbstractScinthDef> abstractScinthDef):
     m_device(device),
     m_nodeID(nodeID),
-    m_abstractScinthDef(abstractScinthDef) {}
+    m_abstractScinthDef(abstractScinthDef),
+    m_running(false) {}
 
 Scinth::~Scinth() {}
 
 bool Scinth::create(const TimePoint& startTime, vk::UniformLayout* uniformLayout, size_t numberOfImages) {
     m_startTime = startTime;
+    m_running = true;
     if (uniformLayout) {
         m_uniform.reset(new vk::Uniform(m_device));
         if (!m_uniform->createBuffers(uniformLayout, m_abstractScinthDef->uniformManifest().sizeInBytes(),

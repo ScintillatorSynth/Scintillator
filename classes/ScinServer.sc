@@ -52,17 +52,13 @@ ScinServer {
 
 	quit {
 		OSCFunc.new({
-			"*** got scin_done back".postln;
+			// could do some interesting post quit stuff here.
 		}, '/scin_done').oneShot;
 		addr.sendMsg('/scin_quit');
 	}
 
 	dumpOSC { |on|
-		if (on, {
-			addr.sendMsg('/scin_dumpOSC', 1);
-		}, {
-			addr.sendMsg('/scin_dumpOSC', 0);
-		});
+		addr.sendMsg('/scin_dumpOSC', on.binaryValue);
 	}
 
 	// Integer from 0 to 6.

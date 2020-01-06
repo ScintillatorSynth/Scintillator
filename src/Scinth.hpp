@@ -53,8 +53,15 @@ public:
      */
     bool prepareFrame(size_t imageIndex, const TimePoint& frameTime);
 
+    /*! Determines the paused or playing status of the Scinth.
+     *
+     * \param run If false, will pause the Scinth. If true, will play it. Note this only sets the flag for the Scinth.
+     */
+    void setRunning(bool run) { m_running = run; }
+
     std::shared_ptr<vk::CommandBuffer> frameCommands() { return m_commands; }
     int nodeID() const { return m_nodeID; }
+    bool running() const { return m_running; }
 
 private:
     std::shared_ptr<vk::Device> m_device;
@@ -63,6 +70,7 @@ private:
     std::shared_ptr<vk::Uniform> m_uniform;
     std::shared_ptr<vk::CommandBuffer> m_commands;
     std::chrono::time_point<std::chrono::high_resolution_clock> m_startTime;
+    bool m_running;
 };
 
 } // namespace scin

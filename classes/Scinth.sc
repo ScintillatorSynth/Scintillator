@@ -13,4 +13,8 @@ Scinth {
 	free {
 		server.sendMsg('/scin_n_free', nodeID);
 	}
+
+	run { |flag=true|
+		server.sendMsg('/scin_n_run', nodeID, flag.binaryValue);
+	}
 }

@@ -55,6 +55,13 @@ public:
      */
     void freeNodes(const std::vector<int>& nodeIDs);
 
+    /*! Sets the pause/play status of provided nodeID in the provided list of pairs.
+     *
+     * \param pairs A pair of integers, with the first element as a nodeID and the second as a run value. A value of
+     *        zero for the run value will pause the nodeID, and a nonzero value will play it.
+     */
+    void setRun(const std::vector<std::pair<int, int>>& pairs);
+
     /*! Prepare and return a CommandBuffers that when executed in order will render the current frame.
      *
      * \param imageIndex The index of the imageView in the Canvas we will be rendering in to.

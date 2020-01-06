@@ -85,7 +85,25 @@ table::
 ## N * strong::int:: || node ID
 ::
 
-Stops a node abruptly, removes it from its group, and frees its memory. A list of nodeIDs may be specified.
+Stops a node abruptly, removes it from its group, and frees its memory. More than one nodeID may be specified as additional integer arguments in the message.
+
+subsection::/scin_n_run
+
+Turn node on or off from rendering.
+
+table::
+## N* || table::
+## strong::int:: || node ID
+## strong::int:: || run flag
+::
+::
+
+list::
+## if the run flag is set to zero then the node will not be rendered.
+## if the run flag is set to any nonzero value then it will be rendered.
+::
+
+Can take pairs of arguments and will apply the run flag to each provided node ID at the same time.
 
 section::Scinth Commands
 
@@ -105,3 +123,12 @@ As Scintillator does not currently support groups, offscreen render targets, or 
 note::
 The SuperCollider Synthesis Server command reference specifies if the provided ID number is -1, the server reserves all negative numbers for IDs, and so will assign a unique negative value to the Synth instance. Scintillator server is similar, but will treat emphasis::any:: negative value as a request for a unique ID to be assigned.
 ::
+
+
+section::Group Commands
+
+subsection::/scin_g_clearColor
+
+Sets the background color for the provided group.
+
+TODO

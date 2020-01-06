@@ -99,12 +99,33 @@ bool Compositor::play(const std::string& scinthDefName, int nodeID, const TimePo
 
 void Compositor::freeNodes(const std::vector<int>& nodeIDs) {
     std::lock_guard<std::mutex> lock(m_scinthMutex);
+    bool needRebuild = false;
     for (auto nodeID : nodeIDs) {
         auto node = m_scinthMap.find(nodeID);
         if (node != m_scinthMap.end()) {
+            // Only need to rebuild the command buffers if we are removing running Scinths from the list.
+            if ((*(node->second))->running()) {
+                needRebuild = true;
+            }
             freeScinthLockAcquired(node);
         } else {
             spdlog::warn("attempted to free nonexistent nodeID {}", nodeID);
+        }
+    }
+
+    if (needRebuild) {
+        m_commandBufferDirty = true;
+    }
+}
+
+void Compositor::setRun(const std::vector<std::pair<int, int>>& pairs) {
+    std::lock_guard<std::mutex> lock(m_scinthMutex);
+    for (const auto& pair : pairs) {
+        auto node = m_scinthMap.find(pair.first);
+        if (node != m_scinthMap.end()) {
+            (*(node->second))->setRunning(pair.second != 0);
+        } else {
+            spdlog::warn("attempted to set pause/play on nonexistent nodeID {}", pair.first);
         }
     }
 
@@ -117,8 +138,10 @@ std::shared_ptr<vk::CommandBuffer> Compositor::prepareFrame(uint32_t imageIndex,
     {
         std::lock_guard<std::mutex> lock(m_scinthMutex);
         for (auto scinth : m_scinths) {
-            scinth->prepareFrame(imageIndex, frameTime);
-            m_secondaryCommands.push_back(scinth->frameCommands());
+            if (scinth->running()) {
+                scinth->prepareFrame(imageIndex, frameTime);
+                m_secondaryCommands.push_back(scinth->frameCommands());
+            }
         }
     }
 

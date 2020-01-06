@@ -23,6 +23,7 @@ enum OscCommand : int {
 
     // Node Commands
     kNFree = 11,
+    kNRun = 12,
 
     // Scinth Commands
     kSNew = 9
@@ -46,6 +47,7 @@ logLevel,   scin::OscCommand::kLogLevel
 version,    scin::OscCommand::kVersion
 d_recv,     scin::OscCommand::kDRecv
 n_free,     scin::OscCommand::kNFree
+n_run,      scin::OscCommand::kNRun
 s_new,      scin::OscCommand::kSNew
 %%
 

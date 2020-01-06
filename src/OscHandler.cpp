@@ -130,6 +130,15 @@ public:
                 m_compositor->freeNodes(nodeIDs);
             } break;
 
+            case kNRun: {
+                osc::ReceivedMessage::const_iterator msg = message.ArgumentsBegin();
+                std::vector<std::pair<int, int>> pairs;
+                while (msg != message.ArgumentsEnd()) {
+                    pairs.emplace_back(std::make_pair((msg++)->AsInt32(), (msg++)->AsInt32()));
+                }
+                m_compositor->setRun(pairs);
+            } break;
+
             case kSNew: {
                 osc::ReceivedMessage::const_iterator msg = message.ArgumentsBegin();
                 std::string scinthDef = (msg++)->AsString();
