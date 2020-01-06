@@ -19,21 +19,23 @@ Async::~Async() { stop(); }
 void Async::run(size_t numberOfWorkerThreads) {
     spdlog::info("Async starting {} worker threads.", numberOfWorkerThreads);
     for (auto i = 0; i < numberOfWorkerThreads; ++i) {
-        std::string threadName = fmt::format("worker{}", i);
+        std::string threadName = fmt::format("asyncWorkerThread{}", i);
         m_workerThreads.emplace_back(std::thread(&Async::threadMain, this, threadName));
     }
 }
 
 void Async::stop() {
-    m_quit = true;
-    m_jobQueueCondition.notify_all();
-    for (auto& thread : m_workerThreads) {
-        thread.join();
-    }
-    m_workerThreads.clear();
+    if (!m_quit) {
+        m_quit = true;
+        m_jobQueueCondition.notify_all();
+        for (auto& thread : m_workerThreads) {
+            thread.join();
+        }
+        m_workerThreads.clear();
 
-    // All threads are now terminated, mutex no longer required to access m_jobQueue.
-    spdlog::info("Async terminated with {} jobs left in queue.", m_jobQueue.size());
+        // All threads are now terminated, mutex no longer required to access m_jobQueue.
+        spdlog::info("Async terminated with {} jobs left in queue.", m_jobQueue.size());
+    }
 }
 
 void Async::vgenLoadDirectory(fs::path path, std::function<void(bool)> completion) {

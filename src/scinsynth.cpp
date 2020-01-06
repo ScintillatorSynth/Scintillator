@@ -107,11 +107,10 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<scin::Async> async(new scin::Async(archetypes, compositor));
     async->run(FLAGS_async_worker_threads);
 
-    // Chain async calls to load VGens, then ScinthDefs, then play the test ScinthDef.
+    // Chain async calls to load VGens, then ScinthDefs.
     async->vgenLoadDirectory(quarkPath / "vgens", [async, &quarkPath, compositor](bool) {
-        async->scinthDefLoadDirectory(quarkPath / "scinthdefs", [compositor](bool) {
-            compositor->play("TestScinthDef", "t1", std::chrono::high_resolution_clock::now());
-        });
+        async->scinthDefLoadDirectory(quarkPath / "scinthdefs",
+                                      [](bool) { spdlog::info("finished loading predefined VGens and ScinthDefs."); });
     });
 
     if (!window.createSyncObjects()) {
@@ -120,9 +119,8 @@ int main(int argc, char* argv[]) {
     }
 
     // Start listening for incoming OSC commands on UDP.
-    scin::OscHandler oscHandler(async, FLAGS_bind_to_address, FLAGS_udp_port_number);
-    oscHandler.run();
-    oscHandler.setQuitHandler([&window] { window.stop(); });
+    scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
+    oscHandler.run(async, compositor, [&window] { window.stop(); });
 
     // ========== Main loop.
     window.run(compositor);

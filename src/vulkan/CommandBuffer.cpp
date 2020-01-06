@@ -2,6 +2,7 @@
 
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
+#include "vulkan/Uniform.hpp"
 
 #include "spdlog/spdlog.h"
 
@@ -39,7 +40,10 @@ void CommandBuffer::destroy() {
         vkFreeCommandBuffers(m_device->get(), m_commandPool->get(), m_commandBuffers.size(), m_commandBuffers.data());
         m_commandBuffers.clear();
     }
+    m_uniform.reset();
 }
+
+void CommandBuffer::associateUniform(std::shared_ptr<Uniform> uniform) { m_uniform = uniform; }
 
 } // namespace vk
 

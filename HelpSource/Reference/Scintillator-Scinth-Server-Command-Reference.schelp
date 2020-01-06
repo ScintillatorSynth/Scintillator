@@ -49,12 +49,12 @@ Query the Scintillator version. Replies to sender with the following message:
 
 definitionList::
 ## /scin_version.reply || table::
-## string || Program name. Will always be "scinsynth".
-## int || Scintillator major version number.
-## int || Scintillator minor version number.
-## int || Scintillator patch version number.
-## string || Git branch name.
-## string || First seven hex digits of the commit hash.
+## strong::string:: || Program name. Will always be "scinsynth".
+## strong::int:: || Scintillator major version number.
+## strong::int:: || Scintillator minor version number.
+## strong::int:: || Scintillator patch version number.
+## strong::string:: || Git branch name.
+## strong::string:: || First seven hex digits of the commit hash.
 ::
 ::
 
@@ -73,4 +73,35 @@ table::
 
 definitionlist::
 ## Asynchronous. || Replies to sender with strong::/scin_done:: when complete.
+::
+
+section::Node Commands
+
+subsection::/scin_n_free
+
+Delete a node.
+
+table::
+## N * strong::int:: || node ID
+::
+
+Stops a node abruptly, removes it from its group, and frees its memory. A list of nodeIDs may be specified.
+
+section::Scinth Commands
+
+subsection::/scin_s_new
+
+Create a new Scinth.
+
+table::
+## strong::string:: || scinth definition name
+## strong::int:: || scinth ID
+## strong::int:: || add action (not yet supported)
+## strong::int:: || add target ID (not yet supported)
+::
+
+As Scintillator does not currently support groups, offscreen render targets, or scinth controls, only the first two fields are processed by the server. The server will add the Scinth to the default group and start playing it immediately.
+
+note::
+The SuperCollider Synthesis Server command reference specifies if the provided ID number is -1, the server reserves all negative numbers for IDs, and so will assign a unique negative value to the Synth instance. Scintillator server is similar, but will treat emphasis::any:: negative value as a request for a unique ID to be assigned.
 ::

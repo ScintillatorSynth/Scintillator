@@ -1,6 +1,7 @@
 #include "OscHandler.hpp"
 
 #include "Async.hpp"
+#include "Compositor.hpp"
 #include "OscCommand.hpp"
 #include "Version.hpp"
 #include "core/LogLevels.hpp"
@@ -14,19 +15,20 @@
 #include "spdlog/spdlog.h"
 
 #include <cstring>
-#include <deque>
 #include <string>
 
 namespace scin {
 
 class OscHandler::OscListener : public osc::OscPacketListener {
 public:
-    OscListener(OscHandler* handler):
+    OscListener(std::shared_ptr<Async> async, std::shared_ptr<Compositor> compositor,
+                std::function<void()> quitHandler):
         osc::OscPacketListener(),
-        m_handler(handler),
-        m_dumpOSC(false),
+        m_async(async),
+        m_compositor(compositor),
+        m_quitHandler(quitHandler),
         m_sendQuitDone(false),
-        m_quitHandler([] {}) {}
+        m_dumpOSC(false) {}
 
     void ProcessMessage(const osc::ReceivedMessage& message, const IpEndpointName& endpoint) override {
         try {
@@ -74,13 +76,6 @@ public:
                 m_quitHandler();
                 break;
 
-            case kDRecv: {
-                osc::ReceivedMessage::const_iterator msg = message.ArgumentsBegin();
-                std::string yaml = (msg++)->AsString();
-                // TODO: optional message to execute?
-                m_async->scinthDefParseString(yaml, [this, endpoint](bool) { sendDoneMessage(endpoint); });
-            } break;
-
             case kDumpOSC: {
                 osc::ReceivedMessage::const_iterator msg = message.ArgumentsBegin();
                 int dump = (msg++)->AsInt32();
@@ -118,15 +113,35 @@ public:
                 p << osc::EndMessage;
                 responseSocket.Send(p.Data(), p.Size());
             } break;
+
+            case kDRecv: {
+                osc::ReceivedMessage::const_iterator msg = message.ArgumentsBegin();
+                std::string yaml = (msg++)->AsString();
+                // TODO: optional message to execute?
+                m_async->scinthDefParseString(yaml, [this, endpoint](bool) { sendDoneMessage(endpoint); });
+            } break;
+
+            case kNFree: {
+                osc::ReceivedMessage::const_iterator msg = message.ArgumentsBegin();
+                std::vector<int> nodeIDs;
+                while (msg != message.ArgumentsEnd()) {
+                    nodeIDs.emplace_back((msg++)->AsInt32());
+                }
+                m_compositor->freeNodes(nodeIDs);
+            } break;
+
+            case kSNew: {
+                osc::ReceivedMessage::const_iterator msg = message.ArgumentsBegin();
+                std::string scinthDef = (msg++)->AsString();
+                int nodeID = (msg++)->AsInt32();
+                // TODO: handle rest of message.
+                m_compositor->play(scinthDef, nodeID, std::chrono::high_resolution_clock::now());
+            } break;
             }
-        } catch (osc::Exception exception) {
-            spdlog::error("exception in processing OSC message");
+        } catch (osc::Exception e) {
+            spdlog::error("exception in processing OSC message: {}", e.what());
         }
     }
-
-    void setQuitHandler(std::function<void()> quitHandler) { m_quitHandler = quitHandler; }
-
-    void setAsync(std::shared_ptr<Async> async) { m_async = async; }
 
     void sendDoneMessage(const IpEndpointName& endpoint) {
         std::array<char, 32> buffer;
@@ -143,29 +158,23 @@ public:
     }
 
 private:
-    OscHandler* m_handler;
-    bool m_dumpOSC;
-
-    // Function to call back if a /scin_quit command is received, tells the rest of the scinsynth binary to quit.
-    std::function<void()> m_quitHandler;
-    IpEndpointName m_quitEndpoint;
-    bool m_sendQuitDone;
-
     std::shared_ptr<Async> m_async;
+    std::shared_ptr<Compositor> m_compositor;
+    std::function<void()> m_quitHandler;
+    bool m_sendQuitDone;
+    bool m_dumpOSC;
+    IpEndpointName m_quitEndpoint;
 };
 
-OscHandler::OscHandler(std::shared_ptr<Async> async, const std::string& bindAddress, int listenPort):
-    m_async(async),
+OscHandler::OscHandler(const std::string& bindAddress, int listenPort):
     m_bindAddress(bindAddress),
     m_listenPort(listenPort) {}
 
 OscHandler::~OscHandler() {}
 
-void OscHandler::setQuitHandler(std::function<void()> quitHandler) { m_listener->setQuitHandler(quitHandler); }
-
-void OscHandler::run() {
-    m_listener.reset(new OscListener(this));
-    m_listener->setAsync(m_async);
+void OscHandler::run(std::shared_ptr<Async> async, std::shared_ptr<Compositor> compositor,
+                     std::function<void()> quitHandler) {
+    m_listener.reset(new OscListener(async, compositor, quitHandler));
     m_listenSocket.reset(
         new UdpListeningReceiveSocket(IpEndpointName(m_bindAddress.data(), m_listenPort), m_listener.get()));
     m_socketThread = std::thread([this] { m_listenSocket->Run(); });

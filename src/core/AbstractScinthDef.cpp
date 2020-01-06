@@ -191,7 +191,7 @@ bool AbstractScinthDef::buildVertexShader() {
     }
 
     m_vertexShader += "}\n";
-    spdlog::info("vertex shader:\n{}", m_vertexShader);
+    spdlog::info("{} vertex shader:\n{}", m_name, m_vertexShader);
     return true;
 }
 
@@ -277,7 +277,7 @@ bool AbstractScinthDef::buildFragmentShader() {
 
     m_fragmentShader += "}\n";
 
-    spdlog::info("fragment shader:\n{}", m_fragmentShader);
+    spdlog::info("{} fragment shader:\n{}", m_name, m_fragmentShader);
     return true;
 }
 

@@ -71,15 +71,15 @@ bool ScinthDef::build(vk::ShaderCompiler* compiler) {
     return true;
 }
 
-std::unique_ptr<Scinth> ScinthDef::play(const std::string& scinthName, const TimePoint& startTime) {
-    std::unique_ptr<Scinth> scinth(new Scinth(m_device, scinthName, m_abstractScinthDef));
+std::unique_ptr<Scinth> ScinthDef::play(int nodeID, const TimePoint& startTime) {
+    std::unique_ptr<Scinth> scinth(new Scinth(m_device, nodeID, m_abstractScinthDef));
     if (!scinth->create(startTime, m_uniformLayout.get(), m_canvas->numberOfImages())) {
-        spdlog::error("failed to create Scinth {} from ScinthDef {}", scinthName, m_abstractScinthDef->name());
+        spdlog::error("failed to create Scinth {} from ScinthDef {}", nodeID, m_abstractScinthDef->name());
         return nullptr;
     }
     if (!scinth->buildBuffers(m_commandPool.get(), m_canvas.get(), m_vertexBuffer.get(), m_indexBuffer.get(),
                               m_pipeline.get())) {
-        spdlog::error("failed to build command buffers on Scinth {} from ScinthDef {}", scinthName,
+        spdlog::error("failed to build command buffers on Scinth {} from ScinthDef {}", nodeID,
                       m_abstractScinthDef->name());
         return nullptr;
     }

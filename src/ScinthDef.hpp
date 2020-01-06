@@ -37,11 +37,14 @@ public:
      */
     bool build(vk::ShaderCompiler* compiler);
 
-    // TODO: whatever happend to create/destroy paradigm?
+    // TODO: whatever happened to create/destroy paradigm?
 
     /*! Create a running instance Scinth of this ScinthDef.
+     *
+     * \param nodeID The unique ID to assign to the running Scinth.
+     * \param startTime The start time to provide to the running Scinth.
      */
-    std::unique_ptr<Scinth> play(const std::string& scinthName, const TimePoint& startTime);
+    std::unique_ptr<Scinth> play(int nodeID, const TimePoint& startTime);
 
 private:
     bool buildVertexData();

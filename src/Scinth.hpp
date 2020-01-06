@@ -4,7 +4,6 @@
 #include "core/Types.hpp"
 
 #include <memory>
-#include <string>
 
 namespace scin {
 
@@ -25,8 +24,7 @@ class UniformLayout;
  */
 class Scinth {
 public:
-    Scinth(std::shared_ptr<vk::Device> device, const std::string& name,
-           std::shared_ptr<const AbstractScinthDef> abstractScinthDef);
+    Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<const AbstractScinthDef> abstractScinthDef);
     ~Scinth();
 
     /*! Do any one-time setup on this Scinth, including creating the Uniform Buffer.
@@ -56,12 +54,13 @@ public:
     bool prepareFrame(size_t imageIndex, const TimePoint& frameTime);
 
     std::shared_ptr<vk::CommandBuffer> frameCommands() { return m_commands; }
+    int nodeID() const { return m_nodeID; }
 
 private:
     std::shared_ptr<vk::Device> m_device;
-    std::string m_name;
+    int m_nodeID;
     std::shared_ptr<const AbstractScinthDef> m_abstractScinthDef;
-    std::unique_ptr<vk::Uniform> m_uniform;
+    std::shared_ptr<vk::Uniform> m_uniform;
     std::shared_ptr<vk::CommandBuffer> m_commands;
     std::chrono::time_point<std::chrono::high_resolution_clock> m_startTime;
 };

@@ -240,7 +240,7 @@ Archetypes::extractFromNodes(const std::vector<YAML::Node>& nodes) {
             std::lock_guard<std::mutex> lock(m_mutex);
             m_scinthDefs.insert_or_assign(name, scinthDef);
         }
-        spdlog::info("ScinthDef {} parsed, validated, and added to manager.", name);
+        spdlog::info("ScinthDef {} parsed, validated, and added to Archetypes.", name);
         scinthDefs.push_back(scinthDef);
     }
 

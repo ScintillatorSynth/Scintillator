@@ -40,7 +40,20 @@ public:
 
     bool buildScinthDef(std::shared_ptr<const AbstractScinthDef> abstractScinthDef);
 
-    bool play(const std::string& scinthDefName, const std::string& scinthName, const TimePoint& startTime);
+    /*! Adds a node to the default root blend group at the end of the line, playing after all other nodes.
+     *
+     * \param scinthDefName The name of the ScinthDef to invoke.
+     * \param nodeID A nodeID for this scinth, if -1 the Compositor will assign a unique negative value.
+     * \startTime The start time to consider this Scinth started at.
+     * \return True on success, false on error.
+     */
+    bool play(const std::string& scinthDefName, int nodeID, const TimePoint& startTime);
+
+    /*! Stops and removes the nodes from the playing list, and frees the associated resources.
+     *
+     * \param nodeIDs A list of node IDs to stop and remove from the playing list.
+     */
+    void freeNodes(const std::vector<int>& nodeIDs);
 
     /*! Prepare and return a CommandBuffers that when executed in order will render the current frame.
      *
@@ -63,7 +76,7 @@ public:
 
 private:
     typedef std::list<std::shared_ptr<Scinth>> ScinthList;
-    typedef std::unordered_map<std::string, ScinthList::iterator> ScinthMap;
+    typedef std::unordered_map<int, ScinthList::iterator> ScinthMap;
     typedef std::vector<std::shared_ptr<vk::CommandBuffer>> Commands;
 
     bool rebuildCommandBuffer();
@@ -72,7 +85,7 @@ private:
      *
      * \param it An iterator from m_scinthMap pointing to the desired Scinth to remove.
      */
-    void stopScinthLockAcquired(ScinthMap::iterator it);
+    void freeScinthLockAcquired(ScinthMap::iterator it);
 
     std::shared_ptr<vk::Device> m_device;
     std::shared_ptr<vk::Canvas> m_canvas;
@@ -81,11 +94,12 @@ private:
     std::unique_ptr<vk::ShaderCompiler> m_shaderCompiler;
     std::shared_ptr<vk::CommandPool> m_commandPool;
     std::atomic<bool> m_commandBufferDirty;
+    std::atomic<int> m_nodeSerial;
 
     std::mutex m_scinthDefMutex;
     std::unordered_map<std::string, std::shared_ptr<ScinthDef>> m_scinthDefs;
 
-    // Protects m_scinths and m_scinthMap.
+    // Protects m_scinths, m_scinthMap.
     std::mutex m_scinthMutex;
     // A list, in order of evaluation, of all currently running Scinths.
     ScinthList m_scinths;
