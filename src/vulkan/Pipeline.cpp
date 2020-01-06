@@ -6,6 +6,8 @@
 #include "vulkan/Shader.hpp"
 #include "vulkan/UniformLayout.hpp"
 
+#include "spdlog/spdlog.h"
+
 namespace scin { namespace vk {
 
 Pipeline::Pipeline(std::shared_ptr<Device> device):
@@ -15,8 +17,14 @@ Pipeline::Pipeline(std::shared_ptr<Device> device):
 
 Pipeline::~Pipeline() { destroy(); }
 
-bool Pipeline::create(const Manifest& vertexManifest, const Shape* shape, Canvas* canvas, Shader* vertexShader,
-                      Shader* fragmentShader, UniformLayout* uniformLayout) {
+bool Pipeline::create(const Manifest& vertexManifest, const Shape* shape, Canvas* canvas,
+                      std::shared_ptr<Shader> vertexShader, std::shared_ptr<Shader> fragmentShader,
+                      std::shared_ptr<UniformLayout> uniformLayout) {
+    // Keep references to these graphics objects so they won't be destroyed until after this Pipeline is destroyed.
+    m_vertexShader = vertexShader;
+    m_fragmentShader = fragmentShader;
+    m_uniformLayout = uniformLayout;
+
     VkVertexInputBindingDescription vertexBindingDescription = {};
     vertexBindingDescription.binding = 0;
     vertexBindingDescription.stride = vertexManifest.sizeInBytes();
@@ -186,6 +194,7 @@ bool Pipeline::create(const Manifest& vertexManifest, const Shape* shape, Canvas
 }
 
 void Pipeline::destroy() {
+    spdlog::debug("Pipeline destructor");
     if (m_pipelineLayout != VK_NULL_HANDLE) {
         vkDestroyPipelineLayout(m_device->get(), m_pipelineLayout, nullptr);
         m_pipelineLayout = VK_NULL_HANDLE;

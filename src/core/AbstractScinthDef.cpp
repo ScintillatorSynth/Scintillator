@@ -17,7 +17,7 @@ AbstractScinthDef::AbstractScinthDef(const std::string& name, const std::vector<
     m_instances(instances),
     m_shape(new Quad()) {}
 
-AbstractScinthDef::~AbstractScinthDef() {}
+AbstractScinthDef::~AbstractScinthDef() { spdlog::debug("AbstractScinthDef '{}' destructor", m_name); }
 
 bool AbstractScinthDef::build() {
     if (!buildNames()) {

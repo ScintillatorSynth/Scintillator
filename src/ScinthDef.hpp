@@ -37,14 +37,18 @@ public:
      */
     bool build(vk::ShaderCompiler* compiler);
 
-    // TODO: whatever happened to create/destroy paradigm?
-
     /*! Create a running instance Scinth of this ScinthDef.
      *
+     * The Scinth needs a shared_ptr reference to the originating ScinthDef, so that the ScinthDef will remain allocated
+     * until all referencing Scinths are themselves deleted. So this is a static method that provides that shared
+     * pointer as the first argument.
+     * TODO: this is totally a code smell.
+     *
+     * \param scinthDef The ScinthDef to build this Scinth from.
      * \param nodeID The unique ID to assign to the running Scinth.
      * \param startTime The start time to provide to the running Scinth.
      */
-    std::unique_ptr<Scinth> play(int nodeID, const TimePoint& startTime);
+    static std::shared_ptr<Scinth> play(std::shared_ptr<ScinthDef> scinthDef, int nodeID, const TimePoint& startTime);
 
     std::shared_ptr<const AbstractScinthDef> abstract() const { return m_abstractScinthDef; }
 
@@ -57,10 +61,10 @@ private:
     std::shared_ptr<const AbstractScinthDef> m_abstractScinthDef;
     std::shared_ptr<vk::HostBuffer> m_vertexBuffer;
     std::shared_ptr<vk::HostBuffer> m_indexBuffer;
-    std::unique_ptr<vk::Shader> m_vertexShader;
-    std::unique_ptr<vk::Shader> m_fragmentShader;
-    std::unique_ptr<vk::UniformLayout> m_uniformLayout;
-    std::shared_ptr<vk::Pipeline> m_pipeline; // TODO: pipeline could keep the shared resources commandbuffers need.
+    std::shared_ptr<vk::Shader> m_vertexShader;
+    std::shared_ptr<vk::Shader> m_fragmentShader;
+    std::shared_ptr<vk::UniformLayout> m_uniformLayout;
+    std::shared_ptr<vk::Pipeline> m_pipeline;
 };
 
 } // namespace scin

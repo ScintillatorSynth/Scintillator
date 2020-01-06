@@ -36,11 +36,11 @@ bool CommandBuffer::create(size_t count, bool isPrimary) {
 }
 
 void CommandBuffer::destroy() {
+    spdlog::debug("CommandBuffer destructor");
     if (m_commandBuffers.size()) {
         vkFreeCommandBuffers(m_device->get(), m_commandPool->get(), m_commandBuffers.size(), m_commandBuffers.data());
         m_commandBuffers.clear();
     }
-    m_uniform.reset();
 }
 
 void CommandBuffer::associateResources(std::shared_ptr<Buffer> vertexBuffer, std::shared_ptr<Buffer> indexBuffer,

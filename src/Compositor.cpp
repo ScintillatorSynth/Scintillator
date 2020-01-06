@@ -85,7 +85,7 @@ bool Compositor::play(const std::string& scinthDefName, int nodeID, const TimePo
     if (nodeID < 0) {
         nodeID = m_nodeSerial.fetch_sub(1);
     }
-    std::shared_ptr<Scinth> scinth = scinthDef->play(nodeID, startTime);
+    std::shared_ptr<Scinth> scinth = ScinthDef::play(scinthDef, nodeID, startTime);
     if (!scinth) {
         spdlog::error("failed to build Scinth {} from ScinthDef {}.", nodeID, scinthDefName);
         return false;
@@ -152,7 +152,7 @@ std::shared_ptr<vk::CommandBuffer> Compositor::prepareFrame(uint32_t imageIndex,
         for (auto scinth : m_scinths) {
             if (scinth->running()) {
                 scinth->prepareFrame(imageIndex, frameTime);
-                m_secondaryCommands.push_back(scinth->frameCommands());
+                m_secondaryCommands.emplace_back(scinth->frameCommands());
             }
         }
     }

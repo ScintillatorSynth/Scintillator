@@ -4,7 +4,7 @@ ScinServer {
 	var udpPortNumber;
 	var scinBinaryPath;
 	var scinQuarkPath;
-	var logLevel;
+	var <logLevel;
 
 	var scinQuarkVersion;
 	var scinPid;
@@ -62,9 +62,10 @@ ScinServer {
 	}
 
 	// Integer from 0 to 6.
-	logLevel { |level|
+	logLevel_ { |level|
 		if (level >= 0 and: { level <= 6 }, {
-			addr.sendMsg('/scin_logLevel', level);
+			logLevel = level;
+			addr.sendMsg('/scin_logLevel', logLevel);
 		});
 	}
 

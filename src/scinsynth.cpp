@@ -38,6 +38,7 @@ DEFINE_string(quark_dir, "..", "Root directory of the Scintillator Quark, for fi
 
 DEFINE_int32(window_width, 800, "Viewable width in pixels of window to create. Ignored if --fullscreen is supplied.");
 DEFINE_int32(window_height, 600, "Viewable height in pixels of window to create. Ignored if --fullscreen is supplied.");
+DEFINE_bool(keep_on_top, true, "If true will keep the window on top of other windows with focus.");
 
 DEFINE_int32(async_worker_threads, 2,
              "Number of threads to reserve for asynchronous operations (like loading ScinthDefs).");
@@ -80,7 +81,7 @@ int main(int argc, char* argv[]) {
     }
 
     scin::vk::Window window(instance);
-    if (!window.create(FLAGS_window_width, FLAGS_window_height)) {
+    if (!window.create(FLAGS_window_width, FLAGS_window_height, FLAGS_keep_on_top)) {
         spdlog::error("unable to create glfw window.");
         return EXIT_FAILURE;
     }

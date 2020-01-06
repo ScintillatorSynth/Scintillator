@@ -31,7 +31,7 @@ public:
     // needs to know the surface in order to pick a suitable device that supports rendering to that surface. If we
     // aren't rendering to an onscreen window a surface will have to be provided to Device some other way, and perhaps
     // Device will have a different create() function for that context.
-    bool create(int width, int height);
+    bool create(int width, int height, bool keepOnTop);
     bool createSwapchain(std::shared_ptr<Device> device);
     bool createSyncObjects();
     void run(std::shared_ptr<Compositor> compositor);
