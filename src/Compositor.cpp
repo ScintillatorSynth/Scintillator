@@ -19,7 +19,8 @@ Compositor::Compositor(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::C
     m_clearColor(0.0f, 0.0f, 0.0f),
     m_shaderCompiler(new scin::vk::ShaderCompiler()),
     m_commandPool(new scin::vk::CommandPool(device)),
-    m_commandBufferDirty(true) {
+    m_commandBufferDirty(true),
+    m_nodeSerial(-2) {
     m_frameCommands.resize(m_canvas->numberOfImages());
 }
 
@@ -54,7 +55,19 @@ bool Compositor::buildScinthDef(std::shared_ptr<const AbstractScinthDef> abstrac
     return true;
 }
 
-bool Compositor::play(const std::string& scinthDefName, const std::string& scinthName, const TimePoint& startTime) {
+void Compositor::freeScinthDefs(const std::vector<std::string>& names) {
+    std::lock_guard<std::mutex> lock(m_scinthDefMutex);
+    for (auto name : names) {
+        auto it = m_scinthDefs.find(name);
+        if (it != m_scinthDefs.end()) {
+            m_scinthDefs.erase(it);
+        } else {
+            spdlog::warn("unable to free ScinthDef {}, name not found.", name);
+        }
+    }
+}
+
+bool Compositor::play(const std::string& scinthDefName, int nodeID, const TimePoint& startTime) {
     std::shared_ptr<ScinthDef> scinthDef;
     {
         std::lock_guard<std::mutex> lock(m_scinthDefMutex);
@@ -64,31 +77,71 @@ bool Compositor::play(const std::string& scinthDefName, const std::string& scint
         }
     }
     if (!scinthDef) {
-        spdlog::error("ScinthDef {} not found when building Scinth {}.", scinthDefName, scinthName);
+        spdlog::error("ScinthDef {} not found when building Scinth {}.", scinthDefName, nodeID);
         return false;
     }
-    std::shared_ptr<Scinth> scinth = scinthDef->play(scinthName, startTime);
+
+    // Generate a unique negative nodeID if the one provided was negative.
+    if (nodeID < 0) {
+        nodeID = m_nodeSerial.fetch_sub(1);
+    }
+    std::shared_ptr<Scinth> scinth = ScinthDef::play(scinthDef, nodeID, startTime);
     if (!scinth) {
-        spdlog::error("failed to build Scinth {} from ScinthDef {}.", scinthName, scinthDefName);
+        spdlog::error("failed to build Scinth {} from ScinthDef {}.", nodeID, scinthDefName);
         return false;
     }
 
     {
         std::lock_guard<std::mutex> lock(m_scinthMutex);
-        auto map = m_scinthMap.find(scinthName);
-        if (map != m_scinthMap.end()) {
-            spdlog::info("clobbering existing Scinth named {}", scinthName);
-            stopScinthLockAcquired(map);
+        auto oldNode = m_scinthMap.find(nodeID);
+        if (oldNode != m_scinthMap.end()) {
+            spdlog::info("clobbering existing Scinth {}", nodeID);
+            freeScinthLockAcquired(oldNode);
         }
         m_scinths.push_back(scinth);
         auto it = m_scinths.end();
         --it;
-        m_scinthMap.insert({ scinthName, it });
+        m_scinthMap.insert({ nodeID, it });
     }
 
     // Will need to rebuild command buffer on next frame to include the new scinths.
     m_commandBufferDirty = true;
     return true;
+}
+
+void Compositor::freeNodes(const std::vector<int>& nodeIDs) {
+    std::lock_guard<std::mutex> lock(m_scinthMutex);
+    bool needRebuild = false;
+    for (auto nodeID : nodeIDs) {
+        auto node = m_scinthMap.find(nodeID);
+        if (node != m_scinthMap.end()) {
+            // Only need to rebuild the command buffers if we are removing running Scinths from the list.
+            if ((*(node->second))->running()) {
+                needRebuild = true;
+            }
+            freeScinthLockAcquired(node);
+        } else {
+            spdlog::warn("attempted to free nonexistent nodeID {}", nodeID);
+        }
+    }
+
+    if (needRebuild) {
+        m_commandBufferDirty = true;
+    }
+}
+
+void Compositor::setRun(const std::vector<std::pair<int, int>>& pairs) {
+    std::lock_guard<std::mutex> lock(m_scinthMutex);
+    for (const auto& pair : pairs) {
+        auto node = m_scinthMap.find(pair.first);
+        if (node != m_scinthMap.end()) {
+            (*(node->second))->setRunning(pair.second != 0);
+        } else {
+            spdlog::warn("attempted to set pause/play on nonexistent nodeID {}", pair.first);
+        }
+    }
+
+    m_commandBufferDirty = true;
 }
 
 std::shared_ptr<vk::CommandBuffer> Compositor::prepareFrame(uint32_t imageIndex, const TimePoint& frameTime) {
@@ -97,8 +150,10 @@ std::shared_ptr<vk::CommandBuffer> Compositor::prepareFrame(uint32_t imageIndex,
     {
         std::lock_guard<std::mutex> lock(m_scinthMutex);
         for (auto scinth : m_scinths) {
-            scinth->prepareFrame(imageIndex, frameTime);
-            m_secondaryCommands.push_back(scinth->frameCommands());
+            if (scinth->running()) {
+                scinth->prepareFrame(imageIndex, frameTime);
+                m_secondaryCommands.emplace_back(scinth->frameCommands());
+            }
         }
     }
 
@@ -190,7 +245,7 @@ bool Compositor::rebuildCommandBuffer() {
     return true;
 }
 
-void Compositor::stopScinthLockAcquired(ScinthMap::iterator it) {
+void Compositor::freeScinthLockAcquired(ScinthMap::iterator it) {
     // Remove from list first, then dictionary,
     m_scinths.erase(it->second);
     m_scinthMap.erase(it);

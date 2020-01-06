@@ -1,12 +1,13 @@
 #include "Scinth.hpp"
 
+#include "ScinthDef.hpp"
 #include "core/AbstractScinthDef.hpp"
 #include "core/Shape.hpp"
 #include "core/VGen.hpp"
+#include "vulkan/Buffer.hpp"
 #include "vulkan/Canvas.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
-#include "vulkan/Buffer.hpp"
 #include "vulkan/Pipeline.hpp"
 #include "vulkan/Uniform.hpp"
 
@@ -14,21 +15,22 @@
 
 namespace scin {
 
-Scinth::Scinth(std::shared_ptr<vk::Device> device, const std::string& name,
-               std::shared_ptr<const AbstractScinthDef> abstractScinthDef):
+Scinth::Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef):
     m_device(device),
-    m_name(name),
-    m_abstractScinthDef(abstractScinthDef) {}
+    m_nodeID(nodeID),
+    m_scinthDef(scinthDef),
+    m_running(false) {}
 
-Scinth::~Scinth() {}
+Scinth::~Scinth() { spdlog::debug("Scinth destructor"); }
 
 bool Scinth::create(const TimePoint& startTime, vk::UniformLayout* uniformLayout, size_t numberOfImages) {
     m_startTime = startTime;
+    m_running = true;
     if (uniformLayout) {
         m_uniform.reset(new vk::Uniform(m_device));
-        if (!m_uniform->createBuffers(uniformLayout, m_abstractScinthDef->uniformManifest().sizeInBytes(),
+        if (!m_uniform->createBuffers(uniformLayout, m_scinthDef->abstract()->uniformManifest().sizeInBytes(),
                                       numberOfImages)) {
-            spdlog::error("failed creating uniform buffers for Scinth {}", m_name);
+            spdlog::error("failed creating uniform buffers for Scinth {}", m_nodeID);
             return false;
         }
     }
@@ -36,13 +38,15 @@ bool Scinth::create(const TimePoint& startTime, vk::UniformLayout* uniformLayout
     return true;
 }
 
-bool Scinth::buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, vk::Buffer* vertexBuffer,
-                          vk::Buffer* indexBuffer, vk::Pipeline* pipeline) {
+bool Scinth::buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, std::shared_ptr<vk::Buffer> vertexBuffer,
+                          std::shared_ptr<vk::Buffer> indexBuffer, std::shared_ptr<vk::Pipeline> pipeline) {
     m_commands = commandPool->createBuffers(canvas->numberOfImages(), false);
     if (!m_commands) {
-        spdlog::error("failed creating command buffers for Scinth {}", m_name);
+        spdlog::error("failed creating command buffers for Scinth {}", m_nodeID);
         return false;
     }
+
+    m_commands->associateResources(vertexBuffer, indexBuffer, m_uniform, pipeline);
 
     for (auto i = 0; i < canvas->numberOfImages(); ++i) {
         VkCommandBufferBeginInfo beginInfo = {};
@@ -57,7 +61,7 @@ bool Scinth::buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, vk::
         beginInfo.pInheritanceInfo = &inheritanceInfo;
 
         if (vkBeginCommandBuffer(m_commands->buffer(i), &beginInfo) != VK_SUCCESS) {
-            spdlog::error("failed beginning command buffer {} for Scinth {}", i, m_name);
+            spdlog::error("failed beginning command buffer {} for Scinth {}", i, m_nodeID);
             return false;
         }
 
@@ -72,10 +76,10 @@ bool Scinth::buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, vk::
                                     m_uniform->set(i), 0, nullptr);
         }
 
-        vkCmdDrawIndexed(m_commands->buffer(i), m_abstractScinthDef->shape()->numberOfIndices(), 1, 0, 0, 0);
+        vkCmdDrawIndexed(m_commands->buffer(i), m_scinthDef->abstract()->shape()->numberOfIndices(), 1, 0, 0, 0);
 
         if (vkEndCommandBuffer(m_commands->buffer(i)) != VK_SUCCESS) {
-            spdlog::error("failed ending command buffer {} for Scinth {}", i, m_name);
+            spdlog::error("failed ending command buffer {} for Scinth {}", i, m_nodeID);
             return false;
         }
     }
@@ -87,12 +91,16 @@ bool Scinth::prepareFrame(size_t imageIndex, const TimePoint& frameTime) {
     // Update the Uniform buffer at imageIndex, if needed.
     if (m_uniform) {
         std::unique_ptr<float[]> uniformData(
-            new float[m_abstractScinthDef->uniformManifest().sizeInBytes() / sizeof(float)]);
+            new float[m_scinthDef->abstract()->uniformManifest().sizeInBytes() / sizeof(float)]);
         float* uniform = uniformData.get();
-        for (auto i = 0; i < m_abstractScinthDef->uniformManifest().numberOfElements(); ++i) {
-            switch (m_abstractScinthDef->uniformManifest().intrinsicForElement(i)) {
+        for (auto i = 0; i < m_scinthDef->abstract()->uniformManifest().numberOfElements(); ++i) {
+            switch (m_scinthDef->abstract()->uniformManifest().intrinsicForElement(i)) {
             case kNormPos:
-                spdlog::error("normPos is not a valid intrinsic for a Uniform in Scinth {}", m_name);
+                spdlog::error("normPos is not a valid intrinsic for a Uniform in Scinth {}", m_nodeID);
+                return false;
+
+            case kPi:
+                spdlog::error("pi not a valid Uniform intrinsic in Scinth {}", m_nodeID);
                 return false;
 
             case kTime:
@@ -100,11 +108,11 @@ bool Scinth::prepareFrame(size_t imageIndex, const TimePoint& frameTime) {
                 break;
 
             case kNotFound:
-                spdlog::error("unknown uniform Intrinsic in Scinth {}", m_name);
+                spdlog::error("unknown uniform Intrinsic in Scinth {}", m_nodeID);
                 return false;
             }
 
-            uniform += (m_abstractScinthDef->uniformManifest().strideForElement(i) / sizeof(float));
+            uniform += (m_scinthDef->abstract()->uniformManifest().strideForElement(i) / sizeof(float));
         }
 
         m_uniform->buffer(imageIndex)->copyToGPU(uniformData.get());

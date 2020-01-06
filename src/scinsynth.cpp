@@ -1,4 +1,5 @@
-#include "Compositor.hpp" // TODO: audit includes
+#include "Async.hpp" // TODO: audit includes
+#include "Compositor.hpp"
 #include "OscHandler.hpp"
 #include "Version.hpp"
 #include "core/FileSystem.hpp"
@@ -21,7 +22,6 @@
 #include "spdlog/spdlog.h"
 
 #include <chrono>
-#include <future>
 #include <memory>
 #include <vector>
 
@@ -38,6 +38,10 @@ DEFINE_string(quark_dir, "..", "Root directory of the Scintillator Quark, for fi
 
 DEFINE_int32(window_width, 800, "Viewable width in pixels of window to create. Ignored if --fullscreen is supplied.");
 DEFINE_int32(window_height, 600, "Viewable height in pixels of window to create. Ignored if --fullscreen is supplied.");
+DEFINE_bool(keep_on_top, true, "If true will keep the window on top of other windows with focus.");
+
+DEFINE_int32(async_worker_threads, 2,
+             "Number of threads to reserve for asynchronous operations (like loading ScinthDefs).");
 
 int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
@@ -66,37 +70,6 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    // Parse any built-in VGens and ScinthDefs first.
-    std::shared_ptr<scin::Archetypes> archetypes(new scin::Archetypes());
-    //   TODO: do serially for now
-    //    auto parseVGens = std::async(std::launch::async, [&archetypes, &quarkPath] {
-    fs::path vgens = quarkPath / "vgens";
-    spdlog::info("Parsing yaml files in {} for AbstractVGens.", vgens.string());
-    for (auto entry : fs::directory_iterator(vgens)) {
-        auto p = entry.path();
-        if (fs::is_regular_file(p) && p.extension() == ".yaml") {
-            spdlog::debug("Parsing AbstractVGen yaml file {}.", p.string());
-            archetypes->loadAbstractVGensFromFile(p.string());
-        }
-    }
-    spdlog::info("Parsed {} unique VGens.", archetypes->numberOfAbstractVGens());
-
-    fs::path scinthDefs = quarkPath / "scinthdefs";
-    spdlog::info("Parsing yaml files in {} for ScinthDefs.", scinthDefs.string());
-    for (auto entry : fs::directory_iterator(scinthDefs)) {
-        auto p = entry.path();
-        if (fs::is_regular_file(p) && p.extension() == ".yaml") {
-            spdlog::debug("Parsing ScinthDef yaml file {}.", p.string());
-            archetypes->loadFromFile(p.string());
-        }
-    }
-    spdlog::info("Parsed {} unique ScinthDefs.", archetypes->numberOfAbstractScinthDefs());
-    //    });
-
-    // Start listening for incoming OSC commands on UDP.
-    scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
-    oscHandler.run();
-
     // ========== glfw setup.
     glfwInit();
 
@@ -108,7 +81,7 @@ int main(int argc, char* argv[]) {
     }
 
     scin::vk::Window window(instance);
-    if (!window.create(FLAGS_window_width, FLAGS_window_height)) {
+    if (!window.create(FLAGS_window_width, FLAGS_window_height, FLAGS_keep_on_top)) {
         spdlog::error("unable to create glfw window.");
         return EXIT_FAILURE;
     }
@@ -131,22 +104,31 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    std::shared_ptr<const scin::AbstractScinthDef> testScinthDef =
-        archetypes->getAbstractScinthDefNamed("TestScinthDef");
-    compositor->buildScinthDef(testScinthDef);
-    compositor->play("TestScinthDef", "t1", std::chrono::high_resolution_clock::now());
+    std::shared_ptr<scin::Archetypes> archetypes(new scin::Archetypes());
+    std::shared_ptr<scin::Async> async(new scin::Async(archetypes, compositor));
+    async->run(FLAGS_async_worker_threads);
+
+    // Chain async calls to load VGens, then ScinthDefs.
+    async->vgenLoadDirectory(quarkPath / "vgens", [async, &quarkPath, compositor](bool) {
+        async->scinthDefLoadDirectory(quarkPath / "scinthdefs",
+                                      [](bool) { spdlog::info("finished loading predefined VGens and ScinthDefs."); });
+    });
 
     if (!window.createSyncObjects()) {
         spdlog::error("error creating device semaphores.");
         return EXIT_FAILURE;
     }
 
+    // Start listening for incoming OSC commands on UDP.
+    scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
+    oscHandler.run(async, archetypes, compositor, [&window] { window.stop(); });
+
     // ========== Main loop.
-    oscHandler.setQuitHandler([&window] { window.stop(); });
     window.run(compositor);
 
     // ========== Vulkan cleanup.
     window.destroySyncObjects();
+    async->stop();
     compositor->destroy();
     window.destroySwapchain();
     device->destroy();

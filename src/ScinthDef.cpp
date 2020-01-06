@@ -27,7 +27,7 @@ ScinthDef::ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Can
     m_commandPool(commandPool),
     m_abstractScinthDef(abstractScinthDef) {}
 
-ScinthDef::~ScinthDef() {}
+ScinthDef::~ScinthDef() { spdlog::debug("ScinthDef destructor"); }
 
 bool ScinthDef::build(vk::ShaderCompiler* compiler) {
     // Build the vertex data. Because Intrinsics can add data payloads to the vertex data, each ScinthDef shares a
@@ -63,7 +63,7 @@ bool ScinthDef::build(vk::ShaderCompiler* compiler) {
 
     m_pipeline.reset(new vk::Pipeline(m_device));
     if (!m_pipeline->create(m_abstractScinthDef->vertexManifest(), m_abstractScinthDef->shape(), m_canvas.get(),
-                            m_vertexShader.get(), m_fragmentShader.get(), m_uniformLayout.get())) {
+                            m_vertexShader, m_fragmentShader, m_uniformLayout)) {
         spdlog::error("error creating pipeline for ScinthDef {}", m_abstractScinthDef->name());
         return false;
     }
@@ -71,16 +71,17 @@ bool ScinthDef::build(vk::ShaderCompiler* compiler) {
     return true;
 }
 
-std::unique_ptr<Scinth> ScinthDef::play(const std::string& scinthName, const TimePoint& startTime) {
-    std::unique_ptr<Scinth> scinth(new Scinth(m_device, scinthName, m_abstractScinthDef));
-    if (!scinth->create(startTime, m_uniformLayout.get(), m_canvas->numberOfImages())) {
-        spdlog::error("failed to create Scinth {} from ScinthDef {}", scinthName, m_abstractScinthDef->name());
+// static
+std::shared_ptr<Scinth> ScinthDef::play(std::shared_ptr<ScinthDef> scinthDef, int nodeID, const TimePoint& startTime) {
+    std::shared_ptr<Scinth> scinth(new Scinth(scinthDef->m_device, nodeID, scinthDef));
+    if (!scinth->create(startTime, scinthDef->m_uniformLayout.get(), scinthDef->m_canvas->numberOfImages())) {
+        spdlog::error("failed to create Scinth {} from ScinthDef {}", nodeID, scinthDef->m_abstractScinthDef->name());
         return nullptr;
     }
-    if (!scinth->buildBuffers(m_commandPool.get(), m_canvas.get(), m_vertexBuffer.get(), m_indexBuffer.get(),
-                              m_pipeline.get())) {
-        spdlog::error("failed to build command buffers on Scinth {} from ScinthDef {}", scinthName,
-                      m_abstractScinthDef->name());
+    if (!scinth->buildBuffers(scinthDef->m_commandPool.get(), scinthDef->m_canvas.get(), scinthDef->m_vertexBuffer,
+                              scinthDef->m_indexBuffer, scinthDef->m_pipeline)) {
+        spdlog::error("failed to build command buffers on Scinth {} from ScinthDef {}", nodeID,
+                      scinthDef->m_abstractScinthDef->name());
         return nullptr;
     }
     return scinth;
@@ -125,6 +126,10 @@ bool ScinthDef::buildVertexData() {
                     vertex[0] = verts[0] * normPosScale.x;
                     vertex[1] = verts[1] * normPosScale.y;
                 } break;
+
+                case kPi:
+                    spdlog::error("pi is not a valid vertex intrinsic for ScinthDef {}", m_abstractScinthDef->name());
+                    return false;
 
                 case kTime:
                     spdlog::error("time is not a valid vertex intrinsic for ScinthDef {}", m_abstractScinthDef->name());

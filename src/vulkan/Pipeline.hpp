@@ -23,8 +23,9 @@ public:
     Pipeline(std::shared_ptr<Device> device);
     ~Pipeline();
 
-    bool create(const Manifest& vertexManifest, const Shape* shape, Canvas* canvas, Shader* vertexShader,
-                Shader* fragmentShader, UniformLayout* uniformLayout);
+    bool create(const Manifest& vertexManifest, const Shape* shape, Canvas* canvas,
+                std::shared_ptr<Shader> vertexShader, std::shared_ptr<Shader> fragmentShader,
+                std::shared_ptr<UniformLayout> uniformLayout);
     void destroy();
 
     VkPipeline get() { return m_pipeline; }
@@ -35,6 +36,10 @@ private:
 
     VkPipelineLayout m_pipelineLayout;
     VkPipeline m_pipeline;
+
+    std::shared_ptr<Shader> m_vertexShader;
+    std::shared_ptr<Shader> m_fragmentShader;
+    std::shared_ptr<UniformLayout> m_uniformLayout;
 };
 
 } // namespace vk

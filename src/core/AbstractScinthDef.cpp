@@ -17,7 +17,7 @@ AbstractScinthDef::AbstractScinthDef(const std::string& name, const std::vector<
     m_instances(instances),
     m_shape(new Quad()) {}
 
-AbstractScinthDef::~AbstractScinthDef() {}
+AbstractScinthDef::~AbstractScinthDef() { spdlog::debug("AbstractScinthDef '{}' destructor", m_name); }
 
 bool AbstractScinthDef::build() {
     if (!buildNames()) {
@@ -112,6 +112,9 @@ bool AbstractScinthDef::buildManifests() {
             m_vertexManifest.addElement(m_prefix + "_normPos", Manifest::ElementType::kVec2, Intrinsic::kNormPos);
             break;
 
+        case kPi:
+            break;
+
         case kTime:
             m_uniformManifest.addElement("time", Manifest::ElementType::kFloat, Intrinsic::kTime);
             break;
@@ -188,7 +191,7 @@ bool AbstractScinthDef::buildVertexShader() {
     }
 
     m_vertexShader += "}\n";
-    spdlog::info("vertex shader:\n{}", m_vertexShader);
+    spdlog::info("{} vertex shader:\n{}", m_name, m_vertexShader);
     return true;
 }
 
@@ -202,6 +205,7 @@ bool AbstractScinthDef::buildFragmentShader() {
     // For now, all intrinsics are global, coming from either the vertex shader or the uniform buffer, so we can define
     // a single map with all of their substitutions.
     std::unordered_map<Intrinsic, std::string> intrinsicNames;
+    intrinsicNames.insert({ Intrinsic::kPi, "3.1415926535897932384626433832795f" });
 
     // Now add any inputs that might have come from the vertex shader by processing the vertex manifest.
     for (auto i = 0; i < m_vertexManifest.numberOfElements(); ++i) {
@@ -209,8 +213,20 @@ bool AbstractScinthDef::buildFragmentShader() {
             m_fragmentShader += fmt::format("layout(location = {}) in {} in_{};\n", i,
                                             m_vertexManifest.typeNameForElement(i), m_vertexManifest.nameForElement(i));
             Intrinsic intrinsic = m_vertexManifest.intrinsicForElement(i);
-            if (intrinsic == Intrinsic::kNotFound) {
+            switch (intrinsic) {
+            case kPi:
+                break;
+
+            case kNormPos:
+            case kTime:
+                intrinsicNames.insert({ intrinsic, "in_" + m_vertexManifest.nameForElement(i) });
+                break;
+
+            case kNotFound:
                 spdlog::warn("unknown fragment shader vertex input {}", m_vertexManifest.nameForElement(i));
+                break;
+            }
+            if (intrinsic == Intrinsic::kNotFound) {
             } else {
                 intrinsicNames.insert({ intrinsic, "in_" + m_vertexManifest.nameForElement(i) });
             }
@@ -261,7 +277,7 @@ bool AbstractScinthDef::buildFragmentShader() {
 
     m_fragmentShader += "}\n";
 
-    spdlog::info("fragment shader:\n{}", m_fragmentShader);
+    spdlog::info("{} fragment shader:\n{}", m_name, m_fragmentShader);
     return true;
 }
 

@@ -4,11 +4,10 @@
 #include "core/Types.hpp"
 
 #include <memory>
-#include <string>
 
 namespace scin {
 
-class AbstractScinthDef;
+class ScinthDef;
 
 namespace vk {
 class Buffer;
@@ -25,8 +24,7 @@ class UniformLayout;
  */
 class Scinth {
 public:
-    Scinth(std::shared_ptr<vk::Device> device, const std::string& name,
-           std::shared_ptr<const AbstractScinthDef> abstractScinthDef);
+    Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef);
     ~Scinth();
 
     /*! Do any one-time setup on this Scinth, including creating the Uniform Buffer.
@@ -41,8 +39,8 @@ public:
 
     /*! Build the CommandBuffers to render this Scinth. Can be called multiple times to rebuild them as needed.
      */
-    bool buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, vk::Buffer* vertexBuffer,
-                      vk::Buffer* indexBuffer, vk::Pipeline* pipeline);
+    bool buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, std::shared_ptr<vk::Buffer> vertexBuffer,
+                      std::shared_ptr<vk::Buffer> indexBuffer, std::shared_ptr<vk::Pipeline> pipeline);
 
     /*! Prepare for the next frame to render.
      *
@@ -55,15 +53,26 @@ public:
      */
     bool prepareFrame(size_t imageIndex, const TimePoint& frameTime);
 
+    /*! Determines the paused or playing status of the Scinth.
+     *
+     * \param run If false, will pause the Scinth. If true, will play it. Note this only sets the flag for the Scinth.
+     */
+    void setRunning(bool run) { m_running = run; }
+
     std::shared_ptr<vk::CommandBuffer> frameCommands() { return m_commands; }
+    int nodeID() const { return m_nodeID; }
+    bool running() const { return m_running; }
 
 private:
     std::shared_ptr<vk::Device> m_device;
-    std::string m_name;
-    std::shared_ptr<const AbstractScinthDef> m_abstractScinthDef;
-    std::unique_ptr<vk::Uniform> m_uniform;
+    int m_nodeID;
+    // Keep a reference to the ScinthDef, so that it does not get deleted until all referring Scinths have also been
+    // deleted.
+    std::shared_ptr<ScinthDef> m_scinthDef;
+    std::shared_ptr<vk::Uniform> m_uniform;
     std::shared_ptr<vk::CommandBuffer> m_commands;
     std::chrono::time_point<std::chrono::high_resolution_clock> m_startTime;
+    bool m_running;
 };
 
 } // namespace scin

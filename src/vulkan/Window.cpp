@@ -27,9 +27,10 @@ Window::Window(std::shared_ptr<Instance> instance):
 
 Window::~Window() {}
 
-bool Window::create(int width, int height) {
+bool Window::create(int width, int height, bool keepOnTop) {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_FLOATING, keepOnTop ? GLFW_TRUE : GLFW_FALSE);
     m_window = glfwCreateWindow(width, height, "ScintillatorSynth", nullptr, nullptr);
     if (glfwCreateWindowSurface(m_instance->get(), m_window, nullptr, &m_surface) != VK_SUCCESS) {
         spdlog::error("failed to create surface");

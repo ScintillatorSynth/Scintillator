@@ -48,6 +48,8 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
 set(scintillator_synth_files
     "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
     "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp"
+    Async.cpp
+    Async.hpp
     Compositor.cpp
     Compositor.hpp
     OscHandler.cpp

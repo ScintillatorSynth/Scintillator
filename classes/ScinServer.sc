@@ -1,13 +1,17 @@
 ScinServer {
+	classvar <>default;
+
 	var udpPortNumber;
 	var scinBinaryPath;
+	var scinQuarkPath;
+	var <logLevel;
 
 	var scinQuarkVersion;
 	var scinPid;
 	var addr;
 
 	// For local scinsynth instances. Remote not yet supported.
-	*new { |udpPortNumber = 52210, scinBinaryPath|
+	*new { |udpPortNumber = 5511, scinBinaryPath|
 		^super.newCopyArgs(udpPortNumber, scinBinaryPath).init;
 	}
 
@@ -20,17 +24,27 @@ ScinServer {
 					scinBinaryPath = quark.localPath ++ "/build/src/scinsynth";
 				});
 				scinQuarkVersion = quark.version;
+				scinQuarkPath = quark.localPath;
 			});
 		});
+
+		logLevel = 2;
 	}
 
 	boot {
-		var commandLine = scinBinaryPath + "--udp_port_number=" ++ udpPortNumber.asString();
+		var commandLine = scinBinaryPath + "--udp_port_number=" ++ udpPortNumber.asString()
+		+ "--quark_dir=" ++ scinQuarkPath + "--log_level=" ++ logLevel.asString();
+		commandLine.postln;
+
 		scinPid = commandLine.unixCmd({ |exitCode, exitPid|
 			"*** got scinsynth exit code %".format(exitCode).postln;
 		});
 
+		if (ScinServer.default.isNil, {
+			ScinServer.default = this;
+		});
 		addr = NetAddr.new("127.0.0.1", udpPortNumber);
+		^this;
 	}
 
 	status {
@@ -38,24 +52,25 @@ ScinServer {
 
 	quit {
 		OSCFunc.new({
-			"*** got scin_done back".postln;
+			// could do some interesting post quit stuff here.
 		}, '/scin_done').oneShot;
 		addr.sendMsg('/scin_quit');
 	}
 
 	dumpOSC { |on|
-		if (on, {
-			addr.sendMsg('/scin_dumpOSC', 1);
-		}, {
-			addr.sendMsg('/scin_dumpOSC', 0);
-		});
+		addr.sendMsg('/scin_dumpOSC', on.binaryValue);
 	}
 
 	// Integer from 0 to 6.
-	logLevel { |level|
+	logLevel_ { |level|
 		if (level >= 0 and: { level <= 6 }, {
-			addr.sendMsg('/scin_logLevel', level);
+			logLevel = level;
+			addr.sendMsg('/scin_logLevel', logLevel);
 		});
+	}
+
+	sendMsg { |... msg|
+		addr.sendMsg(*msg)
 	}
 
 	prGetVersionAsync { |callback|

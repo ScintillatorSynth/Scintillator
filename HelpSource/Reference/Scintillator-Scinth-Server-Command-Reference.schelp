@@ -1,11 +1,12 @@
 title:: Scintillator Scinth Server Command Reference
 summary:: A list of all OSC commands accepted by scscinth
 categories:: Quarks>Scintillator
-related:: Reference/Server-Command-Architecture
 
 section::OSC Communication Details
 
 While the SuperCollider synth programs support a variety of connection modalities and multi-user scenarios, at present scinsynth only supports a single client commnicating exclusively over UDP. For asynchronous messages the server will respond to whatever UDP address and port messages are received from.
+
+In general Scintillator attempts to follow a similar command list and structure to that of the SuperCollider sound synthesis servers, with the addition of a code::/scin_:: prefix to each OSC command and response.
 
 section::Master Controls
 
@@ -48,13 +49,120 @@ Query the Scintillator version. Replies to sender with the following message:
 
 definitionList::
 ## /scin_version.reply || table::
-## string || Program name. Will always be "scinsynth".
-## int || Scintillator major version number.
-## int || Scintillator minor version number.
-## int || Scintillator patch version number.
-## string || Git branch name.
-## string || First seven hex digits of the commit hash.
+## strong::string:: || Program name. Will always be "scinsynth".
+## strong::int:: || Scintillator major version number.
+## strong::int:: || Scintillator minor version number.
+## strong::int:: || Scintillator patch version number.
+## strong::string:: || Git branch name.
+## strong::string:: || First seven hex digits of the commit hash.
 ::
 ::
 
 It is expected that the scinsynth binary will always have the same major, minor, and patch version as the Scintillator Quark.
+
+section::Scinth Definition Commands
+
+subsection::/scin_d_recv
+
+Recive a Scinth definition yaml file.
+
+table::
+## strong::string:: || A string of yaml data containing one or more ScinthDef documents.
+## strong::bytes:: || optional, an OSC message to execute upon completion.
+::
+
+definitionlist::
+## Asynchronous. || Replies to sender with strong::/scin_done:: when complete.
+::
+
+subsection::/scin_d_load
+
+Load a ScinthDef yaml file from disk.
+
+table::
+## strong::string:: || pathname of file to load.
+## strong::bytes:: || optional, an OSC message to execute upon completion.
+::
+
+definitionlist::
+## Asynchronous. || Replies to sender with strong::/scin_done:: when complete.
+::
+
+subsection::/scin_d_loadDir
+
+Load a directory of Scinth definitions.
+
+table::
+## strong::string:: || directory of *.yaml files to load.
+## strong::bytes:: || optional, an OSC message to execute upon completion.
+::
+
+definitionlist::
+## Asynchronous. || Replies to sender with strong::/scin_done:: when complete.
+::
+
+subsection::/scin_d_free
+
+Delete Scinth defenitions. Note that any existing Scinths will continue to run, and the resources associated with this ScinthDef will not be reclaimed until all running Scinth instances built from this ScinthDef are also freed.
+
+table::
+## N * strong::string:: || ScinthDef names to free.
+::
+
+section::Node Commands
+
+subsection::/scin_n_free
+
+Delete a node.
+
+table::
+## N * strong::int:: || node ID
+::
+
+Stops a node abruptly, removes it from its group, and frees its memory. More than one nodeID may be specified as additional integer arguments in the message.
+
+subsection::/scin_n_run
+
+Turn node on or off from rendering.
+
+table::
+## N* || table::
+## strong::int:: || node ID
+## strong::int:: || run flag
+::
+::
+
+list::
+## if the run flag is set to zero then the node will not be rendered.
+## if the run flag is set to any nonzero value then it will be rendered.
+::
+
+Can take pairs of arguments and will apply the run flag to each provided node ID at the same time.
+
+section::Scinth Commands
+
+subsection::/scin_s_new
+
+Create a new Scinth.
+
+table::
+## strong::string:: || scinth definition name
+## strong::int:: || scinth ID
+## strong::int:: || add action (not yet supported)
+## strong::int:: || add target ID (not yet supported)
+::
+
+As Scintillator does not currently support groups, offscreen render targets, or scinth controls, only the first two fields are processed by the server. The server will add the Scinth to the default group and start playing it immediately.
+
+note::
+The SuperCollider Synthesis Server command reference specifies if the provided ID number is -1, the server reserves all negative numbers for IDs, and so will assign a unique negative value to the Synth instance. Scintillator server is similar, but will treat emphasis::any:: negative value as a request for a unique ID to be assigned.
+::
+
+
+section::Group Commands
+
+subsection::/scin_g_clearColor
+
+Sets the background color for the provided group.
+
+TODO
