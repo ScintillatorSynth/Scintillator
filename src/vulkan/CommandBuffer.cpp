@@ -43,7 +43,13 @@ void CommandBuffer::destroy() {
     m_uniform.reset();
 }
 
-void CommandBuffer::associateUniform(std::shared_ptr<Uniform> uniform) { m_uniform = uniform; }
+void CommandBuffer::associateResources(std::shared_ptr<Buffer> vertexBuffer, std::shared_ptr<Buffer> indexBuffer,
+                                       std::shared_ptr<Uniform> uniform, std::shared_ptr<Pipeline> pipeline) {
+    m_vertexBuffer = vertexBuffer;
+    m_indexBuffer = indexBuffer;
+    m_uniform = uniform;
+    m_pipeline = pipeline;
+}
 
 } // namespace vk
 

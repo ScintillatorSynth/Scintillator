@@ -78,8 +78,7 @@ std::unique_ptr<Scinth> ScinthDef::play(int nodeID, const TimePoint& startTime) 
         spdlog::error("failed to create Scinth {} from ScinthDef {}", nodeID, m_abstractScinthDef->name());
         return nullptr;
     }
-    if (!scinth->buildBuffers(m_commandPool.get(), m_canvas.get(), m_vertexBuffer.get(), m_indexBuffer.get(),
-                              m_pipeline.get())) {
+    if (!scinth->buildBuffers(m_commandPool.get(), m_canvas.get(), m_vertexBuffer, m_indexBuffer, m_pipeline)) {
         spdlog::error("failed to build command buffers on Scinth {} from ScinthDef {}", nodeID,
                       m_abstractScinthDef->name());
         return nullptr;

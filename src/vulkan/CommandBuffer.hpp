@@ -8,8 +8,10 @@
 
 namespace scin { namespace vk {
 
+class Buffer;
 class CommandPool;
 class Device;
+class Pipeline;
 class Uniform;
 
 /*! Simple wrapper class around an array of Vulkan CommandBuffer objects.
@@ -22,13 +24,16 @@ public:
     bool create(size_t count, bool isPrimary);
     void destroy();
 
-    /*! Associates a uniform buffer with this command buffer, allowing the destruction of the Uniform to be tied to
-     * after the destruction of this CommandBuffer.
+    /*! Associates graphical resources with this command buffer, allowing the destruction these resources to be tied to
+     * after the destruction of this CommandBuffer, ensuring the dependencies are destructed in the right order.
      *
-     * \param uniform A shared pointer to the Uniform object, to keep the ref count above zero until after this buffer
-     *        destructs.
+     * \param vertexBuffer The vertex buffer bound by this CommandBuffer.
+     * \param indexBuffer The index buffer bound by this CommandBuffer.
+     * \param uniform The uniform, if any, bound by this CommanBuffer.
+     * \param pipeline The pipeline bound by this CommandBuffer.
      */
-    void associateUniform(std::shared_ptr<Uniform> uniform);
+    void associateResources(std::shared_ptr<Buffer> vertexBuffer, std::shared_ptr<Buffer> indexBuffer,
+                            std::shared_ptr<Uniform> uniform, std::shared_ptr<Pipeline> pipeline);
 
     VkCommandBuffer buffer(size_t i) { return m_commandBuffers[i]; }
     size_t count() const { return m_commandBuffers.size(); }
@@ -37,7 +42,10 @@ private:
     std::shared_ptr<Device> m_device;
     CommandPool* m_commandPool;
     std::vector<VkCommandBuffer> m_commandBuffers;
+    std::shared_ptr<Buffer> m_vertexBuffer;
+    std::shared_ptr<Buffer> m_indexBuffer;
     std::shared_ptr<Uniform> m_uniform;
+    std::shared_ptr<Pipeline> m_pipeline;
 };
 
 } // namespace vk

@@ -38,17 +38,15 @@ bool Scinth::create(const TimePoint& startTime, vk::UniformLayout* uniformLayout
     return true;
 }
 
-bool Scinth::buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, vk::Buffer* vertexBuffer,
-                          vk::Buffer* indexBuffer, vk::Pipeline* pipeline) {
+bool Scinth::buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, std::shared_ptr<vk::Buffer> vertexBuffer,
+                          std::shared_ptr<vk::Buffer> indexBuffer, std::shared_ptr<vk::Pipeline> pipeline) {
     m_commands = commandPool->createBuffers(canvas->numberOfImages(), false);
     if (!m_commands) {
         spdlog::error("failed creating command buffers for Scinth {}", m_nodeID);
         return false;
     }
 
-    if (m_uniform) {
-        m_commands->associateUniform(m_uniform);
-    }
+    m_commands->associateResources(vertexBuffer, indexBuffer, m_uniform, pipeline);
 
     for (auto i = 0; i < canvas->numberOfImages(); ++i) {
         VkCommandBufferBeginInfo beginInfo = {};

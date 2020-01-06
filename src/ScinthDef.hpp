@@ -55,12 +55,12 @@ private:
     std::shared_ptr<vk::Canvas> m_canvas;
     std::shared_ptr<vk::CommandPool> m_commandPool;
     std::shared_ptr<const AbstractScinthDef> m_abstractScinthDef;
-    std::unique_ptr<vk::HostBuffer> m_vertexBuffer;
-    std::unique_ptr<vk::HostBuffer> m_indexBuffer;
+    std::shared_ptr<vk::HostBuffer> m_vertexBuffer;
+    std::shared_ptr<vk::HostBuffer> m_indexBuffer;
     std::unique_ptr<vk::Shader> m_vertexShader;
     std::unique_ptr<vk::Shader> m_fragmentShader;
     std::unique_ptr<vk::UniformLayout> m_uniformLayout;
-    std::unique_ptr<vk::Pipeline> m_pipeline;
+    std::shared_ptr<vk::Pipeline> m_pipeline; // TODO: pipeline could keep the shared resources commandbuffers need.
 };
 
 } // namespace scin
