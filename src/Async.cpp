@@ -54,6 +54,14 @@ void Async::scinthDefLoadDirectory(fs::path path, std::function<void(bool)> comp
     m_jobQueueCondition.notify_one();
 }
 
+void Async::scinthDefLoadFile(fs::path path, std::function<void(bool)> completion) {
+    {
+        std::lock_guard<std::mutex> lock(m_jobQueueMutex);
+        m_jobQueue.push_back({ [this, path]() { return asyncScinthDefLoadFile(path); }, completion });
+    }
+    m_jobQueueCondition.notify_one();
+}
+
 void Async::scinthDefParseString(std::string yaml, std::function<void(bool)> completion) {
     {
         std::lock_guard<std::mutex> lock(m_jobQueueMutex);
@@ -107,11 +115,12 @@ void Async::threadMain(std::string threadName) {
 }
 
 bool Async::asyncVGenLoadDirectory(fs::path path) {
-    spdlog::info("Parsing yaml files in {} for AbstractVGens.", path.string());
     if (!fs::exists(path) || !fs::is_directory(path)) {
         spdlog::error("nonexistent or not directory path {} for VGens.", path.string());
         return false;
     }
+
+    spdlog::info("Parsing yaml files in {} for AbstractVGens.", path.string());
     auto parseCount = 0;
     for (auto entry : fs::directory_iterator(path)) {
         auto p = entry.path();
@@ -125,11 +134,12 @@ bool Async::asyncVGenLoadDirectory(fs::path path) {
 }
 
 bool Async::asyncScinthDefLoadDirectory(fs::path path) {
-    spdlog::info("Parsing yaml files in {} for ScinthDefs.", path.string());
     if (!fs::exists(path) || !fs::is_directory(path)) {
         spdlog::error("nonexistent or not directory path {} for ScinthDefs.", path.string());
         return false;
     }
+
+    spdlog::info("Parsing yaml files in directory {} for ScinthDefs.", path.string());
     auto parseCount = 0;
     for (auto entry : fs::directory_iterator(path)) {
         auto p = entry.path();
@@ -143,7 +153,24 @@ bool Async::asyncScinthDefLoadDirectory(fs::path path) {
             }
         }
     }
-    spdlog::info("Parsed {} unique ScinthDefs.", parseCount);
+    spdlog::info("Parsed {} unique ScinthDefs from directory {}.", parseCount, path.string());
+    return true;
+}
+
+bool Async::asyncScinthDefLoadFile(fs::path path) {
+    if (!fs::exists(path) || !fs::is_regular_file(path)) {
+        spdlog::error("nonexistent or nonfile path {} for ScinthDefs.", path.string());
+        return false;
+    }
+    spdlog::info("Loading ScinthDefs from file {}.", path.string());
+    std::vector<std::shared_ptr<const AbstractScinthDef>> scinthDefs = m_archetypes->loadFromFile(path.string());
+    auto parseCount = 0;
+    for (auto scinthDef : scinthDefs) {
+        if (m_compositor->buildScinthDef(scinthDef)) {
+            ++parseCount;
+        }
+    }
+    spdlog::info("Parsed {} unique ScinthDefs from file {}.", parseCount, path.string());
     return true;
 }
 

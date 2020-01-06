@@ -7,7 +7,7 @@
 
 namespace scin {
 
-class AbstractScinthDef;
+class ScinthDef;
 
 namespace vk {
 class Buffer;
@@ -24,7 +24,7 @@ class UniformLayout;
  */
 class Scinth {
 public:
-    Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<const AbstractScinthDef> abstractScinthDef);
+    Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef);
     ~Scinth();
 
     /*! Do any one-time setup on this Scinth, including creating the Uniform Buffer.
@@ -66,7 +66,9 @@ public:
 private:
     std::shared_ptr<vk::Device> m_device;
     int m_nodeID;
-    std::shared_ptr<const AbstractScinthDef> m_abstractScinthDef;
+    // Keep a reference to the ScinthDef, so that it does not get deleted until all referring Scinths have also been
+    // deleted.
+    std::shared_ptr<ScinthDef> m_scinthDef;
     std::shared_ptr<vk::Uniform> m_uniform;
     std::shared_ptr<vk::CommandBuffer> m_commands;
     std::chrono::time_point<std::chrono::high_resolution_clock> m_startTime;

@@ -38,7 +38,18 @@ public:
 
     bool create();
 
+    /*! Construct a ScinthDef designed to render into this Compositor and add to the local ScinthDef map.
+     *
+     * \param abstractScinthDef The template to build the ScinthDef from
+     * \return true on success, false on failure.
+     */
     bool buildScinthDef(std::shared_ptr<const AbstractScinthDef> abstractScinthDef);
+
+    /*! Remove the supplied ScinthDefs from this Compositor's map.
+     *
+     * \param names A list of ScinthDef names to remove.
+     */
+    void freeScinthDefs(const std::vector<std::string>& names);
 
     /*! Adds a node to the default root blend group at the end of the line, playing after all other nodes.
      *

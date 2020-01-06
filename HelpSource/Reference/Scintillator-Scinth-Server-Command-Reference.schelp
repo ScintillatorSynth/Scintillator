@@ -75,6 +75,40 @@ definitionlist::
 ## Asynchronous. || Replies to sender with strong::/scin_done:: when complete.
 ::
 
+subsection::/scin_d_load
+
+Load a ScinthDef yaml file from disk.
+
+table::
+## strong::string:: || pathname of file to load.
+## strong::bytes:: || optional, an OSC message to execute upon completion.
+::
+
+definitionlist::
+## Asynchronous. || Replies to sender with strong::/scin_done:: when complete.
+::
+
+subsection::/scin_d_loadDir
+
+Load a directory of Scinth definitions.
+
+table::
+## strong::string:: || directory of *.yaml files to load.
+## strong::bytes:: || optional, an OSC message to execute upon completion.
+::
+
+definitionlist::
+## Asynchronous. || Replies to sender with strong::/scin_done:: when complete.
+::
+
+subsection::/scin_d_free
+
+Delete Scinth defenitions. Note that any existing Scinths will continue to run, and the resources associated with this ScinthDef will not be reclaimed until all running Scinth instances built from this ScinthDef are also freed.
+
+table::
+## N * strong::string:: || ScinthDef names to free.
+::
+
 section::Node Commands
 
 subsection::/scin_n_free

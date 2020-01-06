@@ -36,10 +36,17 @@ public:
 
     /*! Async load all ScinthDef yaml files at path.
      *
-     * \param path The file path to load ScinthDef yaml data from.
+     * \param path The directory path to load ScinthDef yaml data from.
      * \param completion The function to call on completion of loading.
      */
     void scinthDefLoadDirectory(fs::path path, std::function<void(bool)> completion);
+
+    /*! Async load ScinthDefs from a file.
+     *
+     * \param path The yaml file path to load ScinthDefs from.
+     * \param completion The function to call on completion of loading.
+     */
+    void scinthDefLoadFile(fs::path path, std::function<void(bool)> completion);
 
     /*! Async parse a ScinthDef yaml string.
      *
@@ -54,6 +61,7 @@ private:
     bool asyncVGenLoadDirectory(fs::path path);
 
     bool asyncScinthDefLoadDirectory(fs::path path);
+    bool asyncScinthDefLoadFile(fs::path path);
     bool asyncScinthDefParseString(std::string yaml);
 
     std::shared_ptr<Archetypes> m_archetypes;

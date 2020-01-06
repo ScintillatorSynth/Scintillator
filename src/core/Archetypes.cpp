@@ -33,6 +33,18 @@ std::shared_ptr<const AbstractScinthDef> Archetypes::getAbstractScinthDefNamed(c
     return scinthDef;
 }
 
+void Archetypes::freeAbstractScinthDefs(const std::vector<std::string>& names) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    for (auto name : names) {
+        auto it = m_scinthDefs.find(name);
+        if (it != m_scinthDefs.end()) {
+            m_scinthDefs.erase(it);
+        } else {
+            spdlog::warn("failed to free AbstractScinthDef {}, name not found", name);
+        }
+    }
+}
+
 size_t Archetypes::numberOfAbstractScinthDefs() {
     std::lock_guard<std::mutex> lock(m_mutex);
     return m_scinthDefs.size();

@@ -43,6 +43,12 @@ public:
      */
     std::shared_ptr<const AbstractScinthDef> getAbstractScinthDefNamed(const std::string& name);
 
+    /*! Remove the AbstractScinthDefs from the map as identified by name.
+     *
+     * \param names A list of names of AbstractScinthDefs to remove.
+     */
+    void freeAbstractScinthDefs(const std::vector<std::string>& names);
+
     /*! The size of the current ScinthDefs dictionary.
      *
      * \return The number of defined ScinthDefs.

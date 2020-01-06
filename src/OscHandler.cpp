@@ -4,6 +4,7 @@
 #include "Compositor.hpp"
 #include "OscCommand.hpp"
 #include "Version.hpp"
+#include "core/Archetypes.hpp"
 #include "core/LogLevels.hpp"
 
 #include "ip/UdpSocket.h"
@@ -21,10 +22,11 @@ namespace scin {
 
 class OscHandler::OscListener : public osc::OscPacketListener {
 public:
-    OscListener(std::shared_ptr<Async> async, std::shared_ptr<Compositor> compositor,
-                std::function<void()> quitHandler):
+    OscListener(std::shared_ptr<Async> async, std::shared_ptr<Archetypes> archetypes,
+                std::shared_ptr<Compositor> compositor, std::function<void()> quitHandler):
         osc::OscPacketListener(),
         m_async(async),
+        m_archetypes(archetypes),
         m_compositor(compositor),
         m_quitHandler(quitHandler),
         m_sendQuitDone(false),
@@ -77,9 +79,9 @@ public:
                 break;
 
             case kDumpOSC: {
-                osc::ReceivedMessage::const_iterator msg = message.ArgumentsBegin();
-                int dump = (msg++)->AsInt32();
-                if (msg != message.ArgumentsEnd())
+                osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
+                int dump = (args++)->AsInt32();
+                if (args != message.ArgumentsEnd())
                     throw osc::ExcessArgumentException();
                 if (dump == 0) {
                     spdlog::info("Turning off OSC message dumping to the log.");
@@ -91,9 +93,9 @@ public:
             } break;
 
             case kLogLevel: {
-                osc::ReceivedMessage::const_iterator msg = message.ArgumentsBegin();
-                int logLevel = (msg++)->AsInt32();
-                if (msg != message.ArgumentsEnd())
+                osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
+                int logLevel = (args++)->AsInt32();
+                if (args != message.ArgumentsEnd())
                     throw osc::ExcessArgumentException();
                 spdlog::info("Setting log level to {}.", logLevel);
                 setGlobalLogLevel(logLevel);
@@ -115,35 +117,77 @@ public:
             } break;
 
             case kDRecv: {
-                osc::ReceivedMessage::const_iterator msg = message.ArgumentsBegin();
-                std::string yaml = (msg++)->AsString();
-                // TODO: optional message to execute?
-                m_async->scinthDefParseString(yaml, [this, endpoint](bool) { sendDoneMessage(endpoint); });
+                osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
+                std::string yaml = (args++)->AsString();
+                int completionMessageSize;
+                std::shared_ptr<char[]> onCompletion = extractMessage(message, args, completionMessageSize);
+                m_async->scinthDefParseString(yaml, [this, onCompletion, completionMessageSize, endpoint](bool) {
+                    if (onCompletion) {
+                        ProcessPacket(onCompletion.get(), completionMessageSize, endpoint);
+                    }
+                    sendDoneMessage(endpoint);
+                });
+            } break;
+
+            case kDLoad: {
+                osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
+                std::string path = (args++)->AsString();
+                int completionMessageSize;
+                std::shared_ptr<char[]> onCompletion = extractMessage(message, args, completionMessageSize);
+                m_async->scinthDefLoadFile(path, [this, onCompletion, completionMessageSize, endpoint](bool) {
+                    if (onCompletion) {
+                        ProcessPacket(onCompletion.get(), completionMessageSize, endpoint);
+                    }
+                    sendDoneMessage(endpoint);
+                });
+            } break;
+
+            case kDLoadDir: {
+                osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
+                std::string path = (args++)->AsString();
+                int completionMessageSize;
+                std::shared_ptr<char[]> onCompletion = extractMessage(message, args, completionMessageSize);
+                m_async->scinthDefLoadDirectory(path, [this, onCompletion, completionMessageSize, endpoint](bool) {
+                    if (onCompletion) {
+                        ProcessPacket(onCompletion.get(), completionMessageSize, endpoint);
+                    }
+                    sendDoneMessage(endpoint);
+                });
+            } break;
+
+            case kDFree: {
+                osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
+                std::vector<std::string> names;
+                while (args != message.ArgumentsEnd()) {
+                    names.emplace_back((args++)->AsString());
+                }
+                m_archetypes->freeAbstractScinthDefs(names);
+                m_compositor->freeScinthDefs(names);
             } break;
 
             case kNFree: {
-                osc::ReceivedMessage::const_iterator msg = message.ArgumentsBegin();
+                osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
                 std::vector<int> nodeIDs;
-                while (msg != message.ArgumentsEnd()) {
-                    nodeIDs.emplace_back((msg++)->AsInt32());
+                while (args != message.ArgumentsEnd()) {
+                    nodeIDs.emplace_back((args++)->AsInt32());
                 }
                 m_compositor->freeNodes(nodeIDs);
             } break;
 
             case kNRun: {
-                osc::ReceivedMessage::const_iterator msg = message.ArgumentsBegin();
+                osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
                 std::vector<std::pair<int, int>> pairs;
-                while (msg != message.ArgumentsEnd()) {
-                    pairs.emplace_back(std::make_pair((msg++)->AsInt32(), (msg++)->AsInt32()));
+                while (args != message.ArgumentsEnd()) {
+                    pairs.emplace_back(std::make_pair((args++)->AsInt32(), (args++)->AsInt32()));
                 }
                 m_compositor->setRun(pairs);
             } break;
 
             case kSNew: {
-                osc::ReceivedMessage::const_iterator msg = message.ArgumentsBegin();
-                std::string scinthDef = (msg++)->AsString();
-                int nodeID = (msg++)->AsInt32();
-                // TODO: handle rest of message.
+                osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
+                std::string scinthDef = (args++)->AsString();
+                int nodeID = (args++)->AsInt32();
+                // TODO: handle rest of message in terms of placement and group support.
                 m_compositor->play(scinthDef, nodeID, std::chrono::high_resolution_clock::now());
             } break;
             }
@@ -166,8 +210,22 @@ public:
         }
     }
 
+    std::shared_ptr<char[]> extractMessage(const osc::ReceivedMessage& message,
+                                           const osc::ReceivedMessage::const_iterator& args, int& messageSize) {
+        std::shared_ptr<char[]> extracted;
+        const void* messageData = nullptr;
+        messageSize = 0;
+        if (args != message.ArgumentsEnd() && args->IsBlob()) {
+            args->AsBlob(messageData, messageSize);
+            extracted.reset(new char[messageSize]);
+            std::memcpy(extracted.get(), messageData, messageSize);
+        }
+        return extracted;
+    }
+
 private:
     std::shared_ptr<Async> m_async;
+    std::shared_ptr<Archetypes> m_archetypes;
     std::shared_ptr<Compositor> m_compositor;
     std::function<void()> m_quitHandler;
     bool m_sendQuitDone;
@@ -181,9 +239,9 @@ OscHandler::OscHandler(const std::string& bindAddress, int listenPort):
 
 OscHandler::~OscHandler() {}
 
-void OscHandler::run(std::shared_ptr<Async> async, std::shared_ptr<Compositor> compositor,
-                     std::function<void()> quitHandler) {
-    m_listener.reset(new OscListener(async, compositor, quitHandler));
+void OscHandler::run(std::shared_ptr<Async> async, std::shared_ptr<Archetypes> archetypes,
+                     std::shared_ptr<Compositor> compositor, std::function<void()> quitHandler) {
+    m_listener.reset(new OscListener(async, archetypes, compositor, quitHandler));
     m_listenSocket.reset(
         new UdpListeningReceiveSocket(IpEndpointName(m_bindAddress.data(), m_listenPort), m_listener.get()));
     m_socketThread = std::thread([this] { m_listenSocket->Run(); });

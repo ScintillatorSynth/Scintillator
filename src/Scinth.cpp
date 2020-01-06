@@ -1,12 +1,13 @@
 #include "Scinth.hpp"
 
+#include "ScinthDef.hpp"
 #include "core/AbstractScinthDef.hpp"
 #include "core/Shape.hpp"
 #include "core/VGen.hpp"
+#include "vulkan/Buffer.hpp"
 #include "vulkan/Canvas.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
-#include "vulkan/Buffer.hpp"
 #include "vulkan/Pipeline.hpp"
 #include "vulkan/Uniform.hpp"
 
@@ -14,11 +15,10 @@
 
 namespace scin {
 
-Scinth::Scinth(std::shared_ptr<vk::Device> device, int nodeID,
-               std::shared_ptr<const AbstractScinthDef> abstractScinthDef):
+Scinth::Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef):
     m_device(device),
     m_nodeID(nodeID),
-    m_abstractScinthDef(abstractScinthDef),
+    m_scinthDef(scinthDef),
     m_running(false) {}
 
 Scinth::~Scinth() {}
@@ -28,7 +28,7 @@ bool Scinth::create(const TimePoint& startTime, vk::UniformLayout* uniformLayout
     m_running = true;
     if (uniformLayout) {
         m_uniform.reset(new vk::Uniform(m_device));
-        if (!m_uniform->createBuffers(uniformLayout, m_abstractScinthDef->uniformManifest().sizeInBytes(),
+        if (!m_uniform->createBuffers(uniformLayout, m_scinthDef->abstract()->uniformManifest().sizeInBytes(),
                                       numberOfImages)) {
             spdlog::error("failed creating uniform buffers for Scinth {}", m_nodeID);
             return false;
@@ -78,7 +78,7 @@ bool Scinth::buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, vk::
                                     m_uniform->set(i), 0, nullptr);
         }
 
-        vkCmdDrawIndexed(m_commands->buffer(i), m_abstractScinthDef->shape()->numberOfIndices(), 1, 0, 0, 0);
+        vkCmdDrawIndexed(m_commands->buffer(i), m_scinthDef->abstract()->shape()->numberOfIndices(), 1, 0, 0, 0);
 
         if (vkEndCommandBuffer(m_commands->buffer(i)) != VK_SUCCESS) {
             spdlog::error("failed ending command buffer {} for Scinth {}", i, m_nodeID);
@@ -93,10 +93,10 @@ bool Scinth::prepareFrame(size_t imageIndex, const TimePoint& frameTime) {
     // Update the Uniform buffer at imageIndex, if needed.
     if (m_uniform) {
         std::unique_ptr<float[]> uniformData(
-            new float[m_abstractScinthDef->uniformManifest().sizeInBytes() / sizeof(float)]);
+            new float[m_scinthDef->abstract()->uniformManifest().sizeInBytes() / sizeof(float)]);
         float* uniform = uniformData.get();
-        for (auto i = 0; i < m_abstractScinthDef->uniformManifest().numberOfElements(); ++i) {
-            switch (m_abstractScinthDef->uniformManifest().intrinsicForElement(i)) {
+        for (auto i = 0; i < m_scinthDef->abstract()->uniformManifest().numberOfElements(); ++i) {
+            switch (m_scinthDef->abstract()->uniformManifest().intrinsicForElement(i)) {
             case kNormPos:
                 spdlog::error("normPos is not a valid intrinsic for a Uniform in Scinth {}", m_nodeID);
                 return false;
@@ -114,7 +114,7 @@ bool Scinth::prepareFrame(size_t imageIndex, const TimePoint& frameTime) {
                 return false;
             }
 
-            uniform += (m_abstractScinthDef->uniformManifest().strideForElement(i) / sizeof(float));
+            uniform += (m_scinthDef->abstract()->uniformManifest().strideForElement(i) / sizeof(float));
         }
 
         m_uniform->buffer(imageIndex)->copyToGPU(uniformData.get());

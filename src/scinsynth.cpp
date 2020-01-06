@@ -120,7 +120,7 @@ int main(int argc, char* argv[]) {
 
     // Start listening for incoming OSC commands on UDP.
     scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
-    oscHandler.run(async, compositor, [&window] { window.stop(); });
+    oscHandler.run(async, archetypes, compositor, [&window] { window.stop(); });
 
     // ========== Main loop.
     window.run(compositor);

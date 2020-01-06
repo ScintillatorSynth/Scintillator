@@ -2,6 +2,7 @@ ScinthDef {
 	var <>name;
 	var <>func;
 	var <>children;
+	var <>defServer;
 
 	*new { | name, vGenGraphFunc |
 		^super.newCopyArgs(name.asSymbol).children_(Array.new(64)).build(vGenGraphFunc);
@@ -78,11 +79,16 @@ ScinthDef {
 		^yaml;
 	}
 
-	add { |server|
+	add { |server, completionMsg|
 		if (server.isNil, {
 			server = ScinServer.default;
 		});
-		server.sendMsg('/scin_d_recv', this.asYAML);
+		defServer = server;
+		server.sendMsg('/scin_d_recv', this.asYAML, completionMsg);
+	}
+
+	free {
+		defServer.sendMsg('/scin_d_free', name);
 	}
 
 	// VGens call these.
@@ -90,4 +96,5 @@ ScinthDef {
 		vgen.scinthIndex = children.size;
 		children = children.add(vgen);
 	}
+
 }

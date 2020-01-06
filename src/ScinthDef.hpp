@@ -46,6 +46,8 @@ public:
      */
     std::unique_ptr<Scinth> play(int nodeID, const TimePoint& startTime);
 
+    std::shared_ptr<const AbstractScinthDef> abstract() const { return m_abstractScinthDef; }
+
 private:
     bool buildVertexData();
 

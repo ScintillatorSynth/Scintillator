@@ -72,7 +72,8 @@ bool ScinthDef::build(vk::ShaderCompiler* compiler) {
 }
 
 std::unique_ptr<Scinth> ScinthDef::play(int nodeID, const TimePoint& startTime) {
-    std::unique_ptr<Scinth> scinth(new Scinth(m_device, nodeID, m_abstractScinthDef));
+    std::shared_ptr<ScinthDef> sharedThis(this);
+    std::unique_ptr<Scinth> scinth(new Scinth(m_device, nodeID, sharedThis));
     if (!scinth->create(startTime, m_uniformLayout.get(), m_canvas->numberOfImages())) {
         spdlog::error("failed to create Scinth {} from ScinthDef {}", nodeID, m_abstractScinthDef->name());
         return nullptr;

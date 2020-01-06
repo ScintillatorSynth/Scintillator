@@ -20,6 +20,9 @@ enum OscCommand : int {
 
     // Scinth Definition Commands
     kDRecv = 5,
+    kDLoad = 6,
+    kDLoadDir = 7,
+    kDFree = 8,
 
     // Node Commands
     kNFree = 11,
@@ -46,6 +49,9 @@ dumpOSC,    scin::OscCommand::kDumpOSC
 logLevel,   scin::OscCommand::kLogLevel
 version,    scin::OscCommand::kVersion
 d_recv,     scin::OscCommand::kDRecv
+d_load,     scin::OscCommand::kDLoad
+d_loadDir,  scin::OscCommand::kDLoadDir
+d_free,     scin::OscCommand::kDFree
 n_free,     scin::OscCommand::kNFree
 n_run,      scin::OscCommand::kNRun
 s_new,      scin::OscCommand::kSNew

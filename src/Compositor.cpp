@@ -55,6 +55,18 @@ bool Compositor::buildScinthDef(std::shared_ptr<const AbstractScinthDef> abstrac
     return true;
 }
 
+void Compositor::freeScinthDefs(const std::vector<std::string>& names) {
+    std::lock_guard<std::mutex> lock(m_scinthDefMutex);
+    for (auto name : names) {
+        auto it = m_scinthDefs.find(name);
+        if (it != m_scinthDefs.end()) {
+            m_scinthDefs.erase(it);
+        } else {
+            spdlog::warn("unable to free ScinthDef {}, name not found.", name);
+        }
+    }
+}
+
 bool Compositor::play(const std::string& scinthDefName, int nodeID, const TimePoint& startTime) {
     std::shared_ptr<ScinthDef> scinthDef;
     {
