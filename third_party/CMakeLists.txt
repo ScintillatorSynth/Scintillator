@@ -61,13 +61,13 @@ set(EFFCEE_BUILD_TESTING OFF CACHE BOOL "build testing in effcee")
 add_subdirectory(effcee)
 
 #### SPIRV-Headers (required by SPIRV-Tools)
-add_subdirectory(SPIRV-Headers)
+#add_subdirectory(SPIRV-Headers)
 
 #### SPIRV-Tools (required by shaderc)
-if(NOT SCIN_USE_SWIFTSHADER) # swiftshader includes its own version of SPRIV-Tools
-    set(SPIRV_SKIP_TESTS ON CACHE BOOL "skip testing in SPIRV-Tools")
-    add_subdirectory(SPIRV-Tools)
-endif()
+#if(NOT SCIN_USE_SWIFTSHADER) # swiftshader includes its own version of SPRIV-Tools
+#    set(SPIRV_SKIP_TESTS ON CACHE BOOL "skip testing in SPIRV-Tools")
+#    add_subdirectory(SPIRV-Tools)
+#endif()
 
 #### glslang (required by shaderc)
 add_subdirectory(glslang)
