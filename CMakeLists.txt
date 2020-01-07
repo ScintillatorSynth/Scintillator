@@ -57,13 +57,18 @@ set(CMAKE_CXX_FLAGS_COVERAGE
     CACHE STRING "C++ coverage compile flags" FORCE)
 set(CMAKE_C_FLAGS_COVERAGE
     "${CMAKE_C_FLAGS_DEBUG} -fprofile-instr-generate -fcoverage-mapping"
-    CACHE STRING "C coverage comiple flags" FORCE)
+    CACHE STRING "C coverage compile flags" FORCE)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
     if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         message(FATAL_ERROR "Code coverage builds require clang")
     endif()
 endif()
+
+# installing SwiftShader: see https://github.com/KhronosGroup/Vulkan-Loader/blob/master/loader/LoaderAndLayerInterface.md#icd-discovery-on-windows
+# for headless builds we need vulkan loader? may need to bring that in and swap for glfw. But should still compile as
+# a .so. would really like to be able to use a system vulkan loader. OK for headless builds to be Linux only?
+# that's really the only headless context :)
 
 add_subdirectory(third_party)
 add_subdirectory(src)

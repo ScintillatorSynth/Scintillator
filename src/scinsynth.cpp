@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
     // Check for early exit conditions.
     if (FLAGS_print_version) {
         fmt::print("scinsynth version {}.{}.{} from branch {} at revision {}", kScinVersionMajor, kScinVersionMinor,
-                     kScinVersionPatch, kScinBranch, kScinCommitHash);
+                   kScinVersionPatch, kScinBranch, kScinCommitHash);
         return EXIT_SUCCESS;
     }
     if (FLAGS_udp_port_number < 1024 || FLAGS_udp_port_number > 65535) {

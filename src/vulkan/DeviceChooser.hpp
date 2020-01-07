@@ -14,9 +14,7 @@ class Instance;
 
 struct DeviceInfo {
     enum Type { kCPU, kDiscreteGPU, kIntegratedGPU, kOther };
-    DeviceInfo(Type deviceType, std::string deviceName, const uint8_t* deviceUUID):
-        type(deviceType),
-        name(deviceName) {
+    DeviceInfo(Type deviceType, std::string deviceName, const uint8_t* deviceUUID): type(deviceType), name(deviceName) {
         std::memcpy(uuid.data(), deviceUUID, sizeof(uuid));
     }
 

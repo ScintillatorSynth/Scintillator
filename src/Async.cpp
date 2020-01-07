@@ -19,7 +19,7 @@ Async::~Async() { stop(); }
 void Async::run(size_t numberOfWorkerThreads) {
     spdlog::info("Async starting {} worker threads.", numberOfWorkerThreads);
     for (auto i = 0; i < numberOfWorkerThreads; ++i) {
-        std::string threadName = fmt::format("asyncWorkerThread{}", i);
+        std::string threadName = fmt::format("asyncWorkerThread_{}", i);
         m_workerThreads.emplace_back(std::thread(&Async::threadMain, this, threadName));
     }
 }
