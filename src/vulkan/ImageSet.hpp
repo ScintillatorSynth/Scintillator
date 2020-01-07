@@ -1,5 +1,5 @@
-#ifndef SRC_VULKAN_IMAGES_HPP_
-#define SRC_VULKAN_IMAGES_HPP_
+#ifndef SRC_VULKAN_IMAGE_SET_HPP_
+#define SRC_VULKAN_IMAGE_SET_HPP_
 
 #include "vulkan/Vulkan.hpp"
 
@@ -13,18 +13,23 @@ class Swapchain;
 
 /*! Wraps one or more Vulkan VkImage objects, and associated metadata.
  */
-class Images {
+class ImageSet {
 public:
-    Images(std::shared_ptr<Device> device);
-    ~Images();
+    ImageSet(std::shared_ptr<Device> device);
+    ~ImageSet();
 
-    /*! Extracts the set of images from the swapchain.
+    /*! Wraps the set of images from the swapchain.
      *
-     * \param swapchain The Swapchain class to extract the Images from.
+     * \param swapchain The Swapchain class to extract the images from.
      * \param imageCount The expected number of images. Vulkan may actually allocate more images than this.
-     * \return The actual number of images allocated.
+     * \return The actual number of images allocated, 0 on error.
      */
     uint32_t getFromSwapchain(Swapchain* swapchain, uint32_t imageCount);
+
+    /*! Make a set of images backed by allocated memory.
+     */
+    bool create(uint32_t width, uint32_t height);
+    void destroy();
 
     size_t count() const { return m_images.size(); }
     const std::vector<VkImage>& get() const { return m_images; }
@@ -35,6 +40,7 @@ public:
 
 private:
     std::shared_ptr<Device> m_device;
+    bool m_nonOwning;
     std::vector<VkImage> m_images;
     VkFormat m_format;
     VkExtent2D m_extent;
@@ -44,4 +50,4 @@ private:
 
 } // namespace scin
 
-#endif // SRC_VULKAN_IMAGES_HPP_
+#endif // SRC_VULKAN_IMAGE_SET_HPP_

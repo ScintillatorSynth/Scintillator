@@ -2,7 +2,7 @@
 
 #include "vulkan/Canvas.hpp"
 #include "vulkan/Device.hpp"
-#include "vulkan/Images.hpp"
+#include "vulkan/ImageSet.hpp"
 #include "vulkan/Pipeline.hpp"
 #include "vulkan/Window.hpp"
 
@@ -17,7 +17,7 @@ Swapchain::Swapchain(std::shared_ptr<Device> device):
     m_device(device),
     m_imageCount(0),
     m_swapchain(VK_NULL_HANDLE),
-    m_images(new Images(device)),
+    m_images(new ImageSet(device)),
     m_canvas(new Canvas(device)) {}
 
 Swapchain::~Swapchain() { destroy(); }

@@ -1,7 +1,7 @@
 #include "vulkan/Canvas.hpp"
 
 #include "vulkan/Device.hpp"
-#include "vulkan/Images.hpp"
+#include "vulkan/ImageSet.hpp"
 
 #include "spdlog/spdlog.h"
 
@@ -11,7 +11,7 @@ Canvas::Canvas(std::shared_ptr<Device> device): m_device(device), m_renderPass(V
 
 Canvas::~Canvas() { destroy(); }
 
-bool Canvas::create(std::shared_ptr<Images> images) {
+bool Canvas::create(std::shared_ptr<ImageSet> images) {
     m_images = images;
     m_extent = images->extent();
     m_numberOfImages = images->count();

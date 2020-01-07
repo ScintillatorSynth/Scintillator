@@ -10,7 +10,7 @@ namespace scin { namespace vk {
 
 class Canvas;
 class Device;
-class Images;
+class ImageSet;
 class Pipeline;
 class Window;
 
@@ -35,7 +35,7 @@ private:
     VkExtent2D m_extent;
     uint32_t m_imageCount;
     VkSwapchainKHR m_swapchain;
-    std::shared_ptr<Images> m_images;
+    std::shared_ptr<ImageSet> m_images;
     std::shared_ptr<Canvas> m_canvas;
 };
 

@@ -9,7 +9,7 @@
 namespace scin { namespace vk {
 
 class Device;
-class Images;
+class ImageSet;
 
 /*! Contains the data and state required to render to a set of Vulkan Images.
  *
@@ -25,7 +25,7 @@ public:
      * \param images A pointer to an Images class.
      * \return true on success, false on failure.
      */
-    bool create(std::shared_ptr<Images> images);
+    bool create(std::shared_ptr<ImageSet> images);
 
     /*! Reclaims the Vukan resources associated with the Canvas.
      */
@@ -41,7 +41,7 @@ public:
 
 private:
     std::shared_ptr<Device> m_device;
-    std::shared_ptr<Images> m_images;
+    std::shared_ptr<ImageSet> m_images;
     VkExtent2D m_extent;
     size_t m_numberOfImages;
     std::vector<VkImageView> m_imageViews;

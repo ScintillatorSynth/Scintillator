@@ -1,19 +1,19 @@
-#include "vulkan/Images.hpp"
+#include "vulkan/ImageSet.hpp"
 
 #include "vulkan/Device.hpp"
 #include "vulkan/Swapchain.hpp"
 
 namespace scin { namespace vk {
 
-Images::Images(std::shared_ptr<Device> device): m_device(device), m_format(VK_FORMAT_UNDEFINED) {}
+ImageSet::ImageSet(std::shared_ptr<Device> device):
+    m_device(device),
+    m_nonOwning(true),
+    m_format(VK_FORMAT_UNDEFINED) {}
 
-Images::~Images() {
-    // For the moment the only way we have images is we got them from Swapchain, in which case they should not be
-    // destroyed with VkDestroyImage, but rather are destroyed with VkDestroySwapchainKHR. So this dtor is a no-op
-    // for the moment.
-}
+ImageSet::~ImageSet() { destroy(); }
 
-uint32_t Images::getFromSwapchain(Swapchain* swapchain, uint32_t imageCount) {
+uint32_t ImageSet::getFromSwapchain(Swapchain* swapchain, uint32_t imageCount) {
+    m_nonOwning = true;
     m_format = swapchain->surfaceFormat().format;
     m_extent = swapchain->extent();
     // Retrieve images from swap chain. Note it may be possible that Vulkan has allocated more images than requested by
@@ -23,6 +23,17 @@ uint32_t Images::getFromSwapchain(Swapchain* swapchain, uint32_t imageCount) {
     m_images.resize(actualImageCount);
     vkGetSwapchainImagesKHR(m_device->get(), swapchain->get(), &actualImageCount, m_images.data());
     return actualImageCount;
+}
+
+bool ImageSet::create(uint32_t width, uint32_t height) {
+    m_nonOwning = false;
+
+    return true;
+}
+
+void ImageSet::destroy() {
+    if (!m_nonOwning) {
+    }
 }
 
 } // namespace vk
