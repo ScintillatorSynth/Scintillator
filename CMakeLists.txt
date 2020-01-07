@@ -27,6 +27,8 @@ option(SCIN_VALIDATE_VULKAN
     "Use LunarG Vulkan Validation Layers to check Vulkan calls" ON)
 option(SCIN_BUILD_DOCS
     "Add docs build target to build C++ documentation with Doxygen" ON)
+option(SCIN_USE_SYSTEM_VULKAN
+    "Use the system installed Vulkan library instead of the built-in" OFF)
 
 # If this is a git checkout we can extract the git hash and branch. This code copied verbatim or close to it from the
 # SuperCollider CMake files.

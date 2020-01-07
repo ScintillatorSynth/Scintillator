@@ -44,3 +44,9 @@
 [submodule "third_party/fmt"]
 	path = third_party/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "third_party/Vulkan-Headers"]
+	path = third_party/Vulkan-Headers
+	url = https://github.com/KhronosGroup/Vulkan-Headers.git
+[submodule "third_party/Vulkan-Loader"]
+	path = third_party/Vulkan-Loader
+	url = https://github.com/KhronosGroup/Vulkan-Loader
