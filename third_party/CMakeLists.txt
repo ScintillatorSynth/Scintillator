@@ -1,6 +1,7 @@
 if(SCIN_USE_SYSTEM_VULKAN)
     find_package(Vulkan REQUIRED FATAL_ERROR)
 else()
+    include_directories(Vulkan-Headers/include)
     add_subdirectory(Vulkan-Headers)
     set(BUILD_WSI_WAYLAND_SUPPORT OFF CACHE BOOL "don't build Wayland WSI support")
     add_subdirectory(Vulkan-Loader)
