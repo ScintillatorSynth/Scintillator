@@ -70,6 +70,8 @@ set(scintillator_synth_files
     vulkan/CommandPool.hpp
     vulkan/Device.cpp
     vulkan/Device.hpp
+    vulkan/DeviceChooser.cpp
+    vulkan/DeviceChooser.hpp
     vulkan/Images.cpp
     vulkan/Images.hpp
     vulkan/Instance.cpp

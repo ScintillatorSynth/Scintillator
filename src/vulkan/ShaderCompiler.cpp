@@ -24,6 +24,7 @@ void ShaderCompiler::releaseCompiler() {
     }
 }
 
+// TODO: this may not be multi threading well. May need a mutex to protect.
 std::unique_ptr<Shader> ShaderCompiler::compile(std::shared_ptr<Device> device, const std::string& source,
                                                 const std::string& name, const std::string& entryPoint,
                                                 Shader::Kind kind) {

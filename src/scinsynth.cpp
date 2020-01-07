@@ -2,12 +2,13 @@
 #include "Compositor.hpp"
 #include "OscHandler.hpp"
 #include "Version.hpp"
+#include "core/Archetypes.hpp"
 #include "core/FileSystem.hpp"
 #include "core/LogLevels.hpp"
-#include "core/Archetypes.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
+#include "vulkan/DeviceChooser.hpp"
 #include "vulkan/Instance.hpp"
 #include "vulkan/Pipeline.hpp"
 #include "vulkan/Shader.hpp"
@@ -17,6 +18,7 @@
 #include "vulkan/Vulkan.hpp"
 #include "vulkan/Window.hpp"
 
+#include "fmt/core.h"
 #include "gflags/gflags.h"
 #include "glm/glm.hpp"
 #include "spdlog/spdlog.h"
@@ -48,16 +50,16 @@ int main(int argc, char* argv[]) {
 
     // Check for early exit conditions.
     if (FLAGS_print_version) {
-        spdlog::info("scinsynth version {}.{}.{} from branch {} at revision {}", kScinVersionMajor, kScinVersionMinor,
+        fmt::print("scinsynth version {}.{}.{} from branch {} at revision {}", kScinVersionMajor, kScinVersionMinor,
                      kScinVersionPatch, kScinBranch, kScinCommitHash);
         return EXIT_SUCCESS;
     }
     if (FLAGS_udp_port_number < 1024 || FLAGS_udp_port_number > 65535) {
-        spdlog::error("scinsynth requires a UDP port number between 1024 and 65535. Specify with --udp_port_number");
+        fmt::print("scinsynth requires a UDP port number between 1024 and 65535. Specify with --udp_port_number");
         return EXIT_FAILURE;
     }
     if (!fs::exists(FLAGS_quark_dir)) {
-        spdlog::error("invalid or nonexistent path {} supplied for --quark_dir, terminating.", FLAGS_quark_dir);
+        fmt::print("invalid or nonexistent path {} supplied for --quark_dir, terminating.", FLAGS_quark_dir);
         return EXIT_FAILURE;
     }
 
@@ -79,6 +81,10 @@ int main(int argc, char* argv[]) {
         spdlog::error("unable to create Vulkan instance.");
         return EXIT_FAILURE;
     }
+
+    scin::vk::DeviceChooser chooser(instance);
+    chooser.enumerateAllDevices();
+
 
     scin::vk::Window window(instance);
     if (!window.create(FLAGS_window_width, FLAGS_window_height, FLAGS_keep_on_top)) {
