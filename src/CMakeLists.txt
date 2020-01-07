@@ -93,7 +93,10 @@ set(scintillator_synth_files
 
 add_executable(scinsynth ${scintillator_synth_files})
 
+find_package(Vulkan REQUIRED FATAL_ERROR)
+
 target_link_libraries(scinsynth
+    "${Vulkan_LIBRARY}"
     SPIRV-Tools
     VulkanMemoryAllocator
     gflags
@@ -105,18 +108,9 @@ target_link_libraries(scinsynth
     shaderc
     spdlog
     stdc++fs
+    SwiftShader
+    vk_swiftshader
 )
-
-if(SCIN_USE_SWIFTSHADER)
-    target_link_libraries(scinsynth
-        SwiftShader
-        vk_swiftshader
-    )
-else()
-    find_package(Vulkan REQUIRED FATAL_ERROR)
-    target_link_libraries(scinsynth "${Vulkan_LIBRARY}")
-endif()
-
 
 if(SCIN_VALIDATE_VULKAN)
     target_compile_definitions(scinsynth PRIVATE SCIN_VALIDATE_VULKAN)

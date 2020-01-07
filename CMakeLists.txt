@@ -18,7 +18,6 @@ if(DEFINED LLVM_CONFIG)
     set(CMAKE_C_COMPILER "${LLVM_BIN_PATH}/clang" CACHE FILEPATH "clang" FORCE)
 endif()
 
-
 # The authoritative version of Scintillator is always in the Scintillator.quark file in the root directory of the
 # project. This version is manually kept in sync and should be updated to match. Both C++ and sclang Scintillator code
 # is developed in parallel, and is designed to be released together.
@@ -26,8 +25,6 @@ project(Scintillator VERSION 0.0.1 LANGUAGES C CXX)
 
 option(SCIN_VALIDATE_VULKAN
     "Use LunarG Vulkan Validation Layers to check Vulkan calls" ON)
-option(SCIN_USE_SWIFTSHADER
-    "Use SwiftShader for CPU rendering, instead of looking for locally installed Vulkan SDK" OFF)
 option(SCIN_BUILD_DOCS
     "Add docs build target to build C++ documentation with Doxygen" ON)
 

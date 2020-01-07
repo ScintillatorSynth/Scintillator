@@ -1,10 +1,12 @@
-if(SCIN_USE_SWIFTSHADER)
-    # Swiftshader can provide the Vulkan and GL headers to the other libraries.
-    include_directories(swiftshader/include)
-    set(BUILD_SAMPLES OFF CACHE BOOL "don't build swiftshader samples")
-    set(BUILD_TESTS OFF CACHE BOOL "don't build swiftshader tests")
-    add_subdirectory(swiftshader)
-endif()
+set(BUILD_SAMPLES OFF CACHE BOOL "don't build swiftshader samples" FORCE)
+set(BUILD_TESTS OFF CACHE BOOL "don't build swiftshader tests" FORCE)
+set(BUILD_VULKAN ON CACHE BOOL "build Vulkan" FORCE)
+set(BUILD_EGL OFF CACHE BOOL "don't build egl" FORCE)
+set(BUILD_GLESV2 OFF CACHE BOOL "don't build GLESv2" FORCE)
+set(BUILD_GLES_CM OFF CACHE BOOL "don't build GLES CM" FORCE)
+set(CMAKE_SHARED_LINKER_FLAGS "-fuse-ld=gold" CACHE STRING "workaround an issue in gnu ld that breaks vulkan build"
+    FORCE)
+add_subdirectory(swiftshader)
 
 ### fmt
 add_subdirectory(fmt)
@@ -22,6 +24,7 @@ add_subdirectory(spdlog)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_VULKAN_STATIC ON CACHE BOOL "Link directly against the Vulkan loader" FORCE)
 add_subdirectory(glfw)
 
 #### glm
