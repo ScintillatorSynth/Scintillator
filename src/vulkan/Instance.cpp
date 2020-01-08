@@ -64,15 +64,15 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityF
                                                     void* userData) {
     // The Severity bits can be combined, so we key log severity off of the most severe bit.
     if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
-        spdlog::error("Vulkan validation error: {}", callbackData->pMessage);
+        spdlog::error("Vulkan: {}", callbackData->pMessage);
     } else if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
-        spdlog::warn("Vulkan validation warning: {}", callbackData->pMessage);
+        spdlog::warn("Vulkan: {}", callbackData->pMessage);
     } else if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) {
         // Vulkan validation info is quite extensive, so we lower the spdlog level to debug to better match the use of
         // info/debug log levels in the rest of Scintillator.
-        spdlog::debug("Vulkan validation info: {}", callbackData->pMessage);
+        spdlog::debug("Vulkan: {}", callbackData->pMessage);
     } else {
-        spdlog::trace("Vulkan validation verbose: {}", callbackData->pMessage);
+        spdlog::trace("Vulkan: {}", callbackData->pMessage);
     }
     return VK_FALSE;
 }
@@ -98,7 +98,7 @@ bool setupDebugMessenger(VkInstance instance, VkDebugUtilsMessengerEXT* debugMes
 
 namespace scin { namespace vk {
 
-Instance::Instance(): m_instance(VK_NULL_HANDLE) {}
+Instance::Instance(bool enableValidation): m_enableValidation(enableValidation), m_instance(VK_NULL_HANDLE) {}
 
 Instance::~Instance() { destroy(); }
 
@@ -121,23 +121,24 @@ bool Instance::create() {
 
     std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
-    extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-
-    // TODO is this useful?
-    extensions.push_back("VK_EXT_debug_report");
-
-    createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-    createInfo.ppEnabledLayerNames = validationLayers.data();
-
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {};
-    debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-    debugCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
-        | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
-        | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-    debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
-        | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-    debugCreateInfo.pfnUserCallback = debugCallback;
-    createInfo.pNext = &debugCreateInfo;
+    if (m_enableValidation) {
+        extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+
+        debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+        debugCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
+            | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
+            | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+        debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
+            | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+        debugCreateInfo.pfnUserCallback = debugCallback;
+        createInfo.pNext = &debugCreateInfo;
+        createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+        createInfo.ppEnabledLayerNames = validationLayers.data();
+    } else {
+        createInfo.enabledLayerCount = 0;
+        createInfo.ppEnabledLayerNames = nullptr;
+    }
 
     createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
     createInfo.ppEnabledExtensionNames = extensions.data();
@@ -147,20 +148,22 @@ bool Instance::create() {
         return false;
     }
 
-    if (vkGetInstanceProcAddr(m_instance, "vkCreateDebugReportCallbackEXT") != nullptr) {
-        spdlog::critical("you could use debug report?");
+    if (m_enableValidation) {
+        if (!setupDebugMessenger(m_instance, &m_debugMessenger)) {
+            spdlog::error("Instance failed to create Vulkan Validation debug messenger.");
+            return false;
+        }
     }
 
-    if (!setupDebugMessenger(m_instance, &m_debugMessenger)) {
-        spdlog::error("Instance failed to create Vulkan Validation debug messenger.");
-        return false;
-    }
     return true;
 }
 
 void Instance::destroy() {
-    if (m_instance != VK_NULL_HANDLE) {
+    if (m_debugMessenger != VK_NULL_HANDLE) {
         destroyDebugUtilsMessengerEXT(m_instance, m_debugMessenger, nullptr);
+        m_debugMessenger = VK_NULL_HANDLE;
+    }
+    if (m_instance != VK_NULL_HANDLE) {
         vkDestroyInstance(m_instance, nullptr);
         m_instance = VK_NULL_HANDLE;
     }

@@ -10,7 +10,7 @@ namespace scin { namespace vk {
  */
 class Instance {
 public:
-    Instance();
+    Instance(bool enableValidation);
     ~Instance();
 
     /*! Attempts to create a Vulkan Instance, and set up Validation Layers, if configured.
@@ -26,6 +26,7 @@ public:
     VkInstance get() { return m_instance; }
 
 private:
+    bool m_enableValidation;
     VkInstance m_instance;
     VkDebugUtilsMessengerEXT m_debugMessenger;
 };

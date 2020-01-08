@@ -7,9 +7,7 @@
 
 namespace scin { namespace vk {
 
-ImageSet::ImageSet(std::shared_ptr<Device> device):
-    m_device(device),
-    m_format(VK_FORMAT_UNDEFINED) {}
+ImageSet::ImageSet(std::shared_ptr<Device> device): m_device(device), m_format(VK_FORMAT_UNDEFINED) {}
 
 ImageSet::~ImageSet() { destroy(); }
 
@@ -51,7 +49,7 @@ bool ImageSet::createHostTransferTarget(uint32_t width, uint32_t height, size_t 
         VkImage image;
         VmaAllocation allocation;
         if (vmaCreateImage(m_device->allocator(), &createInfo, &allocInfo, &image, &allocation, nullptr)
-                != VK_SUCCESS) {
+            != VK_SUCCESS) {
             spdlog::error("failed creating host transfer target images");
             return false;
         }

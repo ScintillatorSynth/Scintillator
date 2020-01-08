@@ -45,8 +45,11 @@ DEFINE_bool(keep_on_top, true, "If true will keep the window on top of other win
 DEFINE_int32(async_worker_threads, 2,
              "Number of threads to reserve for asynchronous operations (like loading ScinthDefs).");
 
+DEFINE_bool(vulkan_validation, true, "Enable Vulkan validation layers.");
+
 int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
+    scin::setGlobalLogLevel(FLAGS_log_level);
 
     // Check for early exit conditions.
     if (FLAGS_print_version) {
@@ -63,9 +66,6 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    // Set logging level, only after any critical user-triggered reporting or errors (--print_version, etc).
-    scin::setGlobalLogLevel(FLAGS_log_level);
-
     fs::path quarkPath = fs::canonical(FLAGS_quark_dir);
     if (!fs::exists(quarkPath / "Scintillator.quark")) {
         spdlog::error("Path {} doesn't look like Scintillator Quark root directory, terminating.", quarkPath.string());
@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
     glfwInit();
 
     // ========== Vulkan setup.
-    std::shared_ptr<scin::vk::Instance> instance(new scin::vk::Instance());
+    std::shared_ptr<scin::vk::Instance> instance(new scin::vk::Instance(FLAGS_vulkan_validation));
     if (!instance->create()) {
         spdlog::error("scinsynth unable to create Vulkan instance.");
         return EXIT_FAILURE;
@@ -84,7 +84,6 @@ int main(int argc, char* argv[]) {
 
     scin::vk::DeviceChooser chooser(instance);
     chooser.enumerateAllDevices();
-
 
     scin::vk::Window window(instance);
     if (!window.create(FLAGS_window_width, FLAGS_window_height, FLAGS_keep_on_top)) {

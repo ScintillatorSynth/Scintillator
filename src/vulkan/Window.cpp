@@ -175,7 +175,10 @@ void Window::destroySyncObjects() {
     m_inFlightFences.clear();
 }
 
-void Window::destroySwapchain() { m_swapchain->destroy(); }
+void Window::destroySwapchain() {
+    m_readbackImages->destroy();
+    m_swapchain->destroy();
+}
 
 void Window::destroy() {
     vkDestroySurfaceKHR(m_instance->get(), m_surface, nullptr);
