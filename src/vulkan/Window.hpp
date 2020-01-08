@@ -16,6 +16,7 @@ namespace vk {
 class Canvas;
 class CommandBuffer;
 class Device;
+class ImageSet;
 class Instance;
 class Swapchain;
 
@@ -57,6 +58,7 @@ private:
     GLFWwindow* m_window;
     VkSurfaceKHR m_surface;
     std::shared_ptr<Swapchain> m_swapchain;
+    std::shared_ptr<ImageSet> m_readbackImages;
     std::vector<VkSemaphore> m_imageAvailableSemaphores;
     std::vector<VkSemaphore> m_renderFinishedSemaphores;
     std::vector<VkFence> m_inFlightFences;

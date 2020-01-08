@@ -23,8 +23,10 @@ endif()
 # is developed in parallel, and is designed to be released together.
 project(Scintillator VERSION 0.0.1 LANGUAGES C CXX)
 
-option(SCIN_VALIDATE_VULKAN
-    "Use LunarG Vulkan Validation Layers to check Vulkan calls" ON)
+if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    message(FATAL_ERROR "Scintillator currently requires Clang to build")
+endif()
+
 option(SCIN_BUILD_DOCS
     "Add docs build target to build C++ documentation with Doxygen" ON)
 option(SCIN_USE_SYSTEM_VULKAN
@@ -61,16 +63,17 @@ set(CMAKE_C_FLAGS_COVERAGE
     "${CMAKE_C_FLAGS_DEBUG} -fprofile-instr-generate -fcoverage-mapping"
     CACHE STRING "C coverage compile flags" FORCE)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
-    if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        message(FATAL_ERROR "Code coverage builds require clang")
-    endif()
-endif()
-
 # installing SwiftShader: see https://github.com/KhronosGroup/Vulkan-Loader/blob/master/loader/LoaderAndLayerInterface.md#icd-discovery-on-windows
 # for headless builds we need vulkan loader? may need to bring that in and swap for glfw. But should still compile as
 # a .so. would really like to be able to use a system vulkan loader. OK for headless builds to be Linux only?
 # that's really the only headless context :)
+
+# ok you desperately need ccache.
+# also it seems like all the vulkan stuff would much prefer to be an external dependency? maybe?
+# validation layers seem to be loading but the debug messenger api is busted?
+
+# ok things to do:
+#
 
 add_subdirectory(third_party)
 add_subdirectory(src)

@@ -15,7 +15,7 @@ namespace scin { namespace vk {
 
 Swapchain::Swapchain(std::shared_ptr<Device> device):
     m_device(device),
-    m_imageCount(0),
+    m_numberOfImages(0),
     m_swapchain(VK_NULL_HANDLE),
     m_images(new ImageSet(device)),
     m_canvas(new Canvas(device)) {}
@@ -75,16 +75,16 @@ bool Swapchain::create(Window* window) {
                      std::min(capabilities.maxImageExtent.height, static_cast<uint32_t>(window->height())));
     }
 
-    m_imageCount = capabilities.minImageCount + 1;
+    m_numberOfImages = capabilities.minImageCount + 1;
     if (capabilities.maxImageCount > 0) {
-        m_imageCount = std::min(m_imageCount, capabilities.maxImageCount);
+        m_numberOfImages = std::min(m_numberOfImages, capabilities.maxImageCount);
     }
 
     // Populate Swap Chain create info structure.
     VkSwapchainCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     createInfo.surface = window->getSurface();
-    createInfo.minImageCount = m_imageCount;
+    createInfo.minImageCount = m_numberOfImages;
     createInfo.imageFormat = m_surfaceFormat.format;
     createInfo.imageColorSpace = m_surfaceFormat.colorSpace;
     createInfo.imageExtent = m_extent;
@@ -111,13 +111,13 @@ bool Swapchain::create(Window* window) {
     createInfo.oldSwapchain = VK_NULL_HANDLE;
 
     if (vkCreateSwapchainKHR(m_device->get(), &createInfo, nullptr, &m_swapchain) != VK_SUCCESS) {
-        spdlog::error("error creating swap chain");
+        spdlog::error("Failed to create swap chain.");
         return false;
     }
 
-    m_imageCount = m_images->getFromSwapchain(this, m_imageCount);
+    m_numberOfImages = m_images->getFromSwapchain(this, m_numberOfImages);
     if (!m_canvas->create(m_images)) {
-        spdlog::error("error creating Canvas");
+        spdlog::error("Swapchain failed to create Canvas.");
         return false;
     }
 

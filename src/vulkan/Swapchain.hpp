@@ -24,7 +24,7 @@ public:
 
     VkSurfaceFormatKHR surfaceFormat() { return m_surfaceFormat; }
     VkExtent2D extent() { return m_extent; }
-    uint32_t imageCount() const { return m_imageCount; }
+    uint32_t numberOfImages() const { return m_numberOfImages; }
     VkSwapchainKHR get() { return m_swapchain; }
     std::shared_ptr<Canvas> canvas() { return m_canvas; }
 
@@ -33,7 +33,7 @@ private:
     VkSurfaceFormatKHR m_surfaceFormat;
     VkPresentModeKHR m_presentMode;
     VkExtent2D m_extent;
-    uint32_t m_imageCount;
+    uint32_t m_numberOfImages;
     VkSwapchainKHR m_swapchain;
     std::shared_ptr<ImageSet> m_images;
     std::shared_ptr<Canvas> m_canvas;

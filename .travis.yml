@@ -20,6 +20,7 @@ addons:
             - libxi-dev
             - libxinerama-dev
             - libxrandr-dev
+            - libwayland-dev
             - llvm-8-dev
             - python3-distutils
             - supercollider-language

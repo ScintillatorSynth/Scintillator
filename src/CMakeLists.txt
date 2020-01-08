@@ -120,10 +120,6 @@ else()
     )
 endif()
 
-if(SCIN_VALIDATE_VULKAN)
-    target_compile_definitions(scinsynth PRIVATE SCIN_VALIDATE_VULKAN)
-endif()
-
 add_executable(run_unittests
     core/AbstractScinthDef_unittests.cpp
     core/AbstractVGen_unittests.cpp

@@ -7,7 +7,6 @@
 #include <cstring>
 #include <vector>
 
-#if defined(SCIN_VALIDATE_VULKAN)
 namespace {
 
 VkResult createDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* createInfo,
@@ -18,6 +17,7 @@ VkResult createDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMes
     if (func != nullptr) {
         return func(instance, createInfo, allocator, debugMessenger);
     } else {
+        spdlog::error("unable to get function address of vkCreateDebugUtilsMessengerEXT");
         return VK_ERROR_EXTENSION_NOT_PRESENT;
     }
 }
@@ -31,7 +31,7 @@ void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
     }
 }
 
-const std::vector<const char*> validationLayers = { "VK_LAYER_LUNARG_standard_validation" };
+const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 
 bool checkValidationLayerSupport() {
     uint32_t layerCount;
@@ -96,8 +96,6 @@ bool setupDebugMessenger(VkInstance instance, VkDebugUtilsMessengerEXT* debugMes
 
 } // namespace
 
-#endif // SCIN_VALIDATE_VULKAN
-
 namespace scin { namespace vk {
 
 Instance::Instance(): m_instance(VK_NULL_HANDLE) {}
@@ -123,38 +121,46 @@ bool Instance::create() {
 
     std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
-#if defined(SCIN_VALIDATE_VULKAN)
     extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+
+    // TODO is this useful?
+    extensions.push_back("VK_EXT_debug_report");
 
     createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
     createInfo.ppEnabledLayerNames = validationLayers.data();
-#else
-    createInfo.enabledLayerCount = 0;
-#endif
+
+    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {};
+    debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    debugCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
+        | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
+        | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+    debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
+        | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+    debugCreateInfo.pfnUserCallback = debugCallback;
+    createInfo.pNext = &debugCreateInfo;
 
     createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
     createInfo.ppEnabledExtensionNames = extensions.data();
 
     if (vkCreateInstance(&createInfo, nullptr, &m_instance) != VK_SUCCESS) {
-        spdlog::error("Failed to create Vulkan instance.");
+        spdlog::error("Instance failed to create Vulkan instance.");
         return false;
     }
 
-#if defined(SCIN_VALIDATE_VULKAN)
+    if (vkGetInstanceProcAddr(m_instance, "vkCreateDebugReportCallbackEXT") != nullptr) {
+        spdlog::critical("you could use debug report?");
+    }
+
     if (!setupDebugMessenger(m_instance, &m_debugMessenger)) {
-        spdlog::error("Failed to create Vulkan Validation debug messenger.");
+        spdlog::error("Instance failed to create Vulkan Validation debug messenger.");
         return false;
     }
-#endif
-
     return true;
 }
 
 void Instance::destroy() {
     if (m_instance != VK_NULL_HANDLE) {
-#if defined(SCIN_VALIDATE_VULKAN)
         destroyDebugUtilsMessengerEXT(m_instance, m_debugMessenger, nullptr);
-#endif
         vkDestroyInstance(m_instance, nullptr);
         m_instance = VK_NULL_HANDLE;
     }

@@ -5,6 +5,7 @@
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
+#include "vulkan/ImageSet.hpp"
 #include "vulkan/Instance.hpp"
 #include "vulkan/Swapchain.hpp"
 
@@ -46,7 +47,18 @@ bool Window::create(int width, int height, bool keepOnTop) {
 bool Window::createSwapchain(std::shared_ptr<Device> device) {
     m_device = device;
     m_swapchain.reset(new Swapchain(m_device));
-    return m_swapchain->create(this);
+    if (!m_swapchain->create(this)) {
+        spdlog::error("Window failed to create swapchain.");
+        return false;
+    }
+
+    m_readbackImages.reset(new ImageSet(m_device));
+    if (!m_readbackImages->createHostTransferTarget(m_width, m_height, m_swapchain->numberOfImages())) {
+        spdlog::error("Window failed to create readback images.");
+        return false;
+    }
+
+    return true;
 }
 
 bool Window::createSyncObjects() {
@@ -83,32 +95,40 @@ void Window::run(std::shared_ptr<Compositor> compositor) {
     while (!m_stop && !glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
 
+        // Wait for the number of in-flight images to come down to max-1 by waiting on the inflight fence for this
+        // frame.
         vkWaitForFences(m_device->get(), 1, &m_inFlightFences[currentFrame], VK_TRUE,
                         std::numeric_limits<uint64_t>::max());
 
+        // Ask VulkanKHR which is the next available image in the swapchain, wait indefinitely for it to become
+        // available.
         uint32_t imageIndex;
         vkAcquireNextImageKHR(m_device->get(), m_swapchain->get(), std::numeric_limits<uint64_t>::max(),
                               m_imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
-        VkSemaphore waitSemaphores[] = { m_imageAvailableSemaphores[currentFrame] };
-        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
         m_commandBuffers[currentFrame] =
             compositor->prepareFrame(imageIndex, std::chrono::high_resolution_clock::now());
-        VkSemaphore signalSemaphores[] = { m_renderFinishedSemaphores[currentFrame] };
 
+        VkSemaphore imageAvailable[] = { m_imageAvailableSemaphores[currentFrame] };
+        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        VkSemaphore renderFinished[] = { m_renderFinishedSemaphores[currentFrame] };
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = waitSemaphores;
+        submitInfo.pWaitSemaphores = imageAvailable;
         submitInfo.pWaitDstStageMask = waitStages;
         submitInfo.commandBufferCount = 1;
         VkCommandBuffer commandBuffer = m_commandBuffers[currentFrame]->buffer(imageIndex);
         submitInfo.pCommandBuffers = &commandBuffer;
         submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = signalSemaphores;
+        submitInfo.pSignalSemaphores = renderFinished;
 
+        // Reset the inflight fence to indicate that the frame is about to become in-flight again.
         vkResetFences(m_device->get(), 1, &m_inFlightFences[currentFrame]);
 
+        // Submits the command buffer to the queue. Won't start the buffer until the image is marked as available by
+        // the imageAvailable semaphore, and when the render is finished it will signal the renderFinished semaphore
+        // on the device, and also clear the inflight fence on the host.
         if (vkQueueSubmit(m_device->graphicsQueue(), 1, &submitInfo, m_inFlightFences[currentFrame]) != VK_SUCCESS) {
             break;
         }
@@ -116,13 +136,20 @@ void Window::run(std::shared_ptr<Compositor> compositor) {
         VkPresentInfoKHR presentInfo = {};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = signalSemaphores;
+        presentInfo.pWaitSemaphores = renderFinished;
         VkSwapchainKHR swapchains[] = { m_swapchain->get() };
         presentInfo.swapchainCount = 1;
         presentInfo.pSwapchains = swapchains;
         presentInfo.pImageIndices = &imageIndex;
         presentInfo.pResults = nullptr;
+        // Queue the frame to be presented as soon as the renderFinished semaphore is signaled by the end of the
+        // command buffer execution.
         vkQueuePresentKHR(m_device->presentQueue(), &presentInfo);
+
+        // *** At this point in time the CPU could wait on the inflight fence for the frame just submitted (before
+        // advancing the frame counter below), and if there was a copy operation requested this would be the optimal
+        // time to do queue it as the image will not be needed until its turn in the swapchain again, and presumably
+        // the CPU is not needed until it is time to queue another command buffer for the next inflight.
 
         currentFrame = (currentFrame + 1) % kMaxFramesInFlight;
     }

@@ -27,10 +27,7 @@ public:
 
 private:
     VkInstance m_instance;
-
-#if defined(SCIN_VALIDATE_VULKAN)
     VkDebugUtilsMessengerEXT m_debugMessenger;
-#endif
 };
 
 } // namespace vk
