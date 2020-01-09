@@ -5,6 +5,9 @@ file(MAKE_DIRECTORY ${SCIN_EXT_INSTALL_DIR})
 set(SCIN_VULKAN_TAG "sdk-1.1.130")
 
 include(ExternalProject)
+
+
+#### Vulkan Headers
 ExternalProject_add(Vulkan-Headers
     PREFIX ext
     GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Headers.git
@@ -18,6 +21,7 @@ ExternalProject_Add_StepTargets(Vulkan-Headers install)
 #    include_directories(Vulkan-Headers/include)
 #    add_subdirectory(Vulkan-Headers)
 
+#### Vulkan Loader
 ExternalProject_add(Vulkan-Loader
     PREFIX ext
     GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Loader.git
@@ -31,16 +35,24 @@ ExternalProject_Add_StepTargets(Vulkan-Loader install)
 
 #    add_subdirectory(Vulkan-Loader)
 
-set(BUILD_SAMPLES OFF CACHE BOOL "don't build swiftshader samples" FORCE)
-set(BUILD_TESTS OFF CACHE BOOL "don't build swiftshader tests" FORCE)
-set(BUILD_VULKAN ON CACHE BOOL "build Vulkan" FORCE)
-set(BUILD_EGL OFF CACHE BOOL "don't build egl" FORCE)
-set(BUILD_GLESV2 OFF CACHE BOOL "don't build GLESv2" FORCE)
-set(BUILD_GLES_CM OFF CACHE BOOL "don't build GLES CM" FORCE)
+#set(BUILD_SAMPLES OFF CACHE BOOL "don't build swiftshader samples" FORCE)
+#set(BUILD_TESTS OFF CACHE BOOL "don't build swiftshader tests" FORCE)
+#set(BUILD_VULKAN ON CACHE BOOL "build Vulkan" FORCE)
+#set(BUILD_EGL OFF CACHE BOOL "don't build egl" FORCE)
+#set(BUILD_GLESV2 OFF CACHE BOOL "don't build GLESv2" FORCE)
+#set(BUILD_GLES_CM OFF CACHE BOOL "don't build GLES CM" FORCE)
 # https://github.com/google/amber/issues/754
-set(CMAKE_SHARED_LINKER_FLAGS "-fuse-ld=gold" CACHE STRING "workaround an issue in gnu ld that breaks vulkan build"
-    FORCE)
-add_subdirectory(swiftshader)
+#set(CMAKE_SHARED_LINKER_FLAGS "-fuse-ld=gold" CACHE STRING "workaround an issue in gnu ld that breaks vulkan build"
+#    FORCE)
+#add_subdirectory(swiftshader)
+ExternalProject_Add(swiftshader
+    PREFIX ext
+    GIT_REPOSITORY https://github.com/google/swiftshader
+    GIT_TAG master
+    GIT_SHALLOW ON
+    GIT_PROGRESS ON
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SCIN_EXT_INSTALL_DIR} -DBUILD_SAMPLES=OFF -DBUILD_TESTS=OFF -DBUILD_VULKAN=ON -DBUILD_EGL=OFF -DBUILD_GLESV2=OFF -DBUILD_GLES_CM=OFF -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=gold"
+)
 
 #### glslang (required by shaderc, Vulkan validation layers)
 #add_subdirectory(glslang)
@@ -60,6 +72,7 @@ ExternalProject_Add_Step(glslang GETDEPS
     DEPENDERS configure
 )
 
+#### Vulkan Validation Layers
 ExternalProject_Add(Vulkan-ValidationLayers
     PREFIX ext
     GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-ValidationLayers.git

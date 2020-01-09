@@ -100,7 +100,6 @@ set(scintillator_synth_files
 add_executable(scinsynth ${scintillator_synth_files})
 
 target_link_libraries(scinsynth
-    SPIRV-Tools
     VulkanMemoryAllocator
     gflags
     glfw
@@ -109,8 +108,6 @@ target_link_libraries(scinsynth
     scintillator_core
     spdlog
     stdc++fs
-    SwiftShader
-    vk_swiftshader
     "${SCIN_EXT_INSTALL_DIR}/lib/libvulkan.so"
     "${SCIN_EXT_INSTALL_DIR}/lib/libshaderc_shared.so"
 )

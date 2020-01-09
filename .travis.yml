@@ -3,6 +3,7 @@ language: cpp
 dist: bionic
 os: linux
 compiler: clang
+cache: ccache
 
 addons:
     apt:
