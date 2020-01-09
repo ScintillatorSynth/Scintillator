@@ -24,6 +24,7 @@ uint32_t ImageSet::getFromSwapchain(Swapchain* swapchain, uint32_t imageCount) {
 }
 
 bool ImageSet::createHostTransferTarget(uint32_t width, uint32_t height, size_t numberOfImages) {
+    return true;
     m_images.resize(numberOfImages);
     m_allocations.resize(numberOfImages);
     m_extent.width = width;

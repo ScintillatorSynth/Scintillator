@@ -1,6 +1,10 @@
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}/../third_party/include
+)
 
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/core")
 
@@ -109,16 +113,8 @@ target_link_libraries(scinsynth
     stdc++fs
     SwiftShader
     vk_swiftshader
+    "${CMAKE_CURRENT_BINARY_DIR}/../third_party/lib/libvulkan.so"
 )
-
-if(SCIN_USE_SYSTEM_VULKAN)
-    target_link_libraries(scinsynth  "${Vulkan_LIBRARY}")
-else()
-    target_link_libraries(scinsynth
-        Vulkan::Headers
-        Vulkan::Vulkan
-    )
-endif()
 
 add_executable(run_unittests
     core/AbstractScinthDef_unittests.cpp

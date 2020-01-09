@@ -47,3 +47,6 @@
 [submodule "third_party/Vulkan-ValidationLayers"]
 	path = third_party/Vulkan-ValidationLayers
 	url = https://github.com/KhronosGroup/Vulkan-ValidationLayers
+[submodule "third_party/Vulkan-Tools"]
+	path = third_party/Vulkan-Tools
+	url = https://github.com/KhronosGroup/Vulkan-Tools.git

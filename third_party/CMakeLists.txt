@@ -1,10 +1,26 @@
-if(SCIN_USE_SYSTEM_VULKAN)
-    find_package(Vulkan REQUIRED FATAL_ERROR)
-else()
-    include_directories(Vulkan-Headers/include)
-    add_subdirectory(Vulkan-Headers)
-    add_subdirectory(Vulkan-Loader)
-endif()
+set(SCIN_VULKAN_TAG "sdk-1.1.130")
+include(ExternalProject)
+ExternalProject_add(Vulkan-Headers
+    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Headers.git
+    GIT_TAG ${SCIN_VULKAN_TAG}
+    GIT_SHALLOW ON
+    GIT_PROGRESS ON
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}
+)
+
+#    include_directories(Vulkan-Headers/include)
+#    add_subdirectory(Vulkan-Headers)
+
+ExternalProject_add(Vulkan-Loader
+    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Loader.git
+    GIT_TAG ${SCIN_VULKAN_TAG}
+    GIT_SHALLOW ON
+    GIT_PROGRESS ON
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}
+)
+ExternalProject_Add_StepDependencies(Vulkan-Loader install Vulkan-Headers)
+
+#    add_subdirectory(Vulkan-Loader)
 
 set(BUILD_SAMPLES OFF CACHE BOOL "don't build swiftshader samples" FORCE)
 set(BUILD_TESTS OFF CACHE BOOL "don't build swiftshader tests" FORCE)
@@ -19,9 +35,19 @@ add_subdirectory(swiftshader)
 #### glslang (required by shaderc, Vulkan validation layers)
 add_subdirectory(glslang)
 
-if(NOT SCIN_USE_SYSTEM_VULKAN)
-add_subdirectory(Vulkan-ValidationLayers)
-endif()
+#ExternalProject_add(Vulkan-ValidationLayers
+#    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-ValidationLayers.git
+#    GIT_TAG ${SCIN_VULKAN_TAG}
+#    GIT_SHALLOW ON
+#    GIT_PROGRESS ON
+#    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}
+#)
+ExternalProject_Add_StepDependencies(Vulkan-ValidationLayers install Vulkan-Headers)
+ExternalProject_Add_StepDependencies(Vulkan-ValidationLayers install Vulkan-Loader)
+ExternalProject_Add_StepDependencies(Vulkan-ValidationLayers build glslang)
+#    add_subdirectory(Vulkan-ValidationLayers)
+# set(VulkanHeaders_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Vulkan-Headers/include" CACHE PATH "" FORCE)
+# add_subdirectory(Vulkan-Tools)
 
 ### fmt
 add_subdirectory(fmt)
@@ -35,11 +61,15 @@ add_subdirectory(gflags)
 set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "require spdlog to use our external fmt")
 add_subdirectory(spdlog)
 
+# direct include of installed external deps header path
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
+
 #### glfw
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(glfw)
+add_dependencies(glfw Vulkan-Headers)
 
 #### glm
 add_subdirectory(glm)
@@ -48,6 +78,7 @@ add_subdirectory(glm)
 include_directories(VulkanMemoryAllocator/src)
 add_library(VulkanMemoryAllocator STATIC "vulkan_memory_allocator_build.cc")
 target_include_directories(VulkanMemoryAllocator INTERFACE VulkanMemoryAllocator/src)
+add_dependencies(VulkanMemoryAllocator Vulkan-Headers)
 
 #### googletest (required by effcee and re2)
 add_subdirectory(googletest)
