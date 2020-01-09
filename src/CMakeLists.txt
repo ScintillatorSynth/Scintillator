@@ -3,7 +3,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED)
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}/../third_party/include
+    ${SCIN_EXT_INSTALL_DIR}/include
 )
 
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/core")
@@ -105,15 +105,19 @@ target_link_libraries(scinsynth
     gflags
     glfw
     glm
-    glslang
     oscpack
     scintillator_core
-    shaderc
     spdlog
     stdc++fs
     SwiftShader
     vk_swiftshader
-    "${CMAKE_CURRENT_BINARY_DIR}/../third_party/lib/libvulkan.so"
+    "${SCIN_EXT_INSTALL_DIR}/lib/libvulkan.so"
+    "${SCIN_EXT_INSTALL_DIR}/lib/libshaderc_shared.so"
+)
+add_dependencies(scinsynth
+    Vulkan-Headers-install
+    Vulkan-Loader-install
+    shaderc-install
 )
 
 add_executable(run_unittests
