@@ -24,15 +24,18 @@ uint32_t ImageSet::getFromSwapchain(Swapchain* swapchain, uint32_t imageCount) {
 }
 
 bool ImageSet::createHostTransferTarget(uint32_t width, uint32_t height, size_t numberOfImages) {
+    m_format = VK_FORMAT_R8G8B8A8_UNORM;
     m_extent.width = width;
     m_extent.height = height;
-    m_format = VK_FORMAT_R8G8B8A8_UNORM;
 
     for (auto i = 0; i < numberOfImages; ++i) {
         VkImageCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        createInfo.imageType = VK_IMAGE_TYPE_2D;
         createInfo.format = m_format;
         createInfo.extent.width = width;
         createInfo.extent.height = height;
+        createInfo.extent.depth = 1;
         createInfo.arrayLayers = 1;
         createInfo.mipLevels = 1;
         createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -40,7 +43,7 @@ bool ImageSet::createHostTransferTarget(uint32_t width, uint32_t height, size_t 
         createInfo.tiling = VK_IMAGE_TILING_LINEAR;
         createInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
-        VmaAllocationCreateInfo allocInfo;
+        VmaAllocationCreateInfo allocInfo = {};
         allocInfo.usage = VMA_MEMORY_USAGE_GPU_TO_CPU;
         allocInfo.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
         allocInfo.preferredFlags = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
@@ -62,7 +65,7 @@ bool ImageSet::createHostTransferTarget(uint32_t width, uint32_t height, size_t 
 
 void ImageSet::destroy() {
     // Any images allocated by this ImageSet will have allocations associated, so we reclaim any of those here.
-    for (auto i = 0; i <= m_allocations.size(); ++i) {
+    for (auto i = 0; i < m_allocations.size(); ++i) {
         vmaDestroyImage(m_device->allocator(), m_images[i], m_allocations[i]);
     }
     m_images.clear();
