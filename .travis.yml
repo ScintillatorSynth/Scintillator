@@ -15,13 +15,15 @@ addons:
             - cmake
             - doxygen
             - gperf
+            - libavcodec-dev
+            - libavformat-dev
             - libc++-8-dev
             - libc++abi-8-dev
+            - libwayland-dev
             - libxcursor-dev
             - libxi-dev
             - libxinerama-dev
             - libxrandr-dev
-            - libwayland-dev
             - llvm-8-dev
             - python3-distutils
             - supercollider-language

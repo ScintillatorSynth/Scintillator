@@ -103,6 +103,7 @@ ExternalProject_Add_Step(shaderc GETDEPS
     COMMAND ./update_shaderc_sources.py
     WORKING_DIRECTORY "<SOURCE_DIR>"
     COMMENT "downloading glslang dependencies"
+    ALWAYS
     DEPENDEES download
     DEPENDERS configure
 )

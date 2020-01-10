@@ -85,6 +85,9 @@ set(scintillator_synth_files
     ScinthDef.hpp
     scinsynth.cpp
 
+    av/Context.cpp
+    av/Context.hpp
+
     vulkan/Buffer.cpp
     vulkan/Buffer.hpp
     vulkan/Canvas.cpp
