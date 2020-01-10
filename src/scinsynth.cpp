@@ -38,14 +38,27 @@ DEFINE_int32(log_level, 3,
 
 DEFINE_string(quark_dir, "..", "Root directory of the Scintillator Quark, for finding dependent files.");
 
-DEFINE_int32(window_width, 800, "Viewable width in pixels of window to create. Ignored if --fullscreen is supplied.");
-DEFINE_int32(window_height, 600, "Viewable height in pixels of window to create. Ignored if --fullscreen is supplied.");
+DEFINE_int32(width, 800, "Viewable width in pixels of window to create. Ignored if --fullscreen is supplied.");
+DEFINE_int32(height, 600, "Viewable height in pixels of window to create. Ignored if --fullscreen is supplied.");
 DEFINE_bool(keep_on_top, true, "If true will keep the window on top of other windows with focus.");
 
 DEFINE_int32(async_worker_threads, 2,
              "Number of threads to reserve for asynchronous operations (like loading ScinthDefs).");
 
 DEFINE_bool(vulkan_validation, true, "Enable Vulkan validation layers.");
+
+// If we're tracking window framerate we can render directly to the swapchain images. In any other scenario we need
+// a separate set of images to render to at the desired framerate, then always blit the most recently rendered frame
+// to the screen. We might just always do a blit but it feels like an important optimization to be able to skip the
+// blit if possible. Presenting the next image in a swapchain doesn't necessarily have to happen at every possible
+// present interval?
+// Try this - windows are always double-buffered, and render directly to their framebuffers. Window either free-runs,
+// in which case the draw/present relationship is 1:1, and we block on drawing the next frame until it's done presenting.
+// If it's not free-running, we create a double-buffered offscreen render context. Window free-runs by blitting most
+// recent frame. And we update the offscreen according to the schedule, *on a separate thread*
+DEFINE_int32(framerate, -1, "Target framerate in frames per second. Negative number means track windowing system "
+        "framerate. Zero means non-interactive. Positive means to render at that frame per second rate.");
+DEFINE_bool(create_window, true, "If false, Scintillator will not create a window.");
 
 int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
@@ -86,7 +99,7 @@ int main(int argc, char* argv[]) {
     chooser.enumerateAllDevices();
 
     scin::vk::Window window(instance);
-    if (!window.create(FLAGS_window_width, FLAGS_window_height, FLAGS_keep_on_top)) {
+    if (!window.create(FLAGS_width, FLAGS_height, FLAGS_keep_on_top)) {
         spdlog::error("unable to create glfw window.");
         return EXIT_FAILURE;
     }

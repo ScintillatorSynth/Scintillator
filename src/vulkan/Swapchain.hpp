@@ -27,6 +27,7 @@ public:
     uint32_t numberOfImages() const { return m_numberOfImages; }
     VkSwapchainKHR get() { return m_swapchain; }
     std::shared_ptr<Canvas> canvas() { return m_canvas; }
+    bool isMailbox() const { return m_presentMode == VK_PRESENT_MODE_MAILBOX_KHR; }
 
 private:
     std::shared_ptr<Device> m_device;

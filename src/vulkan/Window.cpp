@@ -14,7 +14,8 @@
 #include <chrono>
 #include <limits>
 
-const size_t kMaxFramesInFlight = 2;
+// FIXME - we are always going to go one frame at a time.
+const size_t kMaxFramesInFlight = 1;
 
 namespace scin { namespace vk {
 

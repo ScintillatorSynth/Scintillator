@@ -21,7 +21,7 @@ Scinth::Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<S
     m_scinthDef(scinthDef),
     m_running(false) {}
 
-Scinth::~Scinth() { spdlog::debug("Scinth destructor"); }
+Scinth::~Scinth() { spdlog::debug("Scinth {} destructor", m_nodeID); }
 
 bool Scinth::create(const TimePoint& startTime, vk::UniformLayout* uniformLayout, size_t numberOfImages) {
     m_startTime = startTime;

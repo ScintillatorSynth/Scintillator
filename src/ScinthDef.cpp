@@ -27,7 +27,7 @@ ScinthDef::ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Can
     m_commandPool(commandPool),
     m_abstractScinthDef(abstractScinthDef) {}
 
-ScinthDef::~ScinthDef() { spdlog::debug("ScinthDef destructor"); }
+ScinthDef::~ScinthDef() { spdlog::debug("ScinthDef {} destructor", m_abstractScinthDef->name()); }
 
 bool ScinthDef::build(vk::ShaderCompiler* compiler) {
     // Build the vertex data. Because Intrinsics can add data payloads to the vertex data, each ScinthDef shares a

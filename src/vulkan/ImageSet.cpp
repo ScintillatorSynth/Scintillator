@@ -20,6 +20,7 @@ uint32_t ImageSet::getFromSwapchain(Swapchain* swapchain, uint32_t imageCount) {
     vkGetSwapchainImagesKHR(m_device->get(), swapchain->get(), &actualImageCount, nullptr);
     m_images.resize(actualImageCount);
     vkGetSwapchainImagesKHR(m_device->get(), swapchain->get(), &actualImageCount, m_images.data());
+    spdlog::info("get swapchain images requested {}, got {}.", imageCount, actualImageCount);
     return actualImageCount;
 }
 

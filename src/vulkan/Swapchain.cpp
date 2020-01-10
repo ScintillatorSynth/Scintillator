@@ -59,6 +59,12 @@ bool Swapchain::create(Window* window) {
         }
     }
 
+    if (m_presentMode == VK_PRESENT_MODE_FIFO_KHR) {
+        spdlog::info("using FIFO swapchain present mode.");
+    } else if (m_presentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
+        spdlog::info("using MAILBOX swapchain present mode.");
+    }
+
     // Choose swap extent, pixel dimensions of swap chain.
     VkSurfaceCapabilitiesKHR capabilities;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_device->getPhysical(), window->getSurface(), &capabilities);
@@ -75,10 +81,12 @@ bool Swapchain::create(Window* window) {
                      std::min(capabilities.maxImageExtent.height, static_cast<uint32_t>(window->height())));
     }
 
-    m_numberOfImages = capabilities.minImageCount + 1;
+    // We try to stick to two images in the swapchain, or double-buffering, to reduce latency from render to present.
+    m_numberOfImages = std::max(capabilities.minImageCount, 2u);
     if (capabilities.maxImageCount > 0) {
         m_numberOfImages = std::min(m_numberOfImages, capabilities.maxImageCount);
     }
+    spdlog::info("requesting {} images in swapchain.", m_numberOfImages);
 
     // Populate Swap Chain create info structure.
     VkSwapchainCreateInfoKHR createInfo = {};

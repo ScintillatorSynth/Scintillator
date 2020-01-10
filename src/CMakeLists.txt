@@ -124,7 +124,11 @@ set(scintillator_synth_files
 add_executable(scinsynth ${scintillator_synth_files})
 
 target_link_libraries(scinsynth
+    "${SCIN_EXT_INSTALL_DIR}/lib/libshaderc_shared.so"
+    "${SCIN_EXT_INSTALL_DIR}/lib/libvulkan.so"
     VulkanMemoryAllocator
+    avcodec
+    avformat
     gflags
     glfw
     glm
@@ -132,8 +136,6 @@ target_link_libraries(scinsynth
     scintillator_core
     spdlog
     stdc++fs
-    "${SCIN_EXT_INSTALL_DIR}/lib/libvulkan.so"
-    "${SCIN_EXT_INSTALL_DIR}/lib/libshaderc_shared.so"
 )
 add_dependencies(scinsynth
     Vulkan-Headers-install
