@@ -19,7 +19,7 @@ public:
     Swapchain(std::shared_ptr<Device> device);
     ~Swapchain();
 
-    bool create(Window* window);
+    bool create(Window* window, bool useFIFO);
     void destroy();
 
     VkSurfaceFormatKHR surfaceFormat() { return m_surfaceFormat; }

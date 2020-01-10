@@ -53,11 +53,12 @@ DEFINE_bool(vulkan_validation, true, "Enable Vulkan validation layers.");
 // blit if possible. Presenting the next image in a swapchain doesn't necessarily have to happen at every possible
 // present interval?
 // Try this - windows are always double-buffered, and render directly to their framebuffers. Window either free-runs,
-// in which case the draw/present relationship is 1:1, and we block on drawing the next frame until it's done presenting.
-// If it's not free-running, we create a double-buffered offscreen render context. Window free-runs by blitting most
-// recent frame. And we update the offscreen according to the schedule, *on a separate thread*
-DEFINE_int32(framerate, -1, "Target framerate in frames per second. Negative number means track windowing system "
-        "framerate. Zero means non-interactive. Positive means to render at that frame per second rate.");
+// in which case the draw/present relationship is 1:1, and we block on drawing the next frame until it's done
+// presenting. If it's not free-running, we create a double-buffered offscreen render context. Window free-runs by
+// blitting most recent frame. And we update the offscreen according to the schedule, *on a separate thread*
+DEFINE_int32(frame_rate, -1,
+             "Target framerate in frames per second. Negative number means track windowing system "
+             "framerate. Zero means non-interactive. Positive means to render at that frame per second rate.");
 DEFINE_bool(create_window, true, "If false, Scintillator will not create a window.");
 
 int main(int argc, char* argv[]) {
@@ -98,8 +99,8 @@ int main(int argc, char* argv[]) {
     scin::vk::DeviceChooser chooser(instance);
     chooser.enumerateAllDevices();
 
-    scin::vk::Window window(instance);
-    if (!window.create(FLAGS_width, FLAGS_height, FLAGS_keep_on_top)) {
+    scin::vk::Window window(instance, FLAGS_width, FLAGS_height, FLAGS_keep_on_top, FLAGS_frame_rate);
+    if (!window.create()) {
         spdlog::error("unable to create glfw window.");
         return EXIT_FAILURE;
     }

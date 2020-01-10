@@ -22,7 +22,7 @@ Swapchain::Swapchain(std::shared_ptr<Device> device):
 
 Swapchain::~Swapchain() { destroy(); }
 
-bool Swapchain::create(Window* window) {
+bool Swapchain::create(Window* window, bool useFIFO) {
     // Pick swap chain format from available options.
     uint32_t formatCount;
     vkGetPhysicalDeviceSurfaceFormatsKHR(m_device->getPhysical(), window->getSurface(), &formatCount, nullptr);
@@ -52,10 +52,13 @@ bool Swapchain::create(Window* window) {
     vkGetPhysicalDeviceSurfacePresentModesKHR(m_device->getPhysical(), window->getSurface(), &presentModeCount,
                                               presentModes.data());
     m_presentMode = VK_PRESENT_MODE_FIFO_KHR;
-    for (const auto& mode : presentModes) {
-        if (mode == VK_PRESENT_MODE_MAILBOX_KHR) {
-            m_presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
-            break;
+
+    if (!useFIFO) {
+        for (const auto& mode : presentModes) {
+            if (mode == VK_PRESENT_MODE_MAILBOX_KHR) {
+                m_presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+                break;
+            }
         }
     }
 

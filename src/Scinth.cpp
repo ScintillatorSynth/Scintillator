@@ -18,13 +18,13 @@ namespace scin {
 Scinth::Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef):
     m_device(device),
     m_nodeID(nodeID),
+    m_cueued(true),
     m_scinthDef(scinthDef),
     m_running(false) {}
 
 Scinth::~Scinth() { spdlog::debug("Scinth {} destructor", m_nodeID); }
 
-bool Scinth::create(const TimePoint& startTime, vk::UniformLayout* uniformLayout, size_t numberOfImages) {
-    m_startTime = startTime;
+bool Scinth::create(vk::UniformLayout* uniformLayout, size_t numberOfImages) {
     m_running = true;
     if (uniformLayout) {
         m_uniform.reset(new vk::Uniform(m_device));
@@ -87,7 +87,13 @@ bool Scinth::buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, std:
     return true;
 }
 
-bool Scinth::prepareFrame(size_t imageIndex, const TimePoint& frameTime) {
+bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
+    // If this is our first call to prepareFrame we treat this frameTime as our startTime.
+    if (m_cueued) {
+        m_startTime = frameTime;
+        m_cueued = false;
+    }
+
     // Update the Uniform buffer at imageIndex, if needed.
     if (m_uniform) {
         std::unique_ptr<float[]> uniformData(
@@ -104,7 +110,7 @@ bool Scinth::prepareFrame(size_t imageIndex, const TimePoint& frameTime) {
                 return false;
 
             case core::Intrinsic::kTime:
-                *uniform = std::chrono::duration<float, std::chrono::seconds::period>(frameTime - m_startTime).count();
+                *uniform = static_cast<float>(frameTime - m_startTime);
                 break;
 
             case core::Intrinsic::kNotFound:

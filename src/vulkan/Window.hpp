@@ -4,6 +4,8 @@
 #include "vulkan/Vulkan.hpp"
 
 #include <atomic>
+#include <chrono>
+#include <deque>
 #include <memory>
 #include <vector>
 
@@ -25,14 +27,14 @@ class Swapchain;
  */
 class Window {
 public:
-    Window(std::shared_ptr<Instance> instance);
+    Window(std::shared_ptr<Instance> instance, int width, int height, bool keepOnTop, int frameRate);
     ~Window();
 
     // TODO: weird dependency ordering here where the surface needs to be created in this function, and the device
     // needs to know the surface in order to pick a suitable device that supports rendering to that surface. If we
     // aren't rendering to an onscreen window a surface will have to be provided to Device some other way, and perhaps
     // Device will have a different create() function for that context.
-    bool create(int width, int height, bool keepOnTop);
+    bool create();
     bool createSwapchain(std::shared_ptr<Device> device);
     bool createSyncObjects();
     void run(std::shared_ptr<Compositor> compositor);
@@ -55,18 +57,29 @@ private:
     std::shared_ptr<Device> m_device;
     int m_width;
     int m_height;
+    bool m_keepOnTop;
+    int m_frameRate;
     GLFWwindow* m_window;
     VkSurfaceKHR m_surface;
     std::shared_ptr<Swapchain> m_swapchain;
     std::shared_ptr<ImageSet> m_readbackImages;
-    std::vector<VkSemaphore> m_imageAvailableSemaphores;
-    std::vector<VkSemaphore> m_renderFinishedSemaphores;
-    std::vector<VkFence> m_inFlightFences;
+    VkSemaphore m_imageAvailable;
+    VkSemaphore m_renderFinished;
+    VkFence m_frameRendering;
+
     // We keep the shared pointers to the command buffers until the frame is being re-rendered. This allows
     // the Compositor to change command buffers arbitrarily, and they won't get reclaimed by the system until
     // they are known finished rendering.
-    std::vector<std::shared_ptr<CommandBuffer>> m_commandBuffers;
+    std::shared_ptr<CommandBuffer> m_commandBuffers;
     std::atomic<bool> m_stop;
+
+    typedef std::chrono::time_point<std::chrono::high_resolution_clock> TimePoint;
+    std::deque<double> m_framePeriods;
+    double m_periodSum;
+    TimePoint m_startTime;
+    TimePoint m_lastFrameTime;
+    size_t m_lateFrames;
+    TimePoint m_lastReportTime;
 };
 
 } // namespace vk

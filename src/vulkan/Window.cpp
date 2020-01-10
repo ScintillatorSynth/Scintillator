@@ -11,36 +11,38 @@
 
 #include "spdlog/spdlog.h"
 
-#include <chrono>
 #include <limits>
-
-// FIXME - we are always going to go one frame at a time.
-const size_t kMaxFramesInFlight = 1;
 
 namespace scin { namespace vk {
 
-Window::Window(std::shared_ptr<Instance> instance):
+const size_t kFramePeriodWindowSize = 60;
+
+Window::Window(std::shared_ptr<Instance> instance, int width, int height, bool keepOnTop, int frameRate):
     m_instance(instance),
-    m_width(-1),
-    m_height(-1),
+    m_width(width),
+    m_height(height),
+    m_keepOnTop(keepOnTop),
+    m_frameRate(frameRate),
     m_window(nullptr),
     m_surface(VK_NULL_HANDLE),
-    m_stop(false) {}
+    m_stop(false),
+    m_periodSum(0.0),
+    m_lateFrames(0),
+    m_imageAvailable(VK_NULL_HANDLE),
+    m_renderFinished(VK_NULL_HANDLE),
+    m_frameRendering(VK_NULL_HANDLE) {}
 
 Window::~Window() {}
 
-bool Window::create(int width, int height, bool keepOnTop) {
+bool Window::create() {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-    glfwWindowHint(GLFW_FLOATING, keepOnTop ? GLFW_TRUE : GLFW_FALSE);
-    m_window = glfwCreateWindow(width, height, "ScintillatorSynth", nullptr, nullptr);
+    glfwWindowHint(GLFW_FLOATING, m_keepOnTop ? GLFW_TRUE : GLFW_FALSE);
+    m_window = glfwCreateWindow(m_width, m_height, "ScintillatorSynth", nullptr, nullptr);
     if (glfwCreateWindowSurface(m_instance->get(), m_window, nullptr, &m_surface) != VK_SUCCESS) {
         spdlog::error("failed to create surface");
         return false;
     }
-
-    m_width = width;
-    m_height = height;
 
     return true;
 }
@@ -48,7 +50,7 @@ bool Window::create(int width, int height, bool keepOnTop) {
 bool Window::createSwapchain(std::shared_ptr<Device> device) {
     m_device = device;
     m_swapchain.reset(new Swapchain(m_device));
-    if (!m_swapchain->create(this)) {
+    if (!m_swapchain->create(this, m_frameRate < 0)) {
         spdlog::error("Window failed to create swapchain.");
         return false;
     }
@@ -63,74 +65,99 @@ bool Window::createSwapchain(std::shared_ptr<Device> device) {
 }
 
 bool Window::createSyncObjects() {
-    m_imageAvailableSemaphores.resize(kMaxFramesInFlight);
-    m_renderFinishedSemaphores.resize(kMaxFramesInFlight);
-    m_inFlightFences.resize(kMaxFramesInFlight);
-    m_commandBuffers.resize(kMaxFramesInFlight);
-
     VkSemaphoreCreateInfo semaphoreInfo = {};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    if (vkCreateSemaphore(m_device->get(), &semaphoreInfo, nullptr, &m_imageAvailable) != VK_SUCCESS) {
+        spdlog::error("Window failed to create image available semaphore.");
+        return false;
+    }
+    if (vkCreateSemaphore(m_device->get(), &semaphoreInfo, nullptr, &m_renderFinished) != VK_SUCCESS) {
+        spdlog::error("window failed to create render finished semaphore.");
+        return false;
+    }
 
     VkFenceCreateInfo fenceInfo = {};
     fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-    for (size_t i = 0; i < kMaxFramesInFlight; ++i) {
-        if (vkCreateSemaphore(m_device->get(), &semaphoreInfo, nullptr, &m_imageAvailableSemaphores[i]) != VK_SUCCESS) {
-            return false;
-        }
-        if (vkCreateSemaphore(m_device->get(), &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i]) != VK_SUCCESS) {
-            return false;
-        }
-        if (vkCreateFence(m_device->get(), &fenceInfo, nullptr, &m_inFlightFences[i]) != VK_SUCCESS) {
-            return false;
-        }
+    if (vkCreateFence(m_device->get(), &fenceInfo, nullptr, &m_frameRendering) != VK_SUCCESS) {
+        spdlog::error("window failed to create render fence.");
+        return false;
     }
 
     return true;
 }
 
 void Window::run(std::shared_ptr<Compositor> compositor) {
-    size_t currentFrame = 0;
+    m_startTime = std::chrono::high_resolution_clock::now();
+    m_lastFrameTime = m_startTime;
+    m_lastReportTime = m_startTime;
 
     while (!m_stop && !glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
 
-        // Wait for the number of in-flight images to come down to max-1 by waiting on the inflight fence for this
-        // frame.
-        vkWaitForFences(m_device->get(), 1, &m_inFlightFences[currentFrame], VK_TRUE,
-                        std::numeric_limits<uint64_t>::max());
+        // Wait for the next frame to be finished with the last render.
+        vkWaitForFences(m_device->get(), 1, &m_frameRendering, VK_TRUE, std::numeric_limits<uint64_t>::max());
 
         // Ask VulkanKHR which is the next available image in the swapchain, wait indefinitely for it to become
         // available.
         uint32_t imageIndex;
         vkAcquireNextImageKHR(m_device->get(), m_swapchain->get(), std::numeric_limits<uint64_t>::max(),
-                              m_imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+                              m_imageAvailable, VK_NULL_HANDLE, &imageIndex);
 
-        m_commandBuffers[currentFrame] =
-            compositor->prepareFrame(imageIndex, std::chrono::high_resolution_clock::now());
+        TimePoint now(std::chrono::high_resolution_clock::now());
+        double framePeriod = std::chrono::duration<double, std::chrono::seconds::period>(now - m_lastFrameTime).count();
+        m_lastFrameTime = now;
 
-        VkSemaphore imageAvailable[] = { m_imageAvailableSemaphores[currentFrame] };
+        double meanPeriod =
+            m_framePeriods.size() ? m_periodSum / static_cast<double>(m_framePeriods.size()) : framePeriod;
+        m_periodSum += framePeriod;
+        m_framePeriods.push_back(framePeriod);
+
+        // We consider a frame late when we have at least half of the window of frame times to establish a credible
+        // mean, and the period of the frame is more than half again the mean.
+        if (m_framePeriods.size() >= kFramePeriodWindowSize / 2 && framePeriod >= (meanPeriod * 1.5)) {
+            ++m_lateFrames;
+            // Remove the outlier from the average, to avoid biasing our dropped frame detector.
+            m_periodSum -= framePeriod;
+            m_framePeriods.pop_back();
+        }
+
+        while (m_framePeriods.size() > kFramePeriodWindowSize) {
+            m_periodSum -= m_framePeriods.front();
+            m_framePeriods.pop_front();
+        }
+
+        if (std::chrono::duration<double, std::chrono::seconds::period>(now - m_lastReportTime).count() >= 10.0) {
+            spdlog::info("mean fps: {:.1f}, late frames: {}", 1.0 / meanPeriod, m_lateFrames);
+            m_lateFrames = 0;
+            m_lastReportTime = now;
+        }
+
+        m_commandBuffers = compositor->prepareFrame(
+            imageIndex, std::chrono::duration<double, std::chrono::seconds::period>(now - m_startTime).count());
+
+        VkSemaphore imageAvailable[] = { m_imageAvailable };
         VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        VkSemaphore renderFinished[] = { m_renderFinishedSemaphores[currentFrame] };
+        VkSemaphore renderFinished[] = { m_renderFinished };
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.waitSemaphoreCount = 1;
         submitInfo.pWaitSemaphores = imageAvailable;
         submitInfo.pWaitDstStageMask = waitStages;
         submitInfo.commandBufferCount = 1;
-        VkCommandBuffer commandBuffer = m_commandBuffers[currentFrame]->buffer(imageIndex);
+        VkCommandBuffer commandBuffer = m_commandBuffers->buffer(imageIndex);
         submitInfo.pCommandBuffers = &commandBuffer;
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = renderFinished;
 
-        // Reset the inflight fence to indicate that the frame is about to become in-flight again.
-        vkResetFences(m_device->get(), 1, &m_inFlightFences[currentFrame]);
+        // Reset the fence so that it can be signaled by the render completion again.
+        vkResetFences(m_device->get(), 1, &m_frameRendering);
 
         // Submits the command buffer to the queue. Won't start the buffer until the image is marked as available by
         // the imageAvailable semaphore, and when the render is finished it will signal the renderFinished semaphore
-        // on the device, and also clear the inflight fence on the host.
-        if (vkQueueSubmit(m_device->graphicsQueue(), 1, &submitInfo, m_inFlightFences[currentFrame]) != VK_SUCCESS) {
+        // on the device.
+        if (vkQueueSubmit(m_device->graphicsQueue(), 1, &submitInfo, m_frameRendering) != VK_SUCCESS) {
+            spdlog::error("Window failed to submit command buffer to graphics queue.");
             break;
         }
 
@@ -151,29 +178,25 @@ void Window::run(std::shared_ptr<Compositor> compositor) {
         // advancing the frame counter below), and if there was a copy operation requested this would be the optimal
         // time to do queue it as the image will not be needed until its turn in the swapchain again, and presumably
         // the CPU is not needed until it is time to queue another command buffer for the next inflight.
-
-        currentFrame = (currentFrame + 1) % kMaxFramesInFlight;
     }
 
     vkDeviceWaitIdle(m_device->get());
-    m_commandBuffers.clear();
+    m_commandBuffers = nullptr;
 }
 
 void Window::destroySyncObjects() {
-    for (auto semaphore : m_imageAvailableSemaphores) {
-        vkDestroySemaphore(m_device->get(), semaphore, nullptr);
+    if (m_imageAvailable != VK_NULL_HANDLE) {
+        vkDestroySemaphore(m_device->get(), m_imageAvailable, nullptr);
+        m_imageAvailable = VK_NULL_HANDLE;
     }
-    m_imageAvailableSemaphores.clear();
-
-    for (auto semaphore : m_renderFinishedSemaphores) {
-        vkDestroySemaphore(m_device->get(), semaphore, nullptr);
+    if (m_renderFinished != VK_NULL_HANDLE) {
+        vkDestroySemaphore(m_device->get(), m_renderFinished, nullptr);
+        m_renderFinished = VK_NULL_HANDLE;
     }
-    m_renderFinishedSemaphores.clear();
-
-    for (auto fence : m_inFlightFences) {
-        vkDestroyFence(m_device->get(), fence, nullptr);
+    if (m_frameRendering != VK_NULL_HANDLE) {
+        vkDestroyFence(m_device->get(), m_frameRendering, nullptr);
+        m_frameRendering = VK_NULL_HANDLE;
     }
-    m_inFlightFences.clear();
 }
 
 void Window::destroySwapchain() {

@@ -1,8 +1,6 @@
 #ifndef SRC_SCINTH_HPP_
 #define SRC_SCINTH_HPP_
 
-#include "core/Types.hpp"
-
 #include <memory>
 
 namespace scin {
@@ -35,7 +33,7 @@ public:
      *        independent rendering of the images.
      * \return true if successful, false if not.
      */
-    bool create(const TimePoint& startTime, vk::UniformLayout* uniformLayout, size_t numberOfImages);
+    bool create(vk::UniformLayout* uniformLayout, size_t numberOfImages);
 
     /*! Build the CommandBuffers to render this Scinth. Can be called multiple times to rebuild them as needed.
      */
@@ -51,7 +49,7 @@ public:
      * \param frameTime the time the frame is being prepared for.
      * \return true if Scinth should continue running for this frame, false otherwise.
      */
-    bool prepareFrame(size_t imageIndex, const TimePoint& frameTime);
+    bool prepareFrame(size_t imageIndex, double frameTime);
 
     /*! Determines the paused or playing status of the Scinth.
      *
@@ -66,12 +64,14 @@ public:
 private:
     std::shared_ptr<vk::Device> m_device;
     int m_nodeID;
+    bool m_cueued;
+    double m_startTime;
+
     // Keep a reference to the ScinthDef, so that it does not get deleted until all referring Scinths have also been
     // deleted.
     std::shared_ptr<ScinthDef> m_scinthDef;
     std::shared_ptr<vk::Uniform> m_uniform;
     std::shared_ptr<vk::CommandBuffer> m_commands;
-    std::chrono::time_point<std::chrono::high_resolution_clock> m_startTime;
     bool m_running;
 };
 

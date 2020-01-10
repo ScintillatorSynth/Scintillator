@@ -188,7 +188,7 @@ public:
                 std::string scinthDef = (args++)->AsString();
                 int nodeID = (args++)->AsInt32();
                 // TODO: handle rest of message in terms of placement and group support.
-                m_compositor->play(scinthDef, nodeID, std::chrono::high_resolution_clock::now());
+                m_compositor->cue(scinthDef, nodeID);
             } break;
             }
         } catch (osc::Exception e) {

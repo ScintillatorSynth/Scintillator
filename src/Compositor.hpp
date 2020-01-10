@@ -1,8 +1,6 @@
 #ifndef SRC_COMPOSITOR_HPP_
 #define SRC_COMPOSITOR_HPP_
 
-#include "core/Types.hpp"
-
 #include "glm/glm.hpp"
 
 #include <atomic>
@@ -54,14 +52,14 @@ public:
      */
     void freeScinthDefs(const std::vector<std::string>& names);
 
-    /*! Adds a node to the default root blend group at the end of the line, playing after all other nodes.
+    /*! Adds a node to the default root blend group at the end of the line, playing after all other nodes. The node
+     * will be started on the next call to prepareFrame, and will treat that frameTime as its start time.
      *
      * \param scinthDefName The name of the ScinthDef to invoke.
      * \param nodeID A nodeID for this scinth, if -1 the Compositor will assign a unique negative value.
-     * \startTime The start time to consider this Scinth started at.
      * \return True on success, false on error.
      */
-    bool play(const std::string& scinthDefName, int nodeID, const TimePoint& startTime);
+    bool cue(const std::string& scinthDefName, int nodeID);
 
     /*! Stops and removes the nodes from the playing list, and frees the associated resources.
      *
@@ -82,7 +80,7 @@ public:
      * \param frameTime The point in time at which to build this frame for.
      * \return A CommandBuffer object to be scheduled for graphics queue submission.
      */
-    std::shared_ptr<vk::CommandBuffer> prepareFrame(uint32_t imageIndex, const TimePoint& frameTime);
+    std::shared_ptr<vk::CommandBuffer> prepareFrame(uint32_t imageIndex, double frameTime);
 
     /*! Unload the shader compiler, releasing the resources associated with it.
      *

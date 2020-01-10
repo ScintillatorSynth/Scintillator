@@ -24,9 +24,7 @@ bool Context::create(Codec codec) {
     return true;
 }
 
-void Context::destroy() {
-    avcodec_free_context(&m_context);
-}
+void Context::destroy() { avcodec_free_context(&m_context); }
 
 AVCodecID Context::idForEnum(Codec codec) {
     switch (codec) {

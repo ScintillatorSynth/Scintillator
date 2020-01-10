@@ -1,8 +1,6 @@
 #ifndef SRC_SCINTHDEF_HPP_
 #define SRC_SCINTHDEF_HPP_
 
-#include "core/Types.hpp"
-
 #include <memory>
 
 namespace scin {
@@ -41,7 +39,7 @@ public:
      */
     bool build(vk::ShaderCompiler* compiler);
 
-    /*! Create a running instance Scinth of this ScinthDef.
+    /*! Create a Scinth instance based from this ScinthDef.
      *
      * The Scinth needs a shared_ptr reference to the originating ScinthDef, so that the ScinthDef will remain allocated
      * until all referencing Scinths are themselves deleted. So this is a static method that provides that shared
@@ -50,9 +48,8 @@ public:
      *
      * \param scinthDef The ScinthDef to build this Scinth from.
      * \param nodeID The unique ID to assign to the running Scinth.
-     * \param startTime The start time to provide to the running Scinth.
      */
-    static std::shared_ptr<Scinth> play(std::shared_ptr<ScinthDef> scinthDef, int nodeID, const TimePoint& startTime);
+    static std::shared_ptr<Scinth> cue(std::shared_ptr<ScinthDef> scinthDef, int nodeID);
 
     std::shared_ptr<const core::AbstractScinthDef> abstract() const { return m_abstractScinthDef; }
 

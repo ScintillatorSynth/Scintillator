@@ -33,9 +33,8 @@ significantly greater than the average we report that as a dropped frame (will n
 a counter of number of times we were late and then report that periodically). We use the high precision clock and report
 accurate timestamps on each frame render.
 
-
-
-
+The swapchain *has* to be configured in FIFO mode for this to work, because in MAILBOX mode the present queue will happy
+accept infinite new frames, just replacing the old one in the queue with the newer one.
 
 
 
