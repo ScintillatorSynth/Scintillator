@@ -119,7 +119,7 @@ bool ScinthDef::buildVertexData() {
                 m_abstractScinthDef->shape()->storeVertexAtIndex(i, vertex);
             } else {
                 switch (m_abstractScinthDef->vertexManifest().intrinsicForElement(j)) {
-                    case core::Intrinsic::kNormPos: {
+                case core::Intrinsic::kNormPos: {
                     // TODO: would it be faster/easier to just provide normPosScale in UBO and do this on
                     // the vertex shader?
                     std::array<float, 2> verts;

@@ -145,7 +145,8 @@ bool Async::asyncScinthDefLoadDirectory(fs::path path) {
         auto p = entry.path();
         if (fs::is_regular_file(p) && p.extension() == ".yaml") {
             spdlog::debug("Parsing ScinthDef yaml file {}.", p.string());
-            std::vector<std::shared_ptr<const core::AbstractScinthDef>> scinthDefs = m_archetypes->loadFromFile(p.string());
+            std::vector<std::shared_ptr<const core::AbstractScinthDef>> scinthDefs =
+                m_archetypes->loadFromFile(p.string());
             for (auto scinthDef : scinthDefs) {
                 if (m_compositor->buildScinthDef(scinthDef)) {
                     ++parseCount;

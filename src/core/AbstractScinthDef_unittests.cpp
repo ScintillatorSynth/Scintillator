@@ -3,9 +3,7 @@
 #include "core/AbstractScinthDef.hpp"
 #include "core/VGen.hpp"
 
-namespace scin {
-
-namespace core {
+namespace scin { namespace core {
 
 } // namespace core
 

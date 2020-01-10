@@ -7,7 +7,7 @@
 
 namespace scin {
 
-namespace core{
+namespace core {
 class AbstractScinthDef;
 }
 
