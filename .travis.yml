@@ -37,7 +37,7 @@ before_script:
     - cmake -DSCIN_BUILD_DOCS=ON -DCMAKE_BUILD_TYPE=Coverage -DLLVM_COV="llvm-cov-8" -DLLVM_PROFDATA="llvm-profdata-8" -DPYTHON_EXECUTABLE=`which python3` ..
 
 script:
-    - make
+    - make -j2
     - make coverage_report
     - make lintall
     - make docs

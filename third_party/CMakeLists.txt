@@ -1,6 +1,6 @@
 include(ExternalProject)
 set(SCIN_EXT_INSTALL_DIR "${PROJECT_BINARY_DIR}/install-ext" CACHE PATH "where to install Scintillator dependencies")
-file(MAKE_DIRECTORY ${SCIN_EXT_INSTALL_DIR})
+file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}")
 
 # All the Khronos Group vulkan SDK releases are under the same git tag, so we keep it consistent with a variable.
 set(SCIN_VULKAN_TAG "sdk-1.1.130")
@@ -12,6 +12,7 @@ ExternalProject_add(Vulkan-Headers
     GIT_TAG ${SCIN_VULKAN_TAG}
     GIT_SHALLOW ON
     GIT_PROGRESS ON
+    UPDATE_COMMAND ""
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SCIN_EXT_INSTALL_DIR}
 )
 ExternalProject_Add_StepTargets(Vulkan-Headers install)
@@ -23,20 +24,11 @@ ExternalProject_add(Vulkan-Loader
     GIT_TAG ${SCIN_VULKAN_TAG}
     GIT_SHALLOW ON
     GIT_PROGRESS ON
+    UPDATE_COMMAND ""
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SCIN_EXT_INSTALL_DIR} -DUSE_CCACHE=ON
 )
 ExternalProject_Add_StepDependencies(Vulkan-Loader install Vulkan-Headers)
 ExternalProject_Add_StepTargets(Vulkan-Loader install)
-
-# See https://github.com/google/amber/issues/754 for discussion of shared linker flag.
-ExternalProject_Add(swiftshader
-    PREFIX ext
-    GIT_REPOSITORY https://github.com/google/swiftshader
-    GIT_TAG master
-    GIT_SHALLOW ON
-    GIT_PROGRESS ON
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SCIN_EXT_INSTALL_DIR} -DBUILD_SAMPLES=OFF -DBUILD_TESTS=OFF -DBUILD_VULKAN=ON -DBUILD_EGL=OFF -DBUILD_GLESV2=OFF -DBUILD_GLES_CM=OFF -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=gold"
-)
 
 #### glslang (required by shaderc, Vulkan validation layers)
 ExternalProject_Add(glslang
@@ -45,6 +37,7 @@ ExternalProject_Add(glslang
     GIT_TAG master
     GIT_SHALLOW ON
     GIT_PROGRESS ON
+    UPDATE_COMMAND ""
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SCIN_EXT_INSTALL_DIR}
 )
 ExternalProject_Add_Step(glslang GETDEPS
@@ -54,19 +47,6 @@ ExternalProject_Add_Step(glslang GETDEPS
     DEPENDEES download
     DEPENDERS configure
 )
-
-#### Vulkan Validation Layers
-ExternalProject_Add(Vulkan-ValidationLayers
-    PREFIX ext
-    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-ValidationLayers.git
-    GIT_TAG ${SCIN_VULKAN_TAG}
-    GIT_SHALLOW ON
-    GIT_PROGRESS ON
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SCIN_EXT_INSTALL_DIR} -DVULKAN_HEADERS_INSTALL_DIR=${SCIN_EXT_INSTALL_DIR} -DGLSLANG_INSTALL_DIR=${SCIN_EXT_INSTALL_DIR}
-)
-ExternalProject_Add_StepDependencies(Vulkan-ValidationLayers install Vulkan-Headers)
-ExternalProject_Add_StepDependencies(Vulkan-ValidationLayers install Vulkan-Loader)
-ExternalProject_Add_StepDependencies(Vulkan-ValidationLayers build glslang)
 
 #### fmt
 add_subdirectory(fmt)
@@ -81,7 +61,7 @@ set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "require spdlog to use our external fmt")
 add_subdirectory(spdlog)
 
 # direct include of installed external deps header path
-# TODO: still necessary?
+# TODO: convert GLFW to ExternalProject, then this can be a -D
 include_directories("${SCIN_EXT_INSTALL_DIR}/include")
 
 #### glfw
@@ -115,6 +95,7 @@ ExternalProject_Add(shaderc
     GIT_TAG known-good
     GIT_SHALLOW ON
     GIT_PROGRESS ON
+    UPDATE_COMMAND ""
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SCIN_EXT_INSTALL_DIR} -DSHADERC_SKIP_TESTS=ON
     SOURCE_SUBDIR src/
 )
@@ -129,4 +110,42 @@ ExternalProject_Add_StepTargets(shaderc install)
 
 #### yaml-cpp
 add_subdirectory(yaml-cpp)
+
+
+#### Optional Linux-only Vulkan debugging and validation utilties.
+file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d")
+file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/explicit_layers.d")
+
+#### Swiftshader (Linux-only Vulkan software renderer)
+# See https://github.com/google/amber/issues/754 for discussion of shared linker flag.
+ExternalProject_Add(swiftshader
+    PREFIX ext
+    EXCLUDE_FROM_ALL
+    GIT_REPOSITORY https://github.com/google/swiftshader
+    GIT_TAG master
+    GIT_SHALLOW ON
+    GIT_PROGRESS ON
+    UPDATE_COMMAND ""
+    CMAKE_ARGS -DBUILD_SAMPLES=OFF -DBUILD_TESTS=OFF -DBUILD_VULKAN=ON -DBUILD_EGL=OFF -DBUILD_GLESV2=OFF -DBUILD_GLES_CM=OFF -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=gold"
+    INSTALL_COMMAND cp "<BINARY_DIR>/Linux/libvk_swiftshader.so" "<BINARY_DIR>/Linux/vk_swiftshader_icd.json" "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d"
+)
+ExternalProject_Add_StepTargets(swiftshader build)
+
+#### Vulkan Validation Layers
+# Custom install step to avoid the actual install step helpfully obfuscating the path of the layer .so
+ExternalProject_Add(Vulkan-ValidationLayers
+    PREFIX ext
+    EXCLUDE_FROM_ALL
+    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-ValidationLayers.git
+    GIT_TAG ${SCIN_VULKAN_TAG}
+    GIT_SHALLOW ON
+    GIT_PROGRESS ON
+    UPDATE_COMMAND ""
+    CMAKE_ARGS -DVULKAN_HEADERS_INSTALL_DIR=${SCIN_EXT_INSTALL_DIR} -DGLSLANG_INSTALL_DIR=${SCIN_EXT_INSTALL_DIR} -DUSE_CCACHE=ON
+    INSTALL_COMMAND cp "<BINARY_DIR>/layers/libVkLayer_khronos_validation.so" "<BINARY_DIR>/layers/VkLayer_khronos_validation.json" "<BINARY_DIR>/layers/VkLayer_standard_validation.json" "${SCIN_EXT_INSTALL_DIR}/share/vulkan/explicit_layers.d"
+)
+ExternalProject_Add_StepDependencies(Vulkan-ValidationLayers install Vulkan-Headers)
+ExternalProject_Add_StepDependencies(Vulkan-ValidationLayers install Vulkan-Loader)
+ExternalProject_Add_StepDependencies(Vulkan-ValidationLayers build glslang)
+ExternalProject_Add_StepTargets(Vulkan-ValidationLayers install)
 

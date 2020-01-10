@@ -47,8 +47,8 @@ bool ImageSet::createHostTransferTarget(uint32_t width, uint32_t height, size_t 
         allocInfo.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
         allocInfo.preferredFlags = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
 
-        VkImage image;
-        VmaAllocation allocation;
+        VkImage image = VK_NULL_HANDLE;
+        VmaAllocation allocation = VK_NULL_HANDLE;
         if (vmaCreateImage(m_device->allocator(), &createInfo, &allocInfo, &image, &allocation, nullptr)
             != VK_SUCCESS) {
             spdlog::error("failed creating host transfer target images");

@@ -189,7 +189,6 @@ if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
     )
 endif()
 
-
 #### Doxygen Documentation
 if (SCIN_BUILD_DOCS)
     find_package(Doxygen)
@@ -204,4 +203,32 @@ if (SCIN_BUILD_DOCS)
         message(FATAL_ERROR "SCIN_BUILD_DOCS enabled but Doxygen not found.")
     endif()
 endif()
+
+#### Linux-only Vulkan Validation Utilities
+set(SCIN_SWIFTSHADER_OUTPUTS
+    "$ENV{HOME}/.local/share/vulkan/icd.d/libvk_swiftshader.so"
+    "$ENV{HOME}/.local/share/vulkan/icd.d/vk_swiftshader_icd.json"
+)
+add_custom_command(OUTPUT ${SCIN_SWIFTSHADER_OUTPUTS}
+    COMMAND mkdir -p "$ENV{HOME}/.local/share/vulkan"
+    COMMAND cp -R "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d" "$ENV{HOME}/.local/share/vulkan/."
+    DEPENDS swiftshader-build
+    COMMENT "installing swiftshader in $ENV{HOME}/.local/share/vulkan/icd.d"
+    VERBATIM
+)
+set(SCIN_VULKAN_VALIDATION_OUTPUTS
+    "$ENV{HOME}/.local/share/vulkan/explicit_layer.d/VkLayer_khronos_validation.json"
+    "$ENV{HOME}/.local/share/vulkan/explicit_layer.d/VkLayer_standard_validation.json"
+    "$ENV{HOME}/.local/share/vulkan/explicit_layer.d/libVkLayer_khronos_validation.so"
+)
+add_custom_command(OUTPUT ${SCIN_VULKAN_VALIDATION_OUTPUTS}
+    COMMAND mkdir -p "$ENV{HOME}/.local/share/vulkan"
+    COMMAND cp -R "${SCIN_EXT_INSTALL_DIR}/share/vulkan/explicit_layers.d" "$ENV{HOME}/.local/share/vulkan/."
+    DEPENDS Vulkan-ValidationLayers-install
+    COMMENT "installing Vulkan Validation Layers in $ENV{HOME}/.local/share/vulkan/explicit_layers.d"
+    VERBATIM
+)
+add_custom_target(local-vulkan-utils
+    DEPENDS ${SCIN_SWIFTSHADER_OUTPUTS} ${SCIN_VULKAN_VALIDATION_OUTPUTS}
+)
 
