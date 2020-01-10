@@ -1,11 +1,9 @@
+include(ExternalProject)
 set(SCIN_EXT_INSTALL_DIR "${PROJECT_BINARY_DIR}/install-ext" CACHE PATH "where to install Scintillator dependencies")
 file(MAKE_DIRECTORY ${SCIN_EXT_INSTALL_DIR})
 
 # All the Khronos Group vulkan SDK releases are under the same git tag, so we keep it consistent with a variable.
 set(SCIN_VULKAN_TAG "sdk-1.1.130")
-
-include(ExternalProject)
-
 
 #### Vulkan Headers
 ExternalProject_add(Vulkan-Headers
@@ -17,9 +15,6 @@ ExternalProject_add(Vulkan-Headers
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SCIN_EXT_INSTALL_DIR}
 )
 ExternalProject_Add_StepTargets(Vulkan-Headers install)
-
-#    include_directories(Vulkan-Headers/include)
-#    add_subdirectory(Vulkan-Headers)
 
 #### Vulkan Loader
 ExternalProject_add(Vulkan-Loader
@@ -33,18 +28,7 @@ ExternalProject_add(Vulkan-Loader
 ExternalProject_Add_StepDependencies(Vulkan-Loader install Vulkan-Headers)
 ExternalProject_Add_StepTargets(Vulkan-Loader install)
 
-#    add_subdirectory(Vulkan-Loader)
-
-#set(BUILD_SAMPLES OFF CACHE BOOL "don't build swiftshader samples" FORCE)
-#set(BUILD_TESTS OFF CACHE BOOL "don't build swiftshader tests" FORCE)
-#set(BUILD_VULKAN ON CACHE BOOL "build Vulkan" FORCE)
-#set(BUILD_EGL OFF CACHE BOOL "don't build egl" FORCE)
-#set(BUILD_GLESV2 OFF CACHE BOOL "don't build GLESv2" FORCE)
-#set(BUILD_GLES_CM OFF CACHE BOOL "don't build GLES CM" FORCE)
-# https://github.com/google/amber/issues/754
-#set(CMAKE_SHARED_LINKER_FLAGS "-fuse-ld=gold" CACHE STRING "workaround an issue in gnu ld that breaks vulkan build"
-#    FORCE)
-#add_subdirectory(swiftshader)
+# See https://github.com/google/amber/issues/754 for discussion of shared linker flag.
 ExternalProject_Add(swiftshader
     PREFIX ext
     GIT_REPOSITORY https://github.com/google/swiftshader
@@ -55,7 +39,6 @@ ExternalProject_Add(swiftshader
 )
 
 #### glslang (required by shaderc, Vulkan validation layers)
-#add_subdirectory(glslang)
 ExternalProject_Add(glslang
     PREFIX ext
     GIT_REPOSITORY https://github.com/KhronosGroup/glslang.git
@@ -84,11 +67,8 @@ ExternalProject_Add(Vulkan-ValidationLayers
 ExternalProject_Add_StepDependencies(Vulkan-ValidationLayers install Vulkan-Headers)
 ExternalProject_Add_StepDependencies(Vulkan-ValidationLayers install Vulkan-Loader)
 ExternalProject_Add_StepDependencies(Vulkan-ValidationLayers build glslang)
-#    add_subdirectory(Vulkan-ValidationLayers)
-# set(VulkanHeaders_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Vulkan-Headers/include" CACHE PATH "" FORCE)
-# add_subdirectory(Vulkan-Tools)
 
-### fmt
+#### fmt
 add_subdirectory(fmt)
 
 #### gflags
@@ -128,20 +108,7 @@ include_directories(oscpack_1_1_0)
 add_library(oscpack STATIC "OSCPackBuild.cpp")
 target_include_directories(oscpack INTERFACE oscpack_1_1_0)
 
-#TODO: remove submodule?
-#### re2 (required by effcee and SPIRV-Tools)
-#set(RE2_BUILD_TESTING OFF CACHE BOOL "build testing in re2")
-#add_subdirectory(re2)
-
-#TODO: remove submodule?
-#### effcee (required by SPIRV-Tools)
-#set(EFFCEE_BUILD_SAMPLES OFF CACHE BOOL "build samples in effcee")
-#set(EFFCEE_BUILD_TESTING OFF CACHE BOOL "build testing in effcee")
-#add_subdirectory(effcee)
-
 #### shaderc
-#set(SHADERC_SKIP_TESTS ON CACHE BOOL "skip testing in shaderc")
-#add_subdirectory(shaderc)
 ExternalProject_Add(shaderc
     PREFIX ext
     GIT_REPOSITORY https://github.com/google/shaderc

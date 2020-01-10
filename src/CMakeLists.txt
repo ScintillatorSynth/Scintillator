@@ -6,6 +6,7 @@ include_directories(
     ${SCIN_EXT_INSTALL_DIR}/include
 )
 
+#### "Core" files (without external dependencies)
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/core")
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp"
@@ -42,6 +43,26 @@ target_link_libraries(scintillator_core
     stdc++fs
 )
 
+#### Unit Testing for Core Files
+add_executable(run_unittests
+    core/AbstractScinthDef_unittests.cpp
+    core/AbstractVGen_unittests.cpp
+    core/Archetypes_unittests.cpp
+    core/Manifest_unittests.cpp
+    core/VGen_unittests.cpp
+
+    run_unittests.cpp
+)
+
+target_link_libraries(run_unittests
+    gflags
+    glm
+    gtest
+    scintillator_core
+    stdc++fs
+)
+
+#### Scintillator Binary
 configure_file(Version.hpp.in "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp")
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
     COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp" "${CMAKE_CURRENT_SOURCE_DIR}/OscCommand.hpp.in"
@@ -117,24 +138,7 @@ add_dependencies(scinsynth
     shaderc-install
 )
 
-add_executable(run_unittests
-    core/AbstractScinthDef_unittests.cpp
-    core/AbstractVGen_unittests.cpp
-    core/Archetypes_unittests.cpp
-    core/Manifest_unittests.cpp
-    core/VGen_unittests.cpp
-
-    run_unittests.cpp
-)
-
-target_link_libraries(run_unittests
-    gflags
-    glm
-    gtest
-    scintillator_core
-    stdc++fs
-)
-
+#### Automatic Code Formatting and Linting
 if (NOT DEFINED CLANG_FORMAT)
     set(CLANG_FORMAT clang-format-8)
 endif()
@@ -151,6 +155,7 @@ add_custom_target(formatall
     VERBATIM
 )
 
+#### Code Coverage Computation
 if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
     if(NOT DEFINED LLVM_PROFDATA)
         set(LLVM_PROFDATA llvm-profdata)
@@ -184,6 +189,8 @@ if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
     )
 endif()
 
+
+#### Doxygen Documentation
 if (SCIN_BUILD_DOCS)
     find_package(Doxygen)
     if (DOXYGEN_FOUND)
