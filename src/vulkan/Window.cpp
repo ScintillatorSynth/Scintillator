@@ -50,6 +50,7 @@ bool Window::create() {
 bool Window::createSwapchain(std::shared_ptr<Device> device) {
     m_device = device;
     m_swapchain.reset(new Swapchain(m_device));
+    // Request FIFO queue submission if we are in free-running mode (frame rate < 0).
     if (!m_swapchain->create(this, m_frameRate < 0)) {
         spdlog::error("Window failed to create swapchain.");
         return false;

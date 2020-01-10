@@ -96,6 +96,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    // TODO: do more with this?
     scin::vk::DeviceChooser chooser(instance);
     chooser.enumerateAllDevices();
 

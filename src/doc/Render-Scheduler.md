@@ -7,7 +7,7 @@ the --window boolean flag at startup, which defaults to true. To determine outpu
 in one of three modes:
 
  * Free-running - only relevant when a window is created, instructs Scintillator to track the update framerate of the
-   display. Pass a negative number to the --framerate startup flag to activate this mode.
+   display. Pass a negative number to the frame rate startup flag to activate this mode.
  * Shutter - Scintillator will only advance the frame when receiving an OSC command requesting a render. If there is a
    window open, the window will update the contents when "damaged", or a repaint is requested by the operating system,
    and will attempt to present the updated contents with minimal latency.
@@ -36,5 +36,12 @@ accurate timestamps on each frame render.
 The swapchain *has* to be configured in FIFO mode for this to work, because in MAILBOX mode the present queue will happy
 accept infinite new frames, just replacing the old one in the queue with the newer one.
 
+Numbers lower than -1 are intended to represent a multiple of the frame time, but that work is TBD. So if the display is
+refreshing at 60Hz a frame rate argument of -2 would request window-locked rendering at 30 Hz. This would probably be
+implemented with an offscreen renderer and a blit?
 
+Fixed and Shutter Mode
+----------------------
+
+Not all Vulkan devices support MAILBOX mode.
 
