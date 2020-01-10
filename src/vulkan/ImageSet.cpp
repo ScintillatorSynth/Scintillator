@@ -24,15 +24,13 @@ uint32_t ImageSet::getFromSwapchain(Swapchain* swapchain, uint32_t imageCount) {
 }
 
 bool ImageSet::createHostTransferTarget(uint32_t width, uint32_t height, size_t numberOfImages) {
-    return true;
-    m_images.resize(numberOfImages);
-    m_allocations.resize(numberOfImages);
     m_extent.width = width;
     m_extent.height = height;
+    m_format = VK_FORMAT_R8G8B8A8_UNORM;
 
     for (auto i = 0; i < numberOfImages; ++i) {
         VkImageCreateInfo createInfo = {};
-        createInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+        createInfo.format = m_format;
         createInfo.extent.width = width;
         createInfo.extent.height = height;
         createInfo.arrayLayers = 1;

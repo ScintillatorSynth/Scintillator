@@ -114,7 +114,7 @@ add_subdirectory(yaml-cpp)
 
 #### Optional Linux-only Vulkan debugging and validation utilties.
 file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d")
-file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/explicit_layers.d")
+file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/explicit_layer.d")
 
 #### Swiftshader (Linux-only Vulkan software renderer)
 # See https://github.com/google/amber/issues/754 for discussion of shared linker flag.
@@ -142,7 +142,7 @@ ExternalProject_Add(Vulkan-ValidationLayers
     GIT_PROGRESS ON
     UPDATE_COMMAND ""
     CMAKE_ARGS -DVULKAN_HEADERS_INSTALL_DIR=${SCIN_EXT_INSTALL_DIR} -DGLSLANG_INSTALL_DIR=${SCIN_EXT_INSTALL_DIR} -DUSE_CCACHE=ON
-    INSTALL_COMMAND cp "<BINARY_DIR>/layers/libVkLayer_khronos_validation.so" "<BINARY_DIR>/layers/VkLayer_khronos_validation.json" "<BINARY_DIR>/layers/VkLayer_standard_validation.json" "${SCIN_EXT_INSTALL_DIR}/share/vulkan/explicit_layers.d"
+    INSTALL_COMMAND cp "<BINARY_DIR>/layers/libVkLayer_khronos_validation.so" "<BINARY_DIR>/layers/VkLayer_khronos_validation.json" "<BINARY_DIR>/layers/VkLayer_standard_validation.json" "${SCIN_EXT_INSTALL_DIR}/share/vulkan/explicit_layer.d"
 )
 ExternalProject_Add_StepDependencies(Vulkan-ValidationLayers install Vulkan-Headers)
 ExternalProject_Add_StepDependencies(Vulkan-ValidationLayers install Vulkan-Loader)

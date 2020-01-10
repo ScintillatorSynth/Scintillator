@@ -223,9 +223,9 @@ set(SCIN_VULKAN_VALIDATION_OUTPUTS
 )
 add_custom_command(OUTPUT ${SCIN_VULKAN_VALIDATION_OUTPUTS}
     COMMAND mkdir -p "$ENV{HOME}/.local/share/vulkan"
-    COMMAND cp -R "${SCIN_EXT_INSTALL_DIR}/share/vulkan/explicit_layers.d" "$ENV{HOME}/.local/share/vulkan/."
+    COMMAND cp -R "${SCIN_EXT_INSTALL_DIR}/share/vulkan/explicit_layer.d" "$ENV{HOME}/.local/share/vulkan/."
     DEPENDS Vulkan-ValidationLayers-install
-    COMMENT "installing Vulkan Validation Layers in $ENV{HOME}/.local/share/vulkan/explicit_layers.d"
+    COMMENT "installing Vulkan Validation Layers in $ENV{HOME}/.local/share/vulkan/explicit_layer.d"
     VERBATIM
 )
 add_custom_target(local-vulkan-utils
