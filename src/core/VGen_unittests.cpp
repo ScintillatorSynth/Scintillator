@@ -4,7 +4,7 @@
 #include "core/Intrinsic.hpp"
 #include "core/VGen.hpp"
 
-namespace scin {
+namespace scin { namespace core {
 
 TEST(VGenTest, InvalidInputCounts) {
     std::shared_ptr<const AbstractVGen> noInputs(
@@ -127,5 +127,7 @@ TEST(VGenTest, InputValuesAndTypesRetained) {
     EXPECT_EQ(-2, outputIndex);
     EXPECT_TRUE(pickAndMix.validate());
 }
+
+} // namespace core
 
 } // namespace scin

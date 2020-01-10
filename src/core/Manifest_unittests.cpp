@@ -7,7 +7,7 @@
 #include <string>
 #include <unordered_set>
 
-namespace scin {
+namespace scin { namespace core {
 
 TEST(ManifestTest, EmptyManifest) {
     Manifest unpacked;
@@ -89,5 +89,7 @@ TEST(ManifestTest, HeterogeneousTypes) {
     EXPECT_EQ(Manifest::ElementType::kFloat, oneOfEach.typeForElement(3));
     EXPECT_EQ(Intrinsic::kTime, oneOfEach.intrinsicForElement(3));
 }
+
+} // namespace core
 
 } // namespace scin

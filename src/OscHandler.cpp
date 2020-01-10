@@ -22,7 +22,7 @@ namespace scin {
 
 class OscHandler::OscListener : public osc::OscPacketListener {
 public:
-    OscListener(std::shared_ptr<Async> async, std::shared_ptr<Archetypes> archetypes,
+    OscListener(std::shared_ptr<Async> async, std::shared_ptr<core::Archetypes> archetypes,
                 std::shared_ptr<Compositor> compositor, std::function<void()> quitHandler):
         osc::OscPacketListener(),
         m_async(async),
@@ -98,7 +98,7 @@ public:
                 if (args != message.ArgumentsEnd())
                     throw osc::ExcessArgumentException();
                 spdlog::info("Setting log level to {}.", logLevel);
-                setGlobalLogLevel(logLevel);
+                core::setGlobalLogLevel(logLevel);
             } break;
 
             case kVersion: {
@@ -225,7 +225,7 @@ public:
 
 private:
     std::shared_ptr<Async> m_async;
-    std::shared_ptr<Archetypes> m_archetypes;
+    std::shared_ptr<core::Archetypes> m_archetypes;
     std::shared_ptr<Compositor> m_compositor;
     std::function<void()> m_quitHandler;
     bool m_sendQuitDone;
@@ -239,7 +239,7 @@ OscHandler::OscHandler(const std::string& bindAddress, int listenPort):
 
 OscHandler::~OscHandler() {}
 
-void OscHandler::run(std::shared_ptr<Async> async, std::shared_ptr<Archetypes> archetypes,
+void OscHandler::run(std::shared_ptr<Async> async, std::shared_ptr<core::Archetypes> archetypes,
                      std::shared_ptr<Compositor> compositor, std::function<void()> quitHandler) {
     m_listener.reset(new OscListener(async, archetypes, compositor, quitHandler));
     m_listenSocket.reset(

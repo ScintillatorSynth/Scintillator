@@ -3,7 +3,7 @@
 #include "glm/glm.hpp"
 #include "spdlog/spdlog.h"
 
-namespace scin {
+namespace scin { namespace core {
 
 Manifest::Manifest(): m_size(0) {}
 
@@ -126,5 +126,7 @@ void Manifest::packElement(const std::string& name, uint32_t size) {
     m_offsets.insert({ name, m_size });
     m_size += size;
 }
+
+} // namespace core
 
 } // namespace scin

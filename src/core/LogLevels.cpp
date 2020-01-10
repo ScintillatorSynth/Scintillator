@@ -2,7 +2,7 @@
 
 #include "spdlog/spdlog.h"
 
-namespace scin {
+namespace scin { namespace core {
 
 // We currently just re-use the spdlog log levels. But the enum on the spdlog could change, in which case this mapping
 // needs to change. We include asserts here to ensure that if the spdlog levels change the compile will break here,
@@ -21,5 +21,6 @@ void setGlobalLogLevel(int level) {
     }
 }
 
+} // namespace core
 
 } // namespace scin

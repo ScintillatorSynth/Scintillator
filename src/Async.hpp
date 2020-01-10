@@ -14,14 +14,17 @@
 
 namespace scin {
 
+namespace core {
 class Archetypes;
+}
+
 class Compositor;
 
 /*! Maintains a thread pool and provides facilities to run all async functions on those threads.
  */
 class Async {
 public:
-    Async(std::shared_ptr<Archetypes> archetypes, std::shared_ptr<Compositor> compositor);
+    Async(std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor);
     ~Async();
 
     void run(size_t numberOfWorkerThreads);
@@ -64,7 +67,7 @@ private:
     bool asyncScinthDefLoadFile(fs::path path);
     bool asyncScinthDefParseString(std::string yaml);
 
-    std::shared_ptr<Archetypes> m_archetypes;
+    std::shared_ptr<core::Archetypes> m_archetypes;
     std::shared_ptr<Compositor> m_compositor;
     std::atomic<bool> m_quit;
     std::vector<std::thread> m_workerThreads;

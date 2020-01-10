@@ -4,6 +4,8 @@
 
 namespace scin {
 
+namespace core {
+
 AbstractVGen::AbstractVGen(const std::string& name, const std::vector<std::string>& inputs,
                            const std::vector<std::string>& outputs, const std::vector<std::vector<int>> inputDimensions,
                            const std::vector<std::vector<int>> outputDimensions, const std::string& shader):
@@ -155,5 +157,7 @@ std::string AbstractVGen::parameterize(const std::vector<std::string>& inputs,
 
     return shader;
 }
+
+} // namespace core
 
 } // namespace scin

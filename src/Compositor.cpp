@@ -41,7 +41,7 @@ bool Compositor::create() {
     return true;
 }
 
-bool Compositor::buildScinthDef(std::shared_ptr<const AbstractScinthDef> abstractScinthDef) {
+bool Compositor::buildScinthDef(std::shared_ptr<const core::AbstractScinthDef> abstractScinthDef) {
     std::shared_ptr<ScinthDef> scinthDef(new ScinthDef(m_device, m_canvas, m_commandPool, abstractScinthDef));
     if (!scinthDef->build(m_shaderCompiler.get())) {
         return false;

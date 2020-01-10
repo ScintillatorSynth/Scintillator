@@ -17,7 +17,7 @@ Pipeline::Pipeline(std::shared_ptr<Device> device):
 
 Pipeline::~Pipeline() { destroy(); }
 
-bool Pipeline::create(const Manifest& vertexManifest, const Shape* shape, Canvas* canvas,
+bool Pipeline::create(const core::Manifest& vertexManifest, const core::Shape* shape, Canvas* canvas,
                       std::shared_ptr<Shader> vertexShader, std::shared_ptr<Shader> fragmentShader,
                       std::shared_ptr<UniformLayout> uniformLayout) {
     // Keep references to these graphics objects so they won't be destroyed until after this Pipeline is destroyed.
@@ -36,19 +36,19 @@ bool Pipeline::create(const Manifest& vertexManifest, const Shape* shape, Canvas
         vertexAttributes[i].location = i;
         VkFormat format;
         switch (vertexManifest.typeForElement(i)) {
-        case Manifest::ElementType::kFloat:
+        case core::Manifest::ElementType::kFloat:
             format = VK_FORMAT_R32_SFLOAT;
             break;
 
-        case Manifest::ElementType::kVec2:
+        case core::Manifest::ElementType::kVec2:
             format = VK_FORMAT_R32G32_SFLOAT;
             break;
 
-        case Manifest::ElementType::kVec3:
+        case core::Manifest::ElementType::kVec3:
             format = VK_FORMAT_R32G32B32_SFLOAT;
             break;
 
-        case Manifest::ElementType::kVec4:
+        case core::Manifest::ElementType::kVec4:
             format = VK_FORMAT_R32G32B32A32_SFLOAT;
             break;
         }
@@ -67,7 +67,7 @@ bool Pipeline::create(const Manifest& vertexManifest, const Shape* shape, Canvas
     VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     switch (shape->topology()) {
-    case Shape::Topology::kTriangleStrip:
+    case core::Shape::Topology::kTriangleStrip:
         inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
     }
     inputAssembly.primitiveRestartEnable = VK_FALSE;

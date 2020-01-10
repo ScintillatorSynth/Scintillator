@@ -5,4 +5,8 @@
 
 namespace scin {
 
-}
+namespace core {
+
+} // namespace core
+
+} // namesapce core

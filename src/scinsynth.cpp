@@ -49,7 +49,7 @@ DEFINE_bool(vulkan_validation, true, "Enable Vulkan validation layers.");
 
 int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
-    scin::setGlobalLogLevel(FLAGS_log_level);
+    scin::core::setGlobalLogLevel(FLAGS_log_level);
 
     // Check for early exit conditions.
     if (FLAGS_print_version) {
@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    std::shared_ptr<scin::Archetypes> archetypes(new scin::Archetypes());
+    std::shared_ptr<scin::core::Archetypes> archetypes(new scin::core::Archetypes());
     std::shared_ptr<scin::Async> async(new scin::Async(archetypes, compositor));
     async->run(FLAGS_async_worker_threads);
 

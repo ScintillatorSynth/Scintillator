@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace scin {
+namespace scin { namespace core {
 
 TEST(AbstractVGenTest, DuplicateParameterNames) {
     AbstractVGen dupIn("dupIn", { "in1", "in1" }, { "out" }, { { 1, 1 } }, { { 1 } }, "@out = @in1 + @in1;");
@@ -81,5 +81,7 @@ TEST(AbstractVGenTest, ParameterizeValid) {
                                        { { Intrinsic::kTime, "time" } }, { "gl_FragColor" }, { 1 },
                                        { "gl_FragColor" }));
 }
+
+} // namespace core
 
 } // namespace scin

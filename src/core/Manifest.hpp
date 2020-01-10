@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace scin {
+namespace scin { namespace core {
 
 /*! Describes a configurable buffer layout that aligns members consistent with Vulkan standards.
  *
@@ -77,6 +77,8 @@ private:
     // Names of elements in order as packed.
     std::vector<std::string> m_names;
 };
+
+} // namespace core
 
 } // namespace scin
 

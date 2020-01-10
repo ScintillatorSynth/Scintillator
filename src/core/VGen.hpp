@@ -6,7 +6,7 @@
 
 #include "glm/glm.hpp"
 
-namespace scin {
+namespace scin { namespace core {
 
 class AbstractVGen;
 
@@ -101,6 +101,8 @@ private:
     std::vector<VGenInput> m_inputs;
     std::vector<int> m_outputDimensions;
 };
+
+} // namespace core
 
 } // namespace scin
 

@@ -11,7 +11,7 @@
 
 namespace {
 
-void populateAbstractVGens(std::shared_ptr<scin::Archetypes> parser) {
+void populateAbstractVGens(std::shared_ptr<scin::core::Archetypes> parser) {
     parser->parseAbstractVGensFromString("---\n"
                                          "name: NoInput\n"
                                          "outputs: [ out ]\n"
@@ -58,7 +58,7 @@ void clobberFileWithString(const fs::path& filePath, const std::string& contents
 
 }
 
-namespace scin {
+namespace scin { namespace core {
 
 TEST(ArchetypesTest, InvalidAbstractVGenYamlStrings) {
     Archetypes parser;
@@ -183,7 +183,7 @@ TEST(ArchetypesTest, ParseAbstractVGenFromFile) {
 }
 
 TEST(ArchetypesTest, InvalidYAMLStrings) {
-    std::shared_ptr<scin::Archetypes> parser(new scin::Archetypes());
+    std::shared_ptr<Archetypes> parser(new Archetypes());
     populateAbstractVGens(parser);
     EXPECT_EQ(0, parser->parseFromString("").size());
     EXPECT_EQ(0, parser->parseFromString("abcd").size());
@@ -243,7 +243,7 @@ TEST(ArchetypesTest, InvalidYAMLStrings) {
 }
 
 TEST(ArchetypesTest, ValidYAMLStrings) {
-    std::shared_ptr<scin::Archetypes> parser(new scin::Archetypes());
+    std::shared_ptr<Archetypes> parser(new Archetypes());
     populateAbstractVGens(parser);
 
     EXPECT_EQ(1,
@@ -336,5 +336,7 @@ TEST(ArchetypesTest, ValidYAMLStrings) {
     EXPECT_TRUE(scinthDef->instanceAt(0).getInputConstantValue(2, inputValue));
     EXPECT_EQ(3.0f, inputValue);
 }
+
+} // namespace core
 
 } // namespace scin

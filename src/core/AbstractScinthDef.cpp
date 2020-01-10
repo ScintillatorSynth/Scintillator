@@ -10,7 +10,7 @@
 
 #include <random>
 
-namespace scin {
+namespace scin { namespace core {
 
 AbstractScinthDef::AbstractScinthDef(const std::string& name, const std::vector<VGen>& instances):
     m_name(name),
@@ -280,5 +280,7 @@ bool AbstractScinthDef::buildFragmentShader() {
     spdlog::info("{} fragment shader:\n{}", m_name, m_fragmentShader);
     return true;
 }
+
+} // namespace core
 
 } // namespace scin

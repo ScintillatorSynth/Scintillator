@@ -9,7 +9,7 @@ const std::vector<glm::vec2> quadVertices = { { -1.0f, 1.0f }, { -1.0f, -1.0f },
 const std::vector<uint16_t> quadIndices = { 0, 1, 2, 3 };
 }
 
-namespace scin {
+namespace scin { namespace core {
 
 Shape::Shape() {}
 Shape::~Shape() {}
@@ -32,5 +32,7 @@ size_t Quad::storeVertexAtIndex(uint32_t index, float* store) const {
 }
 
 const uint16_t* Quad::getIndices() const { return quadIndices.data(); }
+
+} // namespace core
 
 } // namespace scin

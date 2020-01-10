@@ -21,9 +21,12 @@ class CommandBuffer;
 class CommandPool;
 class Device;
 class ShaderCompiler;
-} // namespace vk
+}
 
+namespace core {
 class AbstractScinthDef;
+}
+
 class Scinth;
 class ScinthDef;
 
@@ -43,7 +46,7 @@ public:
      * \param abstractScinthDef The template to build the ScinthDef from
      * \return true on success, false on failure.
      */
-    bool buildScinthDef(std::shared_ptr<const AbstractScinthDef> abstractScinthDef);
+    bool buildScinthDef(std::shared_ptr<const core::AbstractScinthDef> abstractScinthDef);
 
     /*! Remove the supplied ScinthDefs from this Compositor's map.
      *

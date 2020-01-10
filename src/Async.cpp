@@ -9,7 +9,7 @@
 
 namespace scin {
 
-Async::Async(std::shared_ptr<Archetypes> archetypes, std::shared_ptr<Compositor> compositor):
+Async::Async(std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor):
     m_compositor(compositor),
     m_archetypes(archetypes),
     m_quit(false) {}
@@ -145,7 +145,7 @@ bool Async::asyncScinthDefLoadDirectory(fs::path path) {
         auto p = entry.path();
         if (fs::is_regular_file(p) && p.extension() == ".yaml") {
             spdlog::debug("Parsing ScinthDef yaml file {}.", p.string());
-            std::vector<std::shared_ptr<const AbstractScinthDef>> scinthDefs = m_archetypes->loadFromFile(p.string());
+            std::vector<std::shared_ptr<const core::AbstractScinthDef>> scinthDefs = m_archetypes->loadFromFile(p.string());
             for (auto scinthDef : scinthDefs) {
                 if (m_compositor->buildScinthDef(scinthDef)) {
                     ++parseCount;
@@ -163,7 +163,7 @@ bool Async::asyncScinthDefLoadFile(fs::path path) {
         return false;
     }
     spdlog::info("Loading ScinthDefs from file {}.", path.string());
-    std::vector<std::shared_ptr<const AbstractScinthDef>> scinthDefs = m_archetypes->loadFromFile(path.string());
+    std::vector<std::shared_ptr<const core::AbstractScinthDef>> scinthDefs = m_archetypes->loadFromFile(path.string());
     auto parseCount = 0;
     for (auto scinthDef : scinthDefs) {
         if (m_compositor->buildScinthDef(scinthDef)) {
@@ -175,7 +175,7 @@ bool Async::asyncScinthDefLoadFile(fs::path path) {
 }
 
 bool Async::asyncScinthDefParseString(std::string yaml) {
-    std::vector<std::shared_ptr<const AbstractScinthDef>> scinthDefs = m_archetypes->parseFromString(yaml);
+    std::vector<std::shared_ptr<const core::AbstractScinthDef>> scinthDefs = m_archetypes->parseFromString(yaml);
     for (auto scinthDef : scinthDefs) {
         m_compositor->buildScinthDef(scinthDef);
     }
