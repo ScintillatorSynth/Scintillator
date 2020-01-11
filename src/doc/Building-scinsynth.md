@@ -6,7 +6,7 @@ formal guide later.
 
 ```
 sudo apt-get install libxinerama-dev libxcursor-dev libxi-dev libxrandr-dev gperf python3-distutils libavcodec-dev
-libavformat-dev
+libavformat-dev libwayland-dev
 ```
 
 ## Python 3

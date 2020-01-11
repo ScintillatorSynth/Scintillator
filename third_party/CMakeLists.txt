@@ -1,52 +1,54 @@
 include(ExternalProject)
-set(SCIN_EXT_INSTALL_DIR "${PROJECT_BINARY_DIR}/install-ext" CACHE PATH "where to install Scintillator dependencies")
+set(SCIN_EXT_INSTALL_DIR "${PROJECT_BINARY_DIR}/install-ext" CACHE PATH "Scintallor Vulkan SDK ")
 file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}")
 
-# All the Khronos Group vulkan SDK releases are under the same git tag, so we keep it consistent with a variable.
-set(SCIN_VULKAN_TAG "sdk-1.1.130")
+include_directories("${SCIN_EXT_INSTALL_DIR}/include")
 
-#### Vulkan Headers
-ExternalProject_add(Vulkan-Headers
+if (NOT SCIN_USE_OWN_VULKAN)
+    # glslang is a dependency of the vulkan-validation layers so will have been built there if we were building our own.
+    ExternalProject_Add(glslang
+        PREFIX ext
+        STEP_TARGETS install
+        EXCLUDE_FROM_ALL ON
+        GIT_REPOSITORY https://github.com/KhronosGroup/glslang.git
+        GIT_TAG master
+        GIT_SHALLOW ON
+        GIT_PROGRESS ON
+        UPDATE_COMMAND ""
+        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SCIN_EXT_INSTALL_DIR}
+    )
+    ExternalProject_Add_Step(glslang getdeps
+        COMMAND ./update_glslang_sources.py
+        WORKING_DIRECTORY "<SOURCE_DIR>"
+        COMMENT "downloading glslang dependencies"
+        DEPENDEES download
+        DEPENDERS update
+    )
+endif()
+
+#### shaderc
+ExternalProject_Add(shaderc
     PREFIX ext
-    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Headers.git
-    GIT_TAG ${SCIN_VULKAN_TAG}
+    STEP_TARGETS install
+    EXCLUDE_FROM_ALL ON
+    GIT_REPOSITORY https://github.com/google/shaderc
+    GIT_TAG known-good
     GIT_SHALLOW ON
     GIT_PROGRESS ON
     UPDATE_COMMAND ""
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SCIN_EXT_INSTALL_DIR}
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SCIN_EXT_INSTALL_DIR} -DSHADERC_SKIP_TESTS=ON
+    SOURCE_SUBDIR src/
 )
-ExternalProject_Add_StepTargets(Vulkan-Headers install)
-
-#### Vulkan Loader
-ExternalProject_add(Vulkan-Loader
-    PREFIX ext
-    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Loader.git
-    GIT_TAG ${SCIN_VULKAN_TAG}
-    GIT_SHALLOW ON
-    GIT_PROGRESS ON
-    UPDATE_COMMAND ""
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SCIN_EXT_INSTALL_DIR} -DUSE_CCACHE=ON
-)
-ExternalProject_Add_StepDependencies(Vulkan-Loader install Vulkan-Headers)
-ExternalProject_Add_StepTargets(Vulkan-Loader install)
-
-#### glslang (required by shaderc, Vulkan validation layers)
-ExternalProject_Add(glslang
-    PREFIX ext
-    GIT_REPOSITORY https://github.com/KhronosGroup/glslang.git
-    GIT_TAG master
-    GIT_SHALLOW ON
-    GIT_PROGRESS ON
-    UPDATE_COMMAND ""
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SCIN_EXT_INSTALL_DIR}
-)
-ExternalProject_Add_Step(glslang GETDEPS
-    COMMAND ./update_glslang_sources.py
+ExternalProject_Add_Step(shaderc getdeps
+    COMMAND ./update_shaderc_sources.py
     WORKING_DIRECTORY "<SOURCE_DIR>"
     COMMENT "downloading glslang dependencies"
     DEPENDEES download
-    DEPENDERS configure
+    DEPENDERS update
 )
+if (NOT SCIN_USE_OWN_VULKAN)
+    ExternalProject_Add_StepDependencies(shaderc build glslang-install)
+endif()
 
 #### fmt
 add_subdirectory(fmt)
@@ -60,16 +62,11 @@ add_subdirectory(gflags)
 set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "require spdlog to use our external fmt")
 add_subdirectory(spdlog)
 
-# direct include of installed external deps header path
-# TODO: convert GLFW to ExternalProject, then this can be a -D
-include_directories("${SCIN_EXT_INSTALL_DIR}/include")
-
 #### glfw
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(glfw)
-add_dependencies(glfw Vulkan-Headers-install)
 
 #### glm
 add_subdirectory(glm)
@@ -78,7 +75,6 @@ add_subdirectory(glm)
 include_directories(VulkanMemoryAllocator/src)
 add_library(VulkanMemoryAllocator STATIC "vulkan_memory_allocator_build.cc")
 target_include_directories(VulkanMemoryAllocator INTERFACE VulkanMemoryAllocator/src)
-add_dependencies(VulkanMemoryAllocator Vulkan-Headers)
 
 #### googletest (required by effcee and re2)
 add_subdirectory(googletest)
@@ -88,65 +84,5 @@ include_directories(oscpack_1_1_0)
 add_library(oscpack STATIC "OSCPackBuild.cpp")
 target_include_directories(oscpack INTERFACE oscpack_1_1_0)
 
-#### shaderc
-ExternalProject_Add(shaderc
-    PREFIX ext
-    GIT_REPOSITORY https://github.com/google/shaderc
-    GIT_TAG known-good
-    GIT_SHALLOW ON
-    GIT_PROGRESS ON
-    UPDATE_COMMAND ""
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SCIN_EXT_INSTALL_DIR} -DSHADERC_SKIP_TESTS=ON
-    SOURCE_SUBDIR src/
-)
-ExternalProject_Add_Step(shaderc GETDEPS
-    COMMAND ./update_shaderc_sources.py
-    WORKING_DIRECTORY "<SOURCE_DIR>"
-    COMMENT "downloading glslang dependencies"
-    ALWAYS
-    DEPENDEES download
-    DEPENDERS configure
-)
-ExternalProject_Add_StepTargets(shaderc install)
-
 #### yaml-cpp
 add_subdirectory(yaml-cpp)
-
-
-#### Optional Linux-only Vulkan debugging and validation utilties.
-file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d")
-file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/explicit_layer.d")
-
-#### Swiftshader (Linux-only Vulkan software renderer)
-# See https://github.com/google/amber/issues/754 for discussion of shared linker flag.
-ExternalProject_Add(swiftshader
-    PREFIX ext
-    EXCLUDE_FROM_ALL
-    GIT_REPOSITORY https://github.com/google/swiftshader
-    GIT_TAG master
-    GIT_SHALLOW ON
-    GIT_PROGRESS ON
-    UPDATE_COMMAND ""
-    CMAKE_ARGS -DBUILD_SAMPLES=OFF -DBUILD_TESTS=OFF -DBUILD_VULKAN=ON -DBUILD_EGL=OFF -DBUILD_GLESV2=OFF -DBUILD_GLES_CM=OFF -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=gold"
-    INSTALL_COMMAND cp "<BINARY_DIR>/Linux/libvk_swiftshader.so" "<BINARY_DIR>/Linux/vk_swiftshader_icd.json" "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d"
-)
-ExternalProject_Add_StepTargets(swiftshader build)
-
-#### Vulkan Validation Layers
-# Custom install step to avoid the actual install step helpfully obfuscating the path of the layer .so
-ExternalProject_Add(Vulkan-ValidationLayers
-    PREFIX ext
-    EXCLUDE_FROM_ALL
-    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-ValidationLayers.git
-    GIT_TAG ${SCIN_VULKAN_TAG}
-    GIT_SHALLOW ON
-    GIT_PROGRESS ON
-    UPDATE_COMMAND ""
-    CMAKE_ARGS -DVULKAN_HEADERS_INSTALL_DIR=${SCIN_EXT_INSTALL_DIR} -DGLSLANG_INSTALL_DIR=${SCIN_EXT_INSTALL_DIR} -DUSE_CCACHE=ON
-    INSTALL_COMMAND cp "<BINARY_DIR>/layers/libVkLayer_khronos_validation.so" "<BINARY_DIR>/layers/VkLayer_khronos_validation.json" "<BINARY_DIR>/layers/VkLayer_standard_validation.json" "${SCIN_EXT_INSTALL_DIR}/share/vulkan/explicit_layer.d"
-)
-ExternalProject_Add_StepDependencies(Vulkan-ValidationLayers install Vulkan-Headers)
-ExternalProject_Add_StepDependencies(Vulkan-ValidationLayers install Vulkan-Loader)
-ExternalProject_Add_StepDependencies(Vulkan-ValidationLayers build glslang)
-ExternalProject_Add_StepTargets(Vulkan-ValidationLayers install)
-

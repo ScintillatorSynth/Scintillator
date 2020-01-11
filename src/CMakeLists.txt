@@ -125,7 +125,6 @@ add_executable(scinsynth ${scintillator_synth_files})
 
 target_link_libraries(scinsynth
     "${SCIN_EXT_INSTALL_DIR}/lib/libshaderc_shared.so"
-    "${SCIN_EXT_INSTALL_DIR}/lib/libvulkan.so"
     VulkanMemoryAllocator
     avcodec
     avformat
@@ -137,11 +136,17 @@ target_link_libraries(scinsynth
     spdlog
     stdc++fs
 )
+
 add_dependencies(scinsynth
-    Vulkan-Headers-install
-    Vulkan-Loader-install
     shaderc-install
 )
+
+# Add the Vulkan loader if we rolled our own.
+if (SCIN_USE_OWN_VULKAN)
+    target_link_libraries(scinsynth
+        "${SCIN_EXT_INSTALL_DIR}/lib/libvulkan.so"
+    )
+endif()
 
 #### Automatic Code Formatting and Linting
 if (NOT DEFINED CLANG_FORMAT)
@@ -162,6 +167,10 @@ add_custom_target(formatall
 
 #### Code Coverage Computation
 if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
+    if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        message(FATAL_ERROR "Scintillator code coverage analysis requires Clang to build")
+    endif()
+
     if(NOT DEFINED LLVM_PROFDATA)
         set(LLVM_PROFDATA llvm-profdata)
     endif()
@@ -208,32 +217,4 @@ if (SCIN_BUILD_DOCS)
         message(FATAL_ERROR "SCIN_BUILD_DOCS enabled but Doxygen not found.")
     endif()
 endif()
-
-#### Linux-only Vulkan Validation Utilities
-set(SCIN_SWIFTSHADER_OUTPUTS
-    "$ENV{HOME}/.local/share/vulkan/icd.d/libvk_swiftshader.so"
-    "$ENV{HOME}/.local/share/vulkan/icd.d/vk_swiftshader_icd.json"
-)
-add_custom_command(OUTPUT ${SCIN_SWIFTSHADER_OUTPUTS}
-    COMMAND mkdir -p "$ENV{HOME}/.local/share/vulkan"
-    COMMAND cp -R "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d" "$ENV{HOME}/.local/share/vulkan/."
-    DEPENDS swiftshader-build
-    COMMENT "installing swiftshader in $ENV{HOME}/.local/share/vulkan/icd.d"
-    VERBATIM
-)
-set(SCIN_VULKAN_VALIDATION_OUTPUTS
-    "$ENV{HOME}/.local/share/vulkan/explicit_layer.d/VkLayer_khronos_validation.json"
-    "$ENV{HOME}/.local/share/vulkan/explicit_layer.d/VkLayer_standard_validation.json"
-    "$ENV{HOME}/.local/share/vulkan/explicit_layer.d/libVkLayer_khronos_validation.so"
-)
-add_custom_command(OUTPUT ${SCIN_VULKAN_VALIDATION_OUTPUTS}
-    COMMAND mkdir -p "$ENV{HOME}/.local/share/vulkan"
-    COMMAND cp -R "${SCIN_EXT_INSTALL_DIR}/share/vulkan/explicit_layer.d" "$ENV{HOME}/.local/share/vulkan/."
-    DEPENDS Vulkan-ValidationLayers-install
-    COMMENT "installing Vulkan Validation Layers in $ENV{HOME}/.local/share/vulkan/explicit_layer.d"
-    VERBATIM
-)
-add_custom_target(local-vulkan-utils
-    DEPENDS ${SCIN_SWIFTSHADER_OUTPUTS} ${SCIN_VULKAN_VALIDATION_OUTPUTS}
-)
 

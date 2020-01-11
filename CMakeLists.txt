@@ -23,14 +23,10 @@ endif()
 # is developed in parallel, and is designed to be released together.
 project(Scintillator VERSION 0.0.1 LANGUAGES C CXX)
 
-if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    message(FATAL_ERROR "Scintillator currently requires Clang to build")
-endif()
-
 option(SCIN_BUILD_DOCS
     "Add docs build target to build C++ documentation with Doxygen" ON)
-option(SCIN_USE_SYSTEM_VULKAN
-    "Use the system installed Vulkan library instead of the built-in" OFF)
+option(SCIN_USE_OWN_VULKAN
+    "Use the Vulkan built from third_party/vulkan-dev instead of system-installed Vulkan SDK" OFF)
 
 # If this is a git checkout we can extract the git hash and branch. This code copied verbatim or close to it from the
 # SuperCollider CMake files.
@@ -48,8 +44,8 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 else()
-    set(GIT_BRANCH not_a_git_checkout)
-    set(GIT_COMMIT_HASH na)
+    set(GIT_BRANCH "not_a_git_checkout")
+    set(GIT_COMMIT_HASH "na")
 endif()
 
 message(STATUS "Scintillator Version: ${PROJECT_VERSION}")

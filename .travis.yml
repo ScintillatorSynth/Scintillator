@@ -35,8 +35,12 @@ env:
 before_install:
 
 before_script:
+    - mkdir third_party/vulkan-dev/build && cd third_party/vulkan-dev/build
+    - cmake -DSCIN_USE_OWN_VULKAN=ON ..
+    - make -j2 install
+    - make -j2 local-vulkan-utils
     - mkdir build && cd build
-    - cmake -DSCIN_BUILD_DOCS=ON -DCMAKE_BUILD_TYPE=Coverage -DLLVM_COV="llvm-cov-8" -DLLVM_PROFDATA="llvm-profdata-8" -DPYTHON_EXECUTABLE=`which python3` ..
+    - cmake -DSCIN_BUILD_DOCS=ON -DSCIN_USE_OWN_VULKAN=ON -DCMAKE_BUILD_TYPE=Coverage -DLLVM_COV="llvm-cov-8" -DLLVM_PROFDATA="llvm-profdata-8" -DPYTHON_EXECUTABLE=`which python3` ..
 
 script:
     - make -j2
