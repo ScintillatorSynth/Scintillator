@@ -4,18 +4,22 @@
 
 namespace scin { namespace av {
 
-Context::Context(): m_codec(nullptr), m_context(nullptr) {}
+Frame::Frame() {}
 
-Context::~Context() { destroy(); }
+Frame::~Frame() {}
 
-bool Context::create(Codec codec) {
-    m_codec = avcodec_find_encoder(idForEnum(codec));
-    if (!m_codec) {
+Context::Context(): m_context(nullptr) {}
+
+Context::~Context() { avcodec_free_context(&m_context); }
+
+bool Context::createCodecContext(AVCodecID codecID) {
+    const AVCodec* codec = avcodec_find_encoder(codecID);
+    if (!codec) {
         spdlog::error("failed creating AV codec.");
         return false;
     }
 
-    m_context = avcodec_alloc_context3(m_codec);
+    m_context = avcodec_alloc_context3(codec);
     if (!m_context) {
         spdlog::error("failed creating AV context.");
         return false;
@@ -24,16 +28,32 @@ bool Context::create(Codec codec) {
     return true;
 }
 
-void Context::destroy() { avcodec_free_context(&m_context); }
+Encoder::Encoder() {}
 
-AVCodecID Context::idForEnum(Codec codec) {
-    switch (codec) {
-    case kPNG:
-        return AV_CODEC_ID_PNG;
+Encoder::~Encoder() {}
+
+std::shared_ptr<Frame> Encoder::getEmptyFrame() {
+    std::shared_ptr<Frame> emptyFrame;
+    {
+        std::lock_guard<std::mutex> lock(m_emptyFramesMutex);
+        if (m_emptyFrames.size()) {
+            emptyFrame = m_emptyFrames.front();
+            m_emptyFrames.pop_front();
+        }
     }
 
-    return AV_CODEC_ID_NONE;
+    if (!emptyFrame) {
+        emptyFrame.reset(new Frame());
+    }
+
+    return emptyFrame;
 }
+
+PNGEncoder::PNGEncoder() {}
+
+PNGEncoder::~PNGEncoder() {}
+
+bool PNGEncoder::create() { return createCodecContext(AV_CODEC_ID_PNG); }
 
 } // namespace av
 

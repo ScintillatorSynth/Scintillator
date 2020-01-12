@@ -28,6 +28,7 @@ public:
     VkSwapchainKHR get() { return m_swapchain; }
     std::shared_ptr<Canvas> canvas() { return m_canvas; }
     bool isMailbox() const { return m_presentMode == VK_PRESENT_MODE_MAILBOX_KHR; }
+    std::shared_ptr<ImageSet> images() { return m_images; }
 
 private:
     std::shared_ptr<Device> m_device;

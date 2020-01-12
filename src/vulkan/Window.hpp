@@ -6,17 +6,24 @@
 #include <atomic>
 #include <chrono>
 #include <deque>
+#include <list>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 namespace scin {
 
 class Compositor;
 
+namespace av {
+class Encoder;
+}
+
 namespace vk {
 
 class Canvas;
 class CommandBuffer;
+class CommandPool;
 class Device;
 class ImageSet;
 class Instance;
@@ -46,6 +53,10 @@ public:
      */
     void stop() { m_stop = true; }
 
+    /*! Adds a video or image encoder to the list of encoders to call with readback images from subsequent frames.
+     */
+    void addEncoder(std::shared_ptr<scin::av::Encoder> encoder);
+
     GLFWwindow* get() { return m_window; }
     VkSurfaceKHR getSurface() { return m_surface; }
     int width() const { return m_width; }
@@ -62,10 +73,10 @@ private:
     GLFWwindow* m_window;
     VkSurfaceKHR m_surface;
     std::shared_ptr<Swapchain> m_swapchain;
-    std::shared_ptr<ImageSet> m_readbackImages;
     VkSemaphore m_imageAvailable;
     VkSemaphore m_renderFinished;
     VkFence m_frameRendering;
+    std::unique_ptr<CommandPool> m_commandPool;
 
     // We keep the shared pointers to the command buffers until the frame is being re-rendered. This allows
     // the Compositor to change command buffers arbitrarily, and they won't get reclaimed by the system until
@@ -73,6 +84,7 @@ private:
     std::shared_ptr<CommandBuffer> m_commandBuffers;
     std::atomic<bool> m_stop;
 
+    // Frame rate tracking for free-running mode.
     typedef std::chrono::time_point<std::chrono::high_resolution_clock> TimePoint;
     std::deque<double> m_framePeriods;
     double m_periodSum;
@@ -80,6 +92,13 @@ private:
     TimePoint m_lastFrameTime;
     size_t m_lateFrames;
     TimePoint m_lastReportTime;
+
+    // Video encoding.
+    std::shared_ptr<ImageSet> m_readbackImages;
+    bool m_readbackSupportsBlit;
+    std::mutex m_encodersMutex;
+    std::list<std::shared_ptr<scin::av::Encoder>> m_encoders;
+    std::shared_ptr<CommandBuffer> m_readbackCommands;
 };
 
 } // namespace vk

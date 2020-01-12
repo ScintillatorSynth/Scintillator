@@ -6,16 +6,26 @@ extern "C" {
 #include <libavformat/avformat.h>
 }
 
+#include <deque>
+#include <memory>
+#include <mutex>
+
 namespace scin { namespace av {
 
-/*! Wraps an ffmpeg AVCodecContext, which is a codec-specific decode or encode state.
+class Frame {
+public:
+    Frame();
+    ~Frame();
+};
+
+
+/*! Abstract base class for all media encoding and decoding. Wraps an ffmpeg AVCodecContext, which is a codec-specific
+ *  state.
  */
 class Context {
 public:
-    enum Codec { kPNG };
-
     Context();
-    ~Context();
+    virtual ~Context();
 
     // So we have an encoders and decoders per codec, created with avcodec_find_encoder or decoder.
     // Then we allocate a context with avcodec_alloc_context3, which needs to be freed.
@@ -32,15 +42,38 @@ public:
     // allocate buffer memory with av_frame_get_buffer (q: are frames reusable? they are)
     // we make it writeable, send it to the encoder (via the context), receive one or more packets and write them,
     // then finished.
-    bool create(Codec codec);
-    void destroy();
 
-private:
-    AVCodecID idForEnum(Codec codec);
+    virtual bool create() = 0;
 
-    const AVCodec* m_codec;
+
+protected:
+    bool createCodecContext(AVCodecID codecID);
+
     AVCodecContext* m_context;
 };
+
+/*! Abstract base class for encoders.
+ */
+class Encoder : public Context {
+public:
+    Encoder();
+    virtual ~Encoder();
+
+    std::shared_ptr<Frame> getEmptyFrame();
+
+protected:
+    std::mutex m_emptyFramesMutex;
+    std::deque<std::shared_ptr<Frame>> m_emptyFrames;
+};
+
+class PNGEncoder : public Encoder {
+public:
+    PNGEncoder();
+    virtual ~PNGEncoder();
+
+    bool create() override;
+};
+
 
 } // namespace av
 

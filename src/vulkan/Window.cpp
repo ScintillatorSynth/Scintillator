@@ -1,6 +1,7 @@
 #include "vulkan/Window.hpp"
 
 #include "Compositor.hpp"
+#include "av/Context.hpp"
 #include "vulkan/Canvas.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
@@ -30,7 +31,8 @@ Window::Window(std::shared_ptr<Instance> instance, int width, int height, bool k
     m_lateFrames(0),
     m_imageAvailable(VK_NULL_HANDLE),
     m_renderFinished(VK_NULL_HANDLE),
-    m_frameRendering(VK_NULL_HANDLE) {}
+    m_frameRendering(VK_NULL_HANDLE),
+    m_readbackSupportsBlit(false) {}
 
 Window::~Window() {}
 
@@ -56,11 +58,109 @@ bool Window::createSwapchain(std::shared_ptr<Device> device) {
         return false;
     }
 
+    // Prepare for readback by allocating GPU memory for readback images, checking for efficient copy operations from
+    // the swapbuffer to those readback images, and building command buffers to do the actual readback.
     m_readbackImages.reset(new ImageSet(m_device));
     if (!m_readbackImages->createHostTransferTarget(m_width, m_height, m_swapchain->numberOfImages())) {
         spdlog::error("Window failed to create readback images.");
         return false;
     }
+
+    // Check if the physical device supports from and to the required formats.
+    m_readbackSupportsBlit = true;
+    VkFormatProperties format;
+    vkGetPhysicalDeviceFormatProperties(m_device->getPhysical(), m_swapchain->surfaceFormat().format, &format);
+    if (!(format.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT)) {
+        spdlog::warn("Window swapchain surface doesn't support blit source, readback will be slow.");
+        m_readbackSupportsBlit = false;
+    }
+    vkGetPhysicalDeviceFormatProperties(m_device->getPhysical(), m_readbackImages->format(), &format);
+    if (!(format.linearTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT)) {
+        spdlog::warn("Window readback image format doesn't support blit destination, readback will be slow.");
+        m_readbackSupportsBlit = false;
+    }
+
+    // Build the readback commands.
+    m_commandPool.reset(new CommandPool(m_device));
+    if (!m_commandPool->create()) {
+        spdlog::error("Window failed to create command pool.");
+        return false;
+    }
+    m_readbackCommands = m_commandPool->createBuffers(m_swapchain->numberOfImages(), true);
+    if (!m_readbackCommands) {
+        spdlog::error("Window failed to create command buffers.");
+        return false;
+    }
+    for (auto i = 0; i < m_swapchain->numberOfImages(); ++i) {
+        VkImageSubresourceRange range = {};
+        range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        range.baseMipLevel = 0;
+        range.levelCount = 1;
+        range.baseArrayLayer = 0;
+        range.layerCount = 1;
+
+        // TODO: possible to batch both of these transitions into a single vkCmdPipelineBarrier call, is faster?
+
+        // Transition swapchain image into a transfer source configuration.
+        VkImageMemoryBarrier memoryBarrier = {};
+        memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        memoryBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        memoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        memoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        memoryBarrier.image = m_swapchain->images()->get()[i];
+        memoryBarrier.subresourceRange = range;
+        vkCmdPipelineBarrier(m_readbackCommands->buffer(i), VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
+
+        // Transition readback image to a transfer destination configuration.
+        memoryBarrier.srcAccessMask = 0;
+        memoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        memoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        memoryBarrier.image = m_readbackImages->get()[i];
+        vkCmdPipelineBarrier(m_readbackCommands->buffer(i), VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
+
+        if (m_readbackSupportsBlit) {
+            VkOffset3D offset = {};
+            offset.x = m_width;
+            offset.y = m_height;
+            offset.z = 1;
+            VkImageBlit blitRegion = {};
+            blitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            blitRegion.srcSubresource.layerCount = 1;
+            // src and dstOffsets[0] are all zeros.
+            blitRegion.srcOffsets[1] = offset;
+            blitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            blitRegion.dstSubresource.layerCount = 1;
+            blitRegion.dstOffsets[1] = offset;
+            vkCmdBlitImage(m_readbackCommands->buffer(i), m_swapchain->images()->get()[i],
+                           VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, m_readbackImages->get()[i],
+                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blitRegion, VK_FILTER_NEAREST);
+        } else {
+            // TODO non-blit copyback.
+        }
+
+        // Transition swapchain image back to ideal rendering target configuration.
+        memoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        memoryBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        memoryBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        memoryBarrier.image = m_swapchain->images()->get()[i];
+        vkCmdPipelineBarrier(m_readbackCommands->buffer(i), VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
+
+        // Transition readback image to a format accessible by the host.
+        memoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        memoryBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        memoryBarrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+        memoryBarrier.image = m_readbackImages->get()[i];
+        vkCmdPipelineBarrier(m_readbackCommands->buffer(i), VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
+    }
+
 
     return true;
 }
@@ -95,6 +195,31 @@ void Window::run(std::shared_ptr<Compositor> compositor) {
 
     while (!m_stop && !glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
+
+        // *** At this point in time the CPU could wait on the inflight fence for the frame just submitted (before
+        // advancing the frame counter below), and if there was a copy operation requested this would be the optimal
+        // time to do queue it as the image will not be needed until its turn in the swapchain again, and presumably
+        // the CPU is not needed until it is time to queue another command buffer for the next inflight.
+
+
+        // TODO: this brings the number of mutexes acquired per frame up to 2 (compositor, window encoders) plus one per
+        // active encoder (empty frames queue). Just sayin'. Maybe an atomic or something to indicate that there's
+        // anything in there at all, like a list or deque with atomic size (so thread-safe empty queries) could be
+        // pretty cool.
+        std::vector<std::shared_ptr<scin::av::Frame>> encodeFrames;
+        {
+            std::lock_guard<std::mutex> lock(m_encodersMutex);
+            for (auto it = m_encoders.begin(); it != m_encoders.end(); /* deliberately empty increment */) {
+                std::shared_ptr<scin::av::Frame> frame = (*it)->getEmptyFrame();
+                // Encoder will return nullptr as a signal to stop sending this encoder filled frames.
+                if (frame) {
+                    encodeFrames.push_back(frame);
+                    ++it;
+                } else {
+                    it = m_encoders.erase(it);
+                }
+            }
+        }
 
         // Wait for the next frame to be finished with the last render.
         vkWaitForFences(m_device->get(), 1, &m_frameRendering, VK_TRUE, std::numeric_limits<uint64_t>::max());
@@ -174,11 +299,6 @@ void Window::run(std::shared_ptr<Compositor> compositor) {
         // Queue the frame to be presented as soon as the renderFinished semaphore is signaled by the end of the
         // command buffer execution.
         vkQueuePresentKHR(m_device->presentQueue(), &presentInfo);
-
-        // *** At this point in time the CPU could wait on the inflight fence for the frame just submitted (before
-        // advancing the frame counter below), and if there was a copy operation requested this would be the optimal
-        // time to do queue it as the image will not be needed until its turn in the swapchain again, and presumably
-        // the CPU is not needed until it is time to queue another command buffer for the next inflight.
     }
 
     vkDeviceWaitIdle(m_device->get());
@@ -208,6 +328,11 @@ void Window::destroySwapchain() {
 void Window::destroy() {
     vkDestroySurfaceKHR(m_instance->get(), m_surface, nullptr);
     glfwDestroyWindow(m_window);
+}
+
+void Window::addEncoder(std::shared_ptr<scin::av::Encoder> encoder) {
+    std::lock_guard<std::mutex> lock(m_encodersMutex);
+    m_encoders.push_back(encoder);
 }
 
 std::shared_ptr<Canvas> Window::canvas() { return m_swapchain->canvas(); }
