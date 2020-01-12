@@ -53,10 +53,12 @@ DEFINE_int32(frame_rate, -1,
              "framerate. Zero means non-interactive. Positive means to render at that frame per second rate.");
 DEFINE_bool(create_window, true, "If false, Scintillator will not create a window.");
 
-DEFINE_string(device_uuid, "", "If empty, will pick the highest performance device available. Otherwise, should be as "
-        "many characters of the uuid as needed to uniquely identify the device.");
-DEFINE_bool(swiftshader, false, "If true, ignores --device_uuid and will always match the swiftshader device, if "
-        "present.");
+DEFINE_string(device_uuid, "",
+              "If empty, will pick the highest performance device available. Otherwise, should be as "
+              "many characters of the uuid as needed to uniquely identify the device.");
+DEFINE_bool(swiftshader, false,
+            "If true, ignores --device_uuid and will always match the swiftshader device, if "
+            "present.");
 
 int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
@@ -98,7 +100,7 @@ int main(int argc, char* argv[]) {
     std::string deviceReport = fmt::format("found {} Vulkan devices:\n", chooser.devices().size());
     for (auto info : chooser.devices()) {
         deviceReport += fmt::format("  device name: {}, type: {}, uuid: {}, swiftshader: {}\n", info.name(),
-                info.typeName(), info.uuid(), info.isSwiftShader());
+                                    info.typeName(), info.uuid(), info.isSwiftShader());
     }
     if (FLAGS_print_devices) {
         fmt::print(deviceReport);
@@ -116,15 +118,16 @@ int main(int argc, char* argv[]) {
     // Create Vulkan physical and logical device.
     std::shared_ptr<scin::vk::Device> device;
     // If swiftshader was selected that trumps all other device selection arguments.
-/*    if (FLAGS_swiftshader) {
-        for (auto info : chooser.devices()) {
-            if (info.isSwiftShader()) {
-                spdlog::info("Selecting SwiftShader device.");
-                device.reset(new Device(instance, info));
-                break;
+    /*    if (FLAGS_swiftshader) {
+            for (auto info : chooser.devices()) {
+                if (info.isSwiftShader()) {
+                    spdlog::info("Selecting SwiftShader device.");
+                    device.reset(new Device(instance, info));
+                    break;
+                }
             }
-        }
-    } else */ if (FLAGS_device_uuid.size()) {
+        } else */
+    if (FLAGS_device_uuid.size()) {
         for (auto info : chooser.devices()) {
             if (std::strncmp(FLAGS_device_uuid.data(), info.uuid(), FLAGS_device_uuid.size()) == 0) {
                 if (info.supportsWindow(&window)) {
@@ -133,7 +136,7 @@ int main(int argc, char* argv[]) {
                     break;
                 } else {
                     spdlog::error("Device uuid {}, name {}, does not support rendering to a window.", FLAGS_device_uuid,
-                            info.name());
+                                  info.name());
                     return EXIT_FAILURE;
                 }
             }

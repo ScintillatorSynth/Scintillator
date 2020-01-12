@@ -14,7 +14,9 @@ const std::vector<const char*> windowDeviceExtensions { VK_KHR_SWAPCHAIN_EXTENSI
 
 namespace scin { namespace vk {
 
-DeviceInfo::DeviceInfo(VkPhysicalDevice device): m_physicalDevice(device), m_presentFamilyIndex(-1),
+DeviceInfo::DeviceInfo(VkPhysicalDevice device):
+    m_physicalDevice(device),
+    m_presentFamilyIndex(-1),
     m_graphicsFamilyIndex(-1) {
     vkGetPhysicalDeviceProperties(m_physicalDevice, &m_properties);
     for (auto i = 0; i < VK_UUID_SIZE; ++i) {
@@ -23,9 +25,7 @@ DeviceInfo::DeviceInfo(VkPhysicalDevice device): m_physicalDevice(device), m_pre
 }
 
 // static
-const std::vector<const char*>& DeviceInfo::windowExtensions() {
-    return windowDeviceExtensions;
-}
+const std::vector<const char*>& DeviceInfo::windowExtensions() { return windowDeviceExtensions; }
 
 bool DeviceInfo::supportsWindow(Window* window) {
     // TODO: check if swiftshader crash goes away when trying to render to windows

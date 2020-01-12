@@ -49,4 +49,3 @@ private:
 } // namespace scin
 
 #endif // SRC_VULKAN_DEVICE_INFO_
-
