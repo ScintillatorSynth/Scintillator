@@ -1,40 +1,39 @@
 #ifndef SRC_VULKAN_DEVICE_CHOOSER_HPP_
 #define SRC_VULKAN_DEVICE_CHOOSER_HPP_
 
-#include "vulkan/Vulkan.hpp"
+#include "vulkan/DeviceInfo.hpp"
 
 #include <array>
-#include <cstring>
 #include <memory>
 #include <vector>
 
 namespace scin { namespace vk {
 
 class Instance;
+class Device;
+class Window;
 
-struct DeviceInfo {
-    enum Type { kCPU, kDiscreteGPU, kIntegratedGPU, kOther };
-    DeviceInfo(Type deviceType, std::string deviceName, const uint8_t* deviceUUID): type(deviceType), name(deviceName) {
-        std::memcpy(uuid.data(), deviceUUID, sizeof(uuid));
-    }
-
-    Type type;
-    std::string name;
-    std::array<uint8_t, VK_UUID_SIZE> uuid;
-};
-
-/* Enumerates available Vulkan Devices, can pick the best suitable, locates SwiftShader.
+/* Enumerates available Vulkan Devices and populates an internal list of DeviceInfo objects.
  */
 class DeviceChooser {
 public:
     DeviceChooser(std::shared_ptr<Instance> instance);
     ~DeviceChooser();
 
-    const std::vector<DeviceInfo>& enumerateAllDevices();
+    /*! Query Vulkan and build the internal list of DeviceInfo structs.
+     */
+    void enumerateAllDevices();
+
+    const std::vector<DeviceInfo>& devices() const { return m_devices; }
+
+    /*! Returns the index of the most performant device, or -1 if no devices were found.
+     */
+    int bestDeviceIndex() const { return m_bestDeviceIndex; }
 
 private:
     std::shared_ptr<Instance> m_instance;
     std::vector<DeviceInfo> m_devices;
+    int m_bestDeviceIndex;
 };
 
 } // namespace vk

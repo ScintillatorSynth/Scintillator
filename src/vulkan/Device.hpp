@@ -8,9 +8,11 @@
 #include "vk_mem_alloc.h"
 
 #include <memory>
+#include <string>
 
 namespace scin { namespace vk {
 
+class DeviceInfo;
 class Instance;
 class Window;
 
@@ -18,7 +20,7 @@ class Window;
 // creation, and destruction.
 class Device {
 public:
-    Device(std::shared_ptr<Instance> instance);
+    Device(std::shared_ptr<Instance> instance, const DeviceInfo& deviceInfo);
     ~Device();
 
     // Try to find a suitable physical device, returns true if one exists.
@@ -40,6 +42,7 @@ public:
 private:
     std::shared_ptr<Instance> m_instance;
     VkPhysicalDevice m_physicalDevice;
+    std::string m_name;
     int m_graphicsFamilyIndex;
     int m_presentFamilyIndex;
     VkDevice m_device;

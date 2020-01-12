@@ -29,6 +29,7 @@
 
 // Command-line options specified to gflags.
 DEFINE_bool(print_version, false, "Print the Scintillator version and exit.");
+DEFINE_bool(print_devices, false, "Print the detected devices and exit.");
 DEFINE_int32(udp_port_number, 5511, "A port number 1024-65535.");
 DEFINE_string(bind_to_address, "127.0.0.1", "Bind the UDP socket to this address.");
 
@@ -47,19 +48,15 @@ DEFINE_int32(async_worker_threads, 2,
 
 DEFINE_bool(vulkan_validation, true, "Enable Vulkan validation layers.");
 
-// If we're tracking window framerate we can render directly to the swapchain images. In any other scenario we need
-// a separate set of images to render to at the desired framerate, then always blit the most recently rendered frame
-// to the screen. We might just always do a blit but it feels like an important optimization to be able to skip the
-// blit if possible. Presenting the next image in a swapchain doesn't necessarily have to happen at every possible
-// present interval?
-// Try this - windows are always double-buffered, and render directly to their framebuffers. Window either free-runs,
-// in which case the draw/present relationship is 1:1, and we block on drawing the next frame until it's done
-// presenting. If it's not free-running, we create a double-buffered offscreen render context. Window free-runs by
-// blitting most recent frame. And we update the offscreen according to the schedule, *on a separate thread*
 DEFINE_int32(frame_rate, -1,
              "Target framerate in frames per second. Negative number means track windowing system "
              "framerate. Zero means non-interactive. Positive means to render at that frame per second rate.");
 DEFINE_bool(create_window, true, "If false, Scintillator will not create a window.");
+
+DEFINE_string(device_uuid, "", "If empty, will pick the highest performance device available. Otherwise, should be as "
+        "many characters of the uuid as needed to uniquely identify the device.");
+DEFINE_bool(swiftshader, false, "If true, ignores --device_uuid and will always match the swiftshader device, if "
+        "present.");
 
 int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
@@ -86,7 +83,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    // ========== glfw setup.
+    // ========== glfw setup, this also loads Vulkan for us via the Vulkan-Loader.
     glfwInit();
 
     // ========== Vulkan setup.
@@ -96,9 +93,19 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    // TODO: do more with this?
     scin::vk::DeviceChooser chooser(instance);
     chooser.enumerateAllDevices();
+    std::string deviceReport = fmt::format("found {} Vulkan devices:\n", chooser.devices().size());
+    for (auto info : chooser.devices()) {
+        deviceReport += fmt::format("  device name: {}, type: {}, uuid: {}, swiftshader: {}\n", info.name(),
+                info.typeName(), info.uuid(), info.isSwiftShader());
+    }
+    if (FLAGS_print_devices) {
+        fmt::print(deviceReport);
+        return EXIT_SUCCESS;
+    } else {
+        spdlog::info(deviceReport);
+    }
 
     scin::vk::Window window(instance, FLAGS_width, FLAGS_height, FLAGS_keep_on_top, FLAGS_frame_rate);
     if (!window.create()) {
@@ -107,7 +114,44 @@ int main(int argc, char* argv[]) {
     }
 
     // Create Vulkan physical and logical device.
-    std::shared_ptr<scin::vk::Device> device(new scin::vk::Device(instance));
+    std::shared_ptr<scin::vk::Device> device;
+    // If swiftshader was selected that trumps all other device selection arguments.
+/*    if (FLAGS_swiftshader) {
+        for (auto info : chooser.devices()) {
+            if (info.isSwiftShader()) {
+                spdlog::info("Selecting SwiftShader device.");
+                device.reset(new Device(instance, info));
+                break;
+            }
+        }
+    } else */ if (FLAGS_device_uuid.size()) {
+        for (auto info : chooser.devices()) {
+            if (std::strncmp(FLAGS_device_uuid.data(), info.uuid(), FLAGS_device_uuid.size()) == 0) {
+                if (info.supportsWindow(&window)) {
+                    spdlog::info("Device uuid {} match, selecting {}", FLAGS_device_uuid, info.name());
+                    device.reset(new scin::vk::Device(instance, info));
+                    break;
+                } else {
+                    spdlog::error("Device uuid {}, name {}, does not support rendering to a window.", FLAGS_device_uuid,
+                            info.name());
+                    return EXIT_FAILURE;
+                }
+            }
+        }
+    }
+
+    if (!device && chooser.bestDeviceIndex() >= 0) {
+        auto info = chooser.devices().at(chooser.bestDeviceIndex());
+        if (info.supportsWindow(&window)) {
+            spdlog::info("Choosing fastest device class {}, device {}", info.typeName(), info.name());
+            device.reset(new scin::vk::Device(instance, info));
+        }
+    }
+
+    if (!device) {
+        spdlog::error("failed to find a suitable Vulkan device.");
+        return EXIT_FAILURE;
+    }
     if (!device->create(&window)) {
         spdlog::error("unable to create Vulkan device.");
         return EXIT_FAILURE;
