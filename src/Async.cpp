@@ -2,6 +2,7 @@
 
 #include "Compositor.hpp"
 #include "ScinthDef.hpp"
+#include "av/CodecChooser.hpp"
 #include "core/Archetypes.hpp"
 
 #include "fmt/core.h"

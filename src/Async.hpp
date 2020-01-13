@@ -14,6 +14,10 @@
 
 namespace scin {
 
+namespace av {
+class CodecChooser;
+}
+
 namespace core {
 class Archetypes;
 }

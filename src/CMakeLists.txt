@@ -85,6 +85,8 @@ set(scintillator_synth_files
     ScinthDef.hpp
     scinsynth.cpp
 
+    av/CodecChooser.cpp
+    av/CodecChooser.hpp
     av/Context.cpp
     av/Context.hpp
 

@@ -2,6 +2,7 @@
 #include "Compositor.hpp"
 #include "OscHandler.hpp"
 #include "Version.hpp"
+#include "av/CodecChooser.hpp"
 #include "core/Archetypes.hpp"
 #include "core/FileSystem.hpp"
 #include "core/LogLevels.hpp"

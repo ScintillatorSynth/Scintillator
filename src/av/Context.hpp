@@ -9,6 +9,8 @@ extern "C" {
 #include <deque>
 #include <memory>
 #include <mutex>
+#include <string>
+#include <vector>
 
 namespace scin { namespace av {
 
