@@ -173,13 +173,14 @@ int main(int argc, char* argv[]) {
     }
 
     std::shared_ptr<scin::core::Archetypes> archetypes(new scin::core::Archetypes());
-    std::shared_ptr<scin::Async> async(new scin::Async(archetypes, compositor));
+    std::shared_ptr<scin::av::CodecChooser> codecChooser(new scin::av::CodecChooser());
+    std::shared_ptr<scin::Async> async(new scin::Async(archetypes, compositor, codecChooser));
     async->run(FLAGS_async_worker_threads);
 
     // Chain async calls to load VGens, then ScinthDefs.
-    async->vgenLoadDirectory(quarkPath / "vgens", [async, &quarkPath, compositor](bool) {
+    async->vgenLoadDirectory(quarkPath / "vgens", [async, &quarkPath, compositor](int) {
         async->scinthDefLoadDirectory(quarkPath / "scinthdefs",
-                                      [](bool) { spdlog::info("finished loading predefined VGens and ScinthDefs."); });
+                                      [](int) { spdlog::info("finished loading predefined VGens and ScinthDefs."); });
     });
 
     if (!window.createSyncObjects()) {

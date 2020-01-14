@@ -32,6 +32,7 @@ public:
         m_sendQuitDone(false),
         m_dumpOSC(false) {}
 
+    // TODO: fixup callback types and response messages for the parsing/loading functions.
     void ProcessMessage(const osc::ReceivedMessage& message, const IpEndpointName& endpoint) override {
         try {
             if (m_dumpOSC) {
@@ -189,6 +190,35 @@ public:
                 int nodeID = (args++)->AsInt32();
                 // TODO: handle rest of message in terms of placement and group support.
                 m_compositor->cue(scinthDef, nodeID);
+            } break;
+
+            case kMediaTypeTagQuery: {
+                osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
+                std::string typeTag;
+                if (!args->IsNil()) {
+                    typeTag = (args++)->AsString();
+                } else {
+                    ++args;
+                }
+                std::string mimeType;
+                if (args != message.ArgumentsEnd()) {
+                    if (!args->IsNil()) {
+                        mimeType = (args++)->AsString();
+                    }
+                }
+                m_async->mediaTypeTagQuery(typeTag, mimeType, [this, endpoint](std::string typeTag) {
+                    std::array<char, 128> buffer;
+                    UdpTransmitSocket socket(endpoint);
+                    osc::OutboundPacketStream p(buffer.data(), sizeof(buffer));
+                    p << osc::BeginMessage("/scin_done");
+                    p << "/scin_media_typeTagQuery";
+                    p << typeTag.data();
+                    p << osc::EndMessage;
+                    socket.Send(p.Data(), p.Size());
+                });
+            } break;
+
+            case kNRTScreenShot: {
             } break;
             }
         } catch (osc::Exception e) {

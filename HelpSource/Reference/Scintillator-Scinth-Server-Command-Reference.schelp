@@ -166,3 +166,33 @@ subsection::/scin_g_clearColor
 Sets the background color for the provided group.
 
 TODO
+
+section::Media Commands
+
+subsection::/scin_media_typeTagQuery
+
+Query the server for identification of codec and container, as well as support for, a given type of media as described by a pre-recorded typeTag or media mime type (like code::image/png::). For type tags the encoding/decoding fields are ignored as long as at least one is present, and the server will return the supported encode/decode configuration.
+
+table::
+## strong::string:: || (optional) typeTag if known, nil otherwise.
+## strong::string:: || (optional) mime type if known, nil otherwise.
+::
+
+At least one of the fields needs to be non-nil.
+
+subsection::/scin_media_typeTagFile
+
+definitionlist::
+## Asynchronous. || Replies to sender with strong::/scin_done /scin_media_typeTag::, followed by the media shortName (or nil if not found/not supported) when complete.
+::
+
+section::Non Real Time Commands
+
+subsection::/scin_nrt_screenShot
+
+Server will save a screenshot image of the next rendered frame to the supplied file name.
+
+table::
+## strong::string:: || file name and path to save the screenshot to.
+## strong::string:: || (optional) shortName of image media type, can be a hint to the encoder about what format to save the image as.
+::

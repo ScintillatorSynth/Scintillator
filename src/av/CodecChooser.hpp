@@ -1,6 +1,8 @@
 #ifndef SRC_AV_CODEC_CHOOSER_HPP_
 #define SRC_AV_CODEC_CHOOSER_HPP_
 
+#include "core/FileSystem.hpp"
+
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -19,6 +21,12 @@ class CodecChooser {
 public:
     CodecChooser();
     ~CodecChooser();
+
+    std::string getTypeTag(const std::string& typeTag, const std::string& mimeType);
+    std::string getTypeTagFromFile(fs::path filePath);
+
+    std::string containerNameFromTag(const std::string& typeTag);
+    std::string codecNameFromTag(const std::string& typeTag);
 
 private:
 };

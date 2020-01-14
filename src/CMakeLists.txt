@@ -150,6 +150,9 @@ if (SCIN_USE_OWN_VULKAN)
     target_link_libraries(scinsynth
         "${SCIN_EXT_INSTALL_DIR}/lib/libvulkan.so"
     )
+else()
+    find_package(Vulkan REQUIRED FATAL_ERROR)
+    target_link_libraries(scinsynth "${Vulkan_LIBRARY}")
 endif()
 
 #### Automatic Code Formatting and Linting
