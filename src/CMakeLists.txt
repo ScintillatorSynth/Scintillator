@@ -104,10 +104,14 @@ set(scintillator_synth_files
     vulkan/DeviceChooser.hpp
     vulkan/DeviceInfo.cpp
     vulkan/DeviceInfo.hpp
+    vulkan/Framebuffer.cpp
+    vulkan/Framebuffer.hpp
     vulkan/ImageSet.cpp
     vulkan/ImageSet.hpp
     vulkan/Instance.cpp
     vulkan/Instance.hpp
+    vulkan/Offscreen.cpp
+    vulkan/Offscreen.hpp
     vulkan/Pipeline.cpp
     vulkan/Pipeline.hpp
     vulkan/Shader.cpp

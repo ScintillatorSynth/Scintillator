@@ -19,7 +19,14 @@ public:
     Swapchain(std::shared_ptr<Device> device);
     ~Swapchain();
 
-    bool create(Window* window, bool useFIFO);
+    /*! Creates the swapchain from the window surface.
+     *
+     * \param directRendering If true the swapchain will configure the swapchain images for rendering, if false it is
+     *        assumed the rendering is happening in an offscreen framebuffer, and the swapchain images are configured
+     *        for transfers.
+     * \return True on success, false on error.
+     */
+    bool create(Window* window, bool directRendering);
     void destroy();
 
     VkSurfaceFormatKHR surfaceFormat() { return m_surfaceFormat; }
@@ -27,13 +34,11 @@ public:
     uint32_t numberOfImages() const { return m_numberOfImages; }
     VkSwapchainKHR get() { return m_swapchain; }
     std::shared_ptr<Canvas> canvas() { return m_canvas; }
-    bool isMailbox() const { return m_presentMode == VK_PRESENT_MODE_MAILBOX_KHR; }
     std::shared_ptr<ImageSet> images() { return m_images; }
 
 private:
     std::shared_ptr<Device> m_device;
     VkSurfaceFormatKHR m_surfaceFormat;
-    VkPresentModeKHR m_presentMode;
     VkExtent2D m_extent;
     uint32_t m_numberOfImages;
     VkSwapchainKHR m_swapchain;

@@ -23,10 +23,11 @@ namespace vk {
 
 class Canvas;
 class CommandBuffer;
-class CommandPool;
 class Device;
 class ImageSet;
 class Instance;
+class Offscreen;
+class RenderSync;
 class Swapchain;
 
 /* While technically more a GLFW object than a Vulkan one, Window also maintains a VkSurfaceKHR handle, so lives with
@@ -53,10 +54,6 @@ public:
      */
     void stop() { m_stop = true; }
 
-    /*! Adds a video or image encoder to the list of encoders to call with readback images from subsequent frames.
-     */
-    void addEncoder(std::shared_ptr<scin::av::Encoder> encoder);
-
     GLFWwindow* get() { return m_window; }
     VkSurfaceKHR getSurface() { return m_surface; }
     int width() const { return m_width; }
@@ -64,25 +61,30 @@ public:
     std::shared_ptr<Canvas> canvas();
 
 private:
+    void runDirectRendering(std::shared_ptr<Compositor> compositor);
+    void runFixedFrameRate(std::shared_ptr<Compositor> compositor);
+
     std::shared_ptr<Instance> m_instance;
     std::shared_ptr<Device> m_device;
     int m_width;
     int m_height;
     bool m_keepOnTop;
     int m_frameRate;
+    bool m_directRendering;
     GLFWwindow* m_window;
     VkSurfaceKHR m_surface;
     std::shared_ptr<Swapchain> m_swapchain;
-    VkSemaphore m_imageAvailable;
-    VkSemaphore m_renderFinished;
-    VkFence m_frameRendering;
-    std::unique_ptr<CommandPool> m_commandPool;
+    std::unique_ptr<RenderSync> m_renderSync;
 
     // We keep the shared pointers to the command buffers until the frame is being re-rendered. This allows
     // the Compositor to change command buffers arbitrarily, and they won't get reclaimed by the system until
     // they are known finished rendering.
     std::shared_ptr<CommandBuffer> m_commandBuffers;
     std::atomic<bool> m_stop;
+
+    // If in non realtime mode, we render to an offscreen framebuffer and blit the latest available image to the
+    // swapchain images.
+    std::shared_ptr<Offscreen> m_offscreen;
 
     // Frame rate tracking for free-running mode.
     typedef std::chrono::time_point<std::chrono::high_resolution_clock> TimePoint;
@@ -93,12 +95,6 @@ private:
     size_t m_lateFrames;
     TimePoint m_lastReportTime;
 
-    // Video encoding.
-    std::shared_ptr<ImageSet> m_readbackImages;
-    bool m_readbackSupportsBlit;
-    std::mutex m_encodersMutex;
-    std::list<std::shared_ptr<scin::av::Encoder>> m_encoders;
-    std::shared_ptr<CommandBuffer> m_readbackCommands;
 };
 
 } // namespace vk

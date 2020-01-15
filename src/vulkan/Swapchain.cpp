@@ -22,7 +22,7 @@ Swapchain::Swapchain(std::shared_ptr<Device> device):
 
 Swapchain::~Swapchain() { destroy(); }
 
-bool Swapchain::create(Window* window, bool useFIFO) {
+bool Swapchain::create(Window* window, bool directRendering) {
     // Pick swap chain format from available options.
     uint32_t formatCount;
     vkGetPhysicalDeviceSurfaceFormatsKHR(m_device->getPhysical(), window->getSurface(), &formatCount, nullptr);
@@ -51,22 +51,6 @@ bool Swapchain::create(Window* window, bool useFIFO) {
     std::vector<VkPresentModeKHR> presentModes(presentModeCount);
     vkGetPhysicalDeviceSurfacePresentModesKHR(m_device->getPhysical(), window->getSurface(), &presentModeCount,
                                               presentModes.data());
-    m_presentMode = VK_PRESENT_MODE_FIFO_KHR;
-
-    if (!useFIFO) {
-        for (const auto& mode : presentModes) {
-            if (mode == VK_PRESENT_MODE_MAILBOX_KHR) {
-                m_presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
-                break;
-            }
-        }
-    }
-
-    if (m_presentMode == VK_PRESENT_MODE_FIFO_KHR) {
-        spdlog::info("using FIFO swapchain present mode.");
-    } else if (m_presentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-        spdlog::info("using MAILBOX swapchain present mode.");
-    }
 
     // Choose swap extent, pixel dimensions of swap chain.
     VkSurfaceCapabilitiesKHR capabilities;
@@ -100,7 +84,11 @@ bool Swapchain::create(Window* window, bool useFIFO) {
     createInfo.imageColorSpace = m_surfaceFormat.colorSpace;
     createInfo.imageExtent = m_extent;
     createInfo.imageArrayLayers = 1;
-    createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    if (directRendering) {
+        createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    } else {
+        createInfo.imageUsage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+    }
 
     uint32_t queueFamilyIndices[] = { static_cast<uint32_t>(m_device->graphicsFamilyIndex()),
                                       static_cast<uint32_t>(m_device->presentFamilyIndex()) };
@@ -117,7 +105,7 @@ bool Swapchain::create(Window* window, bool useFIFO) {
 
     createInfo.preTransform = capabilities.currentTransform;
     createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    createInfo.presentMode = m_presentMode;
+    createInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
     createInfo.clipped = VK_TRUE;
     createInfo.oldSwapchain = VK_NULL_HANDLE;
 
