@@ -11,21 +11,25 @@ RenderSync::RenderSync(std::shared_ptr<Device> device): m_device(device) {}
 
 RenderSync::~RenderSync() { destroy(); }
 
-bool create(size_t inFlightFrames) {
-    m_imageAvailable.reserve(inFlightFrames);
-    m_renderFinished.reserve(inFlightFrames);
+bool create(size_t inFlightFrames, bool makeSemaphores) {
+    if (makeSemaphores) {
+        m_imageAvailable.reserve(inFlightFrames);
+        m_renderFinished.reserve(inFlightFrames);
+    }
     m_frameRendering.reserve(inFlightFrames);
 
     for (auto i = 0; i < inFlightFrames; ++i) {
-        VkSemaphoreCreateInfo semaphoreInfo = {};
-        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-        if (vkCreateSemaphore(m_device->get(), &semaphoreInfo, nullptr, &m_imageAvailable[i]) != VK_SUCCESS) {
-            spdlog::error("RenderSync failed to create image available semaphore.");
-            return false;
-        }
-        if (vkCreateSemaphore(m_device->get(), &semaphoreInfo, nullptr, &m_renderFinished[i]) != VK_SUCCESS) {
-            spdlog::error("RenderSync failed to create render finished semaphore.");
-            return false;
+        if (makeSemaphores) {
+            VkSemaphoreCreateInfo semaphoreInfo = {};
+            semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+            if (vkCreateSemaphore(m_device->get(), &semaphoreInfo, nullptr, &m_imageAvailable[i]) != VK_SUCCESS) {
+                spdlog::error("RenderSync failed to create image available semaphore.");
+                return false;
+            }
+            if (vkCreateSemaphore(m_device->get(), &semaphoreInfo, nullptr, &m_renderFinished[i]) != VK_SUCCESS) {
+                spdlog::error("RenderSync failed to create render finished semaphore.");
+                return false;
+            }
         }
 
         VkFenceCreateInfo fenceInfo = {};

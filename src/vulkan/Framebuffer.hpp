@@ -1,6 +1,8 @@
 #ifndef SRC_VULKAN_FRAMEBUFFER_HPP_
 #define SRC_VULKAN_FRAMEBUFFER_HPP_
 
+#include "vulkan/Vulkan.hpp"
+
 #include <memory>
 
 namespace scin { namespace vk {

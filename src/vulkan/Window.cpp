@@ -85,16 +85,12 @@ void Window::destroy() {
     glfwDestroyWindow(m_window);
 }
 
-void Window::addEncoder(std::shared_ptr<scin::av::Encoder> encoder) {
-    std::lock_guard<std::mutex> lock(m_encodersMutex);
-    m_encoders.push_back(encoder);
-}
 
 std::shared_ptr<Canvas> Window::canvas() { return m_swapchain->canvas(); }
 
 void Window::runDirectRendering(std::shared_ptr<Compositor> compositor) {
     m_renderSync.reset(new RenderSync(m_device));
-    if (!m_renderSync->create(1)) {
+    if (!m_renderSync->create(1, true)) {
         spdlog::error("failed to create direct rendering synchronization primitives.");
         return;
     }
@@ -107,7 +103,7 @@ void Window::runDirectRendering(std::shared_ptr<Compositor> compositor) {
         glfwPollEvents();
 
         // Wait for the next frame to be finished with the last render.
-        renderSync->waitForFrame(0);
+        m_renderSync->waitForFrame(0);
 
         // Ask Vulkan which is the next available image in the swapchain, wait indefinitely for it to become
         // available.

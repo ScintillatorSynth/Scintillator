@@ -21,15 +21,17 @@ public:
      * simultaneously in-progress frames.
      *
      * \param inflightFrames How many sets of sync primitives to make. Should be > 0.
+     * \param makeSemaphores If the semaphores (mostly useful for Swapchains) should be made.
      * \return true on success, false on failure.
      */
-    bool create(size_t inFlightFrames);
+    bool create(size_t inFlightFrames, bool makeSemaphores);
 
     /*! Release synchronization primitives.
      */
     void destroy();
 
     void waitForFrame(size_t index);
+    // Requires that the semaphores were made.
     uint32_t acquireNextImage(size_t index, Swapchain* swapchain);
     void resetFrame(size_t index);
 

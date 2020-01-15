@@ -6,12 +6,14 @@
 
 namespace scin { namespace vk {
 
-Offscreen::Offscreen(std::shared_ptr<Device> device): m_device(device), m_framebuffer(new Framebuffer(device)),
-    m_renderSync(new RenderSync(device)), m_commandPool(new CommandPool(device)) {}
+Offscreen::Offscreen(std::shared_ptr<Device> device): m_device(device), m_quit(false)
+                     m_framebuffer(new Framebuffer(device)), m_renderSync(new RenderSync(device))
+                     m_commandPool(new CommandPool(device)) {}
 
 Offscreen::~Offscreen() { destroy(); }
 
-bool Offscreen::create(int width, int height, size_t numberOfImages) {
+bool Offscreen::create(std::shared_ptr<Compositor> compositor, int width, int height, size_t numberOfImages) {
+    m_compositor(compositor);
     m_numberOfImages = std::min(numberOfImages, 2);
     m_pipelineDepth = m_numberOfImages - 1;
 
@@ -67,8 +69,6 @@ bool Offscreen::create(int width, int height, size_t numberOfImages) {
         range.levelCount = 1;
         range.baseArrayLayer = 0;
         range.layerCount = 1;
-
-        // TODO: possible to batch both of these transitions into a single vkCmdPipelineBarrier call, is faster?
 
         // Transition swapchain image into a transfer source configuration.
         VkImageMemoryBarrier memoryBarrier = {};
@@ -129,13 +129,41 @@ bool Offscreen::create(int width, int height, size_t numberOfImages) {
         vkCmdPipelineBarrier(m_readbackCommands->buffer(i), VK_PIPELINE_STAGE_TRANSFER_BIT,
                              VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
     }
+
+    m_render = false;
+    m_frameRate = 0;
+    m_renderThread = std::thread(&Offscreen::threadMain, this);
 }
 
-void Offscreen::run(int frameRate, std::shared_ptr<Compositor> compositor) {
+void Offscreen::addEncoder(std::shared_ptr<scin::av::Encoder> encoder) {
+    std::lock_guard<std::mutex> lock(m_encodersMutex);
+    m_encoders.push_back(encoder);
+}
+
+void Offscreen::threadMain(int frameRate, std::shared_ptr<Compositor> compositor) {
+    spdlog::info("Offscreen render thread starting up.");
+
     double time = 0.0;
     size_t frameNumber = 0;
+    size_t frameIndex = 0;
 
-    while (!m_stop) {
+    while (!m_quit) {
+        double deltaTime = 0.0;
+        {
+            std::unique_lock<std::mutex> lock(m_renderMutex);
+            m_renderCondition.wait(lock, [this] { return m_quit || m_render; });
+            if (m_quit) {
+                break;
+            }
+            if (!m_render) {
+                continue;
+            }
+            // If framerate is 0 then we turn the render flag back off to block again after this iteration.
+            if (m_frameRate == 0) {
+                m_render = false;
+            }
+            deltaTime = m_deltaTime;
+        }
 
         // Build list of active encoder frames we need to fill, if any.
         std::vector<std::shared_ptr<scin::av::Frame>> encodeFrames;
@@ -152,6 +180,8 @@ void Offscreen::run(int frameRate, std::shared_ptr<Compositor> compositor) {
                 }
             }
         }
+
+        m_renderSync->waitForFrame(frameIndex);
 
 
     }

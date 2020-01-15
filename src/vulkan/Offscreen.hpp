@@ -1,9 +1,11 @@
 #ifndef SRC_VULKAN_OFFSCREEN_HPP_
 #define SRC_VULKAN_OFFSCREEN_HPP_
 
+#include <atomic>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <thread>
 
 namespace scin { namespace vk {
 
@@ -20,15 +22,16 @@ public:
     ~Offscreen();
 
     /*! Offscreen will pipeline rendering to numberOfImages - 1 frames, keeping one image available for
-     * readback/encoding as well as rendering to any window that may be present.
+     * readback/encoding as well as rendering to any window that may be present. Also starts the render thread, in a
+     * paused state.
      *
      * \param numberOfImages Should be at least 2.
      */
-    bool create(int width, int height, size_t numberOfImages, // ?? compositor);
+    bool create(std::shared_ptr<Compositor> compositor, int width, int height, size_t numberOfImages);
 
     /*! Start a thread to render at the provided framerate.
      */
-    void start(int frameRate, std::shared_ptr<Compositor> compositor);
+    void start(int frameRate);
 
     /*! Adds a video or image encoder to the list of encoders to call with readback images from subsequent frames.
      */
@@ -58,7 +61,10 @@ public:
     void destroy();
 
 private:
+    void threadMain();
+
     std::shared_ptr<Device> m_device;
+    std::atomic<bool> m_quit;
 
     size_t m_numberOfImages;
     size_t m_pipelineDepth;
@@ -66,6 +72,7 @@ private:
     std::shared_ptr<Framebuffer> m_framebuffer;
     std::unique_ptr<RenderSync> m_renderSync;
     std::unique_ptr<CommandPool> m_commandPool;
+    std::shared_ptr<Compositor> m_compositor;
 
     std::shared_ptr<ImageSet> m_readbackImages;
     bool m_readbackSupportsBlit;
@@ -73,11 +80,14 @@ private:
     std::list<std::shared_ptr<scin::av::Encoder>> m_encoders;
     std::shared_ptr<CommandBuffer> m_readbackCommands;
 
-    // Protects the render flag and the framerate.
+    std::thread m_renderThread;
+
+    // Protects the render flag and the framerate, and deltaTime.
     std::mutex m_renderMutex;
     std::condition_variable m_renderCondition;
     bool m_render;
     int m_frameRate;
+    double m_deltaTime;
 };
 
 } // namespace vk
