@@ -99,7 +99,7 @@ bool Offscreen::create(std::shared_ptr<Compositor> compositor, int width, int he
             VkImageBlit blitRegion = {};
             blitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             blitRegion.srcSubresource.layerCount = 1;
-            // src and dstOffsets[0] are all zeros.
+            // srcOffsets[0] and dstOffsets[0] are all zeros.
             blitRegion.srcOffsets[1] = offset;
             blitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             blitRegion.dstSubresource.layerCount = 1;
@@ -183,7 +183,41 @@ void Offscreen::threadMain(int frameRate, std::shared_ptr<Compositor> compositor
 
         m_renderSync->waitForFrame(frameIndex);
 
+        // There's two possibilities to consider. The first extreme is that the GPU is rendering frames much faster
+        // than they can be consumed by either encoder or the window update. Let's say > 2x the window update rate.
+        // The other extreme is that the GPU is taking much longer than the CPU. So either we're CPU bound or GPU bound.
 
+        // The outputs of the rendering on an individual frame are always going to be copy operations. For encoding we
+        // will want to copy the rendered frame to a GPU buffer that is accessible by the host, then that can go into a
+        // queue for encoding. For window updates we will want to copy the rendered frame to the swapchain images with
+        // low latency.
+
+        // Let's consider the first use case, copyback operations for encoding. If the CPU is slow compared to the GPU
+        // this will ultimately overwhelm memory as we'll have too many frames waiting for encode. There should be some
+        // maximum outstanding number of frames waiting, and then the render thread should block until we're under that
+        // limit. If the converse is true, the GPU is slow compared to the CPU, this doesn't seem to be an issue because
+        // the encode thread will block until it has something to encode. SO - there needs to be a way to block the
+        // render thread until there is a buffer available when the system has allocated the maximum number of
+        // outstanding buffers.
+
+        // For the purposes of Window updates what Window needs is low-latency access to a blit source. In the fast
+        // GPU case this can mean that we won't blit every frame, far from it. But in the slow GPU case this could
+        // mean either we blit the same frame multiple times, which is wasteful, or we don't update the swapchain
+        // until there's an updated image (or a request for redraw, or some timeout). It seems as if both parties need
+        // to be able to indicate new imagery is available. More specifically the window update thread may want a way
+        // to wait until there's a fresh image, or some timeout, or an interrupt occurs asking for a repaint. And the
+        // Offscreen, in the fast case, needs a way to understand that an additional blit is wasteful.
+        // How about this - we keep two intermediate image buffers. When request blit is called we mark one of the
+
+        // images as in use by the Window, and return it. We also tell the render loop to blit to the next one on the
+        // next render frame. Every time Window requests a new image it gets the current one until the new one is marked
+        // by the render frame as ready. So frames have 3 states - In Use, Update Requested, Ready. Because rendering
+        // is pipelined there needs to be some general consideration of overall frame "readiness". I think we blit
+        // before we re-render. The idea being that if the CPU is slow the GPU is pipelined well ahead of this and
+        // we are waiting on frame availability for new renders. This means that the subsequent buffers are also ready
+        // but as this is NRT we either need this blit for encoding and/or we need an updated framebuffer, but latency
+        // is not as important to prioritize building a system that always gives the framebuffer the latest blit.
+        // If the GPU is slow then the pipeline isn't full and this framebuffer is more recent? or even older?
     }
 }
 
