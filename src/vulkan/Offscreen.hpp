@@ -7,7 +7,13 @@
 #include <mutex>
 #include <thread>
 
-namespace scin { namespace vk {
+namespace scin {
+
+namespace av {
+class BufferPool;
+}
+
+namespace vk {
 
 class Compositor;
 class Device;
@@ -74,6 +80,7 @@ private:
     std::shared_ptr<Framebuffer> m_framebuffer;
     std::unique_ptr<RenderSync> m_renderSync;
     std::unique_ptr<CommandPool> m_commandPool;
+    std::unique_ptr<scin::av::BufferPool> m_bufferPool;
     std::shared_ptr<Compositor> m_compositor;
 
     // threadMain-only access

@@ -9,6 +9,8 @@ sudo apt-get install libxinerama-dev libxcursor-dev libxi-dev libxrandr-dev gper
 libavformat-dev libwayland-dev
 ```
 
+Also the Vulkan SDK, instructions at https://vulkan.lunarg.com/doc/view/1.1.114.0/linux/getting_started_ubuntu.html
+
 ## Python 3
 
 Recent builds of some of the vulkan-related dependencies (effcee at least) are using a cmake command to locate python

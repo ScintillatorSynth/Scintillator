@@ -21,7 +21,7 @@ public:
     bool create(int width, int height, size_t numberOfImages);
     void destroy();
 
-    VkFormat format() { return m_images->format(); }
+    VkFormat format();
 
 private:
     std::shared_ptr<Device> m_device;

@@ -1,5 +1,7 @@
 #include "vulkan/Offscreen.hpp"
 
+#include "av/BufferPool.hpp"
+
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Framebuffer.hpp"
@@ -13,6 +15,7 @@ Offscreen::Offscreen(std::shared_ptr<Device> device): m_device(device), m_quit(f
 Offscreen::~Offscreen() { destroy(); }
 
 bool Offscreen::create(std::shared_ptr<Compositor> compositor, int width, int height, size_t numberOfImages) {
+    m_bufferPool.reset(new BufferPool(width, height));
     m_compositor(compositor);
     m_numberOfImages = std::max(numberOfImages, 2);
 
@@ -216,7 +219,7 @@ void Offscreen::processPendingBlits(size_t frameIndex) {
     // terrible name for m_pendingEncodes, maybe m_pendingEncodes?
     if (m_pendingEncodes[frameIndex].size()) {
         // ffmpeg can decide on a buffer recycling option.
-        std::shared_ptr<scin::av::Buffer> avBuffer(new scin::av::Buffer(m_width, m_height));
+        std::shared_ptr<scin::av::Buffer> avBuffer = m_bufferPool->getBuffer();
         // Readback the first frame request from the GPU.
         m_readbackImages->readbackFrame(frameIndex, avBuffer.get());
         for (auto callback : m_pendingEncodes[frameIndex]) {

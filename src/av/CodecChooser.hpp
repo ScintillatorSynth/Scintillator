@@ -3,10 +3,7 @@
 
 #include "core/FileSystem.hpp"
 
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-}
+#include "av/AVIncludes.hpp"
 
 #include <string>
 #include <unordered_map>
@@ -14,9 +11,9 @@ extern "C" {
 
 namespace scin { namespace av {
 
-// What we want are valid, supported pairs of input containers and supported decoder codecs, and output containers and
-// their supported encoder codecs.
-
+/*! TODO: this whole class seems kind of nuts. Solving a problem we may not have. Particularly by breaking the encoders
+ * at least into image/video/audio subclasses, it might be pretty obvious to avcodec what format to choose.
+ */
 class CodecChooser {
 public:
     CodecChooser();

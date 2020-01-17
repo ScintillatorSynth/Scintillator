@@ -1,28 +1,11 @@
 #ifndef SRC_AV_CONTEXT_HPP_
 #define SRC_AV_CONTEXT_HPP_
 
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-}
-
-#include <deque>
-#include <memory>
-#include <mutex>
-#include <string>
-#include <vector>
+#include "av/AVIncludes.hpp"
 
 namespace scin { namespace av {
 
-class Frame {
-public:
-    Frame();
-    ~Frame();
-};
-
-
-/*! Abstract base class for all media encoding and decoding. Wraps an ffmpeg AVCodecContext, which is a codec-specific
- *  state.
+/*! Abstract base class for media encoding and decoding.
  */
 class Context {
 public:
@@ -47,35 +30,11 @@ public:
 
     virtual bool create() = 0;
 
-
 protected:
     bool createCodecContext(AVCodecID codecID);
 
     AVCodecContext* m_context;
 };
-
-/*! Abstract base class for encoders.
- */
-class Encoder : public Context {
-public:
-    Encoder();
-    virtual ~Encoder();
-
-    std::shared_ptr<Frame> getEmptyFrame();
-
-protected:
-    std::mutex m_emptyFramesMutex;
-    std::deque<std::shared_ptr<Frame>> m_emptyFrames;
-};
-
-class PNGEncoder : public Encoder {
-public:
-    PNGEncoder();
-    virtual ~PNGEncoder();
-
-    bool create() override;
-};
-
 
 } // namespace av
 

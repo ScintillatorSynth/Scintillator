@@ -30,6 +30,8 @@ void Framebuffer::destroy() {
     m_images->destroy();
 }
 
+VkFormat Framebuffer::format() { return m_images->format(); }
+
 } // namespace vk
 
 } // namespace scin
