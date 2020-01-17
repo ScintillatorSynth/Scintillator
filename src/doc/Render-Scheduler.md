@@ -43,5 +43,34 @@ implemented with an offscreen renderer and a blit?
 Fixed and Shutter Mode
 ----------------------
 
-Not all Vulkan devices support MAILBOX mode.
+The Offscreen class maintains a root Compositor and schedules render to the framebuffers. Because frame latency is much
+less of a concern in non real time mode, the Offscreen class pipelines rendering. The product of offscreen rendering is
+one or more copies of the render can be made each frame. Media encoding requires that the framebuffer either be
+host-accessible itself, or blitted to another framebuffer that is host-accessible. The contents are then transfered to
+an AVFrame and sent off to one or more encoders.
+
+One tricky bit is that we only want to pipeline if we are animating. If we're single shot it doesn't make sense to
+pipeline, because nothing will come out of the pipe until several more calls to render() are made. So there's a bool
+we keep, something like ```bool flush```, that tells the render loop if it should wait on the fence after submit or not.
+
+If we're animating, we wait on the fence right before re-rendering. We can then map the copy, readback the data for any
+encodes, and think about updating state about swapchain source imagery. Maybe we keep a vector per-image of pending
+copies? That way if we flush on a frame we understand that we don't necessarily have to redo the copy.
+
+Per-pipelined image we keep a host-accessible image (which can be the framebuffer directly for CPU rendering, likely),
+but only blit to it when an encode is requested.
+
+If there's a swapchain in the mix, we try and create a pair of images (or 3?), GPU accessible only, that are in a format
+that makes blit from them to the swapchain framebuffer possible. When the Window requests a swapchain transfer source
+image, the Offscreen needs to consider that image "locked" until swapchain requests another image and is provided with
+a different one. So it seems these swapchain source images have three states - "locked," meaning that this is the
+current swapchain image we are providing, "waiting for blit," in which case a GPU command has been sent to blit to it,
+but we haven't waited on the fence for that gets cleared when the render is known finished, and "ready," which is the
+state where we know it has fresh data but hasn't been provided to the swapchain yet (because swapchain hasn't asked).
+
+So one image will be locked, and one will be either waiting for blit or ready. Probably only two images needed, and only
+need to be created when asked for by Swapchain or Window, who can also provide a good format suggestion for blit source.
+
+
+
 

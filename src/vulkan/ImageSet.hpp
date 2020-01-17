@@ -8,7 +8,13 @@
 #include <memory>
 #include <vector>
 
-namespace scin { namespace vk {
+namespace scin {
+
+namespace av {
+class Frame;
+}
+
+namespace vk {
 
 class Device;
 class Swapchain;
@@ -32,18 +38,18 @@ public:
 
     /*! Make a set of images backed by allocated memory in a format accessible from the host CPU.
      *
-     * \note The ImageSet does own these Images and will delete them upon destruction.
+     * \note The ImageSet *does* own these Images and *will* delete them upon destruction.
      *
      * \param width The width of each image in the set.
      * \param height The height of each image in the set.
      * \param numberOfImages The number of images to create for the set.
      * \return true on success, false on failure.
      */
-    bool createHostTransferTarget(uint32_t width, uint32_t height, size_t numberOfImages);
+    bool createHostCoherent(uint32_t width, uint32_t height, size_t numberOfImages);
 
     /*! Make a set of images backed by allocated memory in a format that the GPU can render to.
      *
-     * \note the ImageSet does own these Images and will delete them upon destruction.
+     * \note the ImageSet *does* own these Images and *will* delete them upon destruction.
      *
      * \param width The width of each image in the set.
      * \param height The height of each image in the set.
@@ -51,6 +57,8 @@ public:
      * \return true on success, false on failure.
      */
     bool createFramebuffer(uint32_t width, uint32_t height, size_t numberOfImages);
+
+    bool readbackFrame(size_t index, scin::av::Frame* frame);
 
     void destroy();
 

@@ -21,13 +21,15 @@ public:
     Offscreen(std::shared_ptr<Device> device);
     ~Offscreen();
 
-    /*! Offscreen will pipeline rendering to numberOfImages - 1 frames, keeping one image available for
-     * readback/encoding as well as rendering to any window that may be present. Also starts the render thread, in a
-     * paused state.
+    /*! Offscreen will pipeline rendering to numberOfImages frames. Also starts the render thread, in a  paused state.
+     * Additional pipelining costs GPU memory and will increase latency between frame render and encode or Window
+     * update but may increase overall throughput.
      *
      * \param numberOfImages Should be at least 2.
      */
     bool create(std::shared_ptr<Compositor> compositor, int width, int height, size_t numberOfImages);
+
+    bool createSwapchainSources(Swapchain* swapchain)
 
     /*! Start a thread to render at the provided framerate.
      */
@@ -62,25 +64,28 @@ public:
 
 private:
     void threadMain();
+    void processPendingBlits(size_t frameIndex);
 
     std::shared_ptr<Device> m_device;
     std::atomic<bool> m_quit;
 
     size_t m_numberOfImages;
-    size_t m_pipelineDepth;
 
     std::shared_ptr<Framebuffer> m_framebuffer;
     std::unique_ptr<RenderSync> m_renderSync;
     std::unique_ptr<CommandPool> m_commandPool;
     std::shared_ptr<Compositor> m_compositor;
 
+    // threadMain-only access
+    std::thread m_renderThread;
+    std::vector<std::shared_ptr<CommandBuffer>> m_commandBuffers;
+    std::vector<std::vector<std::function<void(std::shared_ptr<const scin::av::Buffer)>> m_pendingEncodes;
     std::shared_ptr<ImageSet> m_readbackImages;
     bool m_readbackSupportsBlit;
+
     std::mutex m_encodersMutex;
     std::list<std::shared_ptr<scin::av::Encoder>> m_encoders;
     std::shared_ptr<CommandBuffer> m_readbackCommands;
-
-    std::thread m_renderThread;
 
     // Protects the render flag and the framerate, and deltaTime.
     std::mutex m_renderMutex;

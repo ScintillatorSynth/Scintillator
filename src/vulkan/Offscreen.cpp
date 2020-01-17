@@ -14,18 +14,17 @@ Offscreen::~Offscreen() { destroy(); }
 
 bool Offscreen::create(std::shared_ptr<Compositor> compositor, int width, int height, size_t numberOfImages) {
     m_compositor(compositor);
-    m_numberOfImages = std::min(numberOfImages, 2);
-    m_pipelineDepth = m_numberOfImages - 1;
+    m_numberOfImages = std::max(numberOfImages, 2);
 
-    spdlog::info("creating Offscreen renderer with {} images, pipeline depth of {}", m_numberOfImages, m_pipelineDepth);
+    spdlog::info("creating Offscreen renderer with {} images.", m_numberOfImages);
 
     if (!m_framebuffer->create(width, height, m_numberOfImages)) {
         spdlog::error("Offscreen failed to create framebuffer of width: {}, height: {}, images: {}", width, height,
-                numberOfImages);
+                m_numberOfImages);
         return false;
     }
 
-    if (!m_renderSync->create(m_pipelineDepth)) {
+    if (!m_renderSync->create(m_numberOfImages)) {
         spdlog::error("Offscreen faild to create the render synchronization primitives.");
         return false;
     }
@@ -33,8 +32,8 @@ bool Offscreen::create(std::shared_ptr<Compositor> compositor, int width, int he
     // Prepare for readback by allocating GPU memory for readback images, checking for efficient copy operations from
     // the framebuffer to those readback images, and building command buffers to do the actual readback.
     m_readbackImages.reset(new ImageSet(m_device));
-    if (!m_readbackImages->createHostTransferTarget(m_width, m_height, numberOfImages)) {
-        spdlog::error("Window failed to create readback images.");
+    if (!m_readbackImages->createHostTransferTarget(m_width, m_height, m_numberOfImages)) {
+        spdlog::error("Window failed to create {} readback images.", m_numberOfImages);
         return false;
     }
 
@@ -57,12 +56,12 @@ bool Offscreen::create(std::shared_ptr<Compositor> compositor, int width, int he
         spdlog::error("Window failed to create command pool.");
         return false;
     }
-    m_readbackCommands = m_commandPool->createBuffers(m_swapchain->numberOfImages(), true);
+    m_readbackCommands = m_commandPool->createBuffers(m_numberOfImages, true);
     if (!m_readbackCommands) {
         spdlog::error("Window failed to create command buffers.");
         return false;
     }
-    for (auto i = 0; i < m_swapchain->numberOfImages(); ++i) {
+    for (auto i = 0; i < m_numberOfImages; ++i) {
         VkImageSubresourceRange range = {};
         range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         range.baseMipLevel = 0;
@@ -147,8 +146,11 @@ void Offscreen::threadMain(int frameRate, std::shared_ptr<Compositor> compositor
     size_t frameNumber = 0;
     size_t frameIndex = 0;
 
+    m_commandBuffers.reserve(m_numberOfImages);
+
     while (!m_quit) {
         double deltaTime = 0.0;
+        bool flush = false;
         {
             std::unique_lock<std::mutex> lock(m_renderMutex);
             m_renderCondition.wait(lock, [this] { return m_quit || m_render; });
@@ -161,12 +163,23 @@ void Offscreen::threadMain(int frameRate, std::shared_ptr<Compositor> compositor
             // If framerate is 0 then we turn the render flag back off to block again after this iteration.
             if (m_frameRate == 0) {
                 m_render = false;
+                flush = true;
             }
             deltaTime = m_deltaTime;
         }
 
-        // Build list of active encoder frames we need to fill, if any.
-        std::vector<std::shared_ptr<scin::av::Frame>> encodeFrames;
+        // Wait for rendering/blitting to complete on this frame.
+        m_renderSync->waitForFrame(frameIndex);
+
+        processPendingBlits(frameIndex);
+
+        // OK, we now consider the contents of the framebuffer (and any blit targets) as subject to GPU mutation.
+        m_commandBuffers[frameIndex] = compositor->prepareFrame(frameIndex, time);
+
+        // Build list of active encoder frames we need to fill, if any. If we are flushing this frame we will process
+        // this list before starting another render. If pipelined, we add this to the list of destinations once we
+        // clear the fence at the end of the pipeline.
+        std::vector<std::function<void(std::shared_ptr<scin::av::Buffer>)>> encodeRequests;
         {
             std::lock_guard<std::mutex> lock(m_encodersMutex);
             for (auto it = m_encoders.begin(); it != m_encoders.end(); /* deliberately empty increment */) {
@@ -181,43 +194,35 @@ void Offscreen::threadMain(int frameRate, std::shared_ptr<Compositor> compositor
             }
         }
 
-        m_renderSync->waitForFrame(frameIndex);
+        if (encodeFrames.size()) {
+            // Add the command buffer to blit/copy to the readback buffer.
+        }
 
-        // There's two possibilities to consider. The first extreme is that the GPU is rendering frames much faster
-        // than they can be consumed by either encoder or the window update. Let's say > 2x the window update rate.
-        // The other extreme is that the GPU is taking much longer than the CPU. So either we're CPU bound or GPU bound.
+        // If we should update the swapchain source image also add that blit command buffer.
 
-        // The outputs of the rendering on an individual frame are always going to be copy operations. For encoding we
-        // will want to copy the rendered frame to a GPU buffer that is accessible by the host, then that can go into a
-        // queue for encoding. For window updates we will want to copy the rendered frame to the swapchain images with
-        // low latency.
+        // Send the command buffers, no semaphore needed, only reset the fence associated with this image.
 
-        // Let's consider the first use case, copyback operations for encoding. If the CPU is slow compared to the GPU
-        // this will ultimately overwhelm memory as we'll have too many frames waiting for encode. There should be some
-        // maximum outstanding number of frames waiting, and then the render thread should block until we're under that
-        // limit. If the converse is true, the GPU is slow compared to the CPU, this doesn't seem to be an issue because
-        // the encode thread will block until it has something to encode. SO - there needs to be a way to block the
-        // render thread until there is a buffer available when the system has allocated the maximum number of
-        // outstanding buffers.
+        // If we should flush this frame, wait for the fence now, otherwise consider this frame wrapped.
 
-        // For the purposes of Window updates what Window needs is low-latency access to a blit source. In the fast
-        // GPU case this can mean that we won't blit every frame, far from it. But in the slow GPU case this could
-        // mean either we blit the same frame multiple times, which is wasteful, or we don't update the swapchain
-        // until there's an updated image (or a request for redraw, or some timeout). It seems as if both parties need
-        // to be able to indicate new imagery is available. More specifically the window update thread may want a way
-        // to wait until there's a fresh image, or some timeout, or an interrupt occurs asking for a repaint. And the
-        // Offscreen, in the fast case, needs a way to understand that an additional blit is wasteful.
-        // How about this - we keep two intermediate image buffers. When request blit is called we mark one of the
+        time += deltaTime;
+        ++frameNumber;
+        frameIndex = frameNumber % m_numberOfImages;
+    }
+}
 
-        // images as in use by the Window, and return it. We also tell the render loop to blit to the next one on the
-        // next render frame. Every time Window requests a new image it gets the current one until the new one is marked
-        // by the render frame as ready. So frames have 3 states - In Use, Update Requested, Ready. Because rendering
-        // is pipelined there needs to be some general consideration of overall frame "readiness". I think we blit
-        // before we re-render. The idea being that if the CPU is slow the GPU is pipelined well ahead of this and
-        // we are waiting on frame availability for new renders. This means that the subsequent buffers are also ready
-        // but as this is NRT we either need this blit for encoding and/or we need an updated framebuffer, but latency
-        // is not as important to prioritize building a system that always gives the framebuffer the latest blit.
-        // If the GPU is slow then the pipeline isn't full and this framebuffer is more recent? or even older?
+void Offscreen::processPendingBlits(size_t frameIndex) {
+    // ** Update swapchain transfer source if warrented.
+
+    // terrible name for m_pendingEncodes, maybe m_pendingEncodes?
+    if (m_pendingEncodes[frameIndex].size()) {
+        // ffmpeg can decide on a buffer recycling option.
+        std::shared_ptr<scin::av::Buffer> avBuffer(new scin::av::Buffer(m_width, m_height));
+        // Readback the first frame request from the GPU.
+        m_readbackImages->readbackFrame(frameIndex, avBuffer.get());
+        for (auto callback : m_pendingEncodes[frameIndex]) {
+            callback(avBuffer);
+        }
+        m_pendingEncodes[frameIndex].clear();
     }
 }
 

@@ -1,5 +1,6 @@
 #include "vulkan/ImageSet.hpp"
 
+#include "av/Frame.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Swapchain.hpp"
 
@@ -24,7 +25,7 @@ uint32_t ImageSet::getFromSwapchain(Swapchain* swapchain, uint32_t imageCount) {
     return actualImageCount;
 }
 
-bool ImageSet::createHostTransferTarget(uint32_t width, uint32_t height, size_t numberOfImages) {
+bool ImageSet::createHostCoherent(uint32_t width, uint32_t height, size_t numberOfImages) {
     m_format = VK_FORMAT_R8G8B8A8_UNORM;
     m_extent.width = width;
     m_extent.height = height;
@@ -100,6 +101,22 @@ bool ImageSet::createFramebuffer(uint32_t width, uint32_t height, size_t numberO
         m_allocations.emplace_back(allocation);
     }
 
+    return true;
+}
+
+bool ImageSet::readbackFrame(size_t index, scin::av::Frame* frame) {
+    // Only support mapping from our own allocatoins, and only those created with HOST_COHERENT
+    if (index >= m_allocations.size()) {
+        return false;
+    }
+
+    void* mappedFrame = nullptr;
+    vmaMapMemory(m_device->allocator(), m_allocations[index], &mappedFrame);
+    if (!mappedFrame) {
+        return false;
+    }
+    std::memcpy(frame->data(), mappedFrame, frame->sizeInBytes());
+    vmaUnmapMemory(m_device->allocator(), m_allocations[index]);
     return true;
 }
 
