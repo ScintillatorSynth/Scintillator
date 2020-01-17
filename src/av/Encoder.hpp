@@ -25,6 +25,7 @@ public:
     bool createFile(const fs::path& filePath, const std::string& mimeType) = 0;
 
 protected:
+    AVOutputFormat* m_outputFormat;
 };
 
 } // namespace av
