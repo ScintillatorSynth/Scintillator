@@ -12,7 +12,7 @@ public:
     virtual ~ImageEncoder();
 
     bool createFile(const fs::path& filePath, const std::string& mimeType) override;
-
+    bool queueEncode(double frameTime, size_t frameNumber, SendBuffer& callbackOut) override;
 private:
 
 };

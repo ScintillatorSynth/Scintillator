@@ -15,6 +15,8 @@ public:
     Buffer(AVBufferRef* bufferRef);
     ~Buffer();
 
+    AVBufferRef* addReference();
+
     uint8_t* data() { return m_bufferRef->data; }
     int size() { return m_bufferRef->size; }
 

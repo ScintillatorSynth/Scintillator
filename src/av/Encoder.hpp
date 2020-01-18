@@ -3,15 +3,18 @@
 
 #include "core/FileSystem.hpp"
 
+#include <memory>
 #include <string>
 
 namespace scin { namespace av {
 
+class Buffer;
+
 /*! Abstract base class for encoders? Maybe ImageEncoder, VideoEncoder, AudioEncoder? Or Video also handles audio?
  */
-class Encoder : public Context {
+class Encoder {
 public:
-    Encoder();
+    Encoder(int width, int height, std::function<void(bool)> completion);
     virtual ~Encoder();
 
     /*! Creates a file and prepares for encoding.
@@ -24,8 +27,28 @@ public:
      */
     bool createFile(const fs::path& filePath, const std::string& mimeType) = 0;
 
+    typedef std::function<void(std::shared_ptr<const scin::av::Buffer>)> SendBuffer;
+
+    /*! Provides a function to call when the next buffer has been rendered.
+     *
+     * \param frameTime The overall render time associated with the frame that will be provided.
+     * \param frameNumber The counting number of the frame.
+     * \param callbackOut On return will be populated with a callback function to be called when the Buffer is ready.
+     * \return True if this encoder should continue to be called for this and subsequent frames, false otherwise. If
+     *         the function returns false the value of callbackOut is undefined.
+     */
+    bool queueEncode(double frameTime, size_t frameNumber, SendBuffer& callbackOut) = 0;
+
 protected:
+    void finishEncode(bool valid);
+
+    int m_width;
+    int m_height;
+    std::function<void(bool)> m_completion;
     AVOutputFormat* m_outputFormat;
+    AVCodec* m_codec;
+    AVCodecContext* m_codecContext;
+    AVFormatContext* m_outputContext;
 };
 
 } // namespace av

@@ -1,6 +1,8 @@
 #ifndef SRC_VULKAN_OFFSCREEN_HPP_
 #define SRC_VULKAN_OFFSCREEN_HPP_
 
+#include "av/Encoder.hpp"
+
 #include <atomic>
 #include <condition_variable>
 #include <memory>
@@ -86,7 +88,7 @@ private:
     // threadMain-only access
     std::thread m_renderThread;
     std::vector<std::shared_ptr<CommandBuffer>> m_commandBuffers;
-    std::vector<std::vector<std::function<void(std::shared_ptr<const scin::av::Buffer)>> m_pendingEncodes;
+    std::vector<std::vector<scin::av::Encoder::SendBuffer>> m_pendingEncodes;
     std::shared_ptr<ImageSet> m_readbackImages;
     bool m_readbackSupportsBlit;
 
