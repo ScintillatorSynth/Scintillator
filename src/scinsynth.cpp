@@ -118,26 +118,27 @@ int main(int argc, char* argv[]) {
     // Create Vulkan physical and logical device.
     std::shared_ptr<scin::vk::Device> device;
     // If swiftshader was selected that trumps all other device selection arguments.
-    /*    if (FLAGS_swiftshader) {
-            for (auto info : chooser.devices()) {
-                if (info.isSwiftShader()) {
-                    spdlog::info("Selecting SwiftShader device.");
-                    device.reset(new Device(instance, info));
-                    break;
-                }
-            }
-        } else */
-    if (FLAGS_device_uuid.size()) {
+    if (FLAGS_swiftshader) {
         for (auto info : chooser.devices()) {
-            if (std::strncmp(FLAGS_device_uuid.data(), info.uuid(), FLAGS_device_uuid.size()) == 0) {
-                if (info.supportsWindow(&window)) {
-                    spdlog::info("Device uuid {} match, selecting {}", FLAGS_device_uuid, info.name());
-                    device.reset(new scin::vk::Device(instance, info));
-                    break;
-                } else {
-                    spdlog::error("Device uuid {}, name {}, does not support rendering to a window.", FLAGS_device_uuid,
-                                  info.name());
-                    return EXIT_FAILURE;
+            if (info.isSwiftShader()) {
+                spdlog::info("Selecting SwiftShader device.");
+                device.reset(new scin::vk::Device(instance, info));
+                break;
+            }
+        }
+    } else {
+        if (FLAGS_device_uuid.size()) {
+            for (auto info : chooser.devices()) {
+                if (std::strncmp(FLAGS_device_uuid.data(), info.uuid(), FLAGS_device_uuid.size()) == 0) {
+                    if (info.supportsWindow(&window)) {
+                        spdlog::info("Device uuid {} match, selecting {}", FLAGS_device_uuid, info.name());
+                        device.reset(new scin::vk::Device(instance, info));
+                        break;
+                    } else {
+                        spdlog::error("Device uuid {}, name {}, does not support rendering to a window.",
+                                      FLAGS_device_uuid, info.name());
+                        return EXIT_FAILURE;
+                    }
                 }
             }
         }

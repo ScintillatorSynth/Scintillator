@@ -47,7 +47,7 @@ std::string AbstractScinthDef::nameForVGenOutput(int vgenIndex, int outputIndex)
 
 bool AbstractScinthDef::buildNames() {
     std::random_device randomDevice;
-    m_prefix = fmt::format("{}_{:8x}", m_name, randomDevice());
+    m_prefix = fmt::format("{}_{:08x}", m_name, randomDevice());
     m_vertexPositionElementName = m_prefix + "_inPosition";
     m_fragmentOutputName = m_prefix + "_outColor";
 

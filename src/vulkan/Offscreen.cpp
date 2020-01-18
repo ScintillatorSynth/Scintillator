@@ -17,9 +17,12 @@
 
 namespace scin { namespace vk {
 
-Offscreen::Offscreen(std::shared_ptr<Device> device): m_device(device), m_quit(false),
-                     m_framebuffer(new Framebuffer(device)), m_renderSync(new RenderSync(device)),
-                     m_commandPool(new CommandPool(device)) {}
+Offscreen::Offscreen(std::shared_ptr<Device> device):
+    m_device(device),
+    m_quit(false),
+    m_framebuffer(new Framebuffer(device)),
+    m_renderSync(new RenderSync(device)),
+    m_commandPool(new CommandPool(device)) {}
 
 Offscreen::~Offscreen() { destroy(); }
 
@@ -32,7 +35,7 @@ bool Offscreen::create(std::shared_ptr<Compositor> compositor, int width, int he
 
     if (!m_framebuffer->create(width, height, m_numberOfImages)) {
         spdlog::error("Offscreen failed to create framebuffer of width: {}, height: {}, images: {}", width, height,
-                m_numberOfImages);
+                      m_numberOfImages);
         return false;
     }
 
@@ -124,9 +127,9 @@ bool Offscreen::create(std::shared_ptr<Compositor> compositor, int width, int he
             blitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             blitRegion.dstSubresource.layerCount = 1;
             blitRegion.dstOffsets[1] = offset;
-            vkCmdBlitImage(m_readbackCommands->buffer(i), m_framebuffer->image(i),
-                           VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, m_readbackImages->get()[i],
-                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blitRegion, VK_FILTER_NEAREST);
+            vkCmdBlitImage(m_readbackCommands->buffer(i), m_framebuffer->image(i), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                           m_readbackImages->get()[i], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blitRegion,
+                           VK_FILTER_NEAREST);
         } else {
             // TODO non-blit copyback.
         }
@@ -165,8 +168,7 @@ void Offscreen::addEncoder(std::shared_ptr<scin::av::Encoder> encoder) {
     m_encoders.push_back(encoder);
 }
 
-void Offscreen::destroy() {
-}
+void Offscreen::destroy() {}
 
 void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
     spdlog::info("Offscreen render thread starting up.");

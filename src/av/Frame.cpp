@@ -23,9 +23,7 @@ bool Frame::create(int width, int height) {
     return true;
 }
 
-void Frame::destroy() {
-    av_frame_free(&m_frame);
-}
+void Frame::destroy() { av_frame_free(&m_frame); }
 
 } // namespace av
 

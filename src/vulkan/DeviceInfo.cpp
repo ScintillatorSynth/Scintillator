@@ -28,11 +28,6 @@ DeviceInfo::DeviceInfo(VkPhysicalDevice device):
 const std::vector<const char*>& DeviceInfo::windowExtensions() { return windowDeviceExtensions; }
 
 bool DeviceInfo::supportsWindow(Window* window) {
-    // TODO: check if swiftshader crash goes away when trying to render to windows
-    if (isSwiftShader()) {
-        return false;
-    }
-
     // Check both graphics and present queue families.
     uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(m_physicalDevice, &queueFamilyCount, nullptr);
@@ -98,9 +93,7 @@ bool DeviceInfo::supportsWindow(Window* window) {
     return true;
 }
 
-bool DeviceInfo::isSwiftShader() const {
-    return std::strncmp(reinterpret_cast<const char*>(uuid()), "SwiftShaderUUID", 15) == 0;
-}
+bool DeviceInfo::isSwiftShader() const { return std::strncmp(name(), "SwiftShader", 11) == 0; }
 
 DeviceInfo::Type DeviceInfo::type() const {
     switch (m_properties.deviceType) {

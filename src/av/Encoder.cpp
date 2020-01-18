@@ -4,8 +4,12 @@
 
 namespace scin { namespace av {
 
-Encoder::Encoder(int width, int height, std::function<void(bool)> completion): m_width(width), m_height(height),
-    m_completion(completion), m_outputFormat(nullptr), m_codec(nullptr),
+Encoder::Encoder(int width, int height, std::function<void(bool)> completion):
+    m_width(width),
+    m_height(height),
+    m_completion(completion),
+    m_outputFormat(nullptr),
+    m_codec(nullptr),
     m_outputContext(nullptr) {}
 
 Encoder::~Encoder() {}

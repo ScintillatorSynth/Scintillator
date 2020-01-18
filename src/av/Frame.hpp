@@ -30,4 +30,4 @@ private:
 
 } // namespace scin
 
-#endif  // SRC_AV_FRAME_HPP_
+#endif // SRC_AV_FRAME_HPP_

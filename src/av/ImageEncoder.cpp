@@ -24,17 +24,17 @@ bool ImageEncoder::createFile(const fs::path& filePath, const std::string& mimeT
         spdlog::error("Encoder unable to guess output format for file {}, mime type {}", filePath.string(), mimeType);
         return false;
     }
-    AVCodecID codecID = av_guess_codec(m_outputFormat, nullptr, filePath.string().data(), mimeString,
-            AVMEDIA_TYPE_VIDEO);
+    AVCodecID codecID =
+        av_guess_codec(m_outputFormat, nullptr, filePath.string().data(), mimeString, AVMEDIA_TYPE_VIDEO);
     m_codec = avcodec_find_encoder(codecID);
     if (!m_codec) {
         spdlog::error("Encoder unable to guess code for file {}, mime type {}, output format name {}",
-            filePath.string(), mimeType, m_outputFormat->name);
+                      filePath.string(), mimeType, m_outputFormat->name);
         return false;
     }
 
     spdlog::info("Encoder chose output format name {}, codec name {} for file {}, mime type {}", m_outputFormat->name,
-            m_codec->name, filePath.string(), mimeType);
+                 m_codec->name, filePath.string(), mimeType);
 
     if (avformat_alloc_output_context2(&m_outputContext, m_outputFormat, nullptr, filePath.string().data()) < 0) {
         spdlog::error("Encoder failed to allocate output context for file {}", filePath.string());

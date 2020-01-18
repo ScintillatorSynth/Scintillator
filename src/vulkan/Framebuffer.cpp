@@ -8,7 +8,9 @@
 
 namespace scin { namespace vk {
 
-Framebuffer::Framebuffer(std::shared_ptr<Device> device): m_images(new ImageSet(device)), m_canvas(new Canvas(device)) {}
+Framebuffer::Framebuffer(std::shared_ptr<Device> device):
+    m_images(new ImageSet(device)),
+    m_canvas(new Canvas(device)) {}
 
 Framebuffer::~Framebuffer() { destroy(); }
 

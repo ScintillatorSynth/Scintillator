@@ -6,9 +6,7 @@ Buffer::Buffer(AVBufferRef* bufferRef): m_bufferRef(bufferRef) {}
 
 Buffer::~Buffer() { av_buffer_unref(&m_bufferRef); }
 
-AVBufferRef* Buffer::addReference() {
-    return av_buffer_ref(m_bufferRef);
-}
+AVBufferRef* Buffer::addReference() { return av_buffer_ref(m_bufferRef); }
 
 } // namespace av
 

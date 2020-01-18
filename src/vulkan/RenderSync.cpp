@@ -71,9 +71,7 @@ uint32_t RenderSync::acquireNextImage(size_t index, Swapchain* swapchain) {
     return imageIndex;
 }
 
-void RenderSync::resetFrame(size_t index) {
-    vkResetFences(m_device->get(), 1, &m_frameRendering[index]);
-}
+void RenderSync::resetFrame(size_t index) { vkResetFences(m_device->get(), 1, &m_frameRendering[index]); }
 
 } // namespace vk
 

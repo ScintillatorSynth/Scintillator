@@ -2,8 +2,8 @@ ScinServer {
 	classvar <>default;
 
 	var udpPortNumber;
-	var scinBinaryPath;
 	var scinQuarkPath;
+	var scinBinaryPath;
 	var <logLevel;
 
 	var scinQuarkVersion;
@@ -11,23 +11,23 @@ ScinServer {
 	var addr;
 
 	// For local scinsynth instances. Remote not yet supported.
-	*new { |udpPortNumber = 5511, scinBinaryPath|
-		^super.newCopyArgs(udpPortNumber, scinBinaryPath).init;
+	*new { |udpPortNumber = 5511, scinQuarkPath|
+		^super.newCopyArgs(udpPortNumber, scinQuarkPath).init;
 	}
 
 	init {
-		Quarks.installed.do({ |quark, index|
-			if (quark.name == "Scintillator", {
-				// If no override path specificed we assume the Scintillator binary is in the
-				// bin/ path within the Quark.
-				if (scinBinaryPath.isNil, {
-					scinBinaryPath = quark.localPath ++ "/build/src/scinsynth";
-				});
-				scinQuarkVersion = quark.version;
-				scinQuarkPath = quark.localPath;
-			});
-		});
+        if (scinQuarkPath.isNil, {
+            Quarks.installed.do({ |quark, index|
+                if (quark.name == "Scintillator", {
+                    scinQuarkVersion = quark.version;
+                    scinQuarkPath = quark.localPath;
+                });
+            });
+        }, {
+            scinQuarkVersion = "unknown";
+        });
 
+        scinBinaryPath = scinQuarkPath +/+ "build/src/scinsynth";
 		logLevel = 2;
 	}
 

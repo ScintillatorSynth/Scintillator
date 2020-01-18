@@ -71,9 +71,7 @@ void Window::run(std::shared_ptr<Compositor> compositor) {
     }
 }
 
-void Window::destroySwapchain() {
-    m_swapchain->destroy();
-}
+void Window::destroySwapchain() { m_swapchain->destroy(); }
 
 void Window::destroy() {
     vkDestroySurfaceKHR(m_instance->get(), m_surface, nullptr);

@@ -8,4 +8,3 @@ extern "C" {
 
 
 #endif // SRC_AV_INCLUDES_HPP_
-

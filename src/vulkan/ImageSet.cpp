@@ -83,8 +83,8 @@ bool ImageSet::createFramebuffer(uint32_t width, uint32_t height, size_t numberO
         createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
         createInfo.tiling = VK_IMAGE_TILING_LINEAR;
-        createInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
-            | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        createInfo.usage =
+            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
         VmaAllocationCreateInfo allocInfo = {};
         allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;

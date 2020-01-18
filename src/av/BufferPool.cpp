@@ -4,9 +4,7 @@
 
 #include "spdlog/spdlog.h"
 
-namespace scin {
-
-namespace av {
+namespace scin { namespace av {
 
 BufferPool::BufferPool(int width, int height): m_bufferPool(nullptr) {
     m_bufferPool = av_buffer_pool_init(width * height * 4, nullptr);
@@ -15,9 +13,7 @@ BufferPool::BufferPool(int width, int height): m_bufferPool(nullptr) {
     }
 }
 
-BufferPool::~BufferPool() {
-    av_buffer_pool_uninit(&m_bufferPool);
-}
+BufferPool::~BufferPool() { av_buffer_pool_uninit(&m_bufferPool); }
 
 std::shared_ptr<Buffer> BufferPool::getBuffer() {
     AVBufferRef* bufferRef = av_buffer_pool_get(m_bufferPool);
