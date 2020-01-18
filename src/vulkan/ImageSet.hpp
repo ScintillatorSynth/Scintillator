@@ -47,16 +47,17 @@ public:
      */
     bool createHostCoherent(uint32_t width, uint32_t height, size_t numberOfImages);
 
-    /*! Make a set of images backed by allocated memory in a format that the GPU can render to.
+    /*! Make a set of images backed by allocated memory optimized for GPU access.
      *
      * \note the ImageSet *does* own these Images and *will* delete them upon destruction.
      *
      * \param width The width of each image in the set.
      * \param height The height of each image in the set.
      * \param numberOfImages The number of images to create for the set.
+     * \param isFramebuffer If true, the memory will also be configured for use as a render target.
      * \return true on success, false on failure.
      */
-    bool createFramebuffer(uint32_t width, uint32_t height, size_t numberOfImages);
+    bool createDeviceLocal(uint32_t width, uint32_t height, size_t numberOfImages, bool isFramebuffer);
 
     bool readbackImage(size_t index, scin::av::Buffer* buffer);
 

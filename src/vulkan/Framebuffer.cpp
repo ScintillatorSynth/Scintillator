@@ -15,7 +15,7 @@ Framebuffer::Framebuffer(std::shared_ptr<Device> device):
 Framebuffer::~Framebuffer() { destroy(); }
 
 bool Framebuffer::create(int width, int height, size_t numberOfImages) {
-    if (!m_images->createFramebuffer(width, height, numberOfImages)) {
+    if (!m_images->createDeviceLocal(width, height, numberOfImages, true)) {
         spdlog::error("framebuffer failed to create images.");
         return false;
     }

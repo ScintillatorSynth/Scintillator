@@ -77,90 +77,37 @@ bool Offscreen::create(std::shared_ptr<Compositor> compositor, int width, int he
         return false;
     }
     for (auto i = 0; i < m_numberOfImages; ++i) {
-        VkCommandBufferBeginInfo beginInfo = {};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-        beginInfo.pInheritanceInfo = nullptr;
-        if (vkBeginCommandBuffer(m_readbackCommands->buffer(i), &beginInfo) != VK_SUCCESS) {
-            spdlog::error("Offscreen failed beginning readback command buffer.");
-            return false;
-        }
-
-        VkImageSubresourceRange range = {};
-        range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        range.baseMipLevel = 0;
-        range.levelCount = 1;
-        range.baseArrayLayer = 0;
-        range.layerCount = 1;
-
-        // Transition framebuffer image into a transfer source configuration.
-        VkImageMemoryBarrier memoryBarrier = {};
-        memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        memoryBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-        memoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-        memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        memoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-        memoryBarrier.image = m_framebuffer->image(i);
-        memoryBarrier.subresourceRange = range;
-        vkCmdPipelineBarrier(m_readbackCommands->buffer(i), VK_PIPELINE_STAGE_TRANSFER_BIT,
-                             VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
-
-        // Transition readback image to a transfer destination configuration.
-        memoryBarrier.srcAccessMask = 0;
-        memoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        memoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        memoryBarrier.image = m_readbackImages->get()[i];
-        vkCmdPipelineBarrier(m_readbackCommands->buffer(i), VK_PIPELINE_STAGE_TRANSFER_BIT,
-                             VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
-
-        if (m_readbackSupportsBlit) {
-            VkOffset3D offset = {};
-            offset.x = width;
-            offset.y = height;
-            offset.z = 1;
-            VkImageBlit blitRegion = {};
-            blitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            blitRegion.srcSubresource.layerCount = 1;
-            // srcOffsets[0] and dstOffsets[0] are all zeros.
-            blitRegion.srcOffsets[1] = offset;
-            blitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            blitRegion.dstSubresource.layerCount = 1;
-            blitRegion.dstOffsets[1] = offset;
-            vkCmdBlitImage(m_readbackCommands->buffer(i), m_framebuffer->image(i), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                           m_readbackImages->get()[i], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blitRegion,
-                           VK_FILTER_NEAREST);
-        } else {
-            // TODO non-blit copyback.
-        }
-
-        // Transition swapchain image back to ideal rendering target configuration.
-        memoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-        memoryBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-        memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-        memoryBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        memoryBarrier.image = m_framebuffer->image(i);
-        vkCmdPipelineBarrier(m_readbackCommands->buffer(i), VK_PIPELINE_STAGE_TRANSFER_BIT,
-                             VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
-
-        // Transition readback image to a format accessible by the host.
-        memoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        memoryBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-        memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        memoryBarrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
-        memoryBarrier.image = m_readbackImages->get()[i];
-        vkCmdPipelineBarrier(m_readbackCommands->buffer(i), VK_PIPELINE_STAGE_TRANSFER_BIT,
-                             VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
-
-        if (vkEndCommandBuffer(m_readbackCommands->buffer(i)) != VK_SUCCESS) {
-            spdlog::info("Offscreen failed ending readback command buffer.");
-            return false;
-        }
     }
 
     m_render = false;
     m_frameRate = 0;
     m_renderThread = std::thread(&Offscreen::threadMain, this, compositor);
+}
+
+bool Offscreen::createSwapchainSources(Swapchain* swapchain) {
+    int width = swapchain->extent().width;
+    int height = swapchain->extent().height;
+    m_swapSources.reset(new ImageSet(m_device));
+
+    if (!m_swapSources->createDeviceLocal(width, height, 2, false)) {
+        spdlog::error("Offscreen failed creating swapchain source images.");
+        return false;
+    }
+
+    // Build the transfer from swapchain sources -> swapchain command buffers.
+    for (auto i = 0; i < 2; ++i) {
+        std::shared_ptr<CommandBuffer> buffers = m_commandPool->createBuffers(swapchain->numberOfImages(), true);
+        if (!buffers) {
+            spdlog::error("Offscreen failed creating swapchain blit command buffers.");
+            return false;
+        }
+        m_swapBlitCommands.push_back(buffers);
+
+        // The jth command buffer contains instructions to blit from the ith swap source image to the jth swapchain
+        // image.
+        for (auto j = 0; j < swapchain->numberOfImages(); ++j) {
+        }
+    }
 }
 
 void Offscreen::addEncoder(std::shared_ptr<scin::av::Encoder> encoder) {
@@ -254,6 +201,68 @@ void Offscreen::processPendingBlits(size_t frameIndex) {
         }
         m_pendingEncodes[frameIndex].clear();
     }
+}
+
+bool Offscreen::writeBlitCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, int width,
+                                  int height, VkImage sourceImage, VkImage destinationImage) {
+    VkCommandBufferBeginInfo beginInfo = {};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+    beginInfo.pInheritanceInfo = nullptr;
+    if (vkBeginCommandBuffer(commandBuffer->buffer(bufferIndex), &beginInfo) != VK_SUCCESS) {
+        spdlog::error("Offscreen failed beginning readback command buffer.");
+        return false;
+    }
+
+    VkImageSubresourceRange range = {};
+    range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    range.baseMipLevel = 0;
+    range.levelCount = 1;
+    range.baseArrayLayer = 0;
+    range.layerCount = 1;
+
+    VkImageMemoryBarrier memoryBarrier = {};
+    memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    memoryBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+    memoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+    memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    memoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    memoryBarrier.image = sourceImage;
+    memoryBarrier.subresourceRange = range;
+    vkCmdPipelineBarrier(commandBuffer->buffer(bufferIndex), VK_PIPELINE_STAGE_TRANSFER_BIT,
+                         VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
+
+    memoryBarrier.srcAccessMask = 0;
+    memoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    memoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    memoryBarrier.image = destinationImage;
+    vkCmdPipelineBarrier(commandBuffer->buffer(bufferIndex), VK_PIPELINE_STAGE_TRANSFER_BIT,
+                         VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
+
+    VkOffset3D offset = {};
+    offset.x = width;
+    offset.y = height;
+    offset.z = 1;
+    VkImageBlit blitRegion = {};
+    blitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    blitRegion.srcSubresource.layerCount = 1;
+    // srcOffsets[0] and dstOffsets[0] are all zeros.
+    blitRegion.srcOffsets[1] = offset;
+    blitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    blitRegion.dstSubresource.layerCount = 1;
+    blitRegion.dstOffsets[1] = offset;
+    vkCmdBlitImage(commandBuffer->buffer(bufferIndex), sourceImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                   destinationImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blitRegion, VK_FILTER_NEAREST);
+
+    // ?? Do we need to transition things back?
+
+    if (vkEndCommandBuffer(commandBuffer->buffer(bufferIndex)) != VK_SUCCESS) {
+        spdlog::info("Offscreen failed ending readback command buffer.");
+        return false;
+    }
+
+    return true;
 }
 
 } // namespace vk

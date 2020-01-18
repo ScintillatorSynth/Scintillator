@@ -55,20 +55,24 @@ bool Window::createSwapchain(std::shared_ptr<Device> device) {
         return false;
     }
 
-    // If we are rendering to a framebuffer create an Offscreen renderer to facilitate.
-    if (!m_directRendering) {
-        m_offscreen.reset(new Offscreen(m_device));
-    }
-
     return true;
 }
 
 void Window::run(std::shared_ptr<Compositor> compositor) {
+    m_renderSync.reset(new RenderSync(m_device));
+    if (!m_renderSync->create(1, true)) {
+        spdlog::error("failed to create direct rendering synchronization primitives.");
+        return;
+    }
+
     if (m_directRendering) {
         runDirectRendering(compositor);
     } else {
         runFixedFrameRate(compositor);
     }
+
+    m_commandBuffers = nullptr;
+    m_renderSync->destroy();
 }
 
 void Window::destroySwapchain() { m_swapchain->destroy(); }
@@ -82,12 +86,6 @@ void Window::destroy() {
 std::shared_ptr<Canvas> Window::canvas() { return m_swapchain->canvas(); }
 
 void Window::runDirectRendering(std::shared_ptr<Compositor> compositor) {
-    m_renderSync.reset(new RenderSync(m_device));
-    if (!m_renderSync->create(1, true)) {
-        spdlog::error("failed to create direct rendering synchronization primitives.");
-        return;
-    }
-
     m_startTime = std::chrono::high_resolution_clock::now();
     m_lastFrameTime = m_startTime;
     m_lastReportTime = m_startTime;
@@ -174,16 +172,28 @@ void Window::runDirectRendering(std::shared_ptr<Compositor> compositor) {
     }
 
     vkDeviceWaitIdle(m_device->get());
-
-    m_commandBuffers = nullptr;
-    m_renderSync->destroy();
 }
 
 void Window::runFixedFrameRate(std::shared_ptr<Compositor> compositor) {
+    m_offscreen.reset(new Offscreen(m_device));
     if (!m_offscreen->create(compositor, m_width, m_height, m_swapchain->numberOfImages() + 1)) {
         spdlog::error("Window failed to create Offscreen rendering environment.");
         return;
     }
+
+    if (!m_offscreen->createSwapchainSources(m_swapchain.get())) {
+        spdlog::error("Window failed to create Swapchain sources for Offscreen rendering.");
+        return;
+    }
+
+    while (!m_stop && !glfwWindowShouldClose(m_window)) {
+        glfwPollEvents();
+
+        m_renderSync->waitForFrame(0);
+    }
+
+    // ?? cleanup offscreen
+    m_offscreen->destroy();
 }
 
 } // namespace vk

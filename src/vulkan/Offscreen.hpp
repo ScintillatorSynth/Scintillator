@@ -3,6 +3,8 @@
 
 #include "av/Encoder.hpp"
 
+#include "vulkan/Vulkan.hpp"
+
 #include <atomic>
 #include <condition_variable>
 #include <list>
@@ -45,7 +47,8 @@ public:
     bool create(std::shared_ptr<Compositor> compositor, int width, int height, size_t numberOfImages);
 
     /*! If this Offscreen is contained in a Window, we create additional copy targets for the offscreen to allow the
-     * Window to update independently.
+     * Window to update independently. This also creates the command buffers for blitting between all possible
+     * combinations of image source and swapchain image destination.
      *
      * \param swapchain The swapchain object to use as a transfer target.
      * \return True on success, false on failure.
@@ -86,6 +89,8 @@ public:
 private:
     void threadMain(std::shared_ptr<Compositor> compositor);
     void processPendingBlits(size_t frameIndex);
+    bool writeBlitCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, int width, int height,
+                           VkImage sourceImage, VkImage destinationImage);
 
     std::shared_ptr<Device> m_device;
     std::atomic<bool> m_quit;
@@ -97,6 +102,10 @@ private:
     std::unique_ptr<CommandPool> m_commandPool;
     std::unique_ptr<scin::av::BufferPool> m_bufferPool;
     std::shared_ptr<Compositor> m_compositor;
+
+    // Swapchain render support.
+    std::unique_ptr<ImageSet> m_swapSources;
+    std::vector<std::shared_ptr<CommandBuffer>> m_swapBlitCommands;
 
     // threadMain-only access
     std::thread m_renderThread;
