@@ -31,9 +31,6 @@ enum OscCommand : int {
     // Scinth Commands
     kSNew = 9,
 
-    // Media Commands
-    kMediaTypeTagQuery = 66,
-
     // Non Real Time Commands
     kNRTScreenShot = 67,
 };
@@ -61,7 +58,6 @@ d_free,             scin::OscCommand::kDFree
 n_free,             scin::OscCommand::kNFree
 n_run,              scin::OscCommand::kNRun
 s_new,              scin::OscCommand::kSNew
-media_typeTagQuery, scin::OscCommand::kMediaTypeTagQuery
 nrt_screenShot,     scin::OscCommand::kNRTScreenShot
 %%
 

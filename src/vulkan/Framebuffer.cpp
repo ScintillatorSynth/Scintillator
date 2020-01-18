@@ -12,7 +12,7 @@ Framebuffer::Framebuffer(std::shared_ptr<Device> device): m_images(new ImageSet(
 
 Framebuffer::~Framebuffer() { destroy(); }
 
-bool Framebuffer::create(int with, int height, size_t numberOfImages) {
+bool Framebuffer::create(int width, int height, size_t numberOfImages) {
     if (!m_images->createFramebuffer(width, height, numberOfImages)) {
         spdlog::error("framebuffer failed to create images.");
         return false;
@@ -31,6 +31,7 @@ void Framebuffer::destroy() {
 }
 
 VkFormat Framebuffer::format() { return m_images->format(); }
+VkImage Framebuffer::image(size_t index) { return m_images->get()[index]; }
 
 } // namespace vk
 

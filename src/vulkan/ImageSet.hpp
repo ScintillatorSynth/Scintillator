@@ -11,7 +11,7 @@
 namespace scin {
 
 namespace av {
-class Frame;
+class Buffer;
 }
 
 namespace vk {
@@ -58,7 +58,7 @@ public:
      */
     bool createFramebuffer(uint32_t width, uint32_t height, size_t numberOfImages);
 
-    bool readbackFrame(size_t index, scin::av::Frame* frame);
+    bool readbackImage(size_t index, scin::av::Buffer* buffer);
 
     void destroy();
 

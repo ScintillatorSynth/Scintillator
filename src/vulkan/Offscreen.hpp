@@ -5,11 +5,15 @@
 
 #include <atomic>
 #include <condition_variable>
+#include <list>
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <vector>
 
 namespace scin {
+
+class Compositor;
 
 namespace av {
 class BufferPool;
@@ -17,10 +21,13 @@ class BufferPool;
 
 namespace vk {
 
-class Compositor;
+class CommandBuffer;
+class CommandPool;
 class Device;
 class Framebuffer;
+class ImageSet;
 class RenderSync;
+class Swapchain;
 
 /*! Used in place of Window as a host for a Framebuffer when no Window is to be created.
  */
@@ -37,7 +44,13 @@ public:
      */
     bool create(std::shared_ptr<Compositor> compositor, int width, int height, size_t numberOfImages);
 
-    bool createSwapchainSources(Swapchain* swapchain)
+    /*! If this Offscreen is contained in a Window, we create additional copy targets for the offscreen to allow the
+     * Window to update independently.
+     *
+     * \param swapchain The swapchain object to use as a transfer target.
+     * \return True on success, false on failure.
+     */
+    bool createSwapchainSources(Swapchain* swapchain);
 
     /*! Start a thread to render at the provided framerate.
      */
@@ -71,7 +84,7 @@ public:
     void destroy();
 
 private:
-    void threadMain();
+    void threadMain(std::shared_ptr<Compositor> compositor);
     void processPendingBlits(size_t frameIndex);
 
     std::shared_ptr<Device> m_device;

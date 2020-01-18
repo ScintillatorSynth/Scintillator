@@ -22,6 +22,7 @@ public:
     void destroy();
 
     VkFormat format();
+    VkImage image(size_t index);
 
 private:
     std::shared_ptr<Device> m_device;

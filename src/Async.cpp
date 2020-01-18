@@ -2,7 +2,6 @@
 
 #include "Compositor.hpp"
 #include "ScinthDef.hpp"
-#include "av/CodecChooser.hpp"
 #include "core/Archetypes.hpp"
 
 #include "fmt/core.h"
@@ -10,11 +9,9 @@
 
 namespace scin {
 
-Async::Async(std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
-             std::shared_ptr<av::CodecChooser> codecChooser):
+Async::Async(std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor):
     m_compositor(compositor),
     m_archetypes(archetypes),
-    m_codecChooser(codecChooser),
     m_quit(false) {}
 
 Async::~Async() { stop(); }
@@ -69,15 +66,6 @@ void Async::scinthDefParseString(std::string yaml, std::function<void(int)> comp
     {
         std::lock_guard<std::mutex> lock(m_jobQueueMutex);
         m_jobQueue.emplace_back([this, yaml, completion]() { asyncScinthDefParseString(yaml, completion); });
-    }
-    m_jobQueueCondition.notify_one();
-}
-
-void Async::mediaTypeTagQuery(std::string typeTag, std::string mimeType, std::function<void(std::string)> completion) {
-    {
-        std::lock_guard<std::mutex> lock(m_jobQueueMutex);
-        m_jobQueue.emplace_back(
-            [this, typeTag, mimeType, completion]() { asyncMediaTypeTagQuery(typeTag, mimeType, completion); });
     }
     m_jobQueueCondition.notify_one();
 }
@@ -192,12 +180,6 @@ void Async::asyncScinthDefParseString(std::string yaml, std::function<void(int)>
         m_compositor->buildScinthDef(scinthDef);
     }
     completion(scinthDefs.size());
-}
-
-void Async::asyncMediaTypeTagQuery(std::string typeTag, std::string mimeType,
-                                   std::function<void(std::string)> completion) {
-    std::string tag = m_codecChooser->getTypeTag(typeTag, mimeType);
-    completion(tag);
 }
 
 } // namespace scin

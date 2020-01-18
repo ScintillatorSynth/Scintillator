@@ -1,6 +1,8 @@
 #ifndef SRC_VULKAN_RENDER_SYNC_HPP_
 #define SRC_VULKAN_RENDER_SYNC_HPP_
 
+#include "vulkan/Vulkan.hpp"
+
 #include <memory>
 #include <vector>
 
@@ -31,8 +33,10 @@ public:
     void destroy();
 
     void waitForFrame(size_t index);
+
     // Requires that the semaphores were made.
     uint32_t acquireNextImage(size_t index, Swapchain* swapchain);
+
     void resetFrame(size_t index);
 
     VkSemaphore imageAvailable(size_t index) { return m_imageAvailable[index]; }

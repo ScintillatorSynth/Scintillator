@@ -28,8 +28,7 @@ class Compositor;
  */
 class Async {
 public:
-    Async(std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
-          std::shared_ptr<av::CodecChooser> codecChooser);
+    Async(std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor);
     ~Async();
 
     void run(size_t numberOfWorkerThreads);
@@ -67,15 +66,6 @@ public:
      */
     void scinthDefParseString(std::string yaml, std::function<void(int)> completion);
 
-    /*! Async look up support for a specific media type tag based on tag and/or mime type.
-     *
-     * \param typeTag The existing type tag, if known, or an empty string.
-     * \param mimeType A mime type, if known, or an empty string.
-     * \param completion The function to call on completion of query. The completion argument is the media type tag, or
-     *        an empty string if type is not found or not supported.
-     */
-    void mediaTypeTagQuery(std::string typeTag, std::string mimeType, std::function<void(std::string)> completion);
-
 private:
     void threadMain(std::string threadName);
 
@@ -85,11 +75,8 @@ private:
     void asyncScinthDefLoadFile(fs::path path, std::function<void(int)> completion);
     void asyncScinthDefParseString(std::string yaml, std::function<void(int)> completion);
 
-    void asyncMediaTypeTagQuery(std::string typeTag, std::string mimeType, std::function<void(std::string)> completion);
-
     std::shared_ptr<core::Archetypes> m_archetypes;
     std::shared_ptr<Compositor> m_compositor;
-    std::shared_ptr<av::CodecChooser> m_codecChooser;
     std::atomic<bool> m_quit;
     std::vector<std::thread> m_workerThreads;
 

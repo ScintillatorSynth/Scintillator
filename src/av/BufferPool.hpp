@@ -3,6 +3,8 @@
 
 #include "av/AVIncludes.hpp"
 
+#include <memory>
+
 namespace scin { namespace av {
 
 class Buffer;

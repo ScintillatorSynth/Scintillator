@@ -1,11 +1,13 @@
 #include "av/ImageEncoder.hpp"
 
+#include "av/Frame.hpp"
+
 #include "spdlog/spdlog.h"
 
 namespace scin { namespace av {
 
-ImageEncoder::ImageEncoder(int width, int height): Encoder(width, height) {
-}
+ImageEncoder::ImageEncoder(int width, int height, std::function<void(bool)> completion):
+    Encoder(width, height, completion) {}
 
 ImageEncoder::~ImageEncoder() {
     if (m_outputContext) {
@@ -23,18 +25,18 @@ bool ImageEncoder::createFile(const fs::path& filePath, const std::string& mimeT
         return false;
     }
     AVCodecID codecID = av_guess_codec(m_outputFormat, nullptr, filePath.string().data(), mimeString,
-            AVMEDIA_TYPE_IMAGE);
+            AVMEDIA_TYPE_VIDEO);
     m_codec = avcodec_find_encoder(codecID);
     if (!m_codec) {
-        splog::error("Encoder unable to guess code for file {}, mime type {}, output format name {}", filePath.string(),
-                mimeType, m_outputFormat->name);
+        spdlog::error("Encoder unable to guess code for file {}, mime type {}, output format name {}",
+            filePath.string(), mimeType, m_outputFormat->name);
         return false;
     }
 
     spdlog::info("Encoder chose output format name {}, codec name {} for file {}, mime type {}", m_outputFormat->name,
             m_codec->name, filePath.string(), mimeType);
 
-    if (avformat_alloc_output_context2(&m_outputContext, m_outputFormat, nullptr, filePath.string()) < 0) {
+    if (avformat_alloc_output_context2(&m_outputContext, m_outputFormat, nullptr, filePath.string().data()) < 0) {
         spdlog::error("Encoder failed to allocate output context for file {}", filePath.string());
         return false;
     }
@@ -57,9 +59,6 @@ bool ImageEncoder::createFile(const fs::path& filePath, const std::string& mimeT
     m_codecContext->coded_height = m_height;
     m_codecContext->pix_fmt = AV_PIX_FMT_RGBA;
 
-    m_outputContext->width = m_width;
-    m_outputContext->height = m_height;
-
     if (avformat_write_header(m_outputContext, nullptr) < 0) {
         spdlog::error("Encoder failed to write header to file {}", filePath.string());
         return false;
@@ -69,7 +68,7 @@ bool ImageEncoder::createFile(const fs::path& filePath, const std::string& mimeT
 
 bool ImageEncoder::queueEncode(double frameTime, size_t frameNumber, SendBuffer& callbackOut) {
     spdlog::info("ImageEncoder queuing buffer for render at time {}, frame Number {}", frameTime, frameNumber);
-    callbackOut = SendBuffer([this](std::shared_ptr<const Buffer> buffer) {
+    callbackOut = SendBuffer([this](std::shared_ptr<Buffer> buffer) {
         Frame frame(buffer);
         // For image encoding we're going to send exactly one frame, so this should work unless there's an encoding
         // error, meaning we treat all error results as fatal encoding errors.
@@ -85,7 +84,7 @@ bool ImageEncoder::queueEncode(double frameTime, size_t frameNumber, SendBuffer&
         while (ret == 0) {
             if (av_write_frame(m_outputContext, &packet) < 0) {
                 spdlog::error("ImageEncoder failed writing frame data.");
-                finsihEncode(false);
+                finishEncode(false);
                 return;
             }
             ret = avcodec_receive_packet(m_codecContext, &packet);

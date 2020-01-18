@@ -1,10 +1,14 @@
 #include "av/Encoder.hpp"
 
+#include "spdlog/spdlog.h"
+
 namespace scin { namespace av {
 
 Encoder::Encoder(int width, int height, std::function<void(bool)> completion): m_width(width), m_height(height),
     m_completion(completion), m_outputFormat(nullptr), m_codec(nullptr),
     m_outputContext(nullptr) {}
+
+Encoder::~Encoder() {}
 
 void Encoder::finishEncode(bool valid) {
     int ret = 0;
@@ -18,6 +22,7 @@ void Encoder::finishEncode(bool valid) {
     }
 
     if (valid) {
+        AVPacket packet;
         ret = avcodec_receive_packet(m_codecContext, &packet);
         while (ret == 0) {
             if (av_write_frame(m_outputContext, &packet) < 0) {
@@ -49,7 +54,7 @@ void Encoder::finishEncode(bool valid) {
         }
     }
 
-    avoi_closep(&m_outputContext->pb);
+    avio_closep(&m_outputContext->pb);
     m_completion(valid);
 }
 

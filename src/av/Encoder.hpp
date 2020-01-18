@@ -1,8 +1,10 @@
 #ifndef SRC_AV_ENCODER_HPP_
 #define SRC_AV_ENCODER_HPP_
 
+#include "av/AVIncludes.hpp"
 #include "core/FileSystem.hpp"
 
+#include <functional>
 #include <memory>
 #include <string>
 
@@ -25,9 +27,9 @@ public:
      *        about the type of container and codec to use to encode this file.
      * \return true on succcess, false on failure.
      */
-    bool createFile(const fs::path& filePath, const std::string& mimeType) = 0;
+    virtual bool createFile(const fs::path& filePath, const std::string& mimeType) = 0;
 
-    typedef std::function<void(std::shared_ptr<const scin::av::Buffer>)> SendBuffer;
+    typedef std::function<void(std::shared_ptr<scin::av::Buffer>)> SendBuffer;
 
     /*! Provides a function to call when the next buffer has been rendered.
      *
@@ -37,7 +39,7 @@ public:
      * \return True if this encoder should continue to be called for this and subsequent frames, false otherwise. If
      *         the function returns false the value of callbackOut is undefined.
      */
-    bool queueEncode(double frameTime, size_t frameNumber, SendBuffer& callbackOut) = 0;
+    virtual bool queueEncode(double frameTime, size_t frameNumber, SendBuffer& callbackOut) = 0;
 
 protected:
     void finishEncode(bool valid);

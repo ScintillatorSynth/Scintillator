@@ -44,9 +44,7 @@ public:
     // Device will have a different create() function for that context.
     bool create();
     bool createSwapchain(std::shared_ptr<Device> device);
-    bool createSyncObjects();
     void run(std::shared_ptr<Compositor> compositor);
-    void destroySyncObjects();
     void destroySwapchain();
     void destroy();
 
@@ -94,7 +92,6 @@ private:
     TimePoint m_lastFrameTime;
     size_t m_lateFrames;
     TimePoint m_lastReportTime;
-
 };
 
 } // namespace vk

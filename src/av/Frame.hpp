@@ -1,6 +1,8 @@
 #ifndef SRC_AV_FRAME_HPP_
 #define SRC_AV_FRAME_HPP_
 
+#include "av/AVIncludes.hpp"
+
 #include <memory>
 
 namespace scin { namespace av {
@@ -15,6 +17,7 @@ public:
     ~Frame();
 
     bool create(int width, int height);
+    void destroy();
 
     AVFrame* get() { return m_frame; }
 

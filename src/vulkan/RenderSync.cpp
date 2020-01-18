@@ -11,7 +11,7 @@ RenderSync::RenderSync(std::shared_ptr<Device> device): m_device(device) {}
 
 RenderSync::~RenderSync() { destroy(); }
 
-bool create(size_t inFlightFrames, bool makeSemaphores) {
+bool RenderSync::create(size_t inFlightFrames, bool makeSemaphores) {
     if (makeSemaphores) {
         m_imageAvailable.reserve(inFlightFrames);
         m_renderFinished.reserve(inFlightFrames);
@@ -49,12 +49,12 @@ void RenderSync::destroy() {
     }
     m_imageAvailable.clear();
 
-    if (auto renderFinished : m_renderFinished) {
+    for (auto renderFinished : m_renderFinished) {
         vkDestroySemaphore(m_device->get(), renderFinished, nullptr);
     }
     m_renderFinished.clear();
 
-    if (auto frameRendering : m_frameRendering) {
+    for (auto frameRendering : m_frameRendering) {
         vkDestroyFence(m_device->get(), frameRendering, nullptr);
     }
     m_frameRendering.clear();
@@ -64,12 +64,14 @@ void RenderSync::waitForFrame(size_t index) {
     vkWaitForFences(m_device->get(), 1, &m_frameRendering[index], VK_TRUE, std::numeric_limits<uint64_t>::max());
 }
 
-uint32_t acquireNextImage(size_t index, Swapchain* swapchain) {
+uint32_t RenderSync::acquireNextImage(size_t index, Swapchain* swapchain) {
+    uint32_t imageIndex = 0;
     vkAcquireNextImageKHR(m_device->get(), swapchain->get(), std::numeric_limits<uint64_t>::max(),
                           m_imageAvailable[index], VK_NULL_HANDLE, &imageIndex);
+    return imageIndex;
 }
 
-void resetFrame(size_t index) {
+void RenderSync::resetFrame(size_t index) {
     vkResetFences(m_device->get(), 1, &m_frameRendering[index]);
 }
 

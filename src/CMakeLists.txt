@@ -1,4 +1,5 @@
 set(CMAKE_CXX_STANDARD 17)
+
 set(CMAKE_CXX_STANDARD_REQUIRED)
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -85,10 +86,17 @@ set(scintillator_synth_files
     ScinthDef.hpp
     scinsynth.cpp
 
-    av/CodecChooser.cpp
-    av/CodecChooser.hpp
-    av/Context.cpp
-    av/Context.hpp
+    av/AVIncludes.hpp
+    av/Buffer.cpp
+    av/Buffer.hpp
+    av/BufferPool.cpp
+    av/BufferPool.hpp
+    av/Encoder.cpp
+    av/Encoder.hpp
+    av/Frame.cpp
+    av/Frame.hpp
+    av/ImageEncoder.cpp
+    av/ImageEncoder.hpp
 
     vulkan/Buffer.cpp
     vulkan/Buffer.hpp
@@ -138,6 +146,7 @@ target_link_libraries(scinsynth
     VulkanMemoryAllocator
     avcodec
     avformat
+    avutil
     gflags
     glfw
     glm

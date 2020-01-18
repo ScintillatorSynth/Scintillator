@@ -1,6 +1,6 @@
 #include "vulkan/ImageSet.hpp"
 
-#include "av/Frame.hpp"
+#include "av/Buffer.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Swapchain.hpp"
 
@@ -83,7 +83,7 @@ bool ImageSet::createFramebuffer(uint32_t width, uint32_t height, size_t numberO
         createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
         createInfo.tiling = VK_IMAGE_TILING_LINEAR;
-        createInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |VK_IMAGE_USAGE_TRANSFER_SRC_BIT
+        createInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
             | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
         VmaAllocationCreateInfo allocInfo = {};
@@ -104,7 +104,7 @@ bool ImageSet::createFramebuffer(uint32_t width, uint32_t height, size_t numberO
     return true;
 }
 
-bool ImageSet::readbackFrame(size_t index, scin::av::Frame* frame) {
+bool ImageSet::readbackImage(size_t index, scin::av::Buffer* buffer) {
     // Only support mapping from our own allocatoins, and only those created with HOST_COHERENT
     if (index >= m_allocations.size()) {
         return false;
@@ -115,7 +115,7 @@ bool ImageSet::readbackFrame(size_t index, scin::av::Frame* frame) {
     if (!mappedFrame) {
         return false;
     }
-    std::memcpy(frame->data(), mappedFrame, frame->sizeInBytes());
+    std::memcpy(buffer->data(), mappedFrame, buffer->size());
     vmaUnmapMemory(m_device->allocator(), m_allocations[index]);
     return true;
 }

@@ -2,7 +2,6 @@
 #include "Compositor.hpp"
 #include "OscHandler.hpp"
 #include "Version.hpp"
-#include "av/CodecChooser.hpp"
 #include "core/Archetypes.hpp"
 #include "core/FileSystem.hpp"
 #include "core/LogLevels.hpp"
@@ -173,8 +172,7 @@ int main(int argc, char* argv[]) {
     }
 
     std::shared_ptr<scin::core::Archetypes> archetypes(new scin::core::Archetypes());
-    std::shared_ptr<scin::av::CodecChooser> codecChooser(new scin::av::CodecChooser());
-    std::shared_ptr<scin::Async> async(new scin::Async(archetypes, compositor, codecChooser));
+    std::shared_ptr<scin::Async> async(new scin::Async(archetypes, compositor));
     async->run(FLAGS_async_worker_threads);
 
     // Chain async calls to load VGens, then ScinthDefs.
@@ -182,11 +180,6 @@ int main(int argc, char* argv[]) {
         async->scinthDefLoadDirectory(quarkPath / "scinthdefs",
                                       [](int) { spdlog::info("finished loading predefined VGens and ScinthDefs."); });
     });
-
-    if (!window.createSyncObjects()) {
-        spdlog::error("error creating device semaphores.");
-        return EXIT_FAILURE;
-    }
 
     // Start listening for incoming OSC commands on UDP.
     scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
@@ -196,7 +189,6 @@ int main(int argc, char* argv[]) {
     window.run(compositor);
 
     // ========== Vulkan cleanup.
-    window.destroySyncObjects();
     async->stop();
     compositor->destroy();
     window.destroySwapchain();

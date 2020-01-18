@@ -192,32 +192,6 @@ public:
                 m_compositor->cue(scinthDef, nodeID);
             } break;
 
-            case kMediaTypeTagQuery: {
-                osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
-                std::string typeTag;
-                if (!args->IsNil()) {
-                    typeTag = (args++)->AsString();
-                } else {
-                    ++args;
-                }
-                std::string mimeType;
-                if (args != message.ArgumentsEnd()) {
-                    if (!args->IsNil()) {
-                        mimeType = (args++)->AsString();
-                    }
-                }
-                m_async->mediaTypeTagQuery(typeTag, mimeType, [this, endpoint](std::string typeTag) {
-                    std::array<char, 128> buffer;
-                    UdpTransmitSocket socket(endpoint);
-                    osc::OutboundPacketStream p(buffer.data(), sizeof(buffer));
-                    p << osc::BeginMessage("/scin_done");
-                    p << "/scin_media_typeTagQuery";
-                    p << typeTag.data();
-                    p << osc::EndMessage;
-                    socket.Send(p.Data(), p.Size());
-                });
-            } break;
-
             case kNRTScreenShot: {
             } break;
             }

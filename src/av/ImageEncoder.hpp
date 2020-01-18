@@ -8,13 +8,11 @@ namespace scin { namespace av {
 
 class ImageEncoder : public Encoder {
 public:
-    ImageEncoder();
+    ImageEncoder(int width, int height, std::function<void(bool)> completion);
     virtual ~ImageEncoder();
 
     bool createFile(const fs::path& filePath, const std::string& mimeType) override;
     bool queueEncode(double frameTime, size_t frameNumber, SendBuffer& callbackOut) override;
-private:
-
 };
 
 } // namespace av

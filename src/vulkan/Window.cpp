@@ -1,13 +1,13 @@
 #include "vulkan/Window.hpp"
 
 #include "Compositor.hpp"
-#include "av/Context.hpp"
 #include "vulkan/Canvas.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/ImageSet.hpp"
 #include "vulkan/Instance.hpp"
+#include "vulkan/Offscreen.hpp"
 #include "vulkan/RenderSync.hpp"
 #include "vulkan/Swapchain.hpp"
 
@@ -30,8 +30,7 @@ Window::Window(std::shared_ptr<Instance> instance, int width, int height, bool k
     m_surface(VK_NULL_HANDLE),
     m_stop(false),
     m_periodSum(0.0),
-    m_lateFrames(0),
-    m_readbackSupportsBlit(false) {}
+    m_lateFrames(0) {}
 
 Window::~Window() {}
 
@@ -59,10 +58,6 @@ bool Window::createSwapchain(std::shared_ptr<Device> device) {
     // If we are rendering to a framebuffer create an Offscreen renderer to facilitate.
     if (!m_directRendering) {
         m_offscreen.reset(new Offscreen(m_device));
-        if (!m_offscreen->create(m_width, m_height, m_swapchain->numberOfImages() + 1)) {
-            spdlog::error("Window failed to create Offscreen rendering environment.");
-            return false;
-        }
     }
 
     return true;
@@ -187,7 +182,10 @@ void Window::runDirectRendering(std::shared_ptr<Compositor> compositor) {
 }
 
 void Window::runFixedFrameRate(std::shared_ptr<Compositor> compositor) {
-
+    if (!m_offscreen->create(compositor, m_width, m_height, m_swapchain->numberOfImages() + 1)) {
+        spdlog::error("Window failed to create Offscreen rendering environment.");
+        return;
+    }
 }
 
 } // namespace vk
