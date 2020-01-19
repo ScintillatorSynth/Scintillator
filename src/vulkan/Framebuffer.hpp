@@ -23,6 +23,7 @@ public:
 
     VkFormat format();
     VkImage image(size_t index);
+    std::shared_ptr<Canvas> canvas() { return m_canvas; }
 
 private:
     std::shared_ptr<Device> m_device;

@@ -5,6 +5,7 @@
 
 #include "vulkan/Vulkan.hpp"
 
+#include <array>
 #include <atomic>
 #include <condition_variable>
 #include <list>
@@ -23,6 +24,7 @@ class BufferPool;
 
 namespace vk {
 
+class Canvas;
 class CommandBuffer;
 class CommandPool;
 class Device;
@@ -63,6 +65,12 @@ public:
      */
     void addEncoder(std::shared_ptr<scin::av::Encoder> encoder);
 
+    /*! Returns a command buffer that will blit from the most recently updated copy of the framebuffer.
+     *
+     * \return A command buffer useable in a swapchain update, or nullptr if no buffer has been prepared.
+     */
+    std::shared_ptr<CommandBuffer> getSwapchainBlit();
+
     /*! Can be called before or after start(), will pause the rendering. Time can be advanced with advanceFrame()
      * calls if desired.
      */
@@ -86,6 +94,8 @@ public:
      */
     void destroy();
 
+    std::shared_ptr<Canvas> canvas();
+
 private:
     void threadMain(std::shared_ptr<Compositor> compositor);
     void processPendingBlits(size_t frameIndex);
@@ -108,12 +118,19 @@ private:
     std::vector<std::shared_ptr<CommandBuffer>> m_sourceBlitCommands;
     std::vector<std::shared_ptr<CommandBuffer>> m_swapBlitCommands;
 
+    std::mutex m_swapMutex;
+    enum SourceImageState { kEmpty, kRequested, kPipelined, kReady, kInUse };
+    std::array<SourceImageState, 2> m_sourceStates;
+
     // threadMain-only access
     std::thread m_renderThread;
     std::vector<std::shared_ptr<CommandBuffer>> m_commandBuffers;
     std::vector<std::vector<scin::av::Encoder::SendBuffer>> m_pendingEncodes;
     std::shared_ptr<ImageSet> m_readbackImages;
     bool m_readbackSupportsBlit;
+    // The index of this vector is the frameIndex, so the index of the pipelined framebuffer. The value is -1 if no
+    // swapchain blit was requested, or the index of the swapchain source image (so 0 or 1).
+    std::vector<int> m_pendingSwapchainBlits;
 
     std::mutex m_encodersMutex;
     std::list<std::shared_ptr<scin::av::Encoder>> m_encoders;
