@@ -48,7 +48,7 @@ bool Offscreen::create(std::shared_ptr<Compositor> compositor, int width, int he
     // the framebuffer to those readback images, and building command buffers to do the actual readback.
     m_readbackImages.reset(new ImageSet(m_device));
     if (!m_readbackImages->createHostCoherent(width, height, m_numberOfImages)) {
-        spdlog::error("Window failed to create {} readback images.", m_numberOfImages);
+        spdlog::error("Offscreen failed to create {} readback images.", m_numberOfImages);
         return false;
     }
 
@@ -57,31 +57,37 @@ bool Offscreen::create(std::shared_ptr<Compositor> compositor, int width, int he
     VkFormatProperties format;
     vkGetPhysicalDeviceFormatProperties(m_device->getPhysical(), m_framebuffer->format(), &format);
     if (!(format.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT)) {
-        spdlog::warn("Window swapchain surface doesn't support blit source, readback will be slow.");
+        spdlog::warn("Offscreen swapchain surface doesn't support blit source, readback will be slow.");
         m_readbackSupportsBlit = false;
     }
     vkGetPhysicalDeviceFormatProperties(m_device->getPhysical(), m_readbackImages->format(), &format);
     if (!(format.linearTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT)) {
-        spdlog::warn("Window readback image format doesn't support blit destination, readback will be slow.");
+        spdlog::warn("Offscreen readback image format doesn't support blit destination, readback will be slow.");
         m_readbackSupportsBlit = false;
     }
 
     // Build the readback commands.
     if (!m_commandPool->create()) {
-        spdlog::error("Window failed to create command pool.");
+        spdlog::error("Offscreen failed to create command pool.");
         return false;
     }
     m_readbackCommands = m_commandPool->createBuffers(m_numberOfImages, true);
     if (!m_readbackCommands) {
-        spdlog::error("Window failed to create command buffers.");
+        spdlog::error("Offscreen failed to create command buffers.");
         return false;
     }
     for (auto i = 0; i < m_numberOfImages; ++i) {
+        if (!writeBlitCommands(m_readbackCommands, i, width, height, m_framebuffer->image(i),
+                               m_readbackImages->get()[i])) {
+            spdlog::error("Offscreen failed to create readback command buffers.");
+            return false;
+        }
     }
 
     m_render = false;
     m_frameRate = 0;
     m_renderThread = std::thread(&Offscreen::threadMain, this, compositor);
+    return true;
 }
 
 bool Offscreen::createSwapchainSources(Swapchain* swapchain) {
@@ -94,20 +100,41 @@ bool Offscreen::createSwapchainSources(Swapchain* swapchain) {
         return false;
     }
 
-    // Build the transfer from swapchain sources -> swapchain command buffers.
+    // Build the transfer from framebuffer to swapchain sources command buffers.
+    for (auto i = 0; i < m_numberOfImages; ++i) {
+        std::shared_ptr<CommandBuffer> buffer = m_commandPool->createBuffers(2, true);
+        if (!buffer) {
+            spdlog::error("Offscreen failed creating swapchain source blit command buffers.");
+            return false;
+        }
+        m_sourceBlitCommands.push_back(buffer);
+
+        for (auto j = 0; j < 2; ++j) {
+            if (!writeBlitCommands(buffer, j, width, height, m_framebuffer->image(i), m_swapSources->get()[i])) {
+                spdlog::error("Offscreen failed writing swapchain source blit command buffers.");
+                return false;
+            }
+        }
+    }
+
+    // Build the transfer from swapchain sources -> swapchain image command buffers.
     for (auto i = 0; i < 2; ++i) {
-        std::shared_ptr<CommandBuffer> buffers = m_commandPool->createBuffers(swapchain->numberOfImages(), true);
-        if (!buffers) {
+        std::shared_ptr<CommandBuffer> buffer = m_commandPool->createBuffers(swapchain->numberOfImages(), true);
+        if (!buffer) {
             spdlog::error("Offscreen failed creating swapchain blit command buffers.");
             return false;
         }
-        m_swapBlitCommands.push_back(buffers);
+        m_swapBlitCommands.push_back(buffer);
 
-        // The jth command buffer contains instructions to blit from the ith swap source image to the jth swapchain
-        // image.
+        // The jth command buffer will blit from the ith swap source image to the jth swapchain image.
         for (auto j = 0; j < swapchain->numberOfImages(); ++j) {
+            if (!writeBlitCommands(buffer, j, width, height, m_swapSources->get()[i], swapchain->images()->get()[j])) {
+                spdlog::error("Ofscreen failed writing swapchain blit command buffers.");
+                return false;
+            }
         }
     }
+    return true;
 }
 
 void Offscreen::addEncoder(std::shared_ptr<scin::av::Encoder> encoder) {

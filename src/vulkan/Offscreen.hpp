@@ -105,6 +105,7 @@ private:
 
     // Swapchain render support.
     std::unique_ptr<ImageSet> m_swapSources;
+    std::vector<std::shared_ptr<CommandBuffer>> m_sourceBlitCommands;
     std::vector<std::shared_ptr<CommandBuffer>> m_swapBlitCommands;
 
     // threadMain-only access
