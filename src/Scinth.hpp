@@ -37,8 +37,9 @@ public:
 
     /*! Build the CommandBuffers to render this Scinth. Can be called multiple times to rebuild them as needed.
      */
-    bool buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, std::shared_ptr<vk::Buffer> vertexBuffer,
-                      std::shared_ptr<vk::Buffer> indexBuffer, std::shared_ptr<vk::Pipeline> pipeline);
+    bool buildBuffers(std::shared_ptr<vk::CommandPool> commandPool, vk::Canvas* canvas,
+                      std::shared_ptr<vk::Buffer> vertexBuffer, std::shared_ptr<vk::Buffer> indexBuffer,
+                      std::shared_ptr<vk::Pipeline> pipeline);
 
     /*! Prepare for the next frame to render.
      *

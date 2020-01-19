@@ -38,10 +38,11 @@ bool Scinth::create(vk::UniformLayout* uniformLayout, size_t numberOfImages) {
     return true;
 }
 
-bool Scinth::buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, std::shared_ptr<vk::Buffer> vertexBuffer,
-                          std::shared_ptr<vk::Buffer> indexBuffer, std::shared_ptr<vk::Pipeline> pipeline) {
-    m_commands = commandPool->createBuffers(canvas->numberOfImages(), false);
-    if (!m_commands) {
+bool Scinth::buildBuffers(std::shared_ptr<vk::CommandPool> commandPool, vk::Canvas* canvas,
+                          std::shared_ptr<vk::Buffer> vertexBuffer, std::shared_ptr<vk::Buffer> indexBuffer,
+                          std::shared_ptr<vk::Pipeline> pipeline) {
+    m_commands.reset(new vk::CommandBuffer(m_device, commandPool));
+    if (!m_commands->create(canvas->numberOfImages(), false)) {
         spdlog::error("failed creating command buffers for Scinth {}", m_nodeID);
         return false;
     }

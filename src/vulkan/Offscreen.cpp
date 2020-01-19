@@ -23,13 +23,15 @@ Offscreen::Offscreen(std::shared_ptr<Device> device):
     m_framebuffer(new Framebuffer(device)),
     m_renderSync(new RenderSync(device)),
     m_commandPool(new CommandPool(device)),
-    m_sourceStates({ kEmpty, kEmpty }) {}
+    m_sourceStates({ kEmpty, kEmpty }),
+    m_render(false),
+    m_frameRate(0),
+    m_deltaTime(0) {}
 
 Offscreen::~Offscreen() { destroy(); }
 
-bool Offscreen::create(std::shared_ptr<Compositor> compositor, int width, int height, size_t numberOfImages) {
+bool Offscreen::create(int width, int height, size_t numberOfImages) {
     m_bufferPool.reset(new scin::av::BufferPool(width, height));
-    m_compositor = compositor;
     m_numberOfImages = std::max(numberOfImages, 2ul);
 
     spdlog::info("creating Offscreen renderer with {} images.", m_numberOfImages);
@@ -56,12 +58,12 @@ bool Offscreen::create(std::shared_ptr<Compositor> compositor, int width, int he
     // Check if the physical device supports from and to the required formats.
     m_readbackSupportsBlit = true;
     VkFormatProperties format;
-    vkGetPhysicalDeviceFormatProperties(m_device->getPhysical(), m_framebuffer->format(), &format);
+    vkGetPhysicalDeviceFormatProperties(m_device->physical(), m_framebuffer->format(), &format);
     if (!(format.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT)) {
         spdlog::warn("Offscreen swapchain surface doesn't support blit source, readback will be slow.");
         m_readbackSupportsBlit = false;
     }
-    vkGetPhysicalDeviceFormatProperties(m_device->getPhysical(), m_readbackImages->format(), &format);
+    vkGetPhysicalDeviceFormatProperties(m_device->physical(), m_readbackImages->format(), &format);
     if (!(format.linearTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT)) {
         spdlog::warn("Offscreen readback image format doesn't support blit destination, readback will be slow.");
         m_readbackSupportsBlit = false;
@@ -72,8 +74,8 @@ bool Offscreen::create(std::shared_ptr<Compositor> compositor, int width, int he
         spdlog::error("Offscreen failed to create command pool.");
         return false;
     }
-    m_readbackCommands = m_commandPool->createBuffers(m_numberOfImages, true);
-    if (!m_readbackCommands) {
+    m_readbackCommands.reset(new CommandBuffer(m_device, m_commandPool));
+    if (!m_readbackCommands->create(m_numberOfImages, true)) {
         spdlog::error("Offscreen failed to create command buffers.");
         return false;
     }
@@ -85,9 +87,6 @@ bool Offscreen::create(std::shared_ptr<Compositor> compositor, int width, int he
         }
     }
 
-    m_render = false;
-    m_frameRate = 0;
-    m_renderThread = std::thread(&Offscreen::threadMain, this, compositor);
     return true;
 }
 
@@ -103,8 +102,8 @@ bool Offscreen::createSwapchainSources(Swapchain* swapchain) {
 
     // Build the transfer from framebuffer to swapchain sources command buffers.
     for (auto i = 0; i < m_numberOfImages; ++i) {
-        std::shared_ptr<CommandBuffer> buffer = m_commandPool->createBuffers(2, true);
-        if (!buffer) {
+        std::shared_ptr<CommandBuffer> buffer(new CommandBuffer(m_device, m_commandPool));
+        if (!buffer->create(2, true)) {
             spdlog::error("Offscreen failed creating swapchain source blit command buffers.");
             return false;
         }
@@ -121,8 +120,8 @@ bool Offscreen::createSwapchainSources(Swapchain* swapchain) {
 
     // Build the transfer from swapchain sources -> swapchain image command buffers.
     for (auto i = 0; i < 2; ++i) {
-        std::shared_ptr<CommandBuffer> buffer = m_commandPool->createBuffers(swapchain->numberOfImages(), true);
-        if (!buffer) {
+        std::shared_ptr<CommandBuffer> buffer(new CommandBuffer(m_device, m_commandPool));
+        if (!buffer->create(swapchain->numberOfImages(), true)) {
             spdlog::error("Offscreen failed creating swapchain blit command buffers.");
             return false;
         }
@@ -140,6 +139,11 @@ bool Offscreen::createSwapchainSources(Swapchain* swapchain) {
     // We know there will be a swapchain requesting frames so start a render request for the first image.
     m_sourceStates[0] = kRequested;
     return true;
+}
+
+void Offscreen::start(std::shared_ptr<Compositor> compositor, int frameRate) {
+    m_frameRate = frameRate;
+    m_renderThread = std::thread(&Offscreen::threadMain, this, compositor);
 }
 
 void Offscreen::addEncoder(std::shared_ptr<scin::av::Encoder> encoder) {

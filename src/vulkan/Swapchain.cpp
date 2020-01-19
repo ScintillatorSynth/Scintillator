@@ -23,11 +23,19 @@ Swapchain::Swapchain(std::shared_ptr<Device> device):
 Swapchain::~Swapchain() { destroy(); }
 
 bool Swapchain::create(Window* window, bool directRendering) {
+    VkBool32 presentSupported = VK_FALSE;
+    vkGetPhysicalDeviceSurfaceSupportKHR(m_device->physical(), m_device->presentFamilyIndex(), window->surface(),
+                                         &presentSupported);
+    if (presentSupported != VK_TRUE) {
+        spdlog::error("Device doesn't support presentation of surfaces.");
+        return false;
+    }
+
     // Pick swap chain format from available options.
     uint32_t formatCount;
-    vkGetPhysicalDeviceSurfaceFormatsKHR(m_device->getPhysical(), window->getSurface(), &formatCount, nullptr);
+    vkGetPhysicalDeviceSurfaceFormatsKHR(m_device->physical(), window->surface(), &formatCount, nullptr);
     std::vector<VkSurfaceFormatKHR> formats(formatCount);
-    vkGetPhysicalDeviceSurfaceFormatsKHR(m_device->getPhysical(), window->getSurface(), &formatCount, formats.data());
+    vkGetPhysicalDeviceSurfaceFormatsKHR(m_device->physical(), window->surface(), &formatCount, formats.data());
     // If the only entry returned is UNDEFINED that means the surface supports all formats equally, pick preferred
     // BGRA format.
     if (formats.size() == 1 && formats[0].format == VK_FORMAT_UNDEFINED) {
@@ -44,17 +52,16 @@ bool Swapchain::create(Window* window, bool directRendering) {
         }
     }
 
-    // Pick present mode, with preference for MAILBOX if supported, which allows for lower-latency renders.
+    // Pick present mode, always FIFO to rate-limit direct rendering.
     uint32_t presentModeCount;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(m_device->getPhysical(), window->getSurface(), &presentModeCount,
-                                              nullptr);
+    vkGetPhysicalDeviceSurfacePresentModesKHR(m_device->physical(), window->surface(), &presentModeCount, nullptr);
     std::vector<VkPresentModeKHR> presentModes(presentModeCount);
-    vkGetPhysicalDeviceSurfacePresentModesKHR(m_device->getPhysical(), window->getSurface(), &presentModeCount,
+    vkGetPhysicalDeviceSurfacePresentModesKHR(m_device->physical(), window->surface(), &presentModeCount,
                                               presentModes.data());
 
     // Choose swap extent, pixel dimensions of swap chain.
     VkSurfaceCapabilitiesKHR capabilities;
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_device->getPhysical(), window->getSurface(), &capabilities);
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_device->physical(), window->surface(), &capabilities);
     // If the currentExtent field is set to MAX_UINT this means we can pick the size of the extent we want, otherwise
     // we should use the size provided in the capabilities struct.
     if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
@@ -78,7 +85,7 @@ bool Swapchain::create(Window* window, bool directRendering) {
     // Populate Swap Chain create info structure.
     VkSwapchainCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = window->getSurface();
+    createInfo.surface = window->surface();
     createInfo.minImageCount = m_numberOfImages;
     createInfo.imageFormat = m_surfaceFormat.format;
     createInfo.imageColorSpace = m_surfaceFormat.colorSpace;

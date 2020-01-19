@@ -46,7 +46,7 @@ public:
      *
      * \param numberOfImages Should be at least 2.
      */
-    bool create(std::shared_ptr<Compositor> compositor, int width, int height, size_t numberOfImages);
+    bool create(int width, int height, size_t numberOfImages);
 
     /*! If this Offscreen is contained in a Window, we create additional copy targets for the offscreen to allow the
      * Window to update independently. This also creates the command buffers for blitting between all possible
@@ -59,7 +59,7 @@ public:
 
     /*! Start a thread to render at the provided framerate.
      */
-    void start(int frameRate);
+    void start(std::shared_ptr<Compositor> compositor, int frameRate);
 
     /*! Adds a video or image encoder to the list of encoders to call with readback images from subsequent frames.
      */
@@ -109,9 +109,8 @@ private:
 
     std::shared_ptr<Framebuffer> m_framebuffer;
     std::unique_ptr<RenderSync> m_renderSync;
-    std::unique_ptr<CommandPool> m_commandPool;
+    std::shared_ptr<CommandPool> m_commandPool;
     std::unique_ptr<scin::av::BufferPool> m_bufferPool;
-    std::shared_ptr<Compositor> m_compositor;
 
     // Swapchain render support.
     std::unique_ptr<ImageSet> m_swapSources;

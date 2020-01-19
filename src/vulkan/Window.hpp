@@ -35,17 +35,12 @@ class Swapchain;
  */
 class Window {
 public:
-    Window(std::shared_ptr<Instance> instance, int width, int height, bool keepOnTop, int frameRate);
+    Window(std::shared_ptr<Instance> instance, std::shared_ptr<Device> device, int width, int height, bool keepOnTop,
+           int frameRate);
     ~Window();
 
-    // TODO: weird dependency ordering here where the surface needs to be created in this function, and the device
-    // needs to know the surface in order to pick a suitable device that supports rendering to that surface. If we
-    // aren't rendering to an onscreen window a surface will have to be provided to Device some other way, and perhaps
-    // Device will have a different create() function for that context.
     bool create();
-    bool createSwapchain(std::shared_ptr<Device> device);
     void run(std::shared_ptr<Compositor> compositor);
-    void destroySwapchain();
     void destroy();
 
     /*! Typically called on another thread, will exit the run() loop on next iteration.
@@ -53,7 +48,7 @@ public:
     void stop() { m_stop = true; }
 
     GLFWwindow* get() { return m_window; }
-    VkSurfaceKHR getSurface() { return m_surface; }
+    VkSurfaceKHR surface() { return m_surface; }
     int width() const { return m_width; }
     int height() const { return m_height; }
     std::shared_ptr<Canvas> canvas();

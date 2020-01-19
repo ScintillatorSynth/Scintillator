@@ -78,7 +78,7 @@ std::shared_ptr<Scinth> ScinthDef::cue(std::shared_ptr<ScinthDef> scinthDef, int
         spdlog::error("failed to create Scinth {} from ScinthDef {}", nodeID, scinthDef->m_abstractScinthDef->name());
         return nullptr;
     }
-    if (!scinth->buildBuffers(scinthDef->m_commandPool.get(), scinthDef->m_canvas.get(), scinthDef->m_vertexBuffer,
+    if (!scinth->buildBuffers(scinthDef->m_commandPool, scinthDef->m_canvas.get(), scinthDef->m_vertexBuffer,
                               scinthDef->m_indexBuffer, scinthDef->m_pipeline)) {
         spdlog::error("failed to build command buffers on Scinth {} from ScinthDef {}", nodeID,
                       scinthDef->m_abstractScinthDef->name());

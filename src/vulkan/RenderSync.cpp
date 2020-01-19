@@ -13,10 +13,10 @@ RenderSync::~RenderSync() { destroy(); }
 
 bool RenderSync::create(size_t inFlightFrames, bool makeSemaphores) {
     if (makeSemaphores) {
-        m_imageAvailable.reserve(inFlightFrames);
-        m_renderFinished.reserve(inFlightFrames);
+        m_imageAvailable.resize(inFlightFrames);
+        m_renderFinished.resize(inFlightFrames);
     }
-    m_frameRendering.reserve(inFlightFrames);
+    m_frameRendering.resize(inFlightFrames);
 
     for (auto i = 0; i < inFlightFrames; ++i) {
         if (makeSemaphores) {
@@ -44,18 +44,18 @@ bool RenderSync::create(size_t inFlightFrames, bool makeSemaphores) {
 }
 
 void RenderSync::destroy() {
-    for (auto imageAvailable : m_imageAvailable) {
-        vkDestroySemaphore(m_device->get(), imageAvailable, nullptr);
+    for (auto i = 0; i < m_imageAvailable.size(); ++i) {
+        vkDestroySemaphore(m_device->get(), m_imageAvailable[i], nullptr);
     }
     m_imageAvailable.clear();
 
-    for (auto renderFinished : m_renderFinished) {
-        vkDestroySemaphore(m_device->get(), renderFinished, nullptr);
+    for (auto i = 0; i < m_renderFinished.size(); ++i) {
+        vkDestroySemaphore(m_device->get(), m_renderFinished[i], nullptr);
     }
     m_renderFinished.clear();
 
-    for (auto frameRendering : m_frameRendering) {
-        vkDestroyFence(m_device->get(), frameRendering, nullptr);
+    for (auto i = 0; i < m_frameRendering.size(); ++i) {
+        vkDestroyFence(m_device->get(), m_frameRendering[i], nullptr);
     }
     m_frameRendering.clear();
 }

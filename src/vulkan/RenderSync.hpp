@@ -43,7 +43,6 @@ public:
     VkSemaphore renderFinished(size_t index) { return m_renderFinished[index]; }
     VkFence frameRendering(size_t index) { return m_frameRendering[index]; }
 
-
 private:
     std::shared_ptr<Device> m_device;
 

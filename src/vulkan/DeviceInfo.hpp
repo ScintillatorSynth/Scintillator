@@ -3,12 +3,13 @@
 
 #include "vulkan/Vulkan.hpp"
 
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace scin { namespace vk {
 
-class Window;
+class Instance;
 
 /*! Wraps a VkPhysicalDevice and can answer basic questions about its properties and compatability with different use
  * cases, mainly in a Window or Surface rendering setup.
@@ -20,12 +21,13 @@ public:
      */
     enum Type { kCPU = 2, kDiscreteGPU = 0, kIntegratedGPU = 1, kOther = 3, kNothing = 4 };
 
-    DeviceInfo(VkPhysicalDevice device);
+    DeviceInfo(std::shared_ptr<Instance> instance, VkPhysicalDevice device);
     static const std::vector<const char*>& windowExtensions();
 
-    // TODO: this right now has to be called before the device can be constructed, to get the queuefamily indices.
-    // Weird side effect for a query method.
-    bool supportsWindow(Window* window);
+    /*! Populate internal data structures with needed values. Will return false if the device can't support basic
+     * graphics operations and shouldn't be considered a candidate device.
+     */
+    bool build();
 
     VkPhysicalDevice physicalDevice() const { return m_physicalDevice; }
     const char* name() const { return reinterpret_cast<const char*>(&m_properties.deviceName); }
@@ -36,13 +38,16 @@ public:
     Type type() const;
     const char* typeName() const;
     const char* uuid() const { return m_uuid.data(); }
+    bool supportsWindow() const { return m_supportsWindow; }
 
 private:
+    std::shared_ptr<Instance> m_instance;
     VkPhysicalDevice m_physicalDevice;
     VkPhysicalDeviceProperties m_properties;
     std::string m_uuid;
     int m_presentFamilyIndex;
     int m_graphicsFamilyIndex;
+    bool m_supportsWindow;
 };
 
 } // namespace vk

@@ -24,14 +24,6 @@ void CommandPool::destroy() {
     }
 }
 
-std::shared_ptr<CommandBuffer> CommandPool::createBuffers(size_t count, bool isPrimary) {
-    std::shared_ptr<CommandBuffer> commandBuffer(new CommandBuffer(m_device, this));
-    if (!commandBuffer->create(count, isPrimary)) {
-        return nullptr;
-    }
-    return commandBuffer;
-}
-
 } // namespace vk
 
 } // namespace scin

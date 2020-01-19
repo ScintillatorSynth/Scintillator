@@ -26,10 +26,13 @@ void DeviceChooser::enumerateAllDevices() {
     std::vector<VkPhysicalDevice> devices(deviceCount);
     vkEnumeratePhysicalDevices(m_instance->get(), &deviceCount, devices.data());
     for (const auto& device : devices) {
-        m_devices.emplace_back(DeviceInfo(device));
-        if (m_devices.back().type() < bestType) {
-            m_bestDeviceIndex = m_devices.size() - 1;
-            bestType = m_devices.back().type();
+        DeviceInfo deviceInfo(m_instance, device);
+        if (deviceInfo.build()) {
+            m_devices.push_back(deviceInfo);
+            if (deviceInfo.type() < bestType) {
+                m_bestDeviceIndex = m_devices.size() - 1;
+                bestType = deviceInfo.type();
+            }
         }
     }
 }

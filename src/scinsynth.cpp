@@ -57,8 +57,7 @@ DEFINE_string(device_uuid, "",
               "If empty, will pick the highest performance device available. Otherwise, should be as "
               "many characters of the uuid as needed to uniquely identify the device.");
 DEFINE_bool(swiftshader, false,
-            "If true, ignores --device_uuid and will always match the swiftshader device, if "
-            "present.");
+            "If true, ignores --device_uuid and will always match the swiftshader device, if present.");
 
 int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
@@ -109,15 +108,9 @@ int main(int argc, char* argv[]) {
         spdlog::info(deviceReport);
     }
 
-    scin::vk::Window window(instance, FLAGS_width, FLAGS_height, FLAGS_keep_on_top, FLAGS_frame_rate);
-    if (!window.create()) {
-        spdlog::error("unable to create glfw window.");
-        return EXIT_FAILURE;
-    }
-
     // Create Vulkan physical and logical device.
     std::shared_ptr<scin::vk::Device> device;
-    // If swiftshader was selected that trumps all other device selection arguments.
+    // If swiftshader was selected prefer it over all other device selection arguments.
     if (FLAGS_swiftshader) {
         for (auto info : chooser.devices()) {
             if (info.isSwiftShader()) {
@@ -130,15 +123,13 @@ int main(int argc, char* argv[]) {
         if (FLAGS_device_uuid.size()) {
             for (auto info : chooser.devices()) {
                 if (std::strncmp(FLAGS_device_uuid.data(), info.uuid(), FLAGS_device_uuid.size()) == 0) {
-                    if (info.supportsWindow(&window)) {
-                        spdlog::info("Device uuid {} match, selecting {}", FLAGS_device_uuid, info.name());
-                        device.reset(new scin::vk::Device(instance, info));
-                        break;
-                    } else {
+                    if (FLAGS_create_window && !info.supportsWindow()) {
                         spdlog::error("Device uuid {}, name {}, does not support rendering to a window.",
                                       FLAGS_device_uuid, info.name());
                         return EXIT_FAILURE;
                     }
+                    spdlog::info("Device uuid {} match, selecting {}", FLAGS_device_uuid, info.name());
+                    device.reset(new scin::vk::Device(instance, info));
                 }
             }
         }
@@ -146,27 +137,36 @@ int main(int argc, char* argv[]) {
 
     if (!device && chooser.bestDeviceIndex() >= 0) {
         auto info = chooser.devices().at(chooser.bestDeviceIndex());
-        if (info.supportsWindow(&window)) {
-            spdlog::info("Choosing fastest device class {}, device {}", info.typeName(), info.name());
-            device.reset(new scin::vk::Device(instance, info));
+        if (FLAGS_create_window && !info.supportsWindow()) {
+            spdlog::error("Automatically chosen device {} doesn't support window rendering.", info.name());
+            return EXIT_FAILURE;
         }
+        spdlog::info("Choosing fastest device class {}, device {}", info.typeName(), info.name());
+        device.reset(new scin::vk::Device(instance, info));
     }
 
     if (!device) {
         spdlog::error("failed to find a suitable Vulkan device.");
         return EXIT_FAILURE;
     }
-    if (!device->create(&window)) {
+    if (!device->create(FLAGS_create_window)) {
         spdlog::error("unable to create Vulkan device.");
         return EXIT_FAILURE;
     }
 
-    if (!window.createSwapchain(device)) {
-        spdlog::error("unable to create Vulkan swapchain.");
-        return EXIT_FAILURE;
+    std::shared_ptr<scin::vk::Window> window;
+    std::shared_ptr<scin::vk::Canvas> canvas;
+    if (FLAGS_create_window) {
+        window.reset(
+            new scin::vk::Window(instance, device, FLAGS_width, FLAGS_height, FLAGS_keep_on_top, FLAGS_frame_rate));
+        if (!window->create()) {
+            spdlog::error("Failed to create window.");
+            return EXIT_FAILURE;
+        }
+        canvas = window->canvas();
     }
 
-    std::shared_ptr<scin::Compositor> compositor(new scin::Compositor(device, window.canvas()));
+    std::shared_ptr<scin::Compositor> compositor(new scin::Compositor(device, canvas));
     if (!compositor->create()) {
         spdlog::error("unable to create Compositor.");
         return EXIT_FAILURE;
@@ -184,17 +184,16 @@ int main(int argc, char* argv[]) {
 
     // Start listening for incoming OSC commands on UDP.
     scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
-    oscHandler.run(async, archetypes, compositor, [&window] { window.stop(); });
+    oscHandler.run(async, archetypes, compositor, [window] { window->stop(); });
 
     // ========== Main loop.
-    window.run(compositor);
+    window->run(compositor);
 
     // ========== Vulkan cleanup.
     async->stop();
     compositor->destroy();
-    window.destroySwapchain();
+    window->destroy();
     device->destroy();
-    window.destroy();
     instance->destroy();
 
     // ========== glfw cleanup.
@@ -202,5 +201,6 @@ int main(int argc, char* argv[]) {
 
     oscHandler.shutdown();
 
+    spdlog::info("scinsynth exited normally.");
     return EXIT_SUCCESS;
 }
