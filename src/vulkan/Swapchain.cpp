@@ -122,9 +122,12 @@ bool Swapchain::create(Window* window, bool directRendering) {
     }
 
     m_numberOfImages = m_images->getFromSwapchain(this, m_numberOfImages);
-    if (!m_canvas->create(m_images)) {
-        spdlog::error("Swapchain failed to create Canvas.");
-        return false;
+
+    if (directRendering) {
+        if (!m_canvas->create(m_images)) {
+            spdlog::error("Swapchain failed to create Canvas.");
+            return false;
+        }
     }
 
     return true;

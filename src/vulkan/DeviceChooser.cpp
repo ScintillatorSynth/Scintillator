@@ -22,7 +22,6 @@ void DeviceChooser::enumerateAllDevices() {
     }
 
     DeviceInfo::Type bestType = DeviceInfo::Type::kNothing;
-    m_devices.reserve(deviceCount);
     std::vector<VkPhysicalDevice> devices(deviceCount);
     vkEnumeratePhysicalDevices(m_instance->get(), &deviceCount, devices.data());
     for (const auto& device : devices) {

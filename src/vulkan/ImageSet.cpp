@@ -82,14 +82,11 @@ bool ImageSet::createDeviceLocal(uint32_t width, uint32_t height, size_t numberO
         createInfo.mipLevels = 1;
         createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-        createInfo.tiling = VK_IMAGE_TILING_LINEAR;
+        createInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
         createInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
         if (isFramebuffer) {
-            spdlog::info("*** adding color attachment bit");
             createInfo.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-        } else {
-            spdlog::info("*** skipping color attachment bit");
         }
 
         VmaAllocationCreateInfo allocInfo = {};

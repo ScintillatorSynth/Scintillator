@@ -4,6 +4,7 @@ ScinServer {
 	var udpPortNumber;
 	var scinQuarkPath;
     var frameRate;
+    var createWindow;
 	var scinBinaryPath;
 	var <logLevel;
 
@@ -12,8 +13,8 @@ ScinServer {
 	var addr;
 
 	// For local scinsynth instances. Remote not yet supported.
-	*new { |udpPortNumber = 5511, scinQuarkPath = nil, frameRate = -1|
-		^super.newCopyArgs(udpPortNumber, scinQuarkPath, frameRate).init;
+	*new { |udpPortNumber = 5511, scinQuarkPath = nil, frameRate = -1, createWindow = true|
+		^super.newCopyArgs(udpPortNumber, scinQuarkPath, frameRate, createWindow).init;
 	}
 
 	init {
@@ -35,7 +36,7 @@ ScinServer {
 	boot {
 		var commandLine = scinBinaryPath + "--udp_port_number=" ++ udpPortNumber.asString()
 		+ "--quark_dir=" ++ scinQuarkPath + "--log_level=" ++ logLevel.asString() + "--frame_rate="
-        ++ frameRate.asString();
+        ++ frameRate.asString() + "--create_window=" ++ createWindow.asString();
 		commandLine.postln;
 
 		scinPid = commandLine.unixCmd({ |exitCode, exitPid|

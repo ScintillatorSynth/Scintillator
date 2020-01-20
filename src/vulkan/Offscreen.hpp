@@ -59,7 +59,11 @@ public:
 
     /*! Start a thread to render at the provided framerate.
      */
-    void start(std::shared_ptr<Compositor> compositor, int frameRate);
+    void runThreaded(std::shared_ptr<Compositor> compositor, int frameRate);
+
+    /*! Render at the provided framerate on this thread.
+     */
+    void run(std::shared_ptr<Compositor> compositor, int frameRate);
 
     /*! Adds a video or image encoder to the list of encoders to call with readback images from subsequent frames.
      */
@@ -99,6 +103,8 @@ public:
 private:
     void threadMain(std::shared_ptr<Compositor> compositor);
     void processPendingBlits(size_t frameIndex);
+    bool writeCopyCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, int width, int height,
+                           VkImage sourceImage, VkImage destinationImage);
     bool writeBlitCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, int width, int height,
                            VkImage sourceImage, VkImage destinationImage);
 

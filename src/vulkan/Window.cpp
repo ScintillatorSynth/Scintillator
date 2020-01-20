@@ -160,7 +160,8 @@ void Window::runDirectRendering(std::shared_ptr<Compositor> compositor) {
 }
 
 void Window::runFixedFrameRate(std::shared_ptr<Compositor> compositor) {
-    m_offscreen->start(compositor, m_frameRate);
+    spdlog::info("Window starting offscreen rendering loop.");
+    m_offscreen->runThreaded(compositor, m_frameRate);
 
     std::chrono::high_resolution_clock::time_point lastFrame = std::chrono::high_resolution_clock::now();
     while (!m_stop && !glfwWindowShouldClose(m_window)) {
@@ -174,6 +175,8 @@ void Window::runFixedFrameRate(std::shared_ptr<Compositor> compositor) {
             break;
         }
     }
+
+    spdlog::info("Window exiting offscreen rendering loop.");
 }
 
 bool Window::submitAndPresent(uint32_t imageIndex) {

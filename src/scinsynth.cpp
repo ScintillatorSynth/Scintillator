@@ -10,6 +10,7 @@
 #include "vulkan/Device.hpp"
 #include "vulkan/DeviceChooser.hpp"
 #include "vulkan/Instance.hpp"
+#include "vulkan/Offscreen.hpp"
 #include "vulkan/Pipeline.hpp"
 #include "vulkan/Shader.hpp"
 #include "vulkan/ShaderCompiler.hpp"
@@ -156,6 +157,7 @@ int main(int argc, char* argv[]) {
 
     std::shared_ptr<scin::vk::Window> window;
     std::shared_ptr<scin::vk::Canvas> canvas;
+    std::shared_ptr<scin::vk::Offscreen> offscreen;
     if (FLAGS_create_window) {
         window.reset(
             new scin::vk::Window(instance, device, FLAGS_width, FLAGS_height, FLAGS_keep_on_top, FLAGS_frame_rate));
@@ -164,6 +166,13 @@ int main(int argc, char* argv[]) {
             return EXIT_FAILURE;
         }
         canvas = window->canvas();
+    } else {
+        offscreen.reset(new scin::vk::Offscreen(device));
+        if (!offscreen->create(FLAGS_width, FLAGS_height, 3)) {
+            spdlog::error("Failed to create offscreen renderer.");
+            return EXIT_FAILURE;
+        }
+        canvas = offscreen->canvas();
     }
 
     std::shared_ptr<scin::Compositor> compositor(new scin::Compositor(device, canvas));
@@ -187,7 +196,11 @@ int main(int argc, char* argv[]) {
     oscHandler.run(async, archetypes, compositor, [window] { window->stop(); });
 
     // ========== Main loop.
-    window->run(compositor);
+    if (FLAGS_create_window) {
+        window->run(compositor);
+    } else {
+        offscreen->run(compositor, FLAGS_frame_rate);
+    }
 
     // ========== Vulkan cleanup.
     async->stop();

@@ -79,11 +79,21 @@ bool Offscreen::create(int width, int height, size_t numberOfImages) {
         spdlog::error("Offscreen failed to create command buffers.");
         return false;
     }
-    for (auto i = 0; i < m_numberOfImages; ++i) {
-        if (!writeBlitCommands(m_readbackCommands, i, width, height, m_framebuffer->image(i),
-                               m_readbackImages->get()[i])) {
-            spdlog::error("Offscreen failed to create readback command buffers.");
-            return false;
+    if (m_readbackSupportsBlit) {
+        for (auto i = 0; i < m_numberOfImages; ++i) {
+            if (!writeBlitCommands(m_readbackCommands, i, width, height, m_framebuffer->image(i),
+                                   m_readbackImages->get()[i])) {
+                spdlog::error("Offscreen failed to create readback command buffers.");
+                return false;
+            }
+        }
+    } else {
+        for (auto i = 0; i < m_numberOfImages; ++i) {
+            if (!writeCopyCommands(m_readbackCommands, i, width, height, m_framebuffer->image(i),
+                                   m_readbackImages->get()[i])) {
+                spdlog::error("Offscreen failed to create readback command buffers.");
+                return false;
+            }
         }
     }
 
@@ -111,7 +121,7 @@ bool Offscreen::createSwapchainSources(Swapchain* swapchain) {
 
         // The jth command buffer will blit from the ith framebuffer image to the jth swapchain source image.
         for (auto j = 0; j < 2; ++j) {
-            if (!writeBlitCommands(buffer, j, width, height, m_framebuffer->image(i), m_swapSources->get()[i])) {
+            if (!writeBlitCommands(buffer, j, width, height, m_framebuffer->image(i), m_swapSources->get()[j])) {
                 spdlog::error("Offscreen failed writing swapchain source blit command buffers.");
                 return false;
             }
@@ -141,9 +151,14 @@ bool Offscreen::createSwapchainSources(Swapchain* swapchain) {
     return true;
 }
 
-void Offscreen::start(std::shared_ptr<Compositor> compositor, int frameRate) {
+void Offscreen::runThreaded(std::shared_ptr<Compositor> compositor, int frameRate) {
     m_frameRate = frameRate;
     m_renderThread = std::thread(&Offscreen::threadMain, this, compositor);
+}
+
+void Offscreen::run(std::shared_ptr<Compositor> compositor, int frameRate) {
+    m_frameRate = frameRate;
+    threadMain(compositor);
 }
 
 void Offscreen::addEncoder(std::shared_ptr<scin::av::Encoder> encoder) {
@@ -199,7 +214,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
     size_t frameNumber = 0;
     size_t frameIndex = 0;
 
-    m_commandBuffers.reserve(m_numberOfImages);
+    m_commandBuffers.resize(m_numberOfImages);
     for (auto i = 0; i < m_numberOfImages; ++i) {
         m_pendingSwapchainBlits.push_back(-1);
     }
@@ -323,7 +338,7 @@ void Offscreen::processPendingBlits(size_t frameIndex) {
     }
 }
 
-bool Offscreen::writeBlitCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, int width,
+bool Offscreen::writeCopyCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, int width,
                                   int height, VkImage sourceImage, VkImage destinationImage) {
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -345,7 +360,68 @@ bool Offscreen::writeBlitCommands(std::shared_ptr<CommandBuffer> commandBuffer, 
     memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     memoryBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
     memoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-    memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    memoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    memoryBarrier.image = sourceImage;
+    memoryBarrier.subresourceRange = range;
+    vkCmdPipelineBarrier(commandBuffer->buffer(bufferIndex), VK_PIPELINE_STAGE_TRANSFER_BIT,
+                         VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
+
+    memoryBarrier.srcAccessMask = 0;
+    memoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    memoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    memoryBarrier.image = destinationImage;
+    vkCmdPipelineBarrier(commandBuffer->buffer(bufferIndex), VK_PIPELINE_STAGE_TRANSFER_BIT,
+                         VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
+
+    VkImageCopy imageCopy = {};
+    imageCopy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    imageCopy.srcSubresource.layerCount = 1;
+    imageCopy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    imageCopy.dstSubresource.layerCount = 1;
+    imageCopy.extent.width = width;
+    imageCopy.extent.height = height;
+    imageCopy.extent.depth = 1;
+    vkCmdCopyImage(commandBuffer->buffer(bufferIndex), sourceImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                   destinationImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imageCopy);
+
+    if (vkEndCommandBuffer(commandBuffer->buffer(bufferIndex)) != VK_SUCCESS) {
+        spdlog::info("Offscreen failed ending readback command buffer.");
+        return false;
+    }
+
+    return true;
+}
+
+bool Offscreen::writeBlitCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, int width,
+                                  int height, VkImage sourceImage, VkImage destinationImage) {
+    if (sourceImage == VK_NULL_HANDLE || destinationImage == VK_NULL_HANDLE) {
+        spdlog::error("Blit from or to NULL image.");
+        return false;
+    }
+
+    VkCommandBufferBeginInfo beginInfo = {};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+    beginInfo.pInheritanceInfo = nullptr;
+    if (vkBeginCommandBuffer(commandBuffer->buffer(bufferIndex), &beginInfo) != VK_SUCCESS) {
+        spdlog::error("Offscreen failed beginning readback command buffer.");
+        return false;
+    }
+
+    VkImageSubresourceRange range = {};
+    range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    range.baseMipLevel = 0;
+    range.levelCount = 1;
+    range.baseArrayLayer = 0;
+    range.layerCount = 1;
+
+    VkImageMemoryBarrier memoryBarrier = {};
+    memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    memoryBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+    memoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+    memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     memoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
     memoryBarrier.image = sourceImage;
     memoryBarrier.subresourceRange = range;
