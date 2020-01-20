@@ -150,7 +150,7 @@ void Window::runDirectRendering(std::shared_ptr<Compositor> compositor) {
         m_commandBuffers = compositor->prepareFrame(
             imageIndex, std::chrono::duration<double, std::chrono::seconds::period>(now - m_startTime).count());
 
-        if (!submitAndPresent(imageIndex, 0)) {
+        if (!submitAndPresent(imageIndex)) {
             break;
         }
     }
@@ -175,7 +175,7 @@ void Window::runFixedFrameRate(std::shared_ptr<Compositor> compositor) {
         if (!m_commandBuffers) {
             spdlog::error("empty command buffer");
         }
-        if (!submitAndPresent(imageIndex, 1)) {
+        if (!submitAndPresent(imageIndex)) {
             break;
         }
 
@@ -187,7 +187,7 @@ void Window::runFixedFrameRate(std::shared_ptr<Compositor> compositor) {
     spdlog::info("Window exiting offscreen rendering loop.");
 }
 
-bool Window::submitAndPresent(uint32_t imageIndex, size_t queueIndex) {
+bool Window::submitAndPresent(uint32_t imageIndex) {
     VkSemaphore imageAvailable[] = { m_renderSync->imageAvailable(0) };
     VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
     VkSemaphore renderFinished[] = { m_renderSync->renderFinished(0) };
@@ -211,8 +211,7 @@ bool Window::submitAndPresent(uint32_t imageIndex, size_t queueIndex) {
     // Submits the command buffer to the queue. Won't start the buffer until the image is marked as available by
     // the imageAvailable semaphore, and when the render is finished it will signal the renderFinished semaphore
     // on the device.
-    if (vkQueueSubmit(m_device->graphicsQueue(queueIndex), 1, &submitInfo, m_renderSync->frameRendering(0))
-        != VK_SUCCESS) {
+    if (vkQueueSubmit(m_device->graphicsQueue(), 1, &submitInfo, m_renderSync->frameRendering(0)) != VK_SUCCESS) {
         spdlog::error("Window failed to submit command buffer to graphics queue.");
         return false;
     }

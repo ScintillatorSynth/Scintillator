@@ -313,7 +313,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
 
         m_renderSync->resetFrame(frameIndex);
 
-        if (vkQueueSubmit(m_device->graphicsQueue(0), 1, &submitInfo, m_renderSync->frameRendering(frameIndex))
+        if (vkQueueSubmit(m_device->graphicsQueue(), 1, &submitInfo, m_renderSync->frameRendering(frameIndex))
             != VK_SUCCESS) {
             spdlog::error("Offscreen failed to submit command buffer to graphics queue.");
             break;

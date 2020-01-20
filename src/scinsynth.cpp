@@ -150,7 +150,7 @@ int main(int argc, char* argv[]) {
         spdlog::error("failed to find a suitable Vulkan device.");
         return EXIT_FAILURE;
     }
-    if (!device->create(FLAGS_create_window, 2)) {
+    if (!device->create(FLAGS_create_window)) {
         spdlog::error("unable to create Vulkan device.");
         return EXIT_FAILURE;
     }

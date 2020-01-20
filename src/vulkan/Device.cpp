@@ -23,24 +23,20 @@ Device::Device(std::shared_ptr<Instance> instance, const DeviceInfo& deviceInfo)
 
 Device::~Device() { destroy(); }
 
-bool Device::create(bool supportWindow, size_t numberOfGraphicsQueues) {
+bool Device::create(bool supportWindow) {
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies = { static_cast<uint32_t>(m_graphicsFamilyIndex) };
     if (supportWindow) {
         uniqueQueueFamilies.insert(static_cast<uint32_t>(m_presentFamilyIndex));
     }
 
-    std::vector<float> queuePriorities(numberOfGraphicsQueues, 1.0);
+    float queuePriority = 1.0;
     for (uint32_t queueFamily : uniqueQueueFamilies) {
         VkDeviceQueueCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         createInfo.queueFamilyIndex = queueFamily;
-        if (queueFamily == static_cast<uint32_t>(m_graphicsFamilyIndex)) {
-            createInfo.queueCount = numberOfGraphicsQueues;
-        } else {
-            createInfo.queueCount = 1;
-        }
-        createInfo.pQueuePriorities = queuePriorities.data();
+        createInfo.queueCount = 1;
+        createInfo.pQueuePriorities = &queuePriority;
         queueCreateInfos.push_back(createInfo);
     }
 
@@ -60,11 +56,7 @@ bool Device::create(bool supportWindow, size_t numberOfGraphicsQueues) {
         return false;
     }
 
-    m_graphicsQueues.resize(numberOfGraphicsQueues);
-    for (auto i = 0; i < numberOfGraphicsQueues; ++i) {
-        vkGetDeviceQueue(m_device, m_graphicsFamilyIndex, i, &m_graphicsQueues[i]);
-    }
-
+    vkGetDeviceQueue(m_device, m_graphicsFamilyIndex, 0, &m_graphicsQueue);
     if (supportWindow) {
         vkGetDeviceQueue(m_device, m_presentFamilyIndex, 0, &m_presentQueue);
     }

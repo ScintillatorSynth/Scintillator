@@ -9,7 +9,6 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 
 namespace scin { namespace vk {
 
@@ -27,10 +26,9 @@ public:
     /*! Creates the logical device, optionally supporting windowed presentation.
      *
      * \param supportWindow If true, configure the device to support presentation of framebuffers via swapchain.
-     * \param numberOfGraphicsQueues How many graphics queues to create. Each thread must have its own queue.
      * \return true on success, false on error.
      */
-    bool create(bool supportWindow, size_t numberOfGraphicsQueues);
+    bool create(bool supportWindow);
 
     void destroy();
 
@@ -41,7 +39,7 @@ public:
 
     int graphicsFamilyIndex() const { return m_graphicsFamilyIndex; }
     int presentFamilyIndex() const { return m_presentFamilyIndex; }
-    VkQueue graphicsQueue(size_t index) { return m_graphicsQueues[index]; }
+    VkQueue graphicsQueue() { return m_graphicsQueue; }
     VkQueue presentQueue() { return m_presentQueue; }
 
 private:
@@ -52,7 +50,7 @@ private:
     int m_presentFamilyIndex;
     VkDevice m_device;
     VmaAllocator m_allocator;
-    std::vector<VkQueue> m_graphicsQueues;
+    VkQueue m_graphicsQueue;
     VkQueue m_presentQueue;
 };
 
