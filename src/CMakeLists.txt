@@ -114,6 +114,8 @@ set(scintillator_synth_files
     vulkan/DeviceInfo.hpp
     vulkan/Framebuffer.cpp
     vulkan/Framebuffer.hpp
+    vulkan/FrameTimer.cpp
+    vulkan/FrameTimer.hpp
     vulkan/ImageSet.cpp
     vulkan/ImageSet.hpp
     vulkan/Instance.cpp

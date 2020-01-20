@@ -5,6 +5,7 @@
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
+#include "vulkan/FrameTimer.hpp"
 #include "vulkan/ImageSet.hpp"
 #include "vulkan/Instance.hpp"
 #include "vulkan/Offscreen.hpp"
@@ -18,8 +19,6 @@
 
 namespace scin { namespace vk {
 
-const size_t kFramePeriodWindowSize = 60;
-
 Window::Window(std::shared_ptr<Instance> instance, std::shared_ptr<Device> device, int width, int height,
                bool keepOnTop, int frameRate):
     m_instance(instance),
@@ -31,9 +30,7 @@ Window::Window(std::shared_ptr<Instance> instance, std::shared_ptr<Device> devic
     m_directRendering(frameRate < 0),
     m_window(nullptr),
     m_surface(VK_NULL_HANDLE),
-    m_stop(false),
-    m_periodSum(0.0),
-    m_lateFrames(0) {}
+    m_stop(false) {}
 
 Window::~Window() {}
 
@@ -104,9 +101,8 @@ std::shared_ptr<Canvas> Window::canvas() {
 
 void Window::runDirectRendering(std::shared_ptr<Compositor> compositor) {
     spdlog::info("Window starting direct rendering loop.");
-    m_startTime = std::chrono::high_resolution_clock::now();
-    m_lastFrameTime = m_startTime;
-    m_lastReportTime = m_startTime;
+    FrameTimer frameTimer(true);
+    frameTimer.start();
 
     while (!m_stop && !glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
@@ -118,37 +114,9 @@ void Window::runDirectRendering(std::shared_ptr<Compositor> compositor) {
         // available.
         uint32_t imageIndex = m_renderSync->acquireNextImage(0, m_swapchain.get());
 
-        TimePoint now(std::chrono::high_resolution_clock::now());
-        double framePeriod = std::chrono::duration<double, std::chrono::seconds::period>(now - m_lastFrameTime).count();
-        m_lastFrameTime = now;
+        frameTimer.markFrame();
 
-        double meanPeriod =
-            m_framePeriods.size() ? m_periodSum / static_cast<double>(m_framePeriods.size()) : framePeriod;
-        m_periodSum += framePeriod;
-        m_framePeriods.push_back(framePeriod);
-
-        // We consider a frame late when we have at least half of the window of frame times to establish a credible
-        // mean, and the period of the frame is more than half again the mean.
-        if (m_framePeriods.size() >= kFramePeriodWindowSize / 2 && framePeriod >= (meanPeriod * 1.5)) {
-            ++m_lateFrames;
-            // Remove the outlier from the average, to avoid biasing our dropped frame detector.
-            m_periodSum -= framePeriod;
-            m_framePeriods.pop_back();
-        }
-
-        while (m_framePeriods.size() > kFramePeriodWindowSize) {
-            m_periodSum -= m_framePeriods.front();
-            m_framePeriods.pop_front();
-        }
-
-        if (std::chrono::duration<double, std::chrono::seconds::period>(now - m_lastReportTime).count() >= 10.0) {
-            spdlog::info("mean fps: {:.1f}, late frames: {}", 1.0 / meanPeriod, m_lateFrames);
-            m_lateFrames = 0;
-            m_lastReportTime = now;
-        }
-
-        m_commandBuffers = compositor->prepareFrame(
-            imageIndex, std::chrono::duration<double, std::chrono::seconds::period>(now - m_startTime).count());
+        m_commandBuffers = compositor->prepareFrame(imageIndex, frameTimer.elapsedTime());
 
         VkSemaphore imageAvailable[] = { m_renderSync->imageAvailable(0) };
         VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };

@@ -24,7 +24,7 @@ DeviceInfo::DeviceInfo(std::shared_ptr<Instance> instance, VkPhysicalDevice devi
 bool DeviceInfo::build() {
     vkGetPhysicalDeviceProperties(m_physicalDevice, &m_properties);
     for (auto i = 0; i < VK_UUID_SIZE; ++i) {
-        m_uuid += fmt::format("{:x}", m_properties.pipelineCacheUUID[i]);
+        m_uuid += fmt::format("{:02x}", m_properties.pipelineCacheUUID[i]);
     }
 
     // Look for a graphics queue family, and ask about present family support.

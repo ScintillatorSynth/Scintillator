@@ -4,11 +4,7 @@
 #include "vulkan/Vulkan.hpp"
 
 #include <atomic>
-#include <chrono>
-#include <deque>
-#include <list>
 #include <memory>
-#include <mutex>
 #include <vector>
 
 namespace scin {
@@ -40,7 +36,13 @@ public:
     ~Window();
 
     bool create();
+
+    /*! Takes over the thead, will run until stop() is called or the Window is closed.
+     *
+     * \param compositor The root compositor to use for rendering.
+     */
     void run(std::shared_ptr<Compositor> compositor);
+
     void destroy();
 
     /*! Typically called on another thread, will exit the run() loop on next iteration.
@@ -78,15 +80,6 @@ private:
     // If in non realtime mode, we render to an offscreen framebuffer and blit the latest available image to the
     // swapchain images.
     std::shared_ptr<Offscreen> m_offscreen;
-
-    // Frame rate tracking for free-running mode.
-    typedef std::chrono::time_point<std::chrono::high_resolution_clock> TimePoint;
-    std::deque<double> m_framePeriods;
-    double m_periodSum;
-    TimePoint m_startTime;
-    TimePoint m_lastFrameTime;
-    size_t m_lateFrames;
-    TimePoint m_lastReportTime;
 };
 
 } // namespace vk

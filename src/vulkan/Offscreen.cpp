@@ -9,6 +9,7 @@
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Framebuffer.hpp"
+#include "vulkan/FrameTimer.hpp"
 #include "vulkan/ImageSet.hpp"
 #include "vulkan/RenderSync.hpp"
 #include "vulkan/Swapchain.hpp"
@@ -199,6 +200,9 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
     }
     m_pendingEncodes.resize(m_numberOfImages);
 
+    FrameTimer frameTimer(false);
+    frameTimer.start();
+
     while (!m_quit) {
         double deltaTime = 0.0;
         bool flush = false;
@@ -240,6 +244,8 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
 
         // Wait for rendering/blitting to complete on this frame.
         m_renderSync->waitForFrame(frameIndex);
+
+        frameTimer.markFrame();
 
         processPendingEncodes(frameIndex);
 
