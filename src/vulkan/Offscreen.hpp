@@ -106,7 +106,7 @@ private:
     bool writeCopyCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, int width, int height,
                            VkImage sourceImage, VkImage destinationImage);
     bool writeBlitCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, int width, int height,
-                           VkImage sourceImage, VkImage destinationImage);
+                           VkImage sourceImage, VkImage destinationImage, VkImageLayout destinationLayout);
 
     std::shared_ptr<Device> m_device;
     std::atomic<bool> m_quit;

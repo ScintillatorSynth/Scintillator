@@ -82,7 +82,7 @@ bool Offscreen::create(int width, int height, size_t numberOfImages) {
     if (m_readbackSupportsBlit) {
         for (auto i = 0; i < m_numberOfImages; ++i) {
             if (!writeBlitCommands(m_readbackCommands, i, width, height, m_framebuffer->image(i),
-                                   m_readbackImages->get()[i])) {
+                                   m_readbackImages->get()[i], VK_IMAGE_LAYOUT_UNDEFINED)) {
                 spdlog::error("Offscreen failed to create readback command buffers.");
                 return false;
             }
@@ -121,7 +121,8 @@ bool Offscreen::createSwapchainSources(Swapchain* swapchain) {
 
         // The jth command buffer will blit from the ith framebuffer image to the jth swapchain source image.
         for (auto j = 0; j < 2; ++j) {
-            if (!writeBlitCommands(buffer, j, width, height, m_framebuffer->image(i), m_swapSources->get()[j])) {
+            if (!writeBlitCommands(buffer, j, width, height, m_framebuffer->image(i), m_swapSources->get()[j],
+                                   VK_IMAGE_LAYOUT_UNDEFINED)) {
                 spdlog::error("Offscreen failed writing swapchain source blit command buffers.");
                 return false;
             }
@@ -139,7 +140,8 @@ bool Offscreen::createSwapchainSources(Swapchain* swapchain) {
 
         // The jth command buffer will blit from the ith swap source image to the jth swapchain image.
         for (auto j = 0; j < swapchain->numberOfImages(); ++j) {
-            if (!writeBlitCommands(buffer, j, width, height, m_swapSources->get()[i], swapchain->images()->get()[j])) {
+            if (!writeBlitCommands(buffer, j, width, height, m_swapSources->get()[i], swapchain->images()->get()[j],
+                                   VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)) {
                 spdlog::error("Ofscreen failed writing swapchain blit command buffers.");
                 return false;
             }
@@ -153,17 +155,26 @@ bool Offscreen::createSwapchainSources(Swapchain* swapchain) {
 
 void Offscreen::runThreaded(std::shared_ptr<Compositor> compositor, int frameRate) {
     m_frameRate = frameRate;
+    m_render = true;
     m_renderThread = std::thread(&Offscreen::threadMain, this, compositor);
+    m_renderCondition.notify_one();
 }
 
 void Offscreen::run(std::shared_ptr<Compositor> compositor, int frameRate) {
     m_frameRate = frameRate;
+    m_render = true;
+    m_renderCondition.notify_one();
     threadMain(compositor);
 }
 
 void Offscreen::addEncoder(std::shared_ptr<scin::av::Encoder> encoder) {
     std::lock_guard<std::mutex> lock(m_encodersMutex);
     m_encoders.push_back(encoder);
+}
+
+void Offscreen::stop() {
+    m_quit = true;
+    m_renderCondition.notify_one();
 }
 
 std::shared_ptr<CommandBuffer> Offscreen::getSwapchainBlit() {
@@ -218,6 +229,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
     for (auto i = 0; i < m_numberOfImages; ++i) {
         m_pendingSwapchainBlits.push_back(-1);
     }
+    m_pendingEncodes.resize(m_numberOfImages);
 
     while (!m_quit) {
         double deltaTime = 0.0;
@@ -271,6 +283,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
         if (encodeRequests.size()) {
             commandBuffers.push_back(m_readbackCommands->buffer(frameIndex));
         }
+        m_pendingEncodes[frameIndex] = encodeRequests;
 
         // If we should update the swapchain source image also add that blit command buffer.
         int swapSourceIndex = -1;
@@ -287,6 +300,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
         m_pendingSwapchainBlits[frameIndex] = swapSourceIndex;
 
         if (swapSourceIndex >= 0) {
+            spdlog::info("frameIndex: {} requested swapSource {}", frameIndex, swapSourceIndex);
             commandBuffers.push_back(m_sourceBlitCommands[frameIndex]->buffer(swapSourceIndex));
         }
 
@@ -299,7 +313,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
 
         m_renderSync->resetFrame(frameIndex);
 
-        if (vkQueueSubmit(m_device->graphicsQueue(), 1, &submitInfo, m_renderSync->frameRendering(frameIndex))
+        if (vkQueueSubmit(m_device->graphicsQueue(0), 1, &submitInfo, m_renderSync->frameRendering(frameIndex))
             != VK_SUCCESS) {
             spdlog::error("Offscreen failed to submit command buffer to graphics queue.");
             break;
@@ -322,10 +336,10 @@ void Offscreen::processPendingBlits(size_t frameIndex) {
     if (swapIndex >= 0) {
         std::lock_guard<std::mutex> lock(m_swapMutex);
         m_sourceStates[swapIndex] = kReady;
+        spdlog::info("blit finished on swapsource index {}, frameIndex {}, marked as ready.", swapIndex, frameIndex);
     }
     m_pendingSwapchainBlits[frameIndex] = -1;
 
-    // terrible name for m_pendingEncodes, maybe m_pendingEncodes?
     if (m_pendingEncodes[frameIndex].size()) {
         // ffmpeg can decide on a buffer recycling option.
         std::shared_ptr<scin::av::Buffer> avBuffer = m_bufferPool->getBuffer();
@@ -395,12 +409,8 @@ bool Offscreen::writeCopyCommands(std::shared_ptr<CommandBuffer> commandBuffer, 
 }
 
 bool Offscreen::writeBlitCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, int width,
-                                  int height, VkImage sourceImage, VkImage destinationImage) {
-    if (sourceImage == VK_NULL_HANDLE || destinationImage == VK_NULL_HANDLE) {
-        spdlog::error("Blit from or to NULL image.");
-        return false;
-    }
-
+                                  int height, VkImage sourceImage, VkImage destinationImage,
+                                  VkImageLayout destinationLayout) {
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -451,7 +461,13 @@ bool Offscreen::writeBlitCommands(std::shared_ptr<CommandBuffer> commandBuffer, 
     vkCmdBlitImage(commandBuffer->buffer(bufferIndex), sourceImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                    destinationImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blitRegion, VK_FILTER_NEAREST);
 
-    // ?? Do we need to transition things back?
+    if (destinationLayout != VK_IMAGE_LAYOUT_UNDEFINED) {
+        memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        memoryBarrier.newLayout = destinationLayout;
+        memoryBarrier.image = destinationImage;
+        vkCmdPipelineBarrier(commandBuffer->buffer(bufferIndex), VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
+    }
 
     if (vkEndCommandBuffer(commandBuffer->buffer(bufferIndex)) != VK_SUCCESS) {
         spdlog::info("Offscreen failed ending readback command buffer.");

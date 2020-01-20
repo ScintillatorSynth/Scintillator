@@ -56,7 +56,7 @@ public:
 private:
     void runDirectRendering(std::shared_ptr<Compositor> compositor);
     void runFixedFrameRate(std::shared_ptr<Compositor> compositor);
-    bool submitAndPresent(uint32_t imageIndex);
+    bool submitAndPresent(uint32_t imageIndex, size_t queueIndex);
 
     std::shared_ptr<Instance> m_instance;
     std::shared_ptr<Device> m_device;

@@ -150,7 +150,7 @@ void Window::runDirectRendering(std::shared_ptr<Compositor> compositor) {
         m_commandBuffers = compositor->prepareFrame(
             imageIndex, std::chrono::duration<double, std::chrono::seconds::period>(now - m_startTime).count());
 
-        if (!submitAndPresent(imageIndex)) {
+        if (!submitAndPresent(imageIndex, 0)) {
             break;
         }
     }
@@ -166,20 +166,28 @@ void Window::runFixedFrameRate(std::shared_ptr<Compositor> compositor) {
     std::chrono::high_resolution_clock::time_point lastFrame = std::chrono::high_resolution_clock::now();
     while (!m_stop && !glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
-        m_renderSync->waitForFrame(0);
-        uint32_t imageIndex = m_renderSync->acquireNextImage(0, m_swapchain.get());
         std::this_thread::sleep_until(lastFrame + std::chrono::milliseconds(200));
 
+        m_renderSync->waitForFrame(0);
+        uint32_t imageIndex = m_renderSync->acquireNextImage(0, m_swapchain.get());
+
         m_commandBuffers = m_offscreen->getSwapchainBlit();
-        if (!submitAndPresent(imageIndex)) {
+        if (!m_commandBuffers) {
+            spdlog::error("empty command buffer");
+        }
+        if (!submitAndPresent(imageIndex, 1)) {
             break;
         }
-    }
 
+        lastFrame = std::chrono::high_resolution_clock::now();
+    }
+    m_offscreen->stop();
+
+    vkDeviceWaitIdle(m_device->get());
     spdlog::info("Window exiting offscreen rendering loop.");
 }
 
-bool Window::submitAndPresent(uint32_t imageIndex) {
+bool Window::submitAndPresent(uint32_t imageIndex, size_t queueIndex) {
     VkSemaphore imageAvailable[] = { m_renderSync->imageAvailable(0) };
     VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
     VkSemaphore renderFinished[] = { m_renderSync->renderFinished(0) };
@@ -188,9 +196,12 @@ bool Window::submitAndPresent(uint32_t imageIndex) {
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = imageAvailable;
     submitInfo.pWaitDstStageMask = waitStages;
-    submitInfo.commandBufferCount = 1;
-    VkCommandBuffer commandBuffer = m_commandBuffers->buffer(imageIndex);
-    submitInfo.pCommandBuffers = &commandBuffer;
+    VkCommandBuffer commandBuffer;
+    if (m_commandBuffers) {
+        submitInfo.commandBufferCount = 1;
+        commandBuffer = m_commandBuffers->buffer(imageIndex);
+        submitInfo.pCommandBuffers = &commandBuffer;
+    }
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = renderFinished;
 
@@ -200,7 +211,8 @@ bool Window::submitAndPresent(uint32_t imageIndex) {
     // Submits the command buffer to the queue. Won't start the buffer until the image is marked as available by
     // the imageAvailable semaphore, and when the render is finished it will signal the renderFinished semaphore
     // on the device.
-    if (vkQueueSubmit(m_device->graphicsQueue(), 1, &submitInfo, m_renderSync->frameRendering(0)) != VK_SUCCESS) {
+    if (vkQueueSubmit(m_device->graphicsQueue(queueIndex), 1, &submitInfo, m_renderSync->frameRendering(0))
+        != VK_SUCCESS) {
         spdlog::error("Window failed to submit command buffer to graphics queue.");
         return false;
     }
