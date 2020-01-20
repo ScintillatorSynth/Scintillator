@@ -48,14 +48,16 @@ public:
      */
     bool create(int width, int height, size_t numberOfImages);
 
-    /*! If this Offscreen is contained in a Window, we create additional copy targets for the offscreen to allow the
-     * Window to update independently. This also creates the command buffers for blitting between all possible
-     * combinations of image source and swapchain image destination.
+    /*! If this Offscreen is contained in a Window, we prepare an additional set of command buffers to blit from the
+     * framebuffer images directly to the swapchain present images, with synchronization primitives provided by the
+     * Window object. This allows the Window thread to schedule its own updates without requiring it to have its own
+     * Vulkan queue, which some devices don't support.
      *
      * \param swapchain The swapchain object to use as a transfer target.
+     * \param swapRenderSync The window-provided synchronization primitives to configure for render.
      * \return True on success, false on failure.
      */
-    bool createSwapchainSources(Swapchain* swapchain);
+    bool supportSwapchain(std::shared_ptr<Swapchain> swapchain, std::shared_ptr<RenderSync> swapRenderSync);
 
     /*! Start a thread to render at the provided framerate.
      */
@@ -69,11 +71,11 @@ public:
      */
     void addEncoder(std::shared_ptr<scin::av::Encoder> encoder);
 
-    /*! Returns a command buffer that will blit from the most recently updated copy of the framebuffer.
+    /*! Request that the offscreen render thread blit recent render contents to the swapchain present image.
      *
-     * \return A command buffer useable in a swapchain update, or nullptr if no buffer has been prepared.
+     * \param swapchainImageIndex Which image in the swapchain to blit to.
      */
-    std::shared_ptr<CommandBuffer> getSwapchainBlit();
+    void requestSwapchainBlit(uint32_t swapchainImageIndex);
 
     /*! Can be called before or after start(), will pause the rendering. Time can be advanced with advanceFrame()
      * calls if desired.
@@ -102,11 +104,12 @@ public:
 
 private:
     void threadMain(std::shared_ptr<Compositor> compositor);
-    void processPendingBlits(size_t frameIndex);
+    void processPendingEncodes(size_t frameIndex);
     bool writeCopyCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, int width, int height,
                            VkImage sourceImage, VkImage destinationImage);
     bool writeBlitCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, int width, int height,
                            VkImage sourceImage, VkImage destinationImage, VkImageLayout destinationLayout);
+    bool blitAndPresent(size_t frameIndex, uint32_t swapImageIndex);
 
     std::shared_ptr<Device> m_device;
     std::atomic<bool> m_quit;
@@ -119,13 +122,9 @@ private:
     std::unique_ptr<scin::av::BufferPool> m_bufferPool;
 
     // Swapchain render support.
-    std::unique_ptr<ImageSet> m_swapSources;
-    std::vector<std::shared_ptr<CommandBuffer>> m_sourceBlitCommands;
+    std::shared_ptr<RenderSync> m_swapRenderSync;
+    std::shared_ptr<Swapchain> m_swapchain;
     std::vector<std::shared_ptr<CommandBuffer>> m_swapBlitCommands;
-
-    std::mutex m_swapMutex;
-    enum SourceImageState { kEmpty, kRequested, kPipelined, kReady, kInUse };
-    std::array<SourceImageState, 2> m_sourceStates;
 
     // threadMain-only access
     std::thread m_renderThread;
@@ -145,6 +144,8 @@ private:
     std::mutex m_renderMutex;
     std::condition_variable m_renderCondition;
     bool m_render;
+    bool m_swapBlitRequested;
+    uint32_t m_swapchainImageIndex;
     int m_frameRate;
     double m_deltaTime;
 };

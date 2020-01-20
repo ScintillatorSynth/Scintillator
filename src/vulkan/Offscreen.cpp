@@ -23,8 +23,9 @@ Offscreen::Offscreen(std::shared_ptr<Device> device):
     m_framebuffer(new Framebuffer(device)),
     m_renderSync(new RenderSync(device)),
     m_commandPool(new CommandPool(device)),
-    m_sourceStates({ kEmpty, kEmpty }),
     m_render(false),
+    m_swapBlitRequested(false),
+    m_swapchainImageIndex(0),
     m_frameRate(0),
     m_deltaTime(0) {}
 
@@ -100,56 +101,31 @@ bool Offscreen::create(int width, int height, size_t numberOfImages) {
     return true;
 }
 
-bool Offscreen::createSwapchainSources(Swapchain* swapchain) {
+bool Offscreen::supportSwapchain(std::shared_ptr<Swapchain> swapchain, std::shared_ptr<RenderSync> swapRenderSync) {
+    m_swapchain = swapchain;
+    m_swapRenderSync = swapRenderSync;
     int width = swapchain->extent().width;
     int height = swapchain->extent().height;
-    m_swapSources.reset(new ImageSet(m_device));
 
-    if (!m_swapSources->createDeviceLocal(width, height, 2, false)) {
-        spdlog::error("Offscreen failed creating swapchain source images.");
-        return false;
-    }
-
-    // Build the transfer from framebuffer to swapchain sources command buffers.
+    // Build the transfer from framebuffer to swapchain images command buffers.
     for (auto i = 0; i < m_numberOfImages; ++i) {
         std::shared_ptr<CommandBuffer> buffer(new CommandBuffer(m_device, m_commandPool));
-        if (!buffer->create(2, true)) {
+        if (!buffer->create(swapchain->numberOfImages(), true)) {
             spdlog::error("Offscreen failed creating swapchain source blit command buffers.");
             return false;
         }
-        m_sourceBlitCommands.push_back(buffer);
-
-        // The jth command buffer will blit from the ith framebuffer image to the jth swapchain source image.
-        for (auto j = 0; j < 2; ++j) {
-            if (!writeBlitCommands(buffer, j, width, height, m_framebuffer->image(i), m_swapSources->get()[j],
-                                   VK_IMAGE_LAYOUT_UNDEFINED)) {
+        // The jth command buffer will blit from the ith framebuffer image to the jth swapchain image.
+        for (auto j = 0; j < swapchain->numberOfImages(); ++j) {
+            if (!writeBlitCommands(buffer, j, width, height, m_framebuffer->image(i), swapchain->images()->get()[j],
+                                   VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)) {
                 spdlog::error("Offscreen failed writing swapchain source blit command buffers.");
                 return false;
             }
         }
-    }
 
-    // Build the transfer from swapchain sources -> swapchain image command buffers.
-    for (auto i = 0; i < 2; ++i) {
-        std::shared_ptr<CommandBuffer> buffer(new CommandBuffer(m_device, m_commandPool));
-        if (!buffer->create(swapchain->numberOfImages(), true)) {
-            spdlog::error("Offscreen failed creating swapchain blit command buffers.");
-            return false;
-        }
         m_swapBlitCommands.push_back(buffer);
-
-        // The jth command buffer will blit from the ith swap source image to the jth swapchain image.
-        for (auto j = 0; j < swapchain->numberOfImages(); ++j) {
-            if (!writeBlitCommands(buffer, j, width, height, m_swapSources->get()[i], swapchain->images()->get()[j],
-                                   VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)) {
-                spdlog::error("Ofscreen failed writing swapchain blit command buffers.");
-                return false;
-            }
-        }
     }
 
-    // We know there will be a swapchain requesting frames so start a render request for the first image.
-    m_sourceStates[0] = kRequested;
     return true;
 }
 
@@ -175,46 +151,38 @@ void Offscreen::addEncoder(std::shared_ptr<scin::av::Encoder> encoder) {
 void Offscreen::stop() {
     m_quit = true;
     m_renderCondition.notify_one();
+    m_renderThread.join();
 }
 
-std::shared_ptr<CommandBuffer> Offscreen::getSwapchainBlit() {
-    int sourceIndex = -1;
+void Offscreen::requestSwapchainBlit(uint32_t swapchainImageIndex) {
     {
-        std::lock_guard<std::mutex> lock(m_swapMutex);
-        // If there's a ready image, we mark it as in use, and change the other image to requested (to request the
-        // next frame).
-        if (m_sourceStates[0] == kReady) {
-            sourceIndex = 0;
-        } else if (m_sourceStates[1] == kReady) {
-            sourceIndex = 1;
+        std::lock_guard<std::mutex> lock(m_renderMutex);
+        if (m_swapBlitRequested) {
+            spdlog::error("Offscreen already had swapchain blit requested.");
+            return;
         }
-
-        // Ok, no ready image, look for an already in-use image.
-        if (sourceIndex == -1) {
-            if (m_sourceStates[0] == kInUse) {
-                sourceIndex = 0;
-            } else if (m_sourceStates[1] == kInUse) {
-                sourceIndex = 1;
-            }
-        }
-
-        // Make sure the next frame is requested, if we haven't already.
-        if (sourceIndex >= 0) {
-            int otherIndex = (sourceIndex + 1) % 2;
-            if (m_sourceStates[otherIndex] == kEmpty || m_sourceStates[otherIndex] == kInUse) {
-                m_sourceStates[otherIndex] = kRequested;
-            }
-        }
+        m_swapBlitRequested = true;
+        m_swapchainImageIndex = swapchainImageIndex;
     }
-
-    if (sourceIndex == -1) {
-        return nullptr;
-    }
-
-    return m_swapBlitCommands[sourceIndex];
+    m_renderCondition.notify_one();
 }
 
-void Offscreen::destroy() {}
+void Offscreen::destroy() {
+    m_swapRenderSync = nullptr;
+    m_swapchain = nullptr;
+    m_swapBlitCommands.clear();
+
+    m_commandBuffers.clear();
+    m_pendingEncodes.clear();
+    m_readbackImages->destroy();
+    m_encoders.clear();
+    m_readbackCommands = nullptr;
+
+    m_bufferPool = nullptr;
+    m_commandPool = nullptr;
+    m_renderSync = nullptr;
+    m_framebuffer = nullptr;
+}
 
 std::shared_ptr<Canvas> Offscreen::canvas() { return m_framebuffer->canvas(); }
 
@@ -234,27 +202,46 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
     while (!m_quit) {
         double deltaTime = 0.0;
         bool flush = false;
+        bool render = false;
+        bool swapBlit = false;
+        uint32_t swapImageIndex = 0;
+
         {
             std::unique_lock<std::mutex> lock(m_renderMutex);
-            m_renderCondition.wait(lock, [this] { return m_quit || m_render; });
+            m_renderCondition.wait(lock, [this] { return m_quit || m_swapBlitRequested || m_render; });
             if (m_quit) {
                 break;
             }
-            if (!m_render) {
-                continue;
+
+            render = m_render;
+            swapBlit = m_swapBlitRequested;
+            deltaTime = m_deltaTime;
+
+            if (swapBlit) {
+                render = false;
+                m_swapBlitRequested = false;
+                swapImageIndex = m_swapchainImageIndex;
             }
+
             // If framerate is 0 then we turn the render flag back off to block again after this iteration.
-            if (m_frameRate == 0) {
+            if (render && m_frameRate == 0) {
                 m_render = false;
                 flush = true;
             }
-            deltaTime = m_deltaTime;
+        }
+
+        if (swapBlit) {
+            blitAndPresent(frameIndex, swapImageIndex);
+            continue;
+        }
+        if (!render) {
+            continue;
         }
 
         // Wait for rendering/blitting to complete on this frame.
         m_renderSync->waitForFrame(frameIndex);
 
-        processPendingBlits(frameIndex);
+        processPendingEncodes(frameIndex);
 
         // OK, we now consider the contents of the framebuffer (and any blit targets) as subject to GPU mutation.
         m_commandBuffers[frameIndex] = compositor->prepareFrame(frameIndex, time);
@@ -285,25 +272,6 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
         }
         m_pendingEncodes[frameIndex] = encodeRequests;
 
-        // If we should update the swapchain source image also add that blit command buffer.
-        int swapSourceIndex = -1;
-        {
-            std::lock_guard<std::mutex> lock(m_swapMutex);
-            if (m_sourceStates[0] == kRequested) {
-                swapSourceIndex = 0;
-                m_sourceStates[0] = kPipelined;
-            } else if (m_sourceStates[1] == kRequested) {
-                swapSourceIndex = 1;
-                m_sourceStates[1] = kPipelined;
-            }
-        }
-        m_pendingSwapchainBlits[frameIndex] = swapSourceIndex;
-
-        if (swapSourceIndex >= 0) {
-            spdlog::info("frameIndex: {} requested swapSource {}", frameIndex, swapSourceIndex);
-            commandBuffers.push_back(m_sourceBlitCommands[frameIndex]->buffer(swapSourceIndex));
-        }
-
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.waitSemaphoreCount = 0;
@@ -322,28 +290,21 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
         // If we should flush this frame, wait for the fence now, otherwise consider this frame wrapped.
         if (flush) {
             m_renderSync->waitForFrame(frameIndex);
-            processPendingBlits(frameIndex);
+            processPendingEncodes(frameIndex);
         }
 
         time += deltaTime;
         ++frameNumber;
         frameIndex = frameNumber % m_numberOfImages;
     }
+
+    vkDeviceWaitIdle(m_device->get());
+    spdlog::info("Offscreen render thread terminating.");
 }
 
-void Offscreen::processPendingBlits(size_t frameIndex) {
-    int swapIndex = m_pendingSwapchainBlits[frameIndex];
-    if (swapIndex >= 0) {
-        std::lock_guard<std::mutex> lock(m_swapMutex);
-        m_sourceStates[swapIndex] = kReady;
-        spdlog::info("blit finished on swapsource index {}, frameIndex {}, marked as ready.", swapIndex, frameIndex);
-    }
-    m_pendingSwapchainBlits[frameIndex] = -1;
-
+void Offscreen::processPendingEncodes(size_t frameIndex) {
     if (m_pendingEncodes[frameIndex].size()) {
-        // ffmpeg can decide on a buffer recycling option.
         std::shared_ptr<scin::av::Buffer> avBuffer = m_bufferPool->getBuffer();
-        // Readback the first frame request from the GPU.
         m_readbackImages->readbackImage(frameIndex, avBuffer.get());
         for (auto callback : m_pendingEncodes[frameIndex]) {
             callback(avBuffer);
@@ -470,9 +431,43 @@ bool Offscreen::writeBlitCommands(std::shared_ptr<CommandBuffer> commandBuffer, 
     }
 
     if (vkEndCommandBuffer(commandBuffer->buffer(bufferIndex)) != VK_SUCCESS) {
-        spdlog::info("Offscreen failed ending readback command buffer.");
+        spdlog::error("Offscreen failed ending readback command buffer.");
         return false;
     }
+
+    return true;
+}
+
+bool Offscreen::blitAndPresent(size_t frameIndex, uint32_t swapImageIndex) {
+    VkSemaphore imageAvailable[] = { m_swapRenderSync->imageAvailable(0) };
+    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    VkSemaphore renderFinished[] = { m_swapRenderSync->renderFinished(0) };
+    VkSubmitInfo submitInfo = {};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = imageAvailable;
+    submitInfo.pWaitDstStageMask = waitStages;
+    VkCommandBuffer commandBuffer = m_swapBlitCommands[frameIndex]->buffer(swapImageIndex);
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer;
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = renderFinished;
+
+    if (vkQueueSubmit(m_device->graphicsQueue(), 1, &submitInfo, m_swapRenderSync->frameRendering(0)) != VK_SUCCESS) {
+        spdlog::error("Offscreen failed to submit swapchain blit command buffer to graphics queue.");
+        return false;
+    }
+
+    VkPresentInfoKHR presentInfo = {};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = renderFinished;
+    VkSwapchainKHR swapchains[] = { m_swapchain->get() };
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = swapchains;
+    presentInfo.pImageIndices = &swapImageIndex;
+    presentInfo.pResults = nullptr;
+    vkQueuePresentKHR(m_device->presentQueue(), &presentInfo);
 
     return true;
 }

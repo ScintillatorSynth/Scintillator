@@ -66,8 +66,8 @@ bool Window::create() {
             return false;
         }
 
-        if (!m_offscreen->createSwapchainSources(m_swapchain.get())) {
-            spdlog::error("Window failed to create Swapchain sources for Offscreen rendering.");
+        if (!m_offscreen->supportSwapchain(m_swapchain, m_renderSync)) {
+            spdlog::error("Window failed to create Swapchain support for Offscreen rendering.");
             return false;
         }
     }
@@ -150,9 +150,46 @@ void Window::runDirectRendering(std::shared_ptr<Compositor> compositor) {
         m_commandBuffers = compositor->prepareFrame(
             imageIndex, std::chrono::duration<double, std::chrono::seconds::period>(now - m_startTime).count());
 
-        if (!submitAndPresent(imageIndex)) {
+        VkSemaphore imageAvailable[] = { m_renderSync->imageAvailable(0) };
+        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        VkSemaphore renderFinished[] = { m_renderSync->renderFinished(0) };
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = imageAvailable;
+        submitInfo.pWaitDstStageMask = waitStages;
+        VkCommandBuffer commandBuffer;
+        if (m_commandBuffers) {
+            submitInfo.commandBufferCount = 1;
+            commandBuffer = m_commandBuffers->buffer(imageIndex);
+            submitInfo.pCommandBuffers = &commandBuffer;
+        }
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = renderFinished;
+
+        // Reset the fence so that it can be signaled by the render completion again.
+        m_renderSync->resetFrame(0);
+
+        // Submits the command buffer to the queue. Won't start the buffer until the image is marked as available by
+        // the imageAvailable semaphore, and when the render is finished it will signal the renderFinished semaphore
+        // on the device.
+        if (vkQueueSubmit(m_device->graphicsQueue(), 1, &submitInfo, m_renderSync->frameRendering(0)) != VK_SUCCESS) {
+            spdlog::error("Window failed to submit command buffer to graphics queue.");
             break;
         }
+
+        VkPresentInfoKHR presentInfo = {};
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores = renderFinished;
+        VkSwapchainKHR swapchains[] = { m_swapchain->get() };
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = swapchains;
+        presentInfo.pImageIndices = &imageIndex;
+        presentInfo.pResults = nullptr;
+        // Queue the frame to be presented as soon as the renderFinished semaphore is signaled by the end of the
+        // command buffer execution.
+        vkQueuePresentKHR(m_device->presentQueue(), &presentInfo);
     }
 
     vkDeviceWaitIdle(m_device->get());
@@ -171,65 +208,15 @@ void Window::runFixedFrameRate(std::shared_ptr<Compositor> compositor) {
         m_renderSync->waitForFrame(0);
         uint32_t imageIndex = m_renderSync->acquireNextImage(0, m_swapchain.get());
 
-        m_commandBuffers = m_offscreen->getSwapchainBlit();
-        if (!m_commandBuffers) {
-            spdlog::error("empty command buffer");
-        }
-        if (!submitAndPresent(imageIndex)) {
-            break;
-        }
+        // Offscreen will configure the submit to clear the fence again, so we reset it here.
+        m_renderSync->resetFrame(0);
+        m_offscreen->requestSwapchainBlit(imageIndex);
 
         lastFrame = std::chrono::high_resolution_clock::now();
     }
     m_offscreen->stop();
 
-    vkDeviceWaitIdle(m_device->get());
     spdlog::info("Window exiting offscreen rendering loop.");
-}
-
-bool Window::submitAndPresent(uint32_t imageIndex) {
-    VkSemaphore imageAvailable[] = { m_renderSync->imageAvailable(0) };
-    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    VkSemaphore renderFinished[] = { m_renderSync->renderFinished(0) };
-    VkSubmitInfo submitInfo = {};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = imageAvailable;
-    submitInfo.pWaitDstStageMask = waitStages;
-    VkCommandBuffer commandBuffer;
-    if (m_commandBuffers) {
-        submitInfo.commandBufferCount = 1;
-        commandBuffer = m_commandBuffers->buffer(imageIndex);
-        submitInfo.pCommandBuffers = &commandBuffer;
-    }
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = renderFinished;
-
-    // Reset the fence so that it can be signaled by the render completion again.
-    m_renderSync->resetFrame(0);
-
-    // Submits the command buffer to the queue. Won't start the buffer until the image is marked as available by
-    // the imageAvailable semaphore, and when the render is finished it will signal the renderFinished semaphore
-    // on the device.
-    if (vkQueueSubmit(m_device->graphicsQueue(), 1, &submitInfo, m_renderSync->frameRendering(0)) != VK_SUCCESS) {
-        spdlog::error("Window failed to submit command buffer to graphics queue.");
-        return false;
-    }
-
-    VkPresentInfoKHR presentInfo = {};
-    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-    presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = renderFinished;
-    VkSwapchainKHR swapchains[] = { m_swapchain->get() };
-    presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = swapchains;
-    presentInfo.pImageIndices = &imageIndex;
-    presentInfo.pResults = nullptr;
-    // Queue the frame to be presented as soon as the renderFinished semaphore is signaled by the end of the
-    // command buffer execution.
-    vkQueuePresentKHR(m_device->presentQueue(), &presentInfo);
-
-    return true;
 }
 
 } // namespace vk

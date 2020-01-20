@@ -56,7 +56,6 @@ public:
 private:
     void runDirectRendering(std::shared_ptr<Compositor> compositor);
     void runFixedFrameRate(std::shared_ptr<Compositor> compositor);
-    bool submitAndPresent(uint32_t imageIndex);
 
     std::shared_ptr<Instance> m_instance;
     std::shared_ptr<Device> m_device;
@@ -68,7 +67,7 @@ private:
     GLFWwindow* m_window;
     VkSurfaceKHR m_surface;
     std::shared_ptr<Swapchain> m_swapchain;
-    std::unique_ptr<RenderSync> m_renderSync;
+    std::shared_ptr<RenderSync> m_renderSync;
 
     // We keep the shared pointers to the command buffers until the frame is being re-rendered. This allows
     // the Compositor to change command buffers arbitrarily, and they won't get reclaimed by the system until
