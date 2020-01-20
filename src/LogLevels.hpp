@@ -1,5 +1,5 @@
-#ifndef SRC_CORE_LOG_LEVELS_HPP_
-#define SRC_CORE_LOG_LEVELS_HPP_
+#ifndef SRC_LOG_LEVELS_HPP_
+#define SRC_LOG_LEVELS_HPP_
 
 namespace scin {
 
@@ -8,4 +8,4 @@ void setGlobalLogLevel(int level);
 
 } // namespace scin
 
-#endif // SRC_CORE_LOG_LEVELS_HPP_
+#endif // SRC_LOG_LEVELS_HPP_

@@ -1,14 +1,13 @@
 #ifndef SRC_SCINTHDEF_HPP_
 #define SRC_SCINTHDEF_HPP_
 
-#include "core/Types.hpp"
-
 #include <memory>
 
 namespace scin {
 
+namespace core {
 class AbstractScinthDef;
-class Scinth;
+}
 
 namespace vk {
 class Canvas;
@@ -21,12 +20,15 @@ class ShaderCompiler;
 class UniformLayout;
 }
 
+class Scinth;
+
 /*! A ScinthDef encapsulates all of the graphics state that can be reused across individual instances of Scinths.
  */
 class ScinthDef {
 public:
     ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Canvas> canvas,
-              std::shared_ptr<vk::CommandPool> commandPool, std::shared_ptr<const AbstractScinthDef> abstractScinthDef);
+              std::shared_ptr<vk::CommandPool> commandPool,
+              std::shared_ptr<const core::AbstractScinthDef> abstractScinthDef);
     ~ScinthDef();
 
     /*! Given the AbstractScinthDef, build the Vulkan objects that can be re-used across all running Scinth instances
@@ -37,7 +39,7 @@ public:
      */
     bool build(vk::ShaderCompiler* compiler);
 
-    /*! Create a running instance Scinth of this ScinthDef.
+    /*! Create a Scinth instance based from this ScinthDef.
      *
      * The Scinth needs a shared_ptr reference to the originating ScinthDef, so that the ScinthDef will remain allocated
      * until all referencing Scinths are themselves deleted. So this is a static method that provides that shared
@@ -46,11 +48,10 @@ public:
      *
      * \param scinthDef The ScinthDef to build this Scinth from.
      * \param nodeID The unique ID to assign to the running Scinth.
-     * \param startTime The start time to provide to the running Scinth.
      */
-    static std::shared_ptr<Scinth> play(std::shared_ptr<ScinthDef> scinthDef, int nodeID, const TimePoint& startTime);
+    static std::shared_ptr<Scinth> cue(std::shared_ptr<ScinthDef> scinthDef, int nodeID);
 
-    std::shared_ptr<const AbstractScinthDef> abstract() const { return m_abstractScinthDef; }
+    std::shared_ptr<const core::AbstractScinthDef> abstract() const { return m_abstractScinthDef; }
 
 private:
     bool buildVertexData();
@@ -58,7 +59,7 @@ private:
     std::shared_ptr<vk::Device> m_device;
     std::shared_ptr<vk::Canvas> m_canvas;
     std::shared_ptr<vk::CommandPool> m_commandPool;
-    std::shared_ptr<const AbstractScinthDef> m_abstractScinthDef;
+    std::shared_ptr<const core::AbstractScinthDef> m_abstractScinthDef;
     std::shared_ptr<vk::HostBuffer> m_vertexBuffer;
     std::shared_ptr<vk::HostBuffer> m_indexBuffer;
     std::shared_ptr<vk::Shader> m_vertexShader;

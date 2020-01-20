@@ -10,16 +10,16 @@ namespace {
 %}
 %language=C++
 %struct-type
-struct IntrinsicPair { const char* name; scin::Intrinsic intrinsic; };
+struct IntrinsicPair { const char* name; scin::core::Intrinsic intrinsic; };
 %%
-normPos,    scin::Intrinsic::kNormPos
-pi,         scin::Intrinsic::kPi
-time,       scin::Intrinsic::kTime
+normPos,    scin::core::Intrinsic::kNormPos
+pi,         scin::core::Intrinsic::kPi
+time,       scin::core::Intrinsic::kTime
 %%
 
 } // namespace
 
-namespace scin {
+namespace scin { namespace core {
 
 Intrinsic getIntrinsicNamed(const std::string& name) {
     const IntrinsicPair* pair = Perfect_Hash::in_word_set(name.data(), name.size());
@@ -28,5 +28,7 @@ Intrinsic getIntrinsicNamed(const std::string& name) {
     }
     return pair->intrinsic;
 }
+
+} // namespace core
 
 } // namespace scin

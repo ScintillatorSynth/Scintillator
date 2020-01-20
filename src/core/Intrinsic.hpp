@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace scin {
+namespace scin { namespace core {
 
 enum Intrinsic : int { kNormPos, kPi, kTime, kNotFound };
 
@@ -13,6 +13,8 @@ enum Intrinsic : int { kNormPos, kPi, kTime, kNotFound };
  * \return The Intrinsic enum associated with name, or kNotFound if not found.
  */
 Intrinsic getIntrinsicNamed(const std::string& name);
+
+} // namespace core
 
 } // namespace scin
 

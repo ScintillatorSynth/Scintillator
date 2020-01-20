@@ -2,7 +2,7 @@
 
 #include "vulkan/Canvas.hpp"
 #include "vulkan/Device.hpp"
-#include "vulkan/Images.hpp"
+#include "vulkan/ImageSet.hpp"
 #include "vulkan/Pipeline.hpp"
 #include "vulkan/Window.hpp"
 
@@ -15,19 +15,27 @@ namespace scin { namespace vk {
 
 Swapchain::Swapchain(std::shared_ptr<Device> device):
     m_device(device),
-    m_imageCount(0),
+    m_numberOfImages(0),
     m_swapchain(VK_NULL_HANDLE),
-    m_images(new Images(device)),
+    m_images(new ImageSet(device)),
     m_canvas(new Canvas(device)) {}
 
 Swapchain::~Swapchain() { destroy(); }
 
-bool Swapchain::create(Window* window) {
+bool Swapchain::create(Window* window, bool directRendering) {
+    VkBool32 presentSupported = VK_FALSE;
+    vkGetPhysicalDeviceSurfaceSupportKHR(m_device->physical(), m_device->presentFamilyIndex(), window->surface(),
+                                         &presentSupported);
+    if (presentSupported != VK_TRUE) {
+        spdlog::error("Device doesn't support presentation of surfaces.");
+        return false;
+    }
+
     // Pick swap chain format from available options.
     uint32_t formatCount;
-    vkGetPhysicalDeviceSurfaceFormatsKHR(m_device->getPhysical(), window->getSurface(), &formatCount, nullptr);
+    vkGetPhysicalDeviceSurfaceFormatsKHR(m_device->physical(), window->surface(), &formatCount, nullptr);
     std::vector<VkSurfaceFormatKHR> formats(formatCount);
-    vkGetPhysicalDeviceSurfaceFormatsKHR(m_device->getPhysical(), window->getSurface(), &formatCount, formats.data());
+    vkGetPhysicalDeviceSurfaceFormatsKHR(m_device->physical(), window->surface(), &formatCount, formats.data());
     // If the only entry returned is UNDEFINED that means the surface supports all formats equally, pick preferred
     // BGRA format.
     if (formats.size() == 1 && formats[0].format == VK_FORMAT_UNDEFINED) {
@@ -44,24 +52,16 @@ bool Swapchain::create(Window* window) {
         }
     }
 
-    // Pick present mode, with preference for MAILBOX if supported, which allows for lower-latency renders.
+    // Pick present mode, always FIFO to rate-limit direct rendering.
     uint32_t presentModeCount;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(m_device->getPhysical(), window->getSurface(), &presentModeCount,
-                                              nullptr);
+    vkGetPhysicalDeviceSurfacePresentModesKHR(m_device->physical(), window->surface(), &presentModeCount, nullptr);
     std::vector<VkPresentModeKHR> presentModes(presentModeCount);
-    vkGetPhysicalDeviceSurfacePresentModesKHR(m_device->getPhysical(), window->getSurface(), &presentModeCount,
+    vkGetPhysicalDeviceSurfacePresentModesKHR(m_device->physical(), window->surface(), &presentModeCount,
                                               presentModes.data());
-    m_presentMode = VK_PRESENT_MODE_FIFO_KHR;
-    for (const auto& mode : presentModes) {
-        if (mode == VK_PRESENT_MODE_MAILBOX_KHR) {
-            m_presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
-            break;
-        }
-    }
 
     // Choose swap extent, pixel dimensions of swap chain.
     VkSurfaceCapabilitiesKHR capabilities;
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_device->getPhysical(), window->getSurface(), &capabilities);
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_device->physical(), window->surface(), &capabilities);
     // If the currentExtent field is set to MAX_UINT this means we can pick the size of the extent we want, otherwise
     // we should use the size provided in the capabilities struct.
     if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
@@ -75,21 +75,27 @@ bool Swapchain::create(Window* window) {
                      std::min(capabilities.maxImageExtent.height, static_cast<uint32_t>(window->height())));
     }
 
-    m_imageCount = capabilities.minImageCount + 1;
+    // We try to stick to two images in the swapchain, or double-buffering, to reduce latency from render to present.
+    m_numberOfImages = std::max(capabilities.minImageCount, 2u);
     if (capabilities.maxImageCount > 0) {
-        m_imageCount = std::min(m_imageCount, capabilities.maxImageCount);
+        m_numberOfImages = std::min(m_numberOfImages, capabilities.maxImageCount);
     }
+    spdlog::info("requesting {} images in swapchain.", m_numberOfImages);
 
     // Populate Swap Chain create info structure.
     VkSwapchainCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = window->getSurface();
-    createInfo.minImageCount = m_imageCount;
+    createInfo.surface = window->surface();
+    createInfo.minImageCount = m_numberOfImages;
     createInfo.imageFormat = m_surfaceFormat.format;
     createInfo.imageColorSpace = m_surfaceFormat.colorSpace;
     createInfo.imageExtent = m_extent;
     createInfo.imageArrayLayers = 1;
-    createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    if (directRendering) {
+        createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    } else {
+        createInfo.imageUsage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+    }
 
     uint32_t queueFamilyIndices[] = { static_cast<uint32_t>(m_device->graphicsFamilyIndex()),
                                       static_cast<uint32_t>(m_device->presentFamilyIndex()) };
@@ -106,19 +112,22 @@ bool Swapchain::create(Window* window) {
 
     createInfo.preTransform = capabilities.currentTransform;
     createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    createInfo.presentMode = m_presentMode;
+    createInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
     createInfo.clipped = VK_TRUE;
     createInfo.oldSwapchain = VK_NULL_HANDLE;
 
     if (vkCreateSwapchainKHR(m_device->get(), &createInfo, nullptr, &m_swapchain) != VK_SUCCESS) {
-        spdlog::error("error creating swap chain");
+        spdlog::error("Failed to create swap chain.");
         return false;
     }
 
-    m_imageCount = m_images->getFromSwapchain(this, m_imageCount);
-    if (!m_canvas->create(m_images)) {
-        spdlog::error("error creating Canvas");
-        return false;
+    m_numberOfImages = m_images->getFromSwapchain(this, m_numberOfImages);
+
+    if (directRendering) {
+        if (!m_canvas->create(m_images)) {
+            spdlog::error("Swapchain failed to create Canvas.");
+            return false;
+        }
     }
 
     return true;

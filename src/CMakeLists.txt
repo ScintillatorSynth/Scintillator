@@ -1,7 +1,13 @@
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
+set(CMAKE_CXX_STANDARD_REQUIRED)
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${SCIN_EXT_INSTALL_DIR}/include
+)
+
+#### "Core" files (without external dependencies)
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/core")
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp"
@@ -20,8 +26,6 @@ add_library(scintillator_core STATIC
     core/Archetypes.hpp
     core/FileSystem.hpp
     core/Intrinsic.hpp
-    core/LogLevels.cpp
-    core/LogLevels.hpp
     core/Manifest.cpp
     core/Manifest.hpp
     core/Shape.cpp
@@ -38,90 +42,7 @@ target_link_libraries(scintillator_core
     stdc++fs
 )
 
-configure_file(Version.hpp.in "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp")
-add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
-    COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp" "${CMAKE_CURRENT_SOURCE_DIR}/OscCommand.hpp.in"
-    MAIN_DEPENDENCY OscCommand.hpp.in
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-)
-
-set(scintillator_synth_files
-    "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
-    "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp"
-    Async.cpp
-    Async.hpp
-    Compositor.cpp
-    Compositor.hpp
-    OscHandler.cpp
-    OscHandler.hpp
-    Scinth.cpp
-    Scinth.hpp
-    ScinthDef.cpp
-    ScinthDef.hpp
-    scinsynth.cpp
-
-    vulkan/Buffer.cpp
-    vulkan/Buffer.hpp
-    vulkan/Canvas.cpp
-    vulkan/Canvas.hpp
-    vulkan/CommandBuffer.cpp
-    vulkan/CommandBuffer.hpp
-    vulkan/CommandPool.cpp
-    vulkan/CommandPool.hpp
-    vulkan/Device.cpp
-    vulkan/Device.hpp
-    vulkan/Images.cpp
-    vulkan/Images.hpp
-    vulkan/Instance.cpp
-    vulkan/Instance.hpp
-    vulkan/Pipeline.cpp
-    vulkan/Pipeline.hpp
-    vulkan/Shader.cpp
-    vulkan/Shader.hpp
-    vulkan/ShaderCompiler.cpp
-    vulkan/ShaderCompiler.hpp
-    vulkan/Swapchain.cpp
-    vulkan/Swapchain.hpp
-    vulkan/Uniform.cpp
-    vulkan/Uniform.hpp
-    vulkan/UniformLayout.cpp
-    vulkan/UniformLayout.hpp
-    vulkan/Vulkan.hpp
-    vulkan/Window.cpp
-    vulkan/Window.hpp
-)
-
-add_executable(scinsynth ${scintillator_synth_files})
-
-target_link_libraries(scinsynth
-    SPIRV-Tools
-    VulkanMemoryAllocator
-    gflags
-    glfw
-    glm
-    glslang
-    oscpack
-    scintillator_core
-    shaderc
-    spdlog
-    stdc++fs
-)
-
-if(SCIN_USE_SWIFTSHADER)
-    target_link_libraries(scinsynth
-        SwiftShader
-        vk_swiftshader
-    )
-else()
-    find_package(Vulkan REQUIRED FATAL_ERROR)
-    target_link_libraries(scinsynth "${Vulkan_LIBRARY}")
-endif()
-
-
-if(SCIN_VALIDATE_VULKAN)
-    target_compile_definitions(scinsynth PRIVATE SCIN_VALIDATE_VULKAN)
-endif()
-
+#### Unit Testing for Core Files
 add_executable(run_unittests
     core/AbstractScinthDef_unittests.cpp
     core/AbstractVGen_unittests.cpp
@@ -140,6 +61,120 @@ target_link_libraries(run_unittests
     stdc++fs
 )
 
+#### Scintillator Binary
+configure_file(Version.hpp.in "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp")
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
+    COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp" "${CMAKE_CURRENT_SOURCE_DIR}/OscCommand.hpp.in"
+    MAIN_DEPENDENCY OscCommand.hpp.in
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+)
+
+set(scintillator_synth_files
+    "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
+    "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp"
+    Async.cpp
+    Async.hpp
+    Compositor.cpp
+    Compositor.hpp
+    LogLevels.cpp
+    LogLevels.hpp
+    OscHandler.cpp
+    OscHandler.hpp
+    Scinth.cpp
+    Scinth.hpp
+    ScinthDef.cpp
+    ScinthDef.hpp
+    scinsynth.cpp
+
+    av/AVIncludes.hpp
+    av/Buffer.cpp
+    av/Buffer.hpp
+    av/BufferPool.cpp
+    av/BufferPool.hpp
+    av/Encoder.cpp
+    av/Encoder.hpp
+    av/Frame.cpp
+    av/Frame.hpp
+    av/ImageEncoder.cpp
+    av/ImageEncoder.hpp
+    av/Packet.cpp
+    av/Packet.hpp
+
+    vulkan/Buffer.cpp
+    vulkan/Buffer.hpp
+    vulkan/Canvas.cpp
+    vulkan/Canvas.hpp
+    vulkan/CommandBuffer.cpp
+    vulkan/CommandBuffer.hpp
+    vulkan/CommandPool.cpp
+    vulkan/CommandPool.hpp
+    vulkan/Device.cpp
+    vulkan/Device.hpp
+    vulkan/DeviceChooser.cpp
+    vulkan/DeviceChooser.hpp
+    vulkan/DeviceInfo.cpp
+    vulkan/DeviceInfo.hpp
+    vulkan/Framebuffer.cpp
+    vulkan/Framebuffer.hpp
+    vulkan/FrameTimer.cpp
+    vulkan/FrameTimer.hpp
+    vulkan/ImageSet.cpp
+    vulkan/ImageSet.hpp
+    vulkan/Instance.cpp
+    vulkan/Instance.hpp
+    vulkan/Offscreen.cpp
+    vulkan/Offscreen.hpp
+    vulkan/Pipeline.cpp
+    vulkan/Pipeline.hpp
+    vulkan/RenderSync.cpp
+    vulkan/RenderSync.hpp
+    vulkan/Shader.cpp
+    vulkan/Shader.hpp
+    vulkan/ShaderCompiler.cpp
+    vulkan/ShaderCompiler.hpp
+    vulkan/Swapchain.cpp
+    vulkan/Swapchain.hpp
+    vulkan/Uniform.cpp
+    vulkan/Uniform.hpp
+    vulkan/UniformLayout.cpp
+    vulkan/UniformLayout.hpp
+    vulkan/Vulkan.hpp
+    vulkan/Window.cpp
+    vulkan/Window.hpp
+)
+
+add_executable(scinsynth ${scintillator_synth_files})
+
+target_link_libraries(scinsynth
+    "${SCIN_EXT_INSTALL_DIR}/lib/libshaderc_shared.so"
+    VulkanMemoryAllocator
+    avcodec
+    avformat
+    avutil
+    gflags
+    glfw
+    glm
+    oscpack
+    scintillator_core
+    spdlog
+    stdc++fs
+)
+
+add_dependencies(scinsynth
+    shaderc-install
+)
+
+# Add the Vulkan loader if we rolled our own.
+if (SCIN_USE_OWN_VULKAN)
+    target_link_libraries(scinsynth
+        "${SCIN_EXT_INSTALL_DIR}/lib/libvulkan.so"
+    )
+else()
+    find_package(Vulkan REQUIRED FATAL_ERROR)
+    target_link_libraries(scinsynth "${Vulkan_LIBRARY}")
+endif()
+
+#### Automatic Code Formatting and Linting
 if (NOT DEFINED CLANG_FORMAT)
     set(CLANG_FORMAT clang-format-8)
 endif()
@@ -156,7 +191,12 @@ add_custom_target(formatall
     VERBATIM
 )
 
+#### Code Coverage Computation
 if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
+    if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        message(FATAL_ERROR "Scintillator code coverage analysis requires Clang to build")
+    endif()
+
     if(NOT DEFINED LLVM_PROFDATA)
         set(LLVM_PROFDATA llvm-profdata)
     endif()
@@ -189,6 +229,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
     )
 endif()
 
+#### Doxygen Documentation
 if (SCIN_BUILD_DOCS)
     find_package(Doxygen)
     if (DOXYGEN_FOUND)

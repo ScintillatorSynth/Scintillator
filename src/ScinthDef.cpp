@@ -21,13 +21,13 @@ namespace scin {
 
 ScinthDef::ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Canvas> canvas,
                      std::shared_ptr<vk::CommandPool> commandPool,
-                     std::shared_ptr<const AbstractScinthDef> abstractScinthDef):
+                     std::shared_ptr<const core::AbstractScinthDef> abstractScinthDef):
     m_device(device),
     m_canvas(canvas),
     m_commandPool(commandPool),
     m_abstractScinthDef(abstractScinthDef) {}
 
-ScinthDef::~ScinthDef() { spdlog::debug("ScinthDef destructor"); }
+ScinthDef::~ScinthDef() { spdlog::debug("ScinthDef {} destructor", m_abstractScinthDef->name()); }
 
 bool ScinthDef::build(vk::ShaderCompiler* compiler) {
     // Build the vertex data. Because Intrinsics can add data payloads to the vertex data, each ScinthDef shares a
@@ -72,13 +72,13 @@ bool ScinthDef::build(vk::ShaderCompiler* compiler) {
 }
 
 // static
-std::shared_ptr<Scinth> ScinthDef::play(std::shared_ptr<ScinthDef> scinthDef, int nodeID, const TimePoint& startTime) {
+std::shared_ptr<Scinth> ScinthDef::cue(std::shared_ptr<ScinthDef> scinthDef, int nodeID) {
     std::shared_ptr<Scinth> scinth(new Scinth(scinthDef->m_device, nodeID, scinthDef));
-    if (!scinth->create(startTime, scinthDef->m_uniformLayout.get(), scinthDef->m_canvas->numberOfImages())) {
+    if (!scinth->create(scinthDef->m_uniformLayout.get(), scinthDef->m_canvas->numberOfImages())) {
         spdlog::error("failed to create Scinth {} from ScinthDef {}", nodeID, scinthDef->m_abstractScinthDef->name());
         return nullptr;
     }
-    if (!scinth->buildBuffers(scinthDef->m_commandPool.get(), scinthDef->m_canvas.get(), scinthDef->m_vertexBuffer,
+    if (!scinth->buildBuffers(scinthDef->m_commandPool, scinthDef->m_canvas.get(), scinthDef->m_vertexBuffer,
                               scinthDef->m_indexBuffer, scinthDef->m_pipeline)) {
         spdlog::error("failed to build command buffers on Scinth {} from ScinthDef {}", nodeID,
                       scinthDef->m_abstractScinthDef->name());
@@ -90,8 +90,8 @@ std::shared_ptr<Scinth> ScinthDef::play(std::shared_ptr<ScinthDef> scinthDef, in
 bool ScinthDef::buildVertexData() {
     // The kNormPos intrinsic applies a scale to the input vertices, but only makes sense for 2D verts.
     glm::vec2 normPosScale;
-    if (m_abstractScinthDef->intrinsics().count(Intrinsic::kNormPos)) {
-        if (m_abstractScinthDef->shape()->elementType() != Manifest::ElementType::kVec2) {
+    if (m_abstractScinthDef->intrinsics().count(core::Intrinsic::kNormPos)) {
+        if (m_abstractScinthDef->shape()->elementType() != core::Manifest::ElementType::kVec2) {
             spdlog::error("normpos intrinsic only supported for 2D vertices in ScinthDef {}.",
                           m_abstractScinthDef->name());
             return false;
@@ -119,23 +119,24 @@ bool ScinthDef::buildVertexData() {
                 m_abstractScinthDef->shape()->storeVertexAtIndex(i, vertex);
             } else {
                 switch (m_abstractScinthDef->vertexManifest().intrinsicForElement(j)) {
-                case kNormPos: { // TODO: would it be faster/easier to just provide normPosScale in UBO and do this on
-                                 // the vertex shader?
+                case core::Intrinsic::kNormPos: {
+                    // TODO: would it be faster/easier to just provide normPosScale in UBO and do this on
+                    // the vertex shader?
                     std::array<float, 2> verts;
                     m_abstractScinthDef->shape()->storeVertexAtIndex(i, verts.data());
                     vertex[0] = verts[0] * normPosScale.x;
                     vertex[1] = verts[1] * normPosScale.y;
                 } break;
 
-                case kPi:
+                case core::Intrinsic::kPi:
                     spdlog::error("pi is not a valid vertex intrinsic for ScinthDef {}", m_abstractScinthDef->name());
                     return false;
 
-                case kTime:
+                case core::Intrinsic::kTime:
                     spdlog::error("time is not a valid vertex intrinsic for ScinthDef {}", m_abstractScinthDef->name());
                     return false;
 
-                case kNotFound:
+                case core::Intrinsic::kNotFound:
                     spdlog::error("unknown intrinsic in vertex manifest for ScinthDef {}", m_abstractScinthDef->name());
                     return false;
                 }

@@ -29,7 +29,10 @@ enum OscCommand : int {
     kNRun = 12,
 
     // Scinth Commands
-    kSNew = 9
+    kSNew = 9,
+
+    // Non Real Time Commands
+    kNRTScreenShot = 67,
 };
 
 }  // namespace scin
@@ -41,20 +44,21 @@ namespace {
 %struct-type
 struct OscCommandPair { const char* name; scin::OscCommand number; };
 %%
-none,       scin::OscCommand::kNone
-notify,     scin::OscCommand::kNotify
-status,     scin::OscCommand::kStatus
-quit,       scin::OscCommand::kQuit
-dumpOSC,    scin::OscCommand::kDumpOSC
-logLevel,   scin::OscCommand::kLogLevel
-version,    scin::OscCommand::kVersion
-d_recv,     scin::OscCommand::kDRecv
-d_load,     scin::OscCommand::kDLoad
-d_loadDir,  scin::OscCommand::kDLoadDir
-d_free,     scin::OscCommand::kDFree
-n_free,     scin::OscCommand::kNFree
-n_run,      scin::OscCommand::kNRun
-s_new,      scin::OscCommand::kSNew
+none,               scin::OscCommand::kNone
+notify,             scin::OscCommand::kNotify
+status,             scin::OscCommand::kStatus
+quit,               scin::OscCommand::kQuit
+dumpOSC,            scin::OscCommand::kDumpOSC
+logLevel,           scin::OscCommand::kLogLevel
+version,            scin::OscCommand::kVersion
+d_recv,             scin::OscCommand::kDRecv
+d_load,             scin::OscCommand::kDLoad
+d_loadDir,          scin::OscCommand::kDLoadDir
+d_free,             scin::OscCommand::kDFree
+n_free,             scin::OscCommand::kNFree
+n_run,              scin::OscCommand::kNRun
+s_new,              scin::OscCommand::kSNew
+nrt_screenShot,     scin::OscCommand::kNRTScreenShot
 %%
 
 }  // namespace

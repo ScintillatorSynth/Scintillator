@@ -18,18 +18,15 @@ if(DEFINED LLVM_CONFIG)
     set(CMAKE_C_COMPILER "${LLVM_BIN_PATH}/clang" CACHE FILEPATH "clang" FORCE)
 endif()
 
-
 # The authoritative version of Scintillator is always in the Scintillator.quark file in the root directory of the
 # project. This version is manually kept in sync and should be updated to match. Both C++ and sclang Scintillator code
 # is developed in parallel, and is designed to be released together.
 project(Scintillator VERSION 0.0.1 LANGUAGES C CXX)
 
-option(SCIN_VALIDATE_VULKAN
-    "Use LunarG Vulkan Validation Layers to check Vulkan calls" ON)
-option(SCIN_USE_SWIFTSHADER
-    "Use SwiftShader for CPU rendering, instead of looking for locally installed Vulkan SDK" OFF)
 option(SCIN_BUILD_DOCS
     "Add docs build target to build C++ documentation with Doxygen" ON)
+option(SCIN_USE_OWN_VULKAN
+    "Use the Vulkan built from third_party/vulkan-dev instead of system-installed Vulkan SDK" OFF)
 
 # If this is a git checkout we can extract the git hash and branch. This code copied verbatim or close to it from the
 # SuperCollider CMake files.
@@ -47,8 +44,8 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 else()
-    set(GIT_BRANCH not_a_git_checkout)
-    set(GIT_COMMIT_HASH na)
+    set(GIT_BRANCH "not_a_git_checkout")
+    set(GIT_COMMIT_HASH "na")
 endif()
 
 message(STATUS "Scintillator Version: ${PROJECT_VERSION}")
@@ -60,13 +57,7 @@ set(CMAKE_CXX_FLAGS_COVERAGE
     CACHE STRING "C++ coverage compile flags" FORCE)
 set(CMAKE_C_FLAGS_COVERAGE
     "${CMAKE_C_FLAGS_DEBUG} -fprofile-instr-generate -fcoverage-mapping"
-    CACHE STRING "C coverage comiple flags" FORCE)
-
-if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
-    if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        message(FATAL_ERROR "Code coverage builds require clang")
-    endif()
-endif()
+    CACHE STRING "C coverage compile flags" FORCE)
 
 add_subdirectory(third_party)
 add_subdirectory(src)

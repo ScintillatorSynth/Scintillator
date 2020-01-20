@@ -3,7 +3,7 @@
 
 #include "core/Manifest.hpp"
 
-namespace scin {
+namespace scin { namespace core {
 
 /*! Abstract base class representing a geometric shape used as the starting point for rendering.
  */
@@ -48,6 +48,8 @@ public:
     const uint16_t* getIndices() const override;
 };
 
-}
+} // namespace core
+
+} // namespace scin
 
 #endif // SRC_CORE_SHAPE_HPP_

@@ -10,7 +10,7 @@ namespace YAML {
 class Node;
 }
 
-namespace scin {
+namespace scin { namespace core {
 
 class AbstractScinthDef;
 class AbstractVGen;
@@ -101,6 +101,8 @@ private:
     std::mutex m_mutex;
     std::unordered_map<std::string, std::shared_ptr<const AbstractScinthDef>> m_scinthDefs;
 };
+
+} // namespace core
 
 } // namespace scin
 

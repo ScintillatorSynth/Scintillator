@@ -18,13 +18,13 @@ namespace scin {
 Scinth::Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef):
     m_device(device),
     m_nodeID(nodeID),
+    m_cueued(true),
     m_scinthDef(scinthDef),
     m_running(false) {}
 
-Scinth::~Scinth() { spdlog::debug("Scinth destructor"); }
+Scinth::~Scinth() { spdlog::debug("Scinth {} destructor", m_nodeID); }
 
-bool Scinth::create(const TimePoint& startTime, vk::UniformLayout* uniformLayout, size_t numberOfImages) {
-    m_startTime = startTime;
+bool Scinth::create(vk::UniformLayout* uniformLayout, size_t numberOfImages) {
     m_running = true;
     if (uniformLayout) {
         m_uniform.reset(new vk::Uniform(m_device));
@@ -38,10 +38,11 @@ bool Scinth::create(const TimePoint& startTime, vk::UniformLayout* uniformLayout
     return true;
 }
 
-bool Scinth::buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, std::shared_ptr<vk::Buffer> vertexBuffer,
-                          std::shared_ptr<vk::Buffer> indexBuffer, std::shared_ptr<vk::Pipeline> pipeline) {
-    m_commands = commandPool->createBuffers(canvas->numberOfImages(), false);
-    if (!m_commands) {
+bool Scinth::buildBuffers(std::shared_ptr<vk::CommandPool> commandPool, vk::Canvas* canvas,
+                          std::shared_ptr<vk::Buffer> vertexBuffer, std::shared_ptr<vk::Buffer> indexBuffer,
+                          std::shared_ptr<vk::Pipeline> pipeline) {
+    m_commands.reset(new vk::CommandBuffer(m_device, commandPool));
+    if (!m_commands->create(canvas->numberOfImages(), false)) {
         spdlog::error("failed creating command buffers for Scinth {}", m_nodeID);
         return false;
     }
@@ -87,7 +88,13 @@ bool Scinth::buildBuffers(vk::CommandPool* commandPool, vk::Canvas* canvas, std:
     return true;
 }
 
-bool Scinth::prepareFrame(size_t imageIndex, const TimePoint& frameTime) {
+bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
+    // If this is our first call to prepareFrame we treat this frameTime as our startTime.
+    if (m_cueued) {
+        m_startTime = frameTime;
+        m_cueued = false;
+    }
+
     // Update the Uniform buffer at imageIndex, if needed.
     if (m_uniform) {
         std::unique_ptr<float[]> uniformData(
@@ -95,19 +102,19 @@ bool Scinth::prepareFrame(size_t imageIndex, const TimePoint& frameTime) {
         float* uniform = uniformData.get();
         for (auto i = 0; i < m_scinthDef->abstract()->uniformManifest().numberOfElements(); ++i) {
             switch (m_scinthDef->abstract()->uniformManifest().intrinsicForElement(i)) {
-            case kNormPos:
+            case core::Intrinsic::kNormPos:
                 spdlog::error("normPos is not a valid intrinsic for a Uniform in Scinth {}", m_nodeID);
                 return false;
 
-            case kPi:
+            case core::Intrinsic::kPi:
                 spdlog::error("pi not a valid Uniform intrinsic in Scinth {}", m_nodeID);
                 return false;
 
-            case kTime:
-                *uniform = std::chrono::duration<float, std::chrono::seconds::period>(frameTime - m_startTime).count();
+            case core::Intrinsic::kTime:
+                *uniform = static_cast<float>(frameTime - m_startTime);
                 break;
 
-            case kNotFound:
+            case core::Intrinsic::kNotFound:
                 spdlog::error("unknown uniform Intrinsic in Scinth {}", m_nodeID);
                 return false;
             }

@@ -9,7 +9,9 @@
 
 namespace scin {
 
+namespace core {
 class Shape;
+}
 
 namespace vk {
 
@@ -23,7 +25,7 @@ public:
     Pipeline(std::shared_ptr<Device> device);
     ~Pipeline();
 
-    bool create(const Manifest& vertexManifest, const Shape* shape, Canvas* canvas,
+    bool create(const core::Manifest& vertexManifest, const core::Shape* shape, Canvas* canvas,
                 std::shared_ptr<Shader> vertexShader, std::shared_ptr<Shader> fragmentShader,
                 std::shared_ptr<UniformLayout> uniformLayout);
     void destroy();

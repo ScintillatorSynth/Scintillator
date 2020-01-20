@@ -10,7 +10,7 @@
 
 #include <random>
 
-namespace scin {
+namespace scin { namespace core {
 
 AbstractScinthDef::AbstractScinthDef(const std::string& name, const std::vector<VGen>& instances):
     m_name(name),
@@ -47,7 +47,7 @@ std::string AbstractScinthDef::nameForVGenOutput(int vgenIndex, int outputIndex)
 
 bool AbstractScinthDef::buildNames() {
     std::random_device randomDevice;
-    m_prefix = fmt::format("{}_{:8x}", m_name, randomDevice());
+    m_prefix = fmt::format("{}_{:08x}", m_name, randomDevice());
     m_vertexPositionElementName = m_prefix + "_inPosition";
     m_fragmentOutputName = m_prefix + "_outColor";
 
@@ -280,5 +280,7 @@ bool AbstractScinthDef::buildFragmentShader() {
     spdlog::info("{} fragment shader:\n{}", m_name, m_fragmentShader);
     return true;
 }
+
+} // namespace core
 
 } // namespace scin

@@ -2,7 +2,7 @@
 
 #include "spdlog/spdlog.h"
 
-namespace scin {
+namespace scin { namespace core {
 
 AbstractVGen::AbstractVGen(const std::string& name, const std::vector<std::string>& inputs,
                            const std::vector<std::string>& outputs, const std::vector<std::vector<int>> inputDimensions,
@@ -155,5 +155,7 @@ std::string AbstractVGen::parameterize(const std::vector<std::string>& inputs,
 
     return shader;
 }
+
+} // namespace core
 
 } // namespace scin

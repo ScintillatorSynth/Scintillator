@@ -9,7 +9,7 @@
 #include <vector>
 #include <memory>
 
-namespace scin {
+namespace scin { namespace core {
 
 class Shape;
 class VGen;
@@ -76,6 +76,8 @@ private:
     std::string m_vertexPositionElementName;
     std::string m_fragmentOutputName;
 };
+
+} // namespace core
 
 } // namespace scin
 

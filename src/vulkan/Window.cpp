@@ -5,7 +5,11 @@
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
+#include "vulkan/FrameTimer.hpp"
+#include "vulkan/ImageSet.hpp"
 #include "vulkan/Instance.hpp"
+#include "vulkan/Offscreen.hpp"
+#include "vulkan/RenderSync.hpp"
 #include "vulkan/Swapchain.hpp"
 
 #include "spdlog/spdlog.h"
@@ -13,63 +17,54 @@
 #include <chrono>
 #include <limits>
 
-const size_t kMaxFramesInFlight = 2;
-
 namespace scin { namespace vk {
 
-Window::Window(std::shared_ptr<Instance> instance):
+Window::Window(std::shared_ptr<Instance> instance, std::shared_ptr<Device> device, int width, int height,
+               bool keepOnTop, int frameRate):
     m_instance(instance),
-    m_width(-1),
-    m_height(-1),
+    m_device(device),
+    m_width(width),
+    m_height(height),
+    m_keepOnTop(keepOnTop),
+    m_frameRate(frameRate),
+    m_directRendering(frameRate < 0),
     m_window(nullptr),
     m_surface(VK_NULL_HANDLE),
     m_stop(false) {}
 
 Window::~Window() {}
 
-bool Window::create(int width, int height, bool keepOnTop) {
+bool Window::create() {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-    glfwWindowHint(GLFW_FLOATING, keepOnTop ? GLFW_TRUE : GLFW_FALSE);
-    m_window = glfwCreateWindow(width, height, "ScintillatorSynth", nullptr, nullptr);
+    glfwWindowHint(GLFW_FLOATING, m_keepOnTop ? GLFW_TRUE : GLFW_FALSE);
+    m_window = glfwCreateWindow(m_width, m_height, "ScintillatorSynth", nullptr, nullptr);
     if (glfwCreateWindowSurface(m_instance->get(), m_window, nullptr, &m_surface) != VK_SUCCESS) {
-        spdlog::error("failed to create surface");
+        spdlog::error("Window failed to create surface");
         return false;
     }
 
-    m_width = width;
-    m_height = height;
-
-    return true;
-}
-
-bool Window::createSwapchain(std::shared_ptr<Device> device) {
-    m_device = device;
     m_swapchain.reset(new Swapchain(m_device));
-    return m_swapchain->create(this);
-}
+    if (!m_swapchain->create(this, m_directRendering)) {
+        spdlog::error("Window failed to create swapchain.");
+        return false;
+    }
 
-bool Window::createSyncObjects() {
-    m_imageAvailableSemaphores.resize(kMaxFramesInFlight);
-    m_renderFinishedSemaphores.resize(kMaxFramesInFlight);
-    m_inFlightFences.resize(kMaxFramesInFlight);
-    m_commandBuffers.resize(kMaxFramesInFlight);
+    m_renderSync.reset(new RenderSync(m_device));
+    if (!m_renderSync->create(1, true)) {
+        spdlog::error("Window failed to create rendering synchronization primitives.");
+        return false;
+    }
 
-    VkSemaphoreCreateInfo semaphoreInfo = {};
-    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-    VkFenceCreateInfo fenceInfo = {};
-    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-    for (size_t i = 0; i < kMaxFramesInFlight; ++i) {
-        if (vkCreateSemaphore(m_device->get(), &semaphoreInfo, nullptr, &m_imageAvailableSemaphores[i]) != VK_SUCCESS) {
+    if (!m_directRendering) {
+        m_offscreen.reset(new Offscreen(m_device));
+        if (!m_offscreen->create(m_width, m_height, m_swapchain->numberOfImages() + 1)) {
+            spdlog::error("Window failed to create Offscreen rendering environment.");
             return false;
         }
-        if (vkCreateSemaphore(m_device->get(), &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i]) != VK_SUCCESS) {
-            return false;
-        }
-        if (vkCreateFence(m_device->get(), &fenceInfo, nullptr, &m_inFlightFences[i]) != VK_SUCCESS) {
+
+        if (!m_offscreen->supportSwapchain(m_swapchain, m_renderSync)) {
+            spdlog::error("Window failed to create Swapchain support for Offscreen rendering.");
             return false;
         }
     }
@@ -78,84 +73,121 @@ bool Window::createSyncObjects() {
 }
 
 void Window::run(std::shared_ptr<Compositor> compositor) {
-    size_t currentFrame = 0;
+    if (m_directRendering) {
+        runDirectRendering(compositor);
+    } else {
+        runFixedFrameRate(compositor);
+    }
+}
+
+void Window::destroy() {
+    if (!m_directRendering) {
+        m_offscreen->destroy();
+    }
+    m_commandBuffers = nullptr;
+    m_renderSync->destroy();
+    m_swapchain->destroy();
+    vkDestroySurfaceKHR(m_instance->get(), m_surface, nullptr);
+    glfwDestroyWindow(m_window);
+}
+
+
+std::shared_ptr<Canvas> Window::canvas() {
+    if (m_directRendering) {
+        return m_swapchain->canvas();
+    }
+    return m_offscreen->canvas();
+}
+
+std::shared_ptr<Offscreen> Window::offscreen() { return m_offscreen; }
+
+void Window::runDirectRendering(std::shared_ptr<Compositor> compositor) {
+    spdlog::info("Window starting direct rendering loop.");
+    FrameTimer frameTimer(true);
+    frameTimer.start();
 
     while (!m_stop && !glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
 
-        vkWaitForFences(m_device->get(), 1, &m_inFlightFences[currentFrame], VK_TRUE,
-                        std::numeric_limits<uint64_t>::max());
+        // Wait for the next frame to be finished with the last render.
+        m_renderSync->waitForFrame(0);
 
-        uint32_t imageIndex;
-        vkAcquireNextImageKHR(m_device->get(), m_swapchain->get(), std::numeric_limits<uint64_t>::max(),
-                              m_imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+        // Ask Vulkan which is the next available image in the swapchain, wait indefinitely for it to become
+        // available.
+        uint32_t imageIndex = m_renderSync->acquireNextImage(0, m_swapchain.get());
 
-        VkSemaphore waitSemaphores[] = { m_imageAvailableSemaphores[currentFrame] };
+        frameTimer.markFrame();
+
+        m_commandBuffers = compositor->prepareFrame(imageIndex, frameTimer.elapsedTime());
+
+        VkSemaphore imageAvailable[] = { m_renderSync->imageAvailable(0) };
         VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        m_commandBuffers[currentFrame] =
-            compositor->prepareFrame(imageIndex, std::chrono::high_resolution_clock::now());
-        VkSemaphore signalSemaphores[] = { m_renderFinishedSemaphores[currentFrame] };
-
+        VkSemaphore renderFinished[] = { m_renderSync->renderFinished(0) };
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = waitSemaphores;
+        submitInfo.pWaitSemaphores = imageAvailable;
         submitInfo.pWaitDstStageMask = waitStages;
-        submitInfo.commandBufferCount = 1;
-        VkCommandBuffer commandBuffer = m_commandBuffers[currentFrame]->buffer(imageIndex);
-        submitInfo.pCommandBuffers = &commandBuffer;
+        VkCommandBuffer commandBuffer;
+        if (m_commandBuffers) {
+            submitInfo.commandBufferCount = 1;
+            commandBuffer = m_commandBuffers->buffer(imageIndex);
+            submitInfo.pCommandBuffers = &commandBuffer;
+        }
         submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = signalSemaphores;
+        submitInfo.pSignalSemaphores = renderFinished;
 
-        vkResetFences(m_device->get(), 1, &m_inFlightFences[currentFrame]);
+        // Reset the fence so that it can be signaled by the render completion again.
+        m_renderSync->resetFrame(0);
 
-        if (vkQueueSubmit(m_device->graphicsQueue(), 1, &submitInfo, m_inFlightFences[currentFrame]) != VK_SUCCESS) {
+        // Submits the command buffer to the queue. Won't start the buffer until the image is marked as available by
+        // the imageAvailable semaphore, and when the render is finished it will signal the renderFinished semaphore
+        // on the device.
+        if (vkQueueSubmit(m_device->graphicsQueue(), 1, &submitInfo, m_renderSync->frameRendering(0)) != VK_SUCCESS) {
+            spdlog::error("Window failed to submit command buffer to graphics queue.");
             break;
         }
 
         VkPresentInfoKHR presentInfo = {};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = signalSemaphores;
+        presentInfo.pWaitSemaphores = renderFinished;
         VkSwapchainKHR swapchains[] = { m_swapchain->get() };
         presentInfo.swapchainCount = 1;
         presentInfo.pSwapchains = swapchains;
         presentInfo.pImageIndices = &imageIndex;
         presentInfo.pResults = nullptr;
+        // Queue the frame to be presented as soon as the renderFinished semaphore is signaled by the end of the
+        // command buffer execution.
         vkQueuePresentKHR(m_device->presentQueue(), &presentInfo);
-
-        currentFrame = (currentFrame + 1) % kMaxFramesInFlight;
     }
 
     vkDeviceWaitIdle(m_device->get());
-    m_commandBuffers.clear();
+    spdlog::info("Window exiting direct rendering loop.");
 }
 
-void Window::destroySyncObjects() {
-    for (auto semaphore : m_imageAvailableSemaphores) {
-        vkDestroySemaphore(m_device->get(), semaphore, nullptr);
-    }
-    m_imageAvailableSemaphores.clear();
+void Window::runFixedFrameRate(std::shared_ptr<Compositor> compositor) {
+    spdlog::info("Window starting offscreen rendering loop.");
+    m_offscreen->runThreaded(compositor, m_frameRate);
 
-    for (auto semaphore : m_renderFinishedSemaphores) {
-        vkDestroySemaphore(m_device->get(), semaphore, nullptr);
-    }
-    m_renderFinishedSemaphores.clear();
+    std::chrono::high_resolution_clock::time_point lastFrame = std::chrono::high_resolution_clock::now();
+    while (!m_stop && !glfwWindowShouldClose(m_window)) {
+        glfwPollEvents();
+        std::this_thread::sleep_until(lastFrame + std::chrono::milliseconds(200));
 
-    for (auto fence : m_inFlightFences) {
-        vkDestroyFence(m_device->get(), fence, nullptr);
+        m_renderSync->waitForFrame(0);
+        uint32_t imageIndex = m_renderSync->acquireNextImage(0, m_swapchain.get());
+
+        // Offscreen will configure the submit to clear the fence again, so we reset it here.
+        m_renderSync->resetFrame(0);
+        m_offscreen->requestSwapchainBlit(imageIndex);
+
+        lastFrame = std::chrono::high_resolution_clock::now();
     }
-    m_inFlightFences.clear();
+    m_offscreen->stop();
+
+    spdlog::info("Window exiting offscreen rendering loop.");
 }
-
-void Window::destroySwapchain() { m_swapchain->destroy(); }
-
-void Window::destroy() {
-    vkDestroySurfaceKHR(m_instance->get(), m_surface, nullptr);
-    glfwDestroyWindow(m_window);
-}
-
-std::shared_ptr<Canvas> Window::canvas() { return m_swapchain->canvas(); }
 
 } // namespace vk
 

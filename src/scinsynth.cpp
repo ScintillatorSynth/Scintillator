@@ -1,14 +1,17 @@
 #include "Async.hpp" // TODO: audit includes
 #include "Compositor.hpp"
+#include "LogLevels.hpp"
 #include "OscHandler.hpp"
 #include "Version.hpp"
-#include "core/FileSystem.hpp"
-#include "core/LogLevels.hpp"
+#include "av/AVIncludes.hpp"
 #include "core/Archetypes.hpp"
+#include "core/FileSystem.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
+#include "vulkan/DeviceChooser.hpp"
 #include "vulkan/Instance.hpp"
+#include "vulkan/Offscreen.hpp"
 #include "vulkan/Pipeline.hpp"
 #include "vulkan/Shader.hpp"
 #include "vulkan/ShaderCompiler.hpp"
@@ -17,6 +20,7 @@
 #include "vulkan/Vulkan.hpp"
 #include "vulkan/Window.hpp"
 
+#include "fmt/core.h"
 #include "gflags/gflags.h"
 #include "glm/glm.hpp"
 #include "spdlog/spdlog.h"
@@ -27,6 +31,7 @@
 
 // Command-line options specified to gflags.
 DEFINE_bool(print_version, false, "Print the Scintillator version and exit.");
+DEFINE_bool(print_devices, false, "Print the detected devices and exit.");
 DEFINE_int32(udp_port_number, 5511, "A port number 1024-65535.");
 DEFINE_string(bind_to_address, "127.0.0.1", "Bind the UDP socket to this address.");
 
@@ -36,33 +41,44 @@ DEFINE_int32(log_level, 3,
 
 DEFINE_string(quark_dir, "..", "Root directory of the Scintillator Quark, for finding dependent files.");
 
-DEFINE_int32(window_width, 800, "Viewable width in pixels of window to create. Ignored if --fullscreen is supplied.");
-DEFINE_int32(window_height, 600, "Viewable height in pixels of window to create. Ignored if --fullscreen is supplied.");
+DEFINE_int32(width, 800, "Viewable width in pixels of window to create. Ignored if --fullscreen is supplied.");
+DEFINE_int32(height, 600, "Viewable height in pixels of window to create. Ignored if --fullscreen is supplied.");
 DEFINE_bool(keep_on_top, true, "If true will keep the window on top of other windows with focus.");
 
 DEFINE_int32(async_worker_threads, 2,
              "Number of threads to reserve for asynchronous operations (like loading ScinthDefs).");
 
+DEFINE_bool(vulkan_validation, true, "Enable Vulkan validation layers.");
+
+DEFINE_int32(frame_rate, -1,
+             "Target framerate in frames per second. Negative number means track windowing system "
+             "framerate. Zero means non-interactive. Positive means to render at that frame per second rate.");
+DEFINE_bool(create_window, true, "If false, Scintillator will not create a window.");
+
+DEFINE_string(device_uuid, "",
+              "If empty, will pick the highest performance device available. Otherwise, should be as "
+              "many characters of the uuid as needed to uniquely identify the device.");
+DEFINE_bool(swiftshader, false,
+            "If true, ignores --device_uuid and will always match the swiftshader device, if present.");
+
 int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
+    scin::setGlobalLogLevel(FLAGS_log_level);
 
     // Check for early exit conditions.
     if (FLAGS_print_version) {
-        spdlog::info("scinsynth version {}.{}.{} from branch {} at revision {}", kScinVersionMajor, kScinVersionMinor,
-                     kScinVersionPatch, kScinBranch, kScinCommitHash);
+        fmt::print("scinsynth version {}.{}.{} from branch {} at revision {}", kScinVersionMajor, kScinVersionMinor,
+                   kScinVersionPatch, kScinBranch, kScinCommitHash);
         return EXIT_SUCCESS;
     }
     if (FLAGS_udp_port_number < 1024 || FLAGS_udp_port_number > 65535) {
-        spdlog::error("scinsynth requires a UDP port number between 1024 and 65535. Specify with --udp_port_number");
+        fmt::print("scinsynth requires a UDP port number between 1024 and 65535. Specify with --udp_port_number");
         return EXIT_FAILURE;
     }
     if (!fs::exists(FLAGS_quark_dir)) {
-        spdlog::error("invalid or nonexistent path {} supplied for --quark_dir, terminating.", FLAGS_quark_dir);
+        fmt::print("invalid or nonexistent path {} supplied for --quark_dir, terminating.", FLAGS_quark_dir);
         return EXIT_FAILURE;
     }
-
-    // Set logging level, only after any critical user-triggered reporting or errors (--print_version, etc).
-    scin::setGlobalLogLevel(FLAGS_log_level);
 
     fs::path quarkPath = fs::canonical(FLAGS_quark_dir);
     if (!fs::exists(quarkPath / "Scintillator.quark")) {
@@ -70,69 +86,138 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    // ========== glfw setup.
+    // ========== Ask libavcodec to register encoders and decoders.
+    av_register_all();
+
+
+    // ========== glfw setup, this also loads Vulkan for us via the Vulkan-Loader.
     glfwInit();
 
     // ========== Vulkan setup.
-    std::shared_ptr<scin::vk::Instance> instance(new scin::vk::Instance());
+    std::shared_ptr<scin::vk::Instance> instance(new scin::vk::Instance(FLAGS_vulkan_validation));
     if (!instance->create()) {
-        spdlog::error("unable to create Vulkan instance.");
+        spdlog::error("scinsynth unable to create Vulkan instance.");
         return EXIT_FAILURE;
     }
 
-    scin::vk::Window window(instance);
-    if (!window.create(FLAGS_window_width, FLAGS_window_height, FLAGS_keep_on_top)) {
-        spdlog::error("unable to create glfw window.");
-        return EXIT_FAILURE;
+    scin::vk::DeviceChooser chooser(instance);
+    chooser.enumerateAllDevices();
+    std::string deviceReport = fmt::format("found {} Vulkan devices:\n", chooser.devices().size());
+    for (auto info : chooser.devices()) {
+        deviceReport += fmt::format("  device name: {}, type: {}, uuid: {}, swiftshader: {}\n", info.name(),
+                                    info.typeName(), info.uuid(), info.isSwiftShader());
+    }
+    if (FLAGS_print_devices) {
+        fmt::print(deviceReport);
+        return EXIT_SUCCESS;
+    } else {
+        spdlog::info(deviceReport);
     }
 
     // Create Vulkan physical and logical device.
-    std::shared_ptr<scin::vk::Device> device(new scin::vk::Device(instance));
-    if (!device->create(&window)) {
+    std::shared_ptr<scin::vk::Device> device;
+    // If swiftshader was selected prefer it over all other device selection arguments.
+    if (FLAGS_swiftshader) {
+        for (auto info : chooser.devices()) {
+            if (info.isSwiftShader()) {
+                spdlog::info("Selecting SwiftShader device.");
+                device.reset(new scin::vk::Device(instance, info));
+                break;
+            }
+        }
+    } else {
+        if (FLAGS_device_uuid.size()) {
+            for (auto info : chooser.devices()) {
+                if (std::strncmp(FLAGS_device_uuid.data(), info.uuid(), FLAGS_device_uuid.size()) == 0) {
+                    if (FLAGS_create_window && !info.supportsWindow()) {
+                        spdlog::error("Device uuid {}, name {}, does not support rendering to a window.",
+                                      FLAGS_device_uuid, info.name());
+                        return EXIT_FAILURE;
+                    }
+                    spdlog::info("Device uuid {} match, selecting {}", FLAGS_device_uuid, info.name());
+                    device.reset(new scin::vk::Device(instance, info));
+                }
+            }
+        }
+    }
+
+    if (!device && chooser.bestDeviceIndex() >= 0) {
+        auto info = chooser.devices().at(chooser.bestDeviceIndex());
+        if (FLAGS_create_window && !info.supportsWindow()) {
+            spdlog::error("Automatically chosen device {} doesn't support window rendering.", info.name());
+            return EXIT_FAILURE;
+        }
+        spdlog::info("Choosing fastest device class {}, device {}", info.typeName(), info.name());
+        device.reset(new scin::vk::Device(instance, info));
+    }
+
+    if (!device) {
+        spdlog::error("failed to find a suitable Vulkan device.");
+        return EXIT_FAILURE;
+    }
+    if (!device->create(FLAGS_create_window)) {
         spdlog::error("unable to create Vulkan device.");
         return EXIT_FAILURE;
     }
 
-    if (!window.createSwapchain(device)) {
-        spdlog::error("unable to create Vulkan swapchain.");
-        return EXIT_FAILURE;
+    std::shared_ptr<scin::vk::Window> window;
+    std::shared_ptr<scin::vk::Canvas> canvas;
+    std::shared_ptr<scin::vk::Offscreen> offscreen;
+    if (FLAGS_create_window) {
+        window.reset(
+            new scin::vk::Window(instance, device, FLAGS_width, FLAGS_height, FLAGS_keep_on_top, FLAGS_frame_rate));
+        if (!window->create()) {
+            spdlog::error("Failed to create window.");
+            return EXIT_FAILURE;
+        }
+        canvas = window->canvas();
+        offscreen = window->offscreen();
+    } else {
+        offscreen.reset(new scin::vk::Offscreen(device));
+        if (!offscreen->create(FLAGS_width, FLAGS_height, 3)) {
+            spdlog::error("Failed to create offscreen renderer.");
+            return EXIT_FAILURE;
+        }
+        canvas = offscreen->canvas();
     }
 
-    std::shared_ptr<scin::Compositor> compositor(new scin::Compositor(device, window.canvas()));
+    std::shared_ptr<scin::Compositor> compositor(new scin::Compositor(device, canvas));
     if (!compositor->create()) {
         spdlog::error("unable to create Compositor.");
         return EXIT_FAILURE;
     }
 
-    std::shared_ptr<scin::Archetypes> archetypes(new scin::Archetypes());
+    std::shared_ptr<scin::core::Archetypes> archetypes(new scin::core::Archetypes());
     std::shared_ptr<scin::Async> async(new scin::Async(archetypes, compositor));
     async->run(FLAGS_async_worker_threads);
 
     // Chain async calls to load VGens, then ScinthDefs.
-    async->vgenLoadDirectory(quarkPath / "vgens", [async, &quarkPath, compositor](bool) {
+    async->vgenLoadDirectory(quarkPath / "vgens", [async, &quarkPath, compositor](int) {
         async->scinthDefLoadDirectory(quarkPath / "scinthdefs",
-                                      [](bool) { spdlog::info("finished loading predefined VGens and ScinthDefs."); });
+                                      [](int) { spdlog::info("finished loading predefined VGens and ScinthDefs."); });
     });
-
-    if (!window.createSyncObjects()) {
-        spdlog::error("error creating device semaphores.");
-        return EXIT_FAILURE;
-    }
 
     // Start listening for incoming OSC commands on UDP.
     scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
-    oscHandler.run(async, archetypes, compositor, [&window] { window.stop(); });
 
     // ========== Main loop.
-    window.run(compositor);
+    if (FLAGS_create_window) {
+        oscHandler.run(async, archetypes, compositor, offscreen, [window] { window->stop(); });
+        window->run(compositor);
+    } else {
+        oscHandler.run(async, archetypes, compositor, offscreen, [offscreen] { offscreen->stop(); });
+        offscreen->run(compositor, FLAGS_frame_rate);
+    }
 
     // ========== Vulkan cleanup.
-    window.destroySyncObjects();
     async->stop();
     compositor->destroy();
-    window.destroySwapchain();
+    if (FLAGS_create_window) {
+        window->destroy();
+    } else {
+        offscreen->destroy();
+    }
     device->destroy();
-    window.destroy();
     instance->destroy();
 
     // ========== glfw cleanup.
@@ -140,5 +225,6 @@ int main(int argc, char* argv[]) {
 
     oscHandler.shutdown();
 
+    spdlog::info("scinsynth exited normally.");
     return EXIT_SUCCESS;
 }

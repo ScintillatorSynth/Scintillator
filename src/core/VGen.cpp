@@ -4,7 +4,7 @@
 
 #include "spdlog/spdlog.h"
 
-namespace scin {
+namespace scin { namespace core {
 
 VGen::VGen(std::shared_ptr<const AbstractVGen> abstractVGen): m_abstractVGen(abstractVGen) {}
 
@@ -83,5 +83,7 @@ bool VGen::getInputVGenIndex(int index, int& outIndex, int& outOutput) const {
     }
     return false;
 }
+
+} // namespace core
 
 } // namespace scin

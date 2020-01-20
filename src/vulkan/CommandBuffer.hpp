@@ -18,10 +18,17 @@ class Uniform;
  */
 class CommandBuffer {
 public:
-    CommandBuffer(const std::shared_ptr<Device> device, CommandPool* commandPool);
+    CommandBuffer(const std::shared_ptr<Device> device, std::shared_ptr<CommandPool> commandPool);
     ~CommandBuffer();
 
+    /*! Allocate the command buffers internally.
+     *
+     * \param count The number of buffers to allocate.
+     * \param isPrimary if true will allocate primary command buffers, if false will allocate secondary.
+     * \return true on success, false on error.
+     */
     bool create(size_t count, bool isPrimary);
+
     void destroy();
 
     /*! Associates graphical resources with this command buffer, allowing the destruction these resources to be tied to
@@ -40,7 +47,7 @@ public:
 
 private:
     std::shared_ptr<Device> m_device;
-    CommandPool* m_commandPool;
+    std::shared_ptr<CommandPool> m_commandPool;
     std::vector<VkCommandBuffer> m_commandBuffers;
     std::shared_ptr<Buffer> m_vertexBuffer;
     std::shared_ptr<Buffer> m_indexBuffer;

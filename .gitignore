@@ -1,3 +1,4 @@
+bin
 build
-.*.swp
+third_party/vulkan-dev/build
 

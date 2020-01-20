@@ -41,7 +41,7 @@ bool Compositor::create() {
     return true;
 }
 
-bool Compositor::buildScinthDef(std::shared_ptr<const AbstractScinthDef> abstractScinthDef) {
+bool Compositor::buildScinthDef(std::shared_ptr<const core::AbstractScinthDef> abstractScinthDef) {
     std::shared_ptr<ScinthDef> scinthDef(new ScinthDef(m_device, m_canvas, m_commandPool, abstractScinthDef));
     if (!scinthDef->build(m_shaderCompiler.get())) {
         return false;
@@ -67,7 +67,7 @@ void Compositor::freeScinthDefs(const std::vector<std::string>& names) {
     }
 }
 
-bool Compositor::play(const std::string& scinthDefName, int nodeID, const TimePoint& startTime) {
+bool Compositor::cue(const std::string& scinthDefName, int nodeID) {
     std::shared_ptr<ScinthDef> scinthDef;
     {
         std::lock_guard<std::mutex> lock(m_scinthDefMutex);
@@ -85,7 +85,7 @@ bool Compositor::play(const std::string& scinthDefName, int nodeID, const TimePo
     if (nodeID < 0) {
         nodeID = m_nodeSerial.fetch_sub(1);
     }
-    std::shared_ptr<Scinth> scinth = ScinthDef::play(scinthDef, nodeID, startTime);
+    std::shared_ptr<Scinth> scinth = ScinthDef::cue(scinthDef, nodeID);
     if (!scinth) {
         spdlog::error("failed to build Scinth {} from ScinthDef {}.", nodeID, scinthDefName);
         return false;
@@ -144,7 +144,7 @@ void Compositor::setRun(const std::vector<std::pair<int, int>>& pairs) {
     m_commandBufferDirty = true;
 }
 
-std::shared_ptr<vk::CommandBuffer> Compositor::prepareFrame(uint32_t imageIndex, const TimePoint& frameTime) {
+std::shared_ptr<vk::CommandBuffer> Compositor::prepareFrame(uint32_t imageIndex, double frameTime) {
     m_secondaryCommands.clear();
 
     {
@@ -178,8 +178,10 @@ void Compositor::destroy() {
     m_secondaryCommands.clear();
     m_frameCommands.clear();
 
-    // Should be able to delete the command pool now, as all outstanding command buffers have been reclaimed.
-    m_commandPool->destroy();
+    // We leave the commandPool undestroyed as there may be outstanding commandbuffers pipelined. The shared_ptr
+    // system should collect them before all is done. But we must remove our reference to it or we keep it alive
+    // until our own destructor.
+    m_commandPool = nullptr;
 
     // Now delete all of the ScinthDefs, which hold shared graphics resources.
     {
@@ -190,8 +192,8 @@ void Compositor::destroy() {
 
 // Needs to be called only from the same thread that calls prepareFrame. Assumes that m_secondaryCommands is up-to-date.
 bool Compositor::rebuildCommandBuffer() {
-    m_primaryCommands = m_commandPool->createBuffers(m_canvas->numberOfImages(), true);
-    if (!m_primaryCommands) {
+    m_primaryCommands.reset(new vk::CommandBuffer(m_device, m_commandPool));
+    if (!m_primaryCommands->create(m_canvas->numberOfImages(), true)) {
         spdlog::critical("failed creating primary command buffers for Compositor.");
         return false;
     }

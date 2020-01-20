@@ -8,9 +8,11 @@
 #include "vk_mem_alloc.h"
 
 #include <memory>
+#include <string>
 
 namespace scin { namespace vk {
 
+class DeviceInfo;
 class Instance;
 class Window;
 
@@ -18,18 +20,21 @@ class Window;
 // creation, and destruction.
 class Device {
 public:
-    Device(std::shared_ptr<Instance> instance);
+    Device(std::shared_ptr<Instance> instance, const DeviceInfo& deviceInfo);
     ~Device();
 
-    // Try to find a suitable physical device, returns true if one exists.
-    bool findPhysicalDevice(Window* window);
+    /*! Creates the logical device, optionally supporting windowed presentation.
+     *
+     * \param supportWindow If true, configure the device to support presentation of framebuffers via swapchain.
+     * \return true on success, false on error.
+     */
+    bool create(bool supportWindow);
 
-    // Creates the logical device, returns false on error.
-    bool create(Window* window);
     void destroy();
 
+
     VkDevice get() { return m_device; }
-    VkPhysicalDevice getPhysical() { return m_physicalDevice; }
+    VkPhysicalDevice physical() { return m_physicalDevice; }
     VmaAllocator allocator() { return m_allocator; }
 
     int graphicsFamilyIndex() const { return m_graphicsFamilyIndex; }
@@ -40,6 +45,7 @@ public:
 private:
     std::shared_ptr<Instance> m_instance;
     VkPhysicalDevice m_physicalDevice;
+    std::string m_name;
     int m_graphicsFamilyIndex;
     int m_presentFamilyIndex;
     VkDevice m_device;

@@ -8,7 +8,7 @@
 #include "yaml-cpp/exceptions.h"
 #include "yaml-cpp/yaml.h"
 
-namespace scin {
+namespace scin { namespace core {
 
 Archetypes::Archetypes() {}
 Archetypes::~Archetypes() {}
@@ -397,5 +397,6 @@ int Archetypes::extractAbstractVGensFromNodes(const std::vector<YAML::Node>& nod
     return numberOfValidElements;
 }
 
+} // namespace core
 
 } // namespace scin

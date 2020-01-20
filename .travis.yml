@@ -3,6 +3,7 @@ language: cpp
 dist: bionic
 os: linux
 compiler: clang
+cache: ccache
 
 addons:
     apt:
@@ -14,14 +15,18 @@ addons:
             - cmake
             - doxygen
             - gperf
+            - libavcodec-dev
+            - libavformat-dev
             - libc++-8-dev
             - libc++abi-8-dev
+            - libwayland-dev
             - libxcursor-dev
             - libxi-dev
             - libxinerama-dev
             - libxrandr-dev
             - llvm-8-dev
             - python3-distutils
+            - supercollider-language
             - zlib1g
 
 env:
@@ -30,10 +35,16 @@ env:
 before_install:
 
 before_script:
-    - mkdir build && cd build
-    - cmake -DSCIN_BUILD_DOCS=ON -DCMAKE_BUILD_TYPE=Coverage -DLLVM_COV="llvm-cov-8" -DLLVM_PROFDATA="llvm-profdata-8" -DSCIN_USE_SWIFTSHADER=ON -DPYTHON_EXECUTABLE=`which python3` ..
+    - mkdir build
+    - mkdir third_party/vulkan-dev/build && cd third_party/vulkan-dev/build
+    - cmake -DSCIN_USE_OWN_VULKAN=ON ..
+    - make -j2 install
+    - make -j2 local-vulkan-utils
+    - cd ../../../build
+    - cmake -DSCIN_BUILD_DOCS=ON -DSCIN_USE_OWN_VULKAN=ON -DCMAKE_BUILD_TYPE=Coverage -DLLVM_COV="llvm-cov-8" -DLLVM_PROFDATA="llvm-profdata-8" -DPYTHON_EXECUTABLE=`which python3` ..
 
 script:
+    - make -j2
     - make coverage_report
     - make lintall
     - make docs

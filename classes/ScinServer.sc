@@ -2,38 +2,40 @@ ScinServer {
 	classvar <>default;
 
 	var udpPortNumber;
-	var scinBinaryPath;
 	var scinQuarkPath;
-	var <logLevel;
+    var frameRate;
+    var createWindow;
+    var <logLevel;
+	var scinBinaryPath;
 
 	var scinQuarkVersion;
 	var scinPid;
 	var addr;
 
 	// For local scinsynth instances. Remote not yet supported.
-	*new { |udpPortNumber = 5511, scinBinaryPath|
-		^super.newCopyArgs(udpPortNumber, scinBinaryPath).init;
+	*new { |udpPortNumber = 5511, scinQuarkPath = nil, frameRate = -1, createWindow = true, logLevel = 2|
+		^super.newCopyArgs(udpPortNumber, scinQuarkPath, frameRate, createWindow, logLevel).init;
 	}
 
 	init {
-		Quarks.installed.do({ |quark, index|
-			if (quark.name == "Scintillator", {
-				// If no override path specificed we assume the Scintillator binary is in the
-				// bin/ path within the Quark.
-				if (scinBinaryPath.isNil, {
-					scinBinaryPath = quark.localPath ++ "/build/src/scinsynth";
-				});
-				scinQuarkVersion = quark.version;
-				scinQuarkPath = quark.localPath;
-			});
-		});
+        if (scinQuarkPath.isNil, {
+            Quarks.installed.do({ |quark, index|
+                if (quark.name == "Scintillator", {
+                    scinQuarkVersion = quark.version;
+                    scinQuarkPath = quark.localPath;
+                });
+            });
+        }, {
+            scinQuarkVersion = "unknown";
+        });
 
-		logLevel = 2;
+        scinBinaryPath = scinQuarkPath +/+ "build/src/scinsynth";
 	}
 
 	boot {
 		var commandLine = scinBinaryPath + "--udp_port_number=" ++ udpPortNumber.asString()
-		+ "--quark_dir=" ++ scinQuarkPath + "--log_level=" ++ logLevel.asString();
+		+ "--quark_dir=" ++ scinQuarkPath + "--log_level=" ++ logLevel.asString() + "--frame_rate="
+        ++ frameRate.asString() + "--create_window=" ++ createWindow.asString();
 		commandLine.postln;
 
 		scinPid = commandLine.unixCmd({ |exitCode, exitPid|
@@ -65,13 +67,19 @@ ScinServer {
 	logLevel_ { |level|
 		if (level >= 0 and: { level <= 6 }, {
 			logLevel = level;
-			addr.sendMsg('/scin_logLevel', logLevel);
+			this.sendMsg('/scin_logLevel', logLevel);
 		});
 	}
 
 	sendMsg { |... msg|
 		addr.sendMsg(*msg)
 	}
+
+    screenShot { |fileName, mimeType|
+        if (frameRate >= 0) {
+            this.sendMsg('/scin_nrt_screenShot', fileName, mimeType);
+        }
+    }
 
 	prGetVersionAsync { |callback|
 		fork {

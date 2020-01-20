@@ -9,7 +9,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace scin {
+namespace scin { namespace core {
 
 /*! Represents a template for a parameterizable shader program suitable for composition in a VGen graph.
  *
@@ -92,6 +92,8 @@ private:
     std::unordered_set<Intrinsic> m_intrinsics;
     std::vector<std::pair<const std::smatch, Parameter>> m_parameters;
 };
+
+} // namespace core
 
 } // namespace scin
 

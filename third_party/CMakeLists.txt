@@ -1,12 +1,56 @@
-if(SCIN_USE_SWIFTSHADER)
-    # Swiftshader can provide the Vulkan and GL headers to the other libraries.
-    include_directories(swiftshader/include)
-    set(BUILD_SAMPLES OFF CACHE BOOL "don't build swiftshader samples")
-    set(BUILD_TESTS OFF CACHE BOOL "don't build swiftshader tests")
-    add_subdirectory(swiftshader)
+include(ExternalProject)
+set(SCIN_EXT_INSTALL_DIR "${PROJECT_BINARY_DIR}/install-ext" CACHE PATH "Scintallor Vulkan SDK ")
+file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}")
+
+include_directories("${SCIN_EXT_INSTALL_DIR}/include")
+
+if (NOT SCIN_USE_OWN_VULKAN)
+    # glslang is a dependency of the vulkan-validation layers so will have been built there if we were building our own.
+    ExternalProject_Add(glslang
+        PREFIX ext
+        STEP_TARGETS install
+        EXCLUDE_FROM_ALL ON
+        GIT_REPOSITORY https://github.com/KhronosGroup/glslang.git
+        GIT_TAG master
+        GIT_SHALLOW ON
+        GIT_PROGRESS ON
+        UPDATE_COMMAND ""
+        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SCIN_EXT_INSTALL_DIR}
+    )
+    ExternalProject_Add_Step(glslang getdeps
+        COMMAND ./update_glslang_sources.py
+        WORKING_DIRECTORY "<SOURCE_DIR>"
+        COMMENT "downloading glslang dependencies"
+        DEPENDEES download
+        DEPENDERS update
+    )
 endif()
 
-### fmt
+#### shaderc
+ExternalProject_Add(shaderc
+    PREFIX ext
+    STEP_TARGETS install
+    EXCLUDE_FROM_ALL ON
+    GIT_REPOSITORY https://github.com/google/shaderc
+    GIT_TAG known-good
+    GIT_SHALLOW ON
+    GIT_PROGRESS ON
+    UPDATE_COMMAND ""
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SCIN_EXT_INSTALL_DIR} -DSHADERC_SKIP_TESTS=ON
+    SOURCE_SUBDIR src/
+)
+ExternalProject_Add_Step(shaderc getdeps
+    COMMAND ./update_shaderc_sources.py
+    WORKING_DIRECTORY "<SOURCE_DIR>"
+    COMMENT "downloading glslang dependencies"
+    DEPENDEES download
+    DEPENDERS update
+)
+if (NOT SCIN_USE_OWN_VULKAN)
+    ExternalProject_Add_StepDependencies(shaderc build glslang-install)
+endif()
+
+#### fmt
 add_subdirectory(fmt)
 
 #### gflags
@@ -40,31 +84,5 @@ include_directories(oscpack_1_1_0)
 add_library(oscpack STATIC "OSCPackBuild.cpp")
 target_include_directories(oscpack INTERFACE oscpack_1_1_0)
 
-#### re2 (required by effcee and SPIRV-Tools)
-set(RE2_BUILD_TESTING OFF CACHE BOOL "build testing in re2")
-add_subdirectory(re2)
-
-#### effcee (required by SPIRV-Tools)
-set(EFFCEE_BUILD_SAMPLES OFF CACHE BOOL "build samples in effcee")
-set(EFFCEE_BUILD_TESTING OFF CACHE BOOL "build testing in effcee")
-add_subdirectory(effcee)
-
-#### SPIRV-Headers (required by SPIRV-Tools)
-add_subdirectory(SPIRV-Headers)
-
-#### SPIRV-Tools (required by shaderc)
-if(NOT SCIN_USE_SWIFTSHADER) # swiftshader includes its own version of SPRIV-Tools
-    set(SPIRV_SKIP_TESTS ON CACHE BOOL "skip testing in SPIRV-Tools")
-    add_subdirectory(SPIRV-Tools)
-endif()
-
-#### glslang (required by shaderc)
-add_subdirectory(glslang)
-
-#### shaderc
-set(SHADERC_SKIP_TESTS ON CACHE BOOL "skip testing in shaderc")
-add_subdirectory(shaderc)
-
 #### yaml-cpp
 add_subdirectory(yaml-cpp)
-
