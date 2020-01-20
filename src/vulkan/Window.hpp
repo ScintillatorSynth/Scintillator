@@ -55,6 +55,10 @@ public:
     int height() const { return m_height; }
     std::shared_ptr<Canvas> canvas();
 
+    /*! Access Window's offscreen renderer. Will be null if direct rendering.
+     */
+    std::shared_ptr<Offscreen> offscreen();
+
 private:
     void runDirectRendering(std::shared_ptr<Compositor> compositor);
     void runFixedFrameRate(std::shared_ptr<Compositor> compositor);

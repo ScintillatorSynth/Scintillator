@@ -36,8 +36,7 @@ public:
      * \param frameTime The overall render time associated with the frame that will be provided.
      * \param frameNumber The counting number of the frame.
      * \param callbackOut On return will be populated with a callback function to be called when the Buffer is ready.
-     * \return True if this encoder should continue to be called for this and subsequent frames, false otherwise. If
-     *         the function returns false the value of callbackOut is undefined.
+     * \return True if this encoder should continue to be called for this and subsequent frames, false otherwise.
      */
     virtual bool queueEncode(double frameTime, size_t frameNumber, SendBuffer& callbackOut) = 0;
 

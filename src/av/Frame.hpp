@@ -16,7 +16,7 @@ public:
     Frame(std::shared_ptr<Buffer> buffer);
     ~Frame();
 
-    bool create(int width, int height);
+    bool create();
     void destroy();
 
     AVFrame* get() { return m_frame; }

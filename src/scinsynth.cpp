@@ -1,10 +1,11 @@
 #include "Async.hpp" // TODO: audit includes
 #include "Compositor.hpp"
+#include "LogLevels.hpp"
 #include "OscHandler.hpp"
 #include "Version.hpp"
+#include "av/AVIncludes.hpp"
 #include "core/Archetypes.hpp"
 #include "core/FileSystem.hpp"
-#include "core/LogLevels.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
@@ -62,7 +63,7 @@ DEFINE_bool(swiftshader, false,
 
 int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
-    scin::core::setGlobalLogLevel(FLAGS_log_level);
+    scin::setGlobalLogLevel(FLAGS_log_level);
 
     // Check for early exit conditions.
     if (FLAGS_print_version) {
@@ -84,6 +85,10 @@ int main(int argc, char* argv[]) {
         spdlog::error("Path {} doesn't look like Scintillator Quark root directory, terminating.", quarkPath.string());
         return EXIT_FAILURE;
     }
+
+    // ========== Ask libavcodec to register encoders and decoders.
+    av_register_all();
+
 
     // ========== glfw setup, this also loads Vulkan for us via the Vulkan-Loader.
     glfwInit();
@@ -166,6 +171,7 @@ int main(int argc, char* argv[]) {
             return EXIT_FAILURE;
         }
         canvas = window->canvas();
+        offscreen = window->offscreen();
     } else {
         offscreen.reset(new scin::vk::Offscreen(device));
         if (!offscreen->create(FLAGS_width, FLAGS_height, 3)) {
@@ -193,19 +199,24 @@ int main(int argc, char* argv[]) {
 
     // Start listening for incoming OSC commands on UDP.
     scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
-    oscHandler.run(async, archetypes, compositor, [window] { window->stop(); });
 
     // ========== Main loop.
     if (FLAGS_create_window) {
+        oscHandler.run(async, archetypes, compositor, offscreen, [window] { window->stop(); });
         window->run(compositor);
     } else {
+        oscHandler.run(async, archetypes, compositor, offscreen, [offscreen] { offscreen->stop(); });
         offscreen->run(compositor, FLAGS_frame_rate);
     }
 
     // ========== Vulkan cleanup.
     async->stop();
     compositor->destroy();
-    window->destroy();
+    if (FLAGS_create_window) {
+        window->destroy();
+    } else {
+        offscreen->destroy();
+    }
     device->destroy();
     instance->destroy();
 

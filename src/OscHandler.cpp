@@ -2,10 +2,12 @@
 
 #include "Async.hpp"
 #include "Compositor.hpp"
+#include "LogLevels.hpp"
 #include "OscCommand.hpp"
 #include "Version.hpp"
+#include "av/ImageEncoder.hpp"
 #include "core/Archetypes.hpp"
-#include "core/LogLevels.hpp"
+#include "vulkan/Offscreen.hpp"
 
 #include "ip/UdpSocket.h"
 #include "osc/OscOutboundPacketStream.h"
@@ -15,20 +17,26 @@
 #include "spdlog/fmt/ostr.h"
 #include "spdlog/spdlog.h"
 
+#include <atomic>
 #include <cstring>
+#include <mutex>
 #include <string>
+#include <unordered_map>
 
 namespace scin {
 
 class OscHandler::OscListener : public osc::OscPacketListener {
 public:
     OscListener(std::shared_ptr<Async> async, std::shared_ptr<core::Archetypes> archetypes,
-                std::shared_ptr<Compositor> compositor, std::function<void()> quitHandler):
+                std::shared_ptr<Compositor> compositor, std::shared_ptr<vk::Offscreen> offscreen,
+                std::function<void()> quitHandler):
         osc::OscPacketListener(),
         m_async(async),
         m_archetypes(archetypes),
         m_compositor(compositor),
+        m_offscreen(offscreen),
         m_quitHandler(quitHandler),
+        m_encodersSerial(0),
         m_sendQuitDone(false),
         m_dumpOSC(false) {}
 
@@ -99,7 +107,7 @@ public:
                 if (args != message.ArgumentsEnd())
                     throw osc::ExcessArgumentException();
                 spdlog::info("Setting log level to {}.", logLevel);
-                core::setGlobalLogLevel(logLevel);
+                setGlobalLogLevel(logLevel);
             } break;
 
             case kVersion: {
@@ -193,6 +201,41 @@ public:
             } break;
 
             case kNRTScreenShot: {
+                if (m_offscreen) {
+                    osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
+                    std::string fileName = (args++)->AsString();
+                    std::string mimeType;
+                    if (args != message.ArgumentsEnd() && args->IsString()) {
+                        mimeType = (args++)->AsString();
+                    }
+                    int serial = m_encodersSerial.fetch_add(1);
+                    std::shared_ptr<av::ImageEncoder> imageEncoder(new av::ImageEncoder(
+                        m_offscreen->width(), m_offscreen->height(), [this, endpoint, fileName, serial](bool valid) {
+                            spdlog::debug("Screenshot finished encode of '{}', valid: {}", fileName, valid);
+                            std::array<char, 128> buffer;
+                            UdpTransmitSocket socket(endpoint);
+                            osc::OutboundPacketStream p(buffer.data(), sizeof(buffer));
+                            p << osc::BeginMessage("/scin_done") << "/scin_nrt_screenShot" << fileName.data();
+                            p << osc::EndMessage;
+                            socket.Send(p.Data(), p.Size());
+                            {
+                                std::lock_guard<std::mutex> lock(m_encodersMutex);
+                                m_encoders.erase(serial);
+                            }
+                        }));
+                    if (imageEncoder->createFile(fileName, mimeType)) {
+                        spdlog::info("Screenshot '{}' enqueued for encode.", fileName);
+                        m_offscreen->addEncoder(imageEncoder);
+                        {
+                            std::lock_guard<std::mutex> lock(m_encodersMutex);
+                            m_encoders.insert(std::make_pair(serial, imageEncoder));
+                        }
+                    } else {
+                        spdlog::error("Screenshot failed to create file '{}' with mimeType '{}'", fileName, mimeType);
+                    }
+                } else {
+                    spdlog::error("Screenshot requested but scinsynth is not running in non-realtime.");
+                }
             } break;
             }
         } catch (osc::Exception e) {
@@ -231,7 +274,11 @@ private:
     std::shared_ptr<Async> m_async;
     std::shared_ptr<core::Archetypes> m_archetypes;
     std::shared_ptr<Compositor> m_compositor;
+    std::shared_ptr<vk::Offscreen> m_offscreen;
     std::function<void()> m_quitHandler;
+    std::atomic<int> m_encodersSerial;
+    std::mutex m_encodersMutex;
+    std::unordered_map<int, std::shared_ptr<av::Encoder>> m_encoders;
     bool m_sendQuitDone;
     bool m_dumpOSC;
     IpEndpointName m_quitEndpoint;
@@ -244,8 +291,9 @@ OscHandler::OscHandler(const std::string& bindAddress, int listenPort):
 OscHandler::~OscHandler() {}
 
 void OscHandler::run(std::shared_ptr<Async> async, std::shared_ptr<core::Archetypes> archetypes,
-                     std::shared_ptr<Compositor> compositor, std::function<void()> quitHandler) {
-    m_listener.reset(new OscListener(async, archetypes, compositor, quitHandler));
+                     std::shared_ptr<Compositor> compositor, std::shared_ptr<vk::Offscreen> offscreen,
+                     std::function<void()> quitHandler) {
+    m_listener.reset(new OscListener(async, archetypes, compositor, offscreen, quitHandler));
     m_listenSocket.reset(
         new UdpListeningReceiveSocket(IpEndpointName(m_bindAddress.data(), m_listenPort), m_listener.get()));
     m_socketThread = std::thread([this] { m_listenSocket->Run(); });

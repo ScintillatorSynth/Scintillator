@@ -21,6 +21,8 @@ public:
 
 private:
     AVBufferPool* m_bufferPool;
+    int m_width;
+    int m_height;
 };
 
 } // namespace av

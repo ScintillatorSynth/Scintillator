@@ -6,7 +6,7 @@
 
 namespace scin { namespace av {
 
-BufferPool::BufferPool(int width, int height): m_bufferPool(nullptr) {
+BufferPool::BufferPool(int width, int height): m_bufferPool(nullptr), m_width(width), m_height(height) {
     m_bufferPool = av_buffer_pool_init(width * height * 4, nullptr);
     if (!m_bufferPool) {
         spdlog::error("failed to create BufferPool.");
@@ -22,7 +22,7 @@ std::shared_ptr<Buffer> BufferPool::getBuffer() {
         return std::shared_ptr<Buffer>();
     }
 
-    return std::shared_ptr<Buffer>(new Buffer(bufferRef));
+    return std::shared_ptr<Buffer>(new Buffer(bufferRef, m_width, m_height));
 }
 
 } // namespace av

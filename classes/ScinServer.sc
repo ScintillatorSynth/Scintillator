@@ -5,16 +5,16 @@ ScinServer {
 	var scinQuarkPath;
     var frameRate;
     var createWindow;
+    var <logLevel;
 	var scinBinaryPath;
-	var <logLevel;
 
 	var scinQuarkVersion;
 	var scinPid;
 	var addr;
 
 	// For local scinsynth instances. Remote not yet supported.
-	*new { |udpPortNumber = 5511, scinQuarkPath = nil, frameRate = -1, createWindow = true|
-		^super.newCopyArgs(udpPortNumber, scinQuarkPath, frameRate, createWindow).init;
+	*new { |udpPortNumber = 5511, scinQuarkPath = nil, frameRate = -1, createWindow = true, logLevel = 2|
+		^super.newCopyArgs(udpPortNumber, scinQuarkPath, frameRate, createWindow, logLevel).init;
 	}
 
 	init {
@@ -30,7 +30,6 @@ ScinServer {
         });
 
         scinBinaryPath = scinQuarkPath +/+ "build/src/scinsynth";
-		logLevel = 2;
 	}
 
 	boot {
@@ -68,13 +67,19 @@ ScinServer {
 	logLevel_ { |level|
 		if (level >= 0 and: { level <= 6 }, {
 			logLevel = level;
-			addr.sendMsg('/scin_logLevel', logLevel);
+			this.sendMsg('/scin_logLevel', logLevel);
 		});
 	}
 
 	sendMsg { |... msg|
 		addr.sendMsg(*msg)
 	}
+
+    screenShot { |fileName, mimeType|
+        if (frameRate >= 0) {
+            this.sendMsg('/scin_nrt_screenShot', fileName, mimeType);
+        }
+    }
 
 	prGetVersionAsync { |callback|
 		fork {

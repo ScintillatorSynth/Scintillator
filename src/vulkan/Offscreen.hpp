@@ -101,20 +101,24 @@ public:
     void destroy();
 
     std::shared_ptr<Canvas> canvas();
+    int width() const { return m_width; }
+    int height() const { return m_height; }
 
 private:
     void threadMain(std::shared_ptr<Compositor> compositor);
     void processPendingEncodes(size_t frameIndex);
-    bool writeCopyCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, int width, int height,
-                           VkImage sourceImage, VkImage destinationImage);
-    bool writeBlitCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, int width, int height,
-                           VkImage sourceImage, VkImage destinationImage, VkImageLayout destinationLayout);
+    bool writeCopyCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, VkImage sourceImage,
+                           VkImage destinationImage);
+    bool writeBlitCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, VkImage sourceImage,
+                           VkImage destinationImage, VkImageLayout destinationLayout);
     bool blitAndPresent(size_t frameIndex, uint32_t swapImageIndex);
 
     std::shared_ptr<Device> m_device;
     std::atomic<bool> m_quit;
 
     size_t m_numberOfImages;
+    int m_width;
+    int m_height;
 
     std::shared_ptr<Framebuffer> m_framebuffer;
     std::unique_ptr<RenderSync> m_renderSync;

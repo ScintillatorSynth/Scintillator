@@ -175,4 +175,9 @@ Server will save a screenshot image of the next rendered frame to the supplied f
 
 table::
 ## strong::string:: || file name and path to save the screenshot to.
+## strong::string:: || (optional) a mime type of the desired image file, to guide container and codec selection.
+::
+
+definitionlist::
+## Asynchronous. || Replies to sender with strong::/scin_done:: followed by strong::/scin_nrt_screenShot:: and the name of the file saved when complete.
 ::

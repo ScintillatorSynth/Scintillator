@@ -6,8 +6,10 @@ namespace scin { namespace vk {
 
 const size_t kFramePeriodWindowSize = 60;
 
-FrameTimer::FrameTimer(bool trackDroppedFrames): m_trackDroppedFrames(trackDroppedFrames), m_periodSum(0),
-m_lateFrames(0) {}
+FrameTimer::FrameTimer(bool trackDroppedFrames):
+    m_trackDroppedFrames(trackDroppedFrames),
+    m_periodSum(0),
+    m_lateFrames(0) {}
 
 FrameTimer::~FrameTimer() {}
 
@@ -28,8 +30,8 @@ void FrameTimer::markFrame() {
 
     // We consider a frame late when we have at least half of the window of frame times to establish a credible
     // mean, and the period of the frame is more than half again the mean.
-    if (m_trackDroppedFrames && m_framePeriods.size() >= kFramePeriodWindowSize / 2 &&
-            framePeriod >= (meanPeriod * 1.5)) {
+    if (m_trackDroppedFrames && m_framePeriods.size() >= kFramePeriodWindowSize / 2
+        && framePeriod >= (meanPeriod * 1.5)) {
         ++m_lateFrames;
         // Remove the outlier from the average, to avoid biasing our dropped frame detector.
         m_periodSum -= framePeriod;
@@ -55,7 +57,6 @@ void FrameTimer::markFrame() {
 double FrameTimer::elapsedTime() {
     return std::chrono::duration<double, std::chrono::seconds::period>(m_lastFrameTime - m_startTime).count();
 }
-
 
 
 } // namespace vk

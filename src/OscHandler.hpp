@@ -12,12 +12,16 @@ class UdpTransmitSocket;
 
 namespace scin {
 
+class Async;
+class Compositor;
+
 namespace core {
 class Archetypes;
 }
 
-class Async;
-class Compositor;
+namespace vk {
+class Offscreen;
+}
 
 class OscHandler {
 public:
@@ -29,11 +33,13 @@ public:
      * \param async The async operations handler.
      * \param archetypes The archetypes dictionary.
      * \param compositor The root compositor, for issuing synchronous commands directly.
+     * \param offscreen The offscreen renderer, if running in non realtime, for encode requests.
      * \param quitHandler Function to call if we receive an OSC /scin_quit command. When called, it should safely
      *        terminate the scinsynth program.
      */
     void run(std::shared_ptr<Async> async, std::shared_ptr<core::Archetypes> archetypes,
-             std::shared_ptr<Compositor> compositor, std::function<void()> quitHandler);
+             std::shared_ptr<Compositor> compositor, std::shared_ptr<vk::Offscreen> offscreen,
+             std::function<void()> quitHandler);
 
     /*! Unbinds UDP socket and terminates listening thread.
      *

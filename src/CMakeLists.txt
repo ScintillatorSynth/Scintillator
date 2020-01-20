@@ -26,8 +26,6 @@ add_library(scintillator_core STATIC
     core/Archetypes.hpp
     core/FileSystem.hpp
     core/Intrinsic.hpp
-    core/LogLevels.cpp
-    core/LogLevels.hpp
     core/Manifest.cpp
     core/Manifest.hpp
     core/Shape.cpp
@@ -78,6 +76,8 @@ set(scintillator_synth_files
     Async.hpp
     Compositor.cpp
     Compositor.hpp
+    LogLevels.cpp
+    LogLevels.hpp
     OscHandler.cpp
     OscHandler.hpp
     Scinth.cpp
@@ -97,6 +97,8 @@ set(scintillator_synth_files
     av/Frame.hpp
     av/ImageEncoder.cpp
     av/ImageEncoder.hpp
+    av/Packet.cpp
+    av/Packet.hpp
 
     vulkan/Buffer.cpp
     vulkan/Buffer.hpp

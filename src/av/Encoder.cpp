@@ -1,5 +1,7 @@
 #include "av/Encoder.hpp"
 
+#include "av/Packet.hpp"
+
 #include "spdlog/spdlog.h"
 
 namespace scin { namespace av {
@@ -15,6 +17,8 @@ Encoder::Encoder(int width, int height, std::function<void(bool)> completion):
 Encoder::~Encoder() {}
 
 void Encoder::finishEncode(bool valid) {
+    spdlog::debug("Encoder finishing encode, valid: {}", valid);
+
     int ret = 0;
     if (valid) {
         // Flush the codec.
@@ -25,11 +29,15 @@ void Encoder::finishEncode(bool valid) {
         }
     }
 
+    spdlog::debug("Encoder through avcodec_send_frame flush, valid: {}", valid);
+
+
     if (valid) {
-        AVPacket packet;
-        ret = avcodec_receive_packet(m_codecContext, &packet);
+        Packet packet;
+        packet.create();
+        ret = avcodec_receive_packet(m_codecContext, packet.get());
         while (ret == 0) {
-            if (av_write_frame(m_outputContext, &packet) < 0) {
+            if (av_write_frame(m_outputContext, packet.get()) < 0) {
                 spdlog::error("Encoder failed writing a packet during flush.");
                 valid = false;
                 break;
@@ -40,6 +48,8 @@ void Encoder::finishEncode(bool valid) {
             valid = false;
         }
     }
+
+    spdlog::debug("Encoder through avcodec_receive_packet flush, valid: {}", valid);
 
     if (valid) {
         // Flush the output format.

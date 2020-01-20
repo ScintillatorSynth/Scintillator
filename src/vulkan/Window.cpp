@@ -99,6 +99,8 @@ std::shared_ptr<Canvas> Window::canvas() {
     return m_offscreen->canvas();
 }
 
+std::shared_ptr<Offscreen> Window::offscreen() { return m_offscreen; }
+
 void Window::runDirectRendering(std::shared_ptr<Compositor> compositor) {
     spdlog::info("Window starting direct rendering loop.");
     FrameTimer frameTimer(true);

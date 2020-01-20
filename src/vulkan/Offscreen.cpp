@@ -21,6 +21,9 @@ namespace scin { namespace vk {
 Offscreen::Offscreen(std::shared_ptr<Device> device):
     m_device(device),
     m_quit(false),
+    m_numberOfImages(0),
+    m_width(0),
+    m_height(0),
     m_framebuffer(new Framebuffer(device)),
     m_renderSync(new RenderSync(device)),
     m_commandPool(new CommandPool(device)),
@@ -33,6 +36,8 @@ Offscreen::Offscreen(std::shared_ptr<Device> device):
 Offscreen::~Offscreen() { destroy(); }
 
 bool Offscreen::create(int width, int height, size_t numberOfImages) {
+    m_width = width;
+    m_height = height;
     m_bufferPool.reset(new scin::av::BufferPool(width, height));
     m_numberOfImages = std::max(numberOfImages, 2ul);
 
@@ -83,16 +88,15 @@ bool Offscreen::create(int width, int height, size_t numberOfImages) {
     }
     if (m_readbackSupportsBlit) {
         for (auto i = 0; i < m_numberOfImages; ++i) {
-            if (!writeBlitCommands(m_readbackCommands, i, width, height, m_framebuffer->image(i),
-                                   m_readbackImages->get()[i], VK_IMAGE_LAYOUT_UNDEFINED)) {
+            if (!writeBlitCommands(m_readbackCommands, i, m_framebuffer->image(i), m_readbackImages->get()[i],
+                                   VK_IMAGE_LAYOUT_UNDEFINED)) {
                 spdlog::error("Offscreen failed to create readback command buffers.");
                 return false;
             }
         }
     } else {
         for (auto i = 0; i < m_numberOfImages; ++i) {
-            if (!writeCopyCommands(m_readbackCommands, i, width, height, m_framebuffer->image(i),
-                                   m_readbackImages->get()[i])) {
+            if (!writeCopyCommands(m_readbackCommands, i, m_framebuffer->image(i), m_readbackImages->get()[i])) {
                 spdlog::error("Offscreen failed to create readback command buffers.");
                 return false;
             }
@@ -105,8 +109,6 @@ bool Offscreen::create(int width, int height, size_t numberOfImages) {
 bool Offscreen::supportSwapchain(std::shared_ptr<Swapchain> swapchain, std::shared_ptr<RenderSync> swapRenderSync) {
     m_swapchain = swapchain;
     m_swapRenderSync = swapRenderSync;
-    int width = swapchain->extent().width;
-    int height = swapchain->extent().height;
 
     // Build the transfer from framebuffer to swapchain images command buffers.
     for (auto i = 0; i < m_numberOfImages; ++i) {
@@ -117,7 +119,7 @@ bool Offscreen::supportSwapchain(std::shared_ptr<Swapchain> swapchain, std::shar
         }
         // The jth command buffer will blit from the ith framebuffer image to the jth swapchain image.
         for (auto j = 0; j < swapchain->numberOfImages(); ++j) {
-            if (!writeBlitCommands(buffer, j, width, height, m_framebuffer->image(i), swapchain->images()->get()[j],
+            if (!writeBlitCommands(buffer, j, m_framebuffer->image(i), swapchain->images()->get()[j],
                                    VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)) {
                 spdlog::error("Offscreen failed writing swapchain source blit command buffers.");
                 return false;
@@ -133,6 +135,9 @@ bool Offscreen::supportSwapchain(std::shared_ptr<Swapchain> swapchain, std::shar
 void Offscreen::runThreaded(std::shared_ptr<Compositor> compositor, int frameRate) {
     m_frameRate = frameRate;
     m_render = true;
+    if (frameRate > 0) {
+        m_deltaTime = 1.0 / static_cast<double>(frameRate);
+    }
     m_renderThread = std::thread(&Offscreen::threadMain, this, compositor);
     m_renderCondition.notify_one();
 }
@@ -140,6 +145,9 @@ void Offscreen::runThreaded(std::shared_ptr<Compositor> compositor, int frameRat
 void Offscreen::run(std::shared_ptr<Compositor> compositor, int frameRate) {
     m_frameRate = frameRate;
     m_render = true;
+    if (frameRate > 0) {
+        m_deltaTime = 1.0 / static_cast<double>(frameRate);
+    }
     m_renderCondition.notify_one();
     threadMain(compositor);
 }
@@ -264,11 +272,11 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
             for (auto it = m_encoders.begin(); it != m_encoders.end(); /* deliberately empty increment */) {
                 scin::av::Encoder::SendBuffer encode;
                 if ((*it)->queueEncode(time, frameNumber, encode)) {
-                    encodeRequests.push_back(encode);
                     ++it;
                 } else {
                     it = m_encoders.erase(it);
                 }
+                encodeRequests.push_back(encode);
             }
         }
 
@@ -319,8 +327,8 @@ void Offscreen::processPendingEncodes(size_t frameIndex) {
     }
 }
 
-bool Offscreen::writeCopyCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, int width,
-                                  int height, VkImage sourceImage, VkImage destinationImage) {
+bool Offscreen::writeCopyCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, VkImage sourceImage,
+                                  VkImage destinationImage) {
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -361,23 +369,22 @@ bool Offscreen::writeCopyCommands(std::shared_ptr<CommandBuffer> commandBuffer, 
     imageCopy.srcSubresource.layerCount = 1;
     imageCopy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     imageCopy.dstSubresource.layerCount = 1;
-    imageCopy.extent.width = width;
-    imageCopy.extent.height = height;
+    imageCopy.extent.width = m_width;
+    imageCopy.extent.height = m_height;
     imageCopy.extent.depth = 1;
     vkCmdCopyImage(commandBuffer->buffer(bufferIndex), sourceImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                    destinationImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imageCopy);
 
     if (vkEndCommandBuffer(commandBuffer->buffer(bufferIndex)) != VK_SUCCESS) {
-        spdlog::info("Offscreen failed ending readback command buffer.");
+        spdlog::error("Offscreen failed ending readback command buffer.");
         return false;
     }
 
     return true;
 }
 
-bool Offscreen::writeBlitCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, int width,
-                                  int height, VkImage sourceImage, VkImage destinationImage,
-                                  VkImageLayout destinationLayout) {
+bool Offscreen::writeBlitCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, VkImage sourceImage,
+                                  VkImage destinationImage, VkImageLayout destinationLayout) {
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -414,8 +421,8 @@ bool Offscreen::writeBlitCommands(std::shared_ptr<CommandBuffer> commandBuffer, 
                          VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
 
     VkOffset3D offset = {};
-    offset.x = width;
-    offset.y = height;
+    offset.x = m_width;
+    offset.y = m_height;
     offset.z = 1;
     VkImageBlit blitRegion = {};
     blitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
