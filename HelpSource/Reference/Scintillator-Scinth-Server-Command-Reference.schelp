@@ -179,5 +179,19 @@ table::
 ::
 
 definitionlist::
-## Asynchronous. || Replies to sender with strong::/scin_done:: followed by strong::/scin_nrt_screenShot:: and the name of the file saved when complete.
+## Asynchronous. || Replies to sender with strong::/scin_done:: followed by strong::/scin_nrt_screenShot::, the name of the file saved, and a boolean with status on completion.
 ::
+
+subsection::/scin_nrt_advanceFrame
+
+If framerate is at zero, renders one frame at the current time and then advances the time by the supplied fractional increment, in seconds.
+
+table::
+## strong::int:: || numerator for fractional time advancement
+## strong::int:: || denominator for fractional time advancement
+::
+
+definitionlist::
+## Asynchronous. || Replies to sender with strong::/scin_done:: followed by strong::/scin_nrt_advanceFrame::.
+::
+

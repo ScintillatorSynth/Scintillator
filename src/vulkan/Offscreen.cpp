@@ -31,7 +31,8 @@ Offscreen::Offscreen(std::shared_ptr<Device> device):
     m_swapBlitRequested(false),
     m_swapchainImageIndex(0),
     m_frameRate(0),
-    m_deltaTime(0) {}
+    m_deltaTime(0),
+    m_flushCallback([](size_t) {}) {}
 
 Offscreen::~Offscreen() { destroy(); }
 
@@ -133,21 +134,15 @@ bool Offscreen::supportSwapchain(std::shared_ptr<Swapchain> swapchain, std::shar
 }
 
 void Offscreen::runThreaded(std::shared_ptr<Compositor> compositor, int frameRate) {
-    m_frameRate = frameRate;
+    setFrameRate(frameRate);
     m_render = true;
-    if (frameRate > 0) {
-        m_deltaTime = 1.0 / static_cast<double>(frameRate);
-    }
     m_renderThread = std::thread(&Offscreen::threadMain, this, compositor);
     m_renderCondition.notify_one();
 }
 
 void Offscreen::run(std::shared_ptr<Compositor> compositor, int frameRate) {
-    m_frameRate = frameRate;
+    setFrameRate(frameRate);
     m_render = true;
-    if (frameRate > 0) {
-        m_deltaTime = 1.0 / static_cast<double>(frameRate);
-    }
     m_renderCondition.notify_one();
     threadMain(compositor);
 }
@@ -178,6 +173,25 @@ void Offscreen::requestSwapchainBlit(uint32_t swapchainImageIndex) {
     m_renderCondition.notify_one();
 }
 
+void Offscreen::advanceFrame(double dt, std::function<void(size_t)> callback) {
+    if (!m_snapShotMode) {
+        spdlog::error("Offscreen got render request but not in snap shot mode.");
+        return;
+    }
+
+    {
+        if (m_render) {
+            spdlog::error("Offscreen detects snapshot render already requested");
+            return;
+        }
+        std::lock_guard<std::mutex> lock(m_renderMutex);
+        m_deltaTime = dt;
+        m_flushCallback = callback;
+        m_render = true;
+    }
+    m_renderCondition.notify_one();
+}
+
 void Offscreen::destroy() {
     m_swapRenderSync = nullptr;
     m_swapchain = nullptr;
@@ -196,6 +210,17 @@ void Offscreen::destroy() {
 }
 
 std::shared_ptr<Canvas> Offscreen::canvas() { return m_framebuffer->canvas(); }
+
+void Offscreen::setFrameRate(int frameRate) {
+    std::lock_guard<std::mutex> lock(m_renderMutex);
+    m_frameRate = frameRate;
+    if (frameRate > 0) {
+        m_deltaTime = 1.0 / static_cast<double>(frameRate);
+        m_snapShotMode = false;
+    } else {
+        m_snapShotMode = true;
+    }
+}
 
 void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
     spdlog::info("Offscreen render thread starting up.");
@@ -241,6 +266,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
             if (render && m_frameRate == 0) {
                 m_render = false;
                 flush = true;
+                m_deltaTime = 0.0;
             }
         }
 

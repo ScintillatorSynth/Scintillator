@@ -81,6 +81,12 @@ ScinServer {
         }
     }
 
+	advanceFrame { |num, denom|
+		if (frameRate == 0) {
+			this.sendMsg('/scin_nrt_advanceFrame', num, denom);
+		}
+	}
+
 	prGetVersionAsync { |callback|
 		fork {
 			var sync = Condition.new;
@@ -94,7 +100,7 @@ ScinServer {
 				sync.test = true;
 				sync.signal;
 			}, '/scin_version.reply').oneShot;
-			addr.sendMsg('/scin_version');
+			this.sendMsg('/scin_version');
 			sync.wait;
 			callback.value(version);
 		}

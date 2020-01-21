@@ -237,6 +237,26 @@ public:
                     spdlog::error("Screenshot requested but scinsynth is not running in non-realtime.");
                 }
             } break;
+
+            case kNRTAdvanceFrame: {
+                if (m_offscreen && m_offscreen->isSnapShotMode()) {
+                    osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
+                    int numerator = (args++)->AsInt32();
+                    int denominator = (args++)->AsInt32();
+                    double dt = static_cast<double>(numerator) / static_cast<double>(denominator);
+                    m_offscreen->advanceFrame(dt, [this, endpoint](size_t frameNumber) {
+                        std::array<char, 128> buffer;
+                        UdpTransmitSocket socket(endpoint);
+                        osc::OutboundPacketStream p(buffer.data(), sizeof(buffer));
+                        p << osc::BeginMessage("/scin_done") << "/scin_nrt_advanceFrame";
+                        p << static_cast<int32_t>(frameNumber);
+                        p << osc::EndMessage;
+                        socket.Send(p.Data(), p.Size());
+                    });
+                } else {
+                    spdlog::error("Advance Frame requested but scinsynth not in snap shot mode.");
+                }
+            } break;
             }
         } catch (osc::Exception e) {
             spdlog::error("exception in processing OSC message: {}", e.what());

@@ -191,6 +191,23 @@ add_custom_target(formatall
     VERBATIM
 )
 
+#### Integration Testing
+file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/testing")
+
+add_custom_command(OUTPUT "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml"
+    COMMAND sclang "${PROJECT_SOURCE_DIR}/tools/TestScripts/addQuark.scd" "${PROJECT_SOURCE_DIR}"
+    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+    COMMENT "configuring sclang to include Scintillator classes."
+    VERBATIM
+)
+
+add_custom_target(test_images
+    DEPENDS "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" scinsynth
+    COMMAND sclang -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/makeTestImages.scd" "${PROJECT_SOURCE_DIR}"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    VERBATIM
+)
+
 #### Code Coverage Computation
 if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
     if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

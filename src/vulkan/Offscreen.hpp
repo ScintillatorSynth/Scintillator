@@ -82,15 +82,12 @@ public:
      */
     void pause();
 
-    /*! For nonzero framerate, when paused, will render one additional frame.
-     */
-    void advanceFrame();
-
-    /*! For zero framerate, will advance time by dt and then render one additional frame.
+    /*! For zero framerate, will render one frame, then advance time by dt and call the supplied callback.
      *
      * \param dt The amount of time to advance the frame by. Must be >= 0.
+     * \param callback A function to call on completion of render, argument is the frame number.
      */
-    void renderFrame(double dt);
+    void advanceFrame(double dt, std::function<void(size_t)> callback);
 
     /*! For stop the render thread and release all associated resources.
      */
@@ -104,7 +101,12 @@ public:
     int width() const { return m_width; }
     int height() const { return m_height; }
 
+    /*! Returns true if the Offscreen is in snap shot mode (frameRate == 0).
+     */
+    bool isSnapShotMode() const { return m_snapShotMode; }
+
 private:
+    void setFrameRate(int frameRate);
     void threadMain(std::shared_ptr<Compositor> compositor);
     void processPendingEncodes(size_t frameIndex);
     bool writeCopyCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, VkImage sourceImage,
@@ -144,6 +146,9 @@ private:
     std::list<std::shared_ptr<scin::av::Encoder>> m_encoders;
     std::shared_ptr<CommandBuffer> m_readbackCommands;
 
+    // Not mutex-protected read-only indicator if the frame rate is zero.
+    bool m_snapShotMode;
+
     // Protects the render flag and the framerate, and deltaTime.
     std::mutex m_renderMutex;
     std::condition_variable m_renderCondition;
@@ -152,6 +157,7 @@ private:
     uint32_t m_swapchainImageIndex;
     int m_frameRate;
     double m_deltaTime;
+    std::function<void(size_t)> m_flushCallback;
 };
 
 } // namespace vk

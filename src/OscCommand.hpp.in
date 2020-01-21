@@ -33,6 +33,7 @@ enum OscCommand : int {
 
     // Non Real Time Commands
     kNRTScreenShot = 67,
+    kNRTAdvanceFrame = 68
 };
 
 }  // namespace scin
@@ -59,6 +60,7 @@ n_free,             scin::OscCommand::kNFree
 n_run,              scin::OscCommand::kNRun
 s_new,              scin::OscCommand::kSNew
 nrt_screenShot,     scin::OscCommand::kNRTScreenShot
+nrt_advanceFrame,   scin::OscCommand::kNRTAdvanceFrame
 %%
 
 }  // namespace

@@ -10,6 +10,6 @@ if (thisProcess.argv.size != 1, {
 quarkPath = thisProcess.argv[0];
 
 LanguageConfig.addIncludePath(quarkPath +/+ "classes");
-LanguageConfig.store(quarkPath +/+ "build" +/+ "sclang_config.yaml");
+LanguageConfig.store(quarkPath +/+ "build" +/+ "testing" +/+ "sclang_config.yaml");
 0.exit;
 )

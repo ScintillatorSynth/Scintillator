@@ -86,8 +86,10 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    // ========== Ask libavcodec to register encoders and decoders.
+    // ========== Ask libavcodec to register encoders and decoders, required for older libavcodecs.
+#if LIBAVCODEC_VERSION_MAJOR < 58
     av_register_all();
+#endif
 
 
     // ========== glfw setup, this also loads Vulkan for us via the Vulkan-Loader.
