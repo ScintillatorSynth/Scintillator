@@ -211,7 +211,7 @@ public:
                     int serial = m_encodersSerial.fetch_add(1);
                     std::shared_ptr<av::ImageEncoder> imageEncoder(new av::ImageEncoder(
                         m_offscreen->width(), m_offscreen->height(), [this, endpoint, fileName, serial](bool valid) {
-                            spdlog::debug("Screenshot finished encode of '{}', valid: {}", fileName, valid);
+                            spdlog::info("Screenshot finished encode of '{}', valid: {}", fileName, valid);
                             std::array<char, 128> buffer;
                             UdpTransmitSocket socket(endpoint);
                             osc::OutboundPacketStream p(buffer.data(), sizeof(buffer));

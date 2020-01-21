@@ -160,7 +160,9 @@ void Offscreen::addEncoder(std::shared_ptr<scin::av::Encoder> encoder) {
 void Offscreen::stop() {
     m_quit = true;
     m_renderCondition.notify_one();
-    m_renderThread.join();
+    if (m_renderThread.joinable()) {
+        m_renderThread.join();
+    }
 }
 
 void Offscreen::requestSwapchainBlit(uint32_t swapchainImageIndex) {
