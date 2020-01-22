@@ -18,34 +18,40 @@
 
 namespace scin { namespace vk {
 
-Offscreen::Offscreen(std::shared_ptr<Device> device):
+Offscreen::Offscreen(std::shared_ptr<Device> device, int width, int height, int frameRate):
     m_device(device),
     m_quit(false),
     m_numberOfImages(0),
-    m_width(0),
-    m_height(0),
+    m_width(width),
+    m_height(height),
+    m_frameTimer(new FrameTimer(frameRate)),
     m_framebuffer(new Framebuffer(device)),
     m_renderSync(new RenderSync(device)),
     m_commandPool(new CommandPool(device)),
     m_render(false),
     m_swapBlitRequested(false),
     m_swapchainImageIndex(0),
-    m_frameRate(0),
+    m_frameRate(frameRate),
     m_deltaTime(0),
-    m_flushCallback([](size_t) {}) {}
+    m_flushCallback([](size_t) {}) {
+    if (frameRate > 0) {
+        m_deltaTime = 1.0 / static_cast<double>(frameRate);
+        m_snapShotMode = false;
+    } else {
+        m_snapShotMode = true;
+    }
+}
 
 Offscreen::~Offscreen() { destroy(); }
 
-bool Offscreen::create(int width, int height, size_t numberOfImages) {
-    m_width = width;
-    m_height = height;
-    m_bufferPool.reset(new scin::av::BufferPool(width, height));
+bool Offscreen::create(size_t numberOfImages) {
+    m_bufferPool.reset(new scin::av::BufferPool(m_width, m_height));
     m_numberOfImages = std::max(numberOfImages, 2ul);
 
     spdlog::info("creating Offscreen renderer with {} images.", m_numberOfImages);
 
-    if (!m_framebuffer->create(width, height, m_numberOfImages)) {
-        spdlog::error("Offscreen failed to create framebuffer of width: {}, height: {}, images: {}", width, height,
+    if (!m_framebuffer->create(m_width, m_height, m_numberOfImages)) {
+        spdlog::error("Offscreen failed to create framebuffer of width: {}, height: {}, images: {}", m_width, m_height,
                       m_numberOfImages);
         return false;
     }
@@ -58,7 +64,7 @@ bool Offscreen::create(int width, int height, size_t numberOfImages) {
     // Prepare for readback by allocating GPU memory for readback images, checking for efficient copy operations from
     // the framebuffer to those readback images, and building command buffers to do the actual readback.
     m_readbackImages.reset(new ImageSet(m_device));
-    if (!m_readbackImages->createHostCoherent(width, height, m_numberOfImages)) {
+    if (!m_readbackImages->createHostCoherent(m_width, m_height, m_numberOfImages)) {
         spdlog::error("Offscreen failed to create {} readback images.", m_numberOfImages);
         return false;
     }
@@ -133,15 +139,13 @@ bool Offscreen::supportSwapchain(std::shared_ptr<Swapchain> swapchain, std::shar
     return true;
 }
 
-void Offscreen::runThreaded(std::shared_ptr<Compositor> compositor, int frameRate) {
-    setFrameRate(frameRate);
+void Offscreen::runThreaded(std::shared_ptr<Compositor> compositor) {
     m_render = true;
     m_renderThread = std::thread(&Offscreen::threadMain, this, compositor);
     m_renderCondition.notify_one();
 }
 
-void Offscreen::run(std::shared_ptr<Compositor> compositor, int frameRate) {
-    setFrameRate(frameRate);
+void Offscreen::run(std::shared_ptr<Compositor> compositor) {
     m_render = true;
     m_renderCondition.notify_one();
     threadMain(compositor);
@@ -211,17 +215,6 @@ void Offscreen::destroy() {
 
 std::shared_ptr<Canvas> Offscreen::canvas() { return m_framebuffer->canvas(); }
 
-void Offscreen::setFrameRate(int frameRate) {
-    std::lock_guard<std::mutex> lock(m_renderMutex);
-    m_frameRate = frameRate;
-    if (frameRate > 0) {
-        m_deltaTime = 1.0 / static_cast<double>(frameRate);
-        m_snapShotMode = false;
-    } else {
-        m_snapShotMode = true;
-    }
-}
-
 void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
     spdlog::info("Offscreen render thread starting up.");
 
@@ -235,8 +228,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
     }
     m_pendingEncodes.resize(m_numberOfImages);
 
-    FrameTimer frameTimer(false);
-    frameTimer.start();
+    m_frameTimer->start();
 
     while (!m_quit) {
         double deltaTime = 0.0;
@@ -281,7 +273,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
         // Wait for rendering/blitting to complete on this frame.
         m_renderSync->waitForFrame(frameIndex);
 
-        frameTimer.markFrame();
+        m_frameTimer->markFrame();
 
         processPendingEncodes(frameIndex);
 

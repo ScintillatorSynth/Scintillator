@@ -17,6 +17,8 @@ Device::Device(std::shared_ptr<Instance> instance, const DeviceInfo& deviceInfo)
     m_name(deviceInfo.name()),
     m_graphicsFamilyIndex(deviceInfo.graphicsFamilyIndex()),
     m_presentFamilyIndex(deviceInfo.presentFamilyIndex()),
+    m_numberOfMemoryHeaps(deviceInfo.numberOfMemoryHeaps()),
+    m_supportsMemoryBudget(deviceInfo.supportsMemoryBudget()),
     m_device(VK_NULL_HANDLE),
     m_allocator(VK_NULL_HANDLE),
     m_presentQueue(VK_NULL_HANDLE) {}
@@ -46,10 +48,16 @@ bool Device::create(bool supportWindow) {
     deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
     deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
+    std::vector<const char*> extensions;
     if (supportWindow) {
-        deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(DeviceInfo::windowExtensions().size());
-        deviceCreateInfo.ppEnabledExtensionNames = DeviceInfo::windowExtensions().data();
+        extensions.insert(extensions.begin(), DeviceInfo::windowExtensions().begin(),
+                          DeviceInfo::windowExtensions().end());
     }
+    if (m_supportsMemoryBudget) {
+        extensions.push_back(DeviceInfo::memoryBudgetExtension());
+    }
+    deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+    deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
 
     if (vkCreateDevice(m_physicalDevice, &deviceCreateInfo, nullptr, &m_device) != VK_SUCCESS) {
         spdlog::error("Device {} failed to create logical device.", m_name);
@@ -79,6 +87,30 @@ void Device::destroy() {
         vkDestroyDevice(m_device, nullptr);
         m_device = VK_NULL_HANDLE;
     }
+}
+
+bool Device::getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudgetOut) {
+    bytesUsedOut = 0;
+    bytesBudgetOut = 0;
+
+    std::vector<VmaBudget> budgets(m_numberOfMemoryHeaps);
+    vmaGetBudget(m_allocator, budgets.data());
+    if (m_supportsMemoryBudget) {
+        for (const auto& budget : budgets) {
+            bytesUsedOut += budget.usage;
+            bytesBudgetOut += budget.budget;
+        }
+    } else {
+        // Some devices don't support VK_EXT_memory_budget extension, and so won't provide budget
+        // data. We approximate memory usage with block bytes allocated, which doesn't count for
+        // some Vulkan allocations that don't use the allocator (like Pipelines and Swapchains),
+        // and we won't have the budget limit available.
+        for (const auto& budget : budgets) {
+            bytesUsedOut += budget.blockBytes;
+        }
+    }
+
+    return true;
 }
 
 

@@ -1,6 +1,6 @@
 #include "Async.hpp" // TODO: audit includes
 #include "Compositor.hpp"
-#include "LogLevels.hpp"
+#include "Logger.hpp"
 #include "OscHandler.hpp"
 #include "Version.hpp"
 #include "av/AVIncludes.hpp"
@@ -10,6 +10,7 @@
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/DeviceChooser.hpp"
+#include "vulkan/FrameTimer.hpp"
 #include "vulkan/Instance.hpp"
 #include "vulkan/Offscreen.hpp"
 #include "vulkan/Pipeline.hpp"
@@ -63,7 +64,8 @@ DEFINE_bool(swiftshader, false,
 
 int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
-    scin::setGlobalLogLevel(FLAGS_log_level);
+    std::shared_ptr<scin::Logger> logger(new scin::Logger());
+    logger->initLogging(FLAGS_log_level);
 
     // Check for early exit conditions.
     if (FLAGS_print_version) {
@@ -90,7 +92,6 @@ int main(int argc, char* argv[]) {
 #if LIBAVCODEC_VERSION_MAJOR < 58
     av_register_all();
 #endif
-
 
     // ========== glfw setup, this also loads Vulkan for us via the Vulkan-Loader.
     glfwInit();
@@ -126,6 +127,10 @@ int main(int argc, char* argv[]) {
                 device.reset(new scin::vk::Device(instance, info));
                 break;
             }
+        }
+        if (!device) {
+            spdlog::error("SwiftShader requested but device not found.");
+            return EXIT_FAILURE;
         }
     } else {
         if (FLAGS_device_uuid.size()) {
@@ -165,6 +170,7 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<scin::vk::Window> window;
     std::shared_ptr<scin::vk::Canvas> canvas;
     std::shared_ptr<scin::vk::Offscreen> offscreen;
+    std::shared_ptr<const scin::vk::FrameTimer> frameTimer;
     if (FLAGS_create_window) {
         window.reset(
             new scin::vk::Window(instance, device, FLAGS_width, FLAGS_height, FLAGS_keep_on_top, FLAGS_frame_rate));
@@ -174,13 +180,15 @@ int main(int argc, char* argv[]) {
         }
         canvas = window->canvas();
         offscreen = window->offscreen();
+        frameTimer = window->frameTimer();
     } else {
-        offscreen.reset(new scin::vk::Offscreen(device));
-        if (!offscreen->create(FLAGS_width, FLAGS_height, 3)) {
+        offscreen.reset(new scin::vk::Offscreen(device, FLAGS_width, FLAGS_height, FLAGS_frame_rate));
+        if (!offscreen->create(3)) {
             spdlog::error("Failed to create offscreen renderer.");
             return EXIT_FAILURE;
         }
         canvas = offscreen->canvas();
+        frameTimer = offscreen->frameTimer();
     }
 
     std::shared_ptr<scin::Compositor> compositor(new scin::Compositor(device, canvas));
@@ -204,11 +212,12 @@ int main(int argc, char* argv[]) {
 
     // ========== Main loop.
     if (FLAGS_create_window) {
-        oscHandler.run(async, archetypes, compositor, offscreen, [window] { window->stop(); });
+        oscHandler.run(logger, async, archetypes, compositor, offscreen, frameTimer, [window] { window->stop(); });
         window->run(compositor);
     } else {
-        oscHandler.run(async, archetypes, compositor, offscreen, [offscreen] { offscreen->stop(); });
-        offscreen->run(compositor, FLAGS_frame_rate);
+        oscHandler.run(logger, async, archetypes, compositor, offscreen, frameTimer,
+                       [offscreen] { offscreen->stop(); });
+        offscreen->run(compositor);
     }
 
     // ========== Vulkan cleanup.

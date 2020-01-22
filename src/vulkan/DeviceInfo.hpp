@@ -23,6 +23,7 @@ public:
 
     DeviceInfo(std::shared_ptr<Instance> instance, VkPhysicalDevice device);
     static const std::vector<const char*>& windowExtensions();
+    static const char* memoryBudgetExtension();
 
     /*! Populate internal data structures with needed values. Will return false if the device can't support basic
      * graphics operations and shouldn't be considered a candidate device.
@@ -33,12 +34,14 @@ public:
     const char* name() const { return reinterpret_cast<const char*>(&m_properties.deviceName); }
     int presentFamilyIndex() const { return m_presentFamilyIndex; }
     int graphicsFamilyIndex() const { return m_graphicsFamilyIndex; }
+    int numberOfMemoryHeaps() const { return m_numberOfMemoryHeaps; }
 
     bool isSwiftShader() const;
     Type type() const;
     const char* typeName() const;
     const char* uuid() const { return m_uuid.data(); }
     bool supportsWindow() const { return m_supportsWindow; }
+    bool supportsMemoryBudget() const { return m_supportsMemoryBudget; }
 
 private:
     std::shared_ptr<Instance> m_instance;
@@ -47,7 +50,9 @@ private:
     std::string m_uuid;
     int m_presentFamilyIndex;
     int m_graphicsFamilyIndex;
+    int m_numberOfMemoryHeaps;
     bool m_supportsWindow;
+    bool m_supportsMemoryBudget;
 };
 
 } // namespace vk

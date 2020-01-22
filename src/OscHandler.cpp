@@ -2,11 +2,12 @@
 
 #include "Async.hpp"
 #include "Compositor.hpp"
-#include "LogLevels.hpp"
+#include "Logger.hpp"
 #include "OscCommand.hpp"
 #include "Version.hpp"
 #include "av/ImageEncoder.hpp"
 #include "core/Archetypes.hpp"
+#include "vulkan/FrameTimer.hpp"
 #include "vulkan/Offscreen.hpp"
 
 #include "ip/UdpSocket.h"
@@ -27,14 +28,17 @@ namespace scin {
 
 class OscHandler::OscListener : public osc::OscPacketListener {
 public:
-    OscListener(std::shared_ptr<Async> async, std::shared_ptr<core::Archetypes> archetypes,
-                std::shared_ptr<Compositor> compositor, std::shared_ptr<vk::Offscreen> offscreen,
+    OscListener(std::shared_ptr<Logger> logger, std::shared_ptr<Async> async,
+                std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
+                std::shared_ptr<vk::Offscreen> offscreen, std::shared_ptr<const vk::FrameTimer> frameTimer,
                 std::function<void()> quitHandler):
         osc::OscPacketListener(),
+        m_logger(logger),
         m_async(async),
         m_archetypes(archetypes),
         m_compositor(compositor),
         m_offscreen(offscreen),
+        m_frameTimer(frameTimer),
         m_quitHandler(quitHandler),
         m_encodersSerial(0),
         m_sendQuitDone(false),
@@ -76,9 +80,34 @@ public:
                 // TBD the server having something to notify about.
                 break;
 
-            case kStatus:
-                // TBD meaningful status.
-                break;
+            case kStatus: {
+                UdpTransmitSocket responseSocket(endpoint);
+                std::array<char, 1024> buffer;
+                osc::OutboundPacketStream p(buffer.data(), sizeof(buffer));
+                p << osc::BeginMessage("/scin_status.reply");
+                p << m_compositor->numberOfRunningScinths();
+                p << 1; // Number of groups currently always 1.
+                p << static_cast<int>(m_archetypes->numberOfAbstractScinthDefs());
+                size_t numberOfWarnings = 0;
+                size_t numberOfErrors = 0;
+                m_logger->getCounts(numberOfWarnings, numberOfErrors);
+                p << static_cast<int32_t>(numberOfWarnings);
+                p << static_cast<int32_t>(numberOfErrors);
+                size_t graphicsBytesUsed = 0;
+                size_t graphicsBytesAvailable = 0;
+                m_compositor->getGraphicsMemoryBudget(graphicsBytesUsed, graphicsBytesAvailable);
+                p << static_cast<double>(graphicsBytesUsed);
+                p << static_cast<double>(graphicsBytesAvailable);
+                int targetFrameRate = 0;
+                double meanFrameRate = 0;
+                size_t lateFrames = 0;
+                m_frameTimer->getStats(targetFrameRate, meanFrameRate, lateFrames);
+                p << targetFrameRate;
+                p << meanFrameRate;
+                p << static_cast<int32_t>(lateFrames);
+                p << osc::EndMessage;
+                responseSocket.Send(p.Data(), p.Size());
+            } break;
 
             case kQuit:
                 spdlog::info("scinsynth got OSC quit command, terminating.");
@@ -107,7 +136,7 @@ public:
                 if (args != message.ArgumentsEnd())
                     throw osc::ExcessArgumentException();
                 spdlog::info("Setting log level to {}.", logLevel);
-                setGlobalLogLevel(logLevel);
+                m_logger->setConsoleLogLevel(logLevel);
             } break;
 
             case kVersion: {
@@ -291,10 +320,12 @@ public:
     }
 
 private:
+    std::shared_ptr<Logger> m_logger;
     std::shared_ptr<Async> m_async;
     std::shared_ptr<core::Archetypes> m_archetypes;
     std::shared_ptr<Compositor> m_compositor;
     std::shared_ptr<vk::Offscreen> m_offscreen;
+    std::shared_ptr<const vk::FrameTimer> m_frameTimer;
     std::function<void()> m_quitHandler;
     std::atomic<int> m_encodersSerial;
     std::mutex m_encodersMutex;
@@ -310,10 +341,11 @@ OscHandler::OscHandler(const std::string& bindAddress, int listenPort):
 
 OscHandler::~OscHandler() {}
 
-void OscHandler::run(std::shared_ptr<Async> async, std::shared_ptr<core::Archetypes> archetypes,
-                     std::shared_ptr<Compositor> compositor, std::shared_ptr<vk::Offscreen> offscreen,
+void OscHandler::run(std::shared_ptr<Logger> logger, std::shared_ptr<Async> async,
+                     std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
+                     std::shared_ptr<vk::Offscreen> offscreen, std::shared_ptr<const vk::FrameTimer> frameTimer,
                      std::function<void()> quitHandler) {
-    m_listener.reset(new OscListener(async, archetypes, compositor, offscreen, quitHandler));
+    m_listener.reset(new OscListener(logger, async, archetypes, compositor, offscreen, frameTimer, quitHandler));
     m_listenSocket.reset(
         new UdpListeningReceiveSocket(IpEndpointName(m_bindAddress.data(), m_listenPort), m_listener.get()));
     m_socketThread = std::thread([this] { m_listenSocket->Run(); });

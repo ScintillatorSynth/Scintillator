@@ -6,6 +6,14 @@ if (thisProcess.argv.size != 1, {
     -1.exit;
 });
 fork {
+    // TODO: implement status message response on server
+    // then can do ScinServer.waitForBoot, which essentially polls status messages to the server until getting a
+    // response.
+    // For ScinthDef.new() pattern, thinking of some kind of .then operator.
+    // screenShot needs a "ready" callback as well as a "finished" one.
+    // advanceFrame can also use a .then
+    // Question is - how can a callback pre-evaluate to a message that can be sent to the server?
+
     quarkPath = thisProcess.argv[0];
     imageOut = quarkPath +/+ "build" +/+ "testing";
     server = ScinServer.new(5511, quarkPath, 0, false).boot;
@@ -18,7 +26,7 @@ fork {
     scinthDef = ScinthDef.new(\scinOsc, {
         RGBOut.fg(ScinOsc.fg(Length.fg(NormPos.fg)), ScinOsc.fg(0.5, VX.fg(NormPos.fg)),
             ScinOsc.fg(1.5, VY.fg(NormPos.fg)));
-    }).add;
+    }).add;  // can add a completion method here that makes it.
     1.0.wait;
     scinth = Scinth.new(\scinOsc, 1);
     server.screenShot(imageOut +/+ "scinOsc_a.png", "image/png");

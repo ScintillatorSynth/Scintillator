@@ -18,6 +18,29 @@ definitionlist::
 ## Asynchronous. || Replies to sender with strong::/scin_done:: just before completion.
 ::
 
+subsection::/scin_status
+
+Query the status. Replies to sender with the following message:
+
+definitionlist::
+## /scin_status.reply || table::
+## int || number of running Scinths.
+## int || number of groups.
+## int || number of loaded Scinth defintions.
+## int || number of warnings in log.
+## int || number of errors in log.
+## double || approximate graphics memory consumed, in bytes.
+## double || approximage graphics memory available, in bytes. Some graphics devices don't support this statistic, in which case it will be 0.
+## int || target frame rate in frames per second (can be -1 or 0)
+## double || computed mean framerate.
+## int || number of dropped frames, if running real time, 0 otherwise.
+::
+
+note:: teletype::/status:: messages won't be posted, if the server is in teletype::/dumpOSC:: mode::
+
+::
+
+
 subsection::/scin_dumpOSC
 Log incoming OSC messages.
 

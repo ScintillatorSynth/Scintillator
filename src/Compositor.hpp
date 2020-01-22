@@ -93,6 +93,12 @@ public:
 
     void setClearColor(glm::vec3 color) { m_clearColor = color; }
 
+    int numberOfRunningScinths();
+
+    /*! Relayed from the graphics device, convenince method.
+     */
+    bool getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudgetOut);
+
 private:
     typedef std::list<std::shared_ptr<Scinth>> ScinthList;
     typedef std::unordered_map<int, ScinthList::iterator> ScinthMap;

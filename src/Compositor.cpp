@@ -7,6 +7,7 @@
 #include "vulkan/Canvas.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
+#include "vulkan/Device.hpp"
 #include "vulkan/ShaderCompiler.hpp"
 
 #include "spdlog/spdlog.h"
@@ -188,6 +189,16 @@ void Compositor::destroy() {
         std::lock_guard<std::mutex> lock(m_scinthDefMutex);
         m_scinthDefs.clear();
     }
+}
+
+
+int Compositor::numberOfRunningScinths() {
+    std::lock_guard<std::mutex> lock(m_scinthMutex);
+    return m_scinths.size();
+}
+
+bool Compositor::getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudgetOut) {
+    return m_device->getGraphicsMemoryBudget(bytesUsedOut, bytesBudgetOut);
 }
 
 // Needs to be called only from the same thread that calls prepareFrame. Assumes that m_secondaryCommands is up-to-date.

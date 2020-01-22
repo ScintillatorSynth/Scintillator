@@ -76,8 +76,8 @@ set(scintillator_synth_files
     Async.hpp
     Compositor.cpp
     Compositor.hpp
-    LogLevels.cpp
-    LogLevels.hpp
+    Logger.cpp
+    Logger.hpp
     OscHandler.cpp
     OscHandler.hpp
     Scinth.cpp
