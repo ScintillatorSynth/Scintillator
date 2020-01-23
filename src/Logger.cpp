@@ -135,6 +135,8 @@ void Logger::initLogging(int level) {
     m_errorSink->set_level(spdlog::level::level_enum::warn);
     m_consoleSink.reset(new spdlog::sinks::stdout_color_sink_mt());
     m_logger.reset(new spdlog::logger("scin_logger", { m_errorSink, m_consoleSink }));
+    // Set the logger main level to get everything, then we can set levels on individual sinks to higher as requested.
+    m_logger->set_level(spdlog::level::level_enum::trace);
     spdlog::set_default_logger(m_logger);
     spdlog::set_pattern("[%E.%e] %t [%^%l%$] %v");
     av_log_set_callback(avLogCallback);
@@ -149,6 +151,7 @@ void Logger::setConsoleLogLevel(int level) {
     // We set libav to log at least warnings, to get notified of errors and warnings and update our counts.
     int atLeastWarnings = std::min(level, 3);
     av_log_set_level(spdLevelToAVLevel(static_cast<spdlog::level::level_enum>(atLeastWarnings)));
+    spdlog::info("setting log level to {}", level);
     m_consoleSink->set_level(static_cast<spdlog::level::level_enum>(level));
 }
 

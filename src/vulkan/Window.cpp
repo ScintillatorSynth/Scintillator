@@ -92,7 +92,6 @@ void Window::destroy() {
     glfwDestroyWindow(m_window);
 }
 
-
 std::shared_ptr<Canvas> Window::canvas() {
     if (m_directRendering) {
         return m_swapchain->canvas();

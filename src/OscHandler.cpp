@@ -119,8 +119,6 @@ public:
             case kDumpOSC: {
                 osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
                 int dump = (args++)->AsInt32();
-                if (args != message.ArgumentsEnd())
-                    throw osc::ExcessArgumentException();
                 if (dump == 0) {
                     spdlog::info("Turning off OSC message dumping to the log.");
                     m_dumpOSC = false;
@@ -130,11 +128,23 @@ public:
                 }
             } break;
 
+            case kSync: {
+                osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
+                int syncId = (args++)->AsInt32();
+                m_async->sync([syncId, endpoint]() {
+                    UdpTransmitSocket responseSocket(endpoint);
+                    std::array<char, 64> buffer;
+                    osc::OutboundPacketStream p(buffer.data(), sizeof(buffer));
+                    p << osc::BeginMessage("/scin_synced");
+                    p << syncId;
+                    p << osc::EndMessage;
+                    responseSocket.Send(p.Data(), p.Size());
+                });
+            } break;
+
             case kLogLevel: {
                 osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
                 int logLevel = (args++)->AsInt32();
-                if (args != message.ArgumentsEnd())
-                    throw osc::ExcessArgumentException();
                 spdlog::info("Setting log level to {}.", logLevel);
                 m_logger->setConsoleLogLevel(logLevel);
             } break;

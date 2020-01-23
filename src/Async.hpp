@@ -31,7 +31,21 @@ public:
     Async(std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor);
     ~Async();
 
+    /*! Nonblocking. Starts the worker threads and the sync thread, then returns.
+     *
+     * \param numberOfWorkerthreads Number of worker threads to start. Should be > 0.
+     */
     void run(size_t numberOfWorkerThreads);
+
+    /*! Adds the callback to a queue to be called the next time all worker threads are idle and the job queue is
+     * empty.
+     *
+     * \param callback A function to call when the Async jobs are complete.
+     */
+    void sync(std::function<void()> callback);
+
+    /*! Signals all threads to exit, even if there's work remaining in the queue.
+     */
     void stop();
 
     /*! Async load all VGen yaml files at path.
@@ -67,7 +81,8 @@ public:
     void scinthDefParseString(std::string yaml, std::function<void(int)> completion);
 
 private:
-    void threadMain(std::string threadName);
+    void workerThreadMain(std::string threadName);
+    void syncThreadMain();
 
     void asyncVGenLoadDirectory(fs::path path, std::function<void(int)> completion);
 
@@ -79,10 +94,20 @@ private:
     std::shared_ptr<Compositor> m_compositor;
     std::atomic<bool> m_quit;
     std::vector<std::thread> m_workerThreads;
+    std::thread m_syncThread;
 
+    // Protects m_jobQueue and m_numberOfActiveWorkers.
     std::mutex m_jobQueueMutex;
     std::condition_variable m_jobQueueCondition;
     std::deque<std::function<void()>> m_jobQueue;
+    std::condition_variable m_activeWorkersCondition;
+    size_t m_numberOfActiveWorkers;
+
+
+    // Protects m_syncCallbacks.
+    std::mutex m_syncCallbackMutex;
+    std::condition_variable m_syncActiveCondition;
+    std::deque<std::function<void()>> m_syncCallbacks;
 };
 
 } // namespace scin

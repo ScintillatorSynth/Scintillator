@@ -1,41 +1,101 @@
-ScinServer {
-	classvar <>default;
+ScinServerOptions {
+	classvar defaultValues;
 
-	var udpPortNumber;
-	var scinQuarkPath;
-    var frameRate;
-    var createWindow;
-    var <logLevel;
-	var scinBinaryPath;
+	var <>quarkPath;
+	var <>udpPortNumber;
+	var <>frameRate;
+	var <>createWindow;
+	var <>logLevel;
+	var <>width;
+	var <>height;
+	var <>keepOnTop;
 
-	var scinQuarkVersion;
-	var scinPid;
-	var addr;
+	*initClass {
+		defaultValues = IdentityDictionary.newFrom(
+			(
+				quarkPath: nil,
+				udpPortNumber: 5511,
+				frameRate: -1,
+				createWindow: true,
+				logLevel: 3,
+				width: 800,
+				height: 600,
+				keepOnTop: true,
+			)
+		);
+	}
 
-	// For local scinsynth instances. Remote not yet supported.
-	*new { |udpPortNumber = 5511, scinQuarkPath = nil, frameRate = -1, createWindow = true, logLevel = 2|
-		^super.newCopyArgs(udpPortNumber, scinQuarkPath, frameRate, createWindow, logLevel).init;
+	*new {
+		^super.new.init;
 	}
 
 	init {
-        if (scinQuarkPath.isNil, {
+		defaultValues.keysValuesDo({ |key, value| this.instVarPut(key, value); });
+	}
+
+	asOptionsString {
+		var o = "--quark_dir=" ++ quarkPath;
+		if (udpPortNumber != defaultValues[\udpPortNumber], {
+			o = o + "--udp_port_number=" ++ udpPortNumber;
+		});
+		if (frameRate != defaultValues[\frameRate], {
+			o = o + "--frame_rate=" ++ frameRate;
+		});
+		if (createWindow != defaultValues[\createWindow], {
+			o = o + "--create_window=" ++ createWindow;
+		});
+		if (logLevel != defaultValues[\logLevel], {
+			o = o + "--log_level=" ++ logLevel;
+		});
+		if (width != defaultValues[\width], {
+			o = o + "--width=" ++ width;
+		});
+		if (height != defaultValues[\height], {
+			o = o + "--height=" ++ height;
+		});
+		if (keepOnTop != defaultValues[\keepOnTop], {
+			o = o + "--keep_on_top=" ++ keepOnTop;
+		});
+		^o;
+	}
+}
+
+ScinServer {
+	classvar <>default;
+
+	var options;
+	var scinBinaryPath;
+	var scinQuarkVersion;
+	var scinPid;
+	var addr;
+	var statusPoller;
+
+	// For local scinsynth instances. Remote not yet supported.
+	*new { |options|
+		^super.newCopyArgs(options).init;
+	}
+
+	init {
+		if (options.isNil, {
+			options = ScinServerOptions.new;
+		});
+        if (options.quarkPath.isNil, {
             Quarks.installed.do({ |quark, index|
                 if (quark.name == "Scintillator", {
                     scinQuarkVersion = quark.version;
-                    scinQuarkPath = quark.localPath;
+                    options.quarkPath = quark.localPath;
                 });
             });
         }, {
             scinQuarkVersion = "unknown";
         });
 
-        scinBinaryPath = scinQuarkPath +/+ "build/src/scinsynth";
+        scinBinaryPath = options.quarkPath +/+ "build/src/scinsynth";
+		statusPoller = ScinServerStatusPoller.new(this);
 	}
 
 	boot {
-		var commandLine = scinBinaryPath + "--udp_port_number=" ++ udpPortNumber.asString()
-		+ "--quark_dir=" ++ scinQuarkPath + "--log_level=" ++ logLevel.asString() + "--frame_rate="
-        ++ frameRate.asString() + "--create_window=" ++ createWindow.asString();
+		var commandLine = scinBinaryPath + options.asOptionsString();
 		commandLine.postln;
 
 		scinPid = commandLine.unixCmd({ |exitCode, exitPid|
@@ -45,11 +105,8 @@ ScinServer {
 		if (ScinServer.default.isNil, {
 			ScinServer.default = this;
 		});
-		addr = NetAddr.new("127.0.0.1", udpPortNumber);
+		addr = NetAddr.new("127.0.0.1", options.udpPortNumber);
 		^this;
-	}
-
-	status {
 	}
 
 	quit {
@@ -66,8 +123,7 @@ ScinServer {
 	// Integer from 0 to 6.
 	logLevel_ { |level|
 		if (level >= 0 and: { level <= 6 }, {
-			logLevel = level;
-			this.sendMsg('/scin_logLevel', logLevel);
+			this.sendMsg('/scin_logLevel', level);
 		});
 	}
 
@@ -76,33 +132,30 @@ ScinServer {
 	}
 
     screenShot { |fileName, mimeType|
-        if (frameRate >= 0) {
+        if (options.frameRate >= 0) {
             this.sendMsg('/scin_nrt_screenShot', fileName, mimeType);
         }
     }
 
 	advanceFrame { |num, denom|
-		if (frameRate == 0) {
+		if (options.frameRate == 0) {
 			this.sendMsg('/scin_nrt_advanceFrame', num, denom);
 		}
 	}
 
-	prGetVersionAsync { |callback|
-		fork {
-			var sync = Condition.new;
-			var version;
-			OSCFunc.new({ |msg|
-				version = msg[2].asString;
-				version = version ++ "." ++ msg[3].asString;
-				version = version ++ "." ++ msg[4].asString;
-				version = version + msg[5] ++ "@" ++ msg[6];
-
-				sync.test = true;
-				sync.signal;
-			}, '/scin_version.reply').oneShot;
-			this.sendMsg('/scin_version');
-			sync.wait;
-			callback.value(version);
-		}
+	// Call on Routine
+	sync {
+		var condition = Condition.new;
+		var id = UniqueID.next;
+		var response = OSCFunc.new({ |msg|
+			if (msg[1] == id, {
+				response.free;
+				condition.test = true;
+				condition.signal;
+			});
+		}, '/scin_synced');
+		condition.test = false;
+		this.sendMsg('/scin_sync', id);
+		condition.wait;
 	}
 }

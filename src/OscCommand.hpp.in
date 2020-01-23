@@ -15,6 +15,7 @@ enum OscCommand : int {
     kStatus = 2,
     kQuit = 3,
     kDumpOSC = 39,
+    kSync = 52,
     kLogLevel = 58,
     kVersion = 64,
 
@@ -50,6 +51,7 @@ notify,             scin::OscCommand::kNotify
 status,             scin::OscCommand::kStatus
 quit,               scin::OscCommand::kQuit
 dumpOSC,            scin::OscCommand::kDumpOSC
+sync,               scin::OscCommand::kSync
 logLevel,           scin::OscCommand::kLogLevel
 version,            scin::OscCommand::kVersion
 d_recv,             scin::OscCommand::kDRecv
