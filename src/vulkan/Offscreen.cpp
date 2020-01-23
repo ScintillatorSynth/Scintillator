@@ -28,6 +28,8 @@ Offscreen::Offscreen(std::shared_ptr<Device> device, int width, int height, int 
     m_framebuffer(new Framebuffer(device)),
     m_renderSync(new RenderSync(device)),
     m_commandPool(new CommandPool(device)),
+    m_bufferPool(new scin::av::BufferPool(width, height)),
+    m_readbackImages(new ImageSet(device)),
     m_render(false),
     m_swapBlitRequested(false),
     m_swapchainImageIndex(0),
@@ -45,7 +47,6 @@ Offscreen::Offscreen(std::shared_ptr<Device> device, int width, int height, int 
 Offscreen::~Offscreen() { destroy(); }
 
 bool Offscreen::create(size_t numberOfImages) {
-    m_bufferPool.reset(new scin::av::BufferPool(m_width, m_height));
     m_numberOfImages = std::max(numberOfImages, 2ul);
 
     spdlog::info("creating Offscreen renderer with {} images.", m_numberOfImages);
@@ -63,7 +64,6 @@ bool Offscreen::create(size_t numberOfImages) {
 
     // Prepare for readback by allocating GPU memory for readback images, checking for efficient copy operations from
     // the framebuffer to those readback images, and building command buffers to do the actual readback.
-    m_readbackImages.reset(new ImageSet(m_device));
     if (!m_readbackImages->createHostCoherent(m_width, m_height, m_numberOfImages)) {
         spdlog::error("Offscreen failed to create {} readback images.", m_numberOfImages);
         return false;

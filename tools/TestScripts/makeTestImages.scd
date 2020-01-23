@@ -1,6 +1,6 @@
 // Generates a series of images for validation of individual VGens and integration testing of the render stack.
 (
-var quarkPath, imageOut, options, server, scinthDef, scinth;
+var quarkPath, imageOut, options, server, c, scinthDef, scinth;
 if (thisProcess.argv.size != 1, {
     "requires one argument, the path to the Scintillator Quark root directory.".postln;
     -1.exit;
@@ -18,13 +18,14 @@ fork {
     imageOut = quarkPath +/+ "build" +/+ "testing";
 	options = ScinServerOptions.new;
 	options.quarkPath = quarkPath;
-	options.logLevel = 0;
+	options.logLevel = 1;
 	options.createWindow = false;
 
-	server = ScinServer.new(options).boot;
-    5.wait;
-	"sending sync".postln;
-	server.sync;
+	server = ScinServer.new(options);
+	c = Condition.new;
+	server.bootSync(c);
+
+
 /*
     server.screenShot(imageOut +/+ "firstFrame.png", "image/png");
     0.5.wait;

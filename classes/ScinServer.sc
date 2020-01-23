@@ -95,7 +95,15 @@ ScinServer {
 	}
 
 	boot {
-		var commandLine = scinBinaryPath + options.asOptionsString();
+		var commandLine;
+
+		if (statusPoller.serverBooting or: { statusPoller.serverRunning }, {
+			^this;
+		});
+
+		statusPoller.serverBooting = true;
+//		commandLine = "lldb-8 -o run" + scinBinaryPath + "--" + options.asOptionsString();
+		commandLine = scinBinaryPath + options.asOptionsString();
 		commandLine.postln;
 
 		scinPid = commandLine.unixCmd({ |exitCode, exitPid|
@@ -143,6 +151,28 @@ ScinServer {
 		}
 	}
 
+	waitForBoot { |onComplete|
+		this.doWhenBooted(onComplete);
+		if (this.serverRunning.not, {
+			this.boot;
+		});
+	}
+
+	doWhenBooted { |onComplete|
+		statusPoller.doWhenBooted(onComplete);
+	}
+
+	// Call on Routine
+	bootSync { |condition|
+		condition ?? { condition = Condition.new };
+		condition.test = false;
+		this.waitForBoot({
+			condition.test = true;
+			condition.signal;
+		});
+		condition.wait;
+	}
+
 	// Call on Routine
 	sync {
 		var condition = Condition.new;
@@ -158,4 +188,7 @@ ScinServer {
 		this.sendMsg('/scin_sync', id);
 		condition.wait;
 	}
+
+	serverRunning { ^statusPoller.serverRunning; }
+	serverBooting { ^statusPoller.serverBooting; }
 }

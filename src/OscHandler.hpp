@@ -39,8 +39,9 @@ public:
      * \param offscreen The offscreen renderer, if running in non realtime, for encode requests.
      * \param quitHandler Function to call if we receive an OSC /scin_quit command. When called, it should safely
      *        terminate the scinsynth program.
+     * \return true if listening thread successfully started, false otherwise.
      */
-    void run(std::shared_ptr<Logger> logger, std::shared_ptr<Async> async, std::shared_ptr<core::Archetypes> archetypes,
+    bool run(std::shared_ptr<Logger> logger, std::shared_ptr<Async> async, std::shared_ptr<core::Archetypes> archetypes,
              std::shared_ptr<Compositor> compositor, std::shared_ptr<vk::Offscreen> offscreen,
              std::shared_ptr<const vk::FrameTimer> frameTimer, std::function<void()> quitHandler);
 

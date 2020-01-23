@@ -5,8 +5,10 @@ ScinServerStatusPoller {
 	var pingTask;
 
 	var lastPingReceived;
+	var bootCallbacks;
 
-	var <isRunning;
+	var <serverRunning;
+	var <>serverBooting;
 	var <numberOfScinths;
 	var <numberOfGroups;
 	var <numberOfScinthDefs;
@@ -23,7 +25,9 @@ ScinServerStatusPoller {
 	}
 
 	init {
-		isRunning = false;
+		bootCallbacks = List.new;
+		serverRunning = false;
+		serverBooting = false;
 		statusReplyFunc = OSCFunc.new({ |msg, time, addr|
 			lastPingReceived = time;
 			numberOfScinths = msg[1];
@@ -43,13 +47,14 @@ ScinServerStatusPoller {
 		pingTask = SkipJack.new({
 			var now = Main.elapsedTime;
 			if (lastPingReceived.notNil and: { now - lastPingReceived < 1.0 }, {
-				if (isRunning.not, {
-					isRunning = true;
+				if (serverRunning.not, {
+					serverRunning = true;
+					serverBooting = false;
 					this.prOnRunningStart;
 				});
 			}, {
-				if (isRunning, {
-					isRunning = false;
+				if (serverRunning, {
+					serverRunning = false;
 					this.prOnRunningStop;
 				});
 			});
@@ -60,7 +65,22 @@ ScinServerStatusPoller {
 		name: "ScinServerStatusPoller");
 	}
 
+	// adds onComplete to functions to call when the server boot is detected. Or calls
+	// immediately if the server is already booted.
+	doWhenBooted { |onComplete|
+		if (serverRunning, {
+			onComplete.value();
+		}, {
+			bootCallbacks.add(onComplete);
+		});
+	}
+
 	prOnRunningStart {
+		fork {
+			scinServer.sync;
+			bootCallbacks.do({ |callback| callback.value(); });
+			bootCallbacks.clear();
+		}
 	}
 
 	prOnRunningStop {

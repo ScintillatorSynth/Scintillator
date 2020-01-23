@@ -351,14 +351,20 @@ OscHandler::OscHandler(const std::string& bindAddress, int listenPort):
 
 OscHandler::~OscHandler() {}
 
-void OscHandler::run(std::shared_ptr<Logger> logger, std::shared_ptr<Async> async,
+bool OscHandler::run(std::shared_ptr<Logger> logger, std::shared_ptr<Async> async,
                      std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
                      std::shared_ptr<vk::Offscreen> offscreen, std::shared_ptr<const vk::FrameTimer> frameTimer,
                      std::function<void()> quitHandler) {
     m_listener.reset(new OscListener(logger, async, archetypes, compositor, offscreen, frameTimer, quitHandler));
-    m_listenSocket.reset(
-        new UdpListeningReceiveSocket(IpEndpointName(m_bindAddress.data(), m_listenPort), m_listener.get()));
+    try {
+        m_listenSocket.reset(
+            new UdpListeningReceiveSocket(IpEndpointName(m_bindAddress.data(), m_listenPort), m_listener.get()));
+    } catch (std::runtime_error e) {
+        spdlog::error("caught exception opening socket: {}", e.what());
+        return false;
+    }
     m_socketThread = std::thread([this] { m_listenSocket->Run(); });
+    return true;
 }
 
 void OscHandler::shutdown() {

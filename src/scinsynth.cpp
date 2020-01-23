@@ -209,14 +209,22 @@ int main(int argc, char* argv[]) {
 
     // Start listening for incoming OSC commands on UDP.
     scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
+    std::function<void()> quitHandler;
+    if (FLAGS_create_window) {
+        quitHandler = [window] { window->stop(); };
+    } else {
+        quitHandler = [offscreen] { offscreen->stop(); };
+    }
+
+    if (!oscHandler.run(logger, async, archetypes, compositor, offscreen, frameTimer, quitHandler)) {
+        spdlog::error("failed starting OSC communications thread.");
+        return EXIT_FAILURE;
+    }
 
     // ========== Main loop.
     if (FLAGS_create_window) {
-        oscHandler.run(logger, async, archetypes, compositor, offscreen, frameTimer, [window] { window->stop(); });
         window->run(compositor);
     } else {
-        oscHandler.run(logger, async, archetypes, compositor, offscreen, frameTimer,
-                       [offscreen] { offscreen->stop(); });
         offscreen->run(compositor);
     }
 
