@@ -85,6 +85,9 @@ std::vector<YAML::Node> Archetypes::parseYAMLFile(const std::string& fileName) {
     } catch (const YAML::BadFile& e) {
         spdlog::error("bad yaml file {}: {}", fileName, e.what());
         return std::vector<YAML::Node>();
+    } catch (const std::runtime_error& e) {
+        spdlog::error("stdlib exception during YAML parsing of {}:", fileName, e.what());
+        return std::vector<YAML::Node>();
     }
     return nodes;
 }

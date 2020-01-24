@@ -213,7 +213,7 @@ table::
 ::
 
 definitionlist::
-## Asynchronous. || Replies to sender with strong::/scin_done:: followed by strong::/scin_nrt_screenShot::, the name of the file saved, and a boolean with status on completion.
+## Asynchronous. || Replies to sender twice with updates. The first response is strong::/scin_nrt_screenShot.ready::, followed by the file name, which is sent once the screenshot is ready to record, and lastly a boolean with file status. The second reponse is on completion of the saving of the screenshot file, the server replies with strong::/scin_done:: followed by strong::/scin_nrt_screenShot::, the name of the file saved, and a boolean with status on completion.
 ::
 
 subsection::/scin_nrt_advanceFrame

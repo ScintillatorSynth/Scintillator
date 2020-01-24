@@ -9,6 +9,7 @@ ScinServerOptions {
 	var <>width;
 	var <>height;
 	var <>keepOnTop;
+	var <>swiftshader;
 
 	*initClass {
 		defaultValues = IdentityDictionary.newFrom(
@@ -21,6 +22,7 @@ ScinServerOptions {
 				width: 800,
 				height: 600,
 				keepOnTop: true,
+				swiftshader: false
 			)
 		);
 	}
@@ -55,6 +57,9 @@ ScinServerOptions {
 		});
 		if (keepOnTop != defaultValues[\keepOnTop], {
 			o = o + "--keep_on_top=" ++ keepOnTop;
+		});
+		if (swiftshader != defaultValues[\swiftshader], {
+			o = o + "--swiftshader=" ++ swiftshader;
 		});
 		^o;
 	}
@@ -139,10 +144,31 @@ ScinServer {
 		addr.sendMsg(*msg)
 	}
 
-    screenShot { |fileName, mimeType|
-        if (options.frameRate >= 0) {
-            this.sendMsg('/scin_nrt_screenShot', fileName, mimeType);
-        }
+    screenShot { |fileName, mimeType, onReady, onComplete|
+		var ready, complete;
+		if (options.frameRate < 0, {
+			"screenShot only supported on non-realtime rendering modes.".postln;
+			^nil;
+		});
+
+		if (onReady.notNil, {
+			ready = OSCFunc.new({ |msg|
+				if (msg[1] == fileName.asSymbol, {
+					ready.free;
+					onReady.value(msg[2]);
+				});
+			}, '/scin_nrt_screenShot.ready');
+		});
+		if (onComplete.notNil, {
+			complete = OSCFunc.new({ |msg|
+				if (msg[1] == '/scin_nrt_screenShot' and: {
+					msg[2] == fileName.asSymbol }, {
+					complete.free;
+					onComplete.value(msg[3]);
+				});
+			}, '/scin_done');
+		});
+        this.sendMsg('/scin_nrt_screenShot', fileName, mimeType);
     }
 
 	advanceFrame { |num, denom|
@@ -174,19 +200,35 @@ ScinServer {
 	}
 
 	// Call on Routine
-	sync {
-		var condition = Condition.new;
-		var id = UniqueID.next;
-		var response = OSCFunc.new({ |msg|
+	sync { |condition|
+		var id, response;
+		condition ?? { condition = Condition.new };
+		condition.test = false;
+		id = UniqueID.next;
+		response = OSCFunc.new({ |msg|
 			if (msg[1] == id, {
 				response.free;
 				condition.test = true;
 				condition.signal;
 			});
 		}, '/scin_synced');
-		condition.test = false;
 		this.sendMsg('/scin_sync', id);
 		condition.wait;
+	}
+
+	// Call on Routine, blocks until the screen shot is queued, then returns status
+	// code of the queue.
+	queueScreenShotSync { |fileName, mimeType, onComplete, condition|
+		var result;
+		condition ?? { condition = Condition.new };
+		condition.test = false;
+		this.screenShot(fileName, mimeType, { |r|
+			result = r;
+			condition.test = true;
+			condition.signal;
+		}, onComplete);
+		condition.wait;
+		^result;
 	}
 
 	serverRunning { ^statusPoller.serverRunning; }
