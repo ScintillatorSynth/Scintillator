@@ -1,0 +1,11 @@
+- name: "First Frame Empty"
+  comment: "Test the first frame of the server is cleared to default clear color"
+  shortName: "firstFrame"
+  scinthDef: ""
+  captureTimes: [ 1 ]
+- name: "ScinOsc Mono"
+  comment: "Test classical ScinOsc image"
+  shortName: "scinOsc"
+  scinthDef: "{ BWOut.fg(ScinOsc.fg(Length.fg(NormPos.fg))); }"
+  captureTimes: [ 1, 1, 1, 1, 1 ]
+

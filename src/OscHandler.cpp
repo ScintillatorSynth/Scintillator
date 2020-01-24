@@ -98,12 +98,12 @@ public:
                             targetFrameRate, meanFrameRate, static_cast<int32_t>(lateFrames));
             } break;
 
-            case kQuit:
+            case kQuit: {
                 spdlog::info("scinsynth got OSC quit command, terminating.");
                 m_quitEndpoint = endpoint;
                 m_sendQuitDone = true;
                 m_quitHandler();
-                break;
+            } break;
 
             case kDumpOSC: {
                 osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();

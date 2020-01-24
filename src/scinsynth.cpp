@@ -68,9 +68,10 @@ int main(int argc, char* argv[]) {
     logger->initLogging(FLAGS_log_level);
 
     // Check for early exit conditions.
+    std::string version = fmt::format("scinsynth version {}.{}.{} from branch {} at revision {}", kScinVersionMajor,
+                                      kScinVersionMinor, kScinVersionPatch, kScinBranch, kScinCommitHash);
     if (FLAGS_print_version) {
-        fmt::print("scinsynth version {}.{}.{} from branch {} at revision {}", kScinVersionMajor, kScinVersionMinor,
-                   kScinVersionPatch, kScinBranch, kScinCommitHash);
+        fmt::print(version);
         return EXIT_SUCCESS;
     }
     if (FLAGS_udp_port_number < 1024 || FLAGS_udp_port_number > 65535) {
@@ -87,6 +88,8 @@ int main(int argc, char* argv[]) {
         spdlog::error("Path {} doesn't look like Scintillator Quark root directory, terminating.", quarkPath.string());
         return EXIT_FAILURE;
     }
+
+    spdlog::info(version);
 
     // ========== Ask libavcodec to register encoders and decoders, required for older libavcodecs.
 #if LIBAVCODEC_VERSION_MAJOR < 58
