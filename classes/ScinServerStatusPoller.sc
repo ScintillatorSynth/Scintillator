@@ -93,6 +93,6 @@ ScinServerStatusPoller {
 		graphicsBytesTotal = 0;
 		targetFrameRate = 0;
 		meanFrameRate = 0;
-		numberOfDroppedFrames = 0;L
+		numberOfDroppedFrames = 0;
 	}
 }

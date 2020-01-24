@@ -107,7 +107,6 @@ ScinServer {
 		});
 
 		statusPoller.serverBooting = true;
-//		commandLine = "lldb-8 -o run" + scinBinaryPath + "--" + options.asOptionsString();
 		commandLine = scinBinaryPath + options.asOptionsString();
 		commandLine.postln;
 

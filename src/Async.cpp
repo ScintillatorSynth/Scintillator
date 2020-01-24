@@ -39,6 +39,7 @@ void Async::stop() {
     if (!m_quit) {
         m_quit = true;
         m_jobQueueCondition.notify_all();
+        m_syncActiveCondition.notify_all();
         m_activeWorkersCondition.notify_all();
         for (auto& thread : m_workerThreads) {
             thread.join();

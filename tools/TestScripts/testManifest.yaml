@@ -3,9 +3,14 @@
   shortName: "firstFrame"
   scinthDef: ""
   captureTimes: [ 1 ]
-- name: "ScinOsc Mono"
-  comment: "Test classical ScinOsc image"
+- name: "ScinOsc Bullseye"
+  comment: "ScinOsc frequency as a function of distance from center."
   shortName: "scinOsc"
   scinthDef: "{ BWOut.fg(ScinOsc.fg(Length.fg(NormPos.fg))); }"
   captureTimes: [ 1, 1, 1, 1, 1 ]
-
+- name: "VSaw Checker"
+  comment: "VSaw two color checker pattern."
+  shortName: "gingham"
+  scinthDef: "{ var pos = NormPos.fg;
+    RGBOut.fg(VSaw.fg(1.0, VX.fg(pos)), VSaw.fg(1.0, VY.fg(pos)), VSaw.fg(1.1)); }"
+  captureTimes: [ 1, 1 ]
