@@ -194,15 +194,19 @@ add_custom_target(formatall
 #### Integration Testing
 file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/testing")
 
+if (NOT DEFINED SCIN_SCLANG)
+    set(SCIN_SCLANG sclang)
+endif()
+
 set(SCLANG_SCIN_CONFIG "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml")
 add_custom_command(OUTPUT ${SCLANG_SCIN_CONFIG}
-    COMMAND sclang "${PROJECT_SOURCE_DIR}/tools/TestScripts/addQuark.scd" "${PROJECT_SOURCE_DIR}"
+    COMMAND ${SCIN_SCLANG} "${PROJECT_SOURCE_DIR}/tools/TestScripts/addQuark.scd" "${PROJECT_SOURCE_DIR}"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
     COMMENT "configuring sclang to include Scintillator classes."
     VERBATIM
 )
 
-set(SCIN_MAKE_TEST_IMAGES sclang -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/makeTestImages.scd" "${PROJECT_SOURCE_DIR}")
+set(SCIN_MAKE_TEST_IMAGES ${SCIN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/makeTestImages.scd" "${PROJECT_SOURCE_DIR}")
 add_custom_target(test_images
     DEPENDS ${SCLANG_SCIN_CONFIG} scinsynth
     COMMAND ${SCIN_MAKE_TEST_IMAGES}

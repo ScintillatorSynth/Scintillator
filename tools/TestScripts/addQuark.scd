@@ -9,7 +9,11 @@ if (thisProcess.argv.size != 1, {
 
 quarkPath = thisProcess.argv[0];
 
-LanguageConfig.addIncludePath(quarkPath +/+ "classes");
-LanguageConfig.store(quarkPath +/+ "build" +/+ "testing" +/+ "sclang_config.yaml");
-0.exit;
+fork {
+    // TODO: remove workaround for https://github.com/supercollider/supercollider/issues/3393
+    1.sleep;
+    LanguageConfig.addIncludePath(quarkPath +/+ "classes");
+    LanguageConfig.store(quarkPath +/+ "build" +/+ "testing" +/+ "sclang_config.yaml");
+    0.exit;
+}
 )

@@ -16,7 +16,6 @@ endif()
 
 message(STATUS "Scintillator build directory set to: ${SCIN_BUILD_DIR}")
 
-
 set(INSTALL_EXT_DIR "${PROJECT_BINARY_DIR}/install-ext" CACHE PATH "")
 
 install(DIRECTORY ${INSTALL_EXT_DIR} DESTINATION ${SCIN_BUILD_DIR})
