@@ -32,7 +32,7 @@ addons:
             - zlib1g
 
 env:
-    - CC=clang-8 CXX=clang++-8 DISPLAY=:99 QT_PLATFORM_PLUGIN=offscreen
+    - CC=clang-8 CXX=clang++-8 DISPLAY=:0
 
 before_install:
 
