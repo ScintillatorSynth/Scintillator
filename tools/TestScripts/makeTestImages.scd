@@ -2,9 +2,15 @@
 // integration testing of the render stack.
 (
 var quarkPath, imageOut, options, server, c, d, testDefs;
-if (thisProcess.argv.size != 1, {
-    "requires one argument, the path to the Scintillator Quark directory.".postln;
+if (thisProcess.argv.size < 1, {
+    "requires at least one argument, the path to the Scintillator Quark directory.".postln;
     -1.exit;
+});
+// Remaining arguments, if any, should be environment variables to set before invoking the server.
+thisProcess.argv[1..].do({ |pairs|
+    var splitPairs = pairs.split($=);
+    "setting environment variable % to %".format(splitPairs[0], splitPairs[1]).postln;
+    splitPairs[0].setenv(splitPairs[1]);
 });
 fork {
 	quarkPath = thisProcess.argv[0];
@@ -19,7 +25,7 @@ fork {
 	options.frameRate = 0;
 	options.width = 400;
 	options.height = 400;
-//	options.swiftshader = true;
+	options.swiftshader = true;
 	server = ScinServer.new(options);
 	server.bootSync(c);
 

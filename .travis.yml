@@ -15,6 +15,7 @@ addons:
             - cmake
             - doxygen
             - gperf
+            - imagemagick
             - libavcodec-dev
             - libavformat-dev
             - libc++-8-dev
@@ -45,15 +46,16 @@ before_script:
     - cmake -DSCIN_BUILD_DOCS=ON -DSCIN_USE_OWN_VULKAN=ON -DCMAKE_BUILD_TYPE=Coverage -DLLVM_COV="llvm-cov-8" -DLLVM_PROFDATA="llvm-profdata-8" -DPYTHON_EXECUTABLE=`which python3` ..
 
 script:
-    - make -j2
-    - make coverage_report
-    - make lintall
-    - make docs
+    - make -j2 compare_images
+    - make -j2 coverage_report
+    - make -j2 lintall
+    - make -j2 docs
 
 before_deploy:
     - mkdir -p $HOME/artifacts/coverage
     - cp $TRAVIS_BUILD_DIR/build/src/scinsynth_coverage.json $HOME/artifacts
     - cp -R $TRAVIS_BUILD_DIR/build/doc $HOME/artifacts
+    - cp -R $TRAVIS_BUILD_DIR/build/report $HOME/artifacts
 
 deploy:
     - provider: s3

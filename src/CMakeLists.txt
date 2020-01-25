@@ -194,17 +194,38 @@ add_custom_target(formatall
 #### Integration Testing
 file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/testing")
 
-add_custom_command(OUTPUT "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml"
+set(SCLANG_SCIN_CONFIG "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml")
+add_custom_command(OUTPUT ${SCLANG_SCIN_CONFIG}
     COMMAND sclang "${PROJECT_SOURCE_DIR}/tools/TestScripts/addQuark.scd" "${PROJECT_SOURCE_DIR}"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
     COMMENT "configuring sclang to include Scintillator classes."
     VERBATIM
 )
 
+set(SCIN_MAKE_TEST_IMAGES sclang -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/makeTestImages.scd" "${PROJECT_SOURCE_DIR}")
 add_custom_target(test_images
-    DEPENDS "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" scinsynth
-    COMMAND sclang -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/makeTestImages.scd" "${PROJECT_SOURCE_DIR}"
+    DEPENDS ${SCLANG_SCIN_CONFIG} scinsynth
+    COMMAND ${SCIN_MAKE_TEST_IMAGES}
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    VERBATIM
+)
+
+# Reference test images. We always use a specific git hash, to control which images we compare against.
+include(ExternalProject)
+set(SCIN_TEST_IMAGE_HASH "79b94eb88ae9371ed4c63befbd142ae9b8c15527")
+ExternalProject_Add(reference_images
+    PREFIX ref
+    STEP_TARGETS update
+    EXCLUDE_FROM_ALL ON
+    GIT_REPOSITORY https://github.com/ScintillatorSynth/TestGoldImages
+    GIT_TAG ${SCIN_TEST_IMAGE_HASH}
+    GIT_PROGRESS ON
+)
+
+add_custom_target(compare_images
+    DEPENDS test_images reference_images-update
+    COMMAND ${PYTHON_EXECUTABLE} ../tools/compare-test-images.py "${PROJECT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/ref/src/reference_images" ${GIT_COMMIT_HASH} ${SCIN_TEST_IMAGE_HASH} "${PROJECT_BINARY_DIR}/report"
+    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
     VERBATIM
 )
 
@@ -222,17 +243,18 @@ if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
     endif()
 
     add_custom_command(OUTPUT scinsynth_coverage.profdata
-        COMMAND rm -f scinsynth_coverage.profdata run_unittests.profraw
+        COMMAND rm -f scinsynth_coverage.profdata run_unittests.profraw scin_test_images.profraw
         COMMAND ${CMAKE_COMMAND} -E env "LLVM_PROFILE_FILE=run_unittests.profraw" ./run_unittests
-        COMMAND ${LLVM_PROFDATA} merge -sparse run_unittests.profraw -o scinsynth_coverage.profdata
-        DEPENDS run_unittests
+        COMMAND ${SCIN_MAKE_TEST_IMAGES} "LLVM_PROFILE_FILE=scin_test_images.profraw"
+        COMMAND ${LLVM_PROFDATA} merge -sparse run_unittests.profraw scin_test_images.profraw -o scinsynth_coverage.profdata
+        DEPENDS run_unittests scinsynth ${SCLANG_SCIN_CONFIG}
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMENT "collecting test coverage data."
         VERBATIM
     )
     add_custom_command(OUTPUT scinsynth_coverage.json
         DEPENDS scinsynth_coverage.profdata
-        COMMAND ${LLVM_COV} export ./run_unittests -instr-profile=scinsynth_coverage.profdata -summary-only > scinsynth_coverage_raw.json
+        COMMAND ${LLVM_COV} export -object run_unittests -object scinsynth -instr-profile=scinsynth_coverage.profdata -summary-only > scinsynth_coverage_raw.json
         COMMAND ${PYTHON_EXECUTABLE} ../../tools/filter-coverage-report.py scinsynth_coverage_raw.json "${CMAKE_CURRENT_SOURCE_DIR}" ${GIT_COMMIT_HASH} scinsynth_coverage.json
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMENT "summarizing coverage data."
@@ -240,7 +262,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
     )
     add_custom_target(coverage_report
         DEPENDS scinsynth_coverage.json
-        COMMAND ${LLVM_COV} report ./run_unittests -instr-profile=scinsynth_coverage.profdata
+        COMMAND ${LLVM_COV} report -object scinsynth -object run_unittests -instr-profile=scinsynth_coverage.profdata
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         VERBATIM
     )

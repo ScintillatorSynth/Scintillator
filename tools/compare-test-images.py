@@ -8,13 +8,18 @@ import sys
 import yaml
 
 def main(argv):
-    if len(argv) != 4:
-        print('compare-test-images.py <Scintillator path> <TestGoldImages path> <commithash> <output directory path>');
+    if len(argv) != 5:
+        print('compare-test-images.py <Scintillator path> <TestGoldImages path> <commithash> <test image hash> <output directory path>');
         sys.exit(2)
+    if sys.version_info.major != 3:
+        print('requires Python 3')
+        sys.exit(2)
+
     scinPath = argv[0]
     goldPath = argv[1]
     commitHash = argv[2]
-    outDir = argv[3]
+    testImageHash = argv[3]
+    outDir = argv[4]
 
     # build the output directory and start the report html file.
     os.makedirs(outDir, exist_ok=True)
@@ -24,9 +29,10 @@ def main(argv):
 <title>Scintillator Image Test Report</title>
 </head>
 <body>
-<h1>Scintillator Image Test Report</h3>
-<h2>Revision {commitHash} on {timestamp}</h4>
-""".format(commitHash=commitHash, timestamp=datetime.datetime.now().strftime("%c")))
+<h1>Scintillator Image Test Report</h1>
+<h2>Revision {commitHash} on {timestamp}</h2>
+<h2>Test Image Revision {testImageHash}</h2>
+""".format(commitHash=commitHash, timestamp=datetime.datetime.now().strftime("%c"), testImageHash=testImageHash))
 
     manifestFile = open(os.path.join(scinPath, "tools", "TestScripts", "testManifest.yaml"), 'r')
     manifest = yaml.safe_load(manifestFile)
@@ -73,9 +79,10 @@ def main(argv):
                 os.path.join(refOutDir, imageFileName),
                 os.path.join(testOutDir, imageFileName),
                 "-metric", "PSNR", "-format", "'%[fx:mean*100]'", "info:"],
-                capture_output=True, encoding="utf-8")
+                encoding="utf-8", stderr=subprocess.PIPE)
             status = 'OK'
-            if results.stderr != 'inf':
+            # some versions of compare are returning inf and some return zero for identical images so we check for both.
+            if results.stderr != 'inf' and results.stderr != '0':
                 status = '<strong>DIFERENT</strong>'
                 diffCount += 1
                 print("difference detected in {category}/{filename}".format(category=category, filename=imageFileName))
