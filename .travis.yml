@@ -26,6 +26,7 @@ addons:
             - libxrandr-dev
             - llvm-8-dev
             - python3-distutils
+            - python3-yaml
             - supercollider-language
             - zlib1g
 

@@ -17,12 +17,16 @@ fork {
 	options.logLevel = 2;
 	options.createWindow = false;
 	options.frameRate = 0;
+	options.width = 400;
+	options.height = 400;
 //	options.swiftshader = true;
 	server = ScinServer.new(options);
 	server.bootSync(c);
 
 	testDefs.do({ |def|
 		var scinth, fileName, t;
+		// Make sure output subdirectory exists.
+		(imageOut +/+ def["category"]).mkdir;
 		if (def["scinthDef"].size > 0, {
 			"sending ScinthDef for %".format(def["shortName"]).postln;
 			ScinthDef.new(\test, def["scinthDef"].interpret).add;
@@ -33,7 +37,7 @@ fork {
 		def["captureTimes"].do({ |dt|
 			d.test = false;
 			dt = dt.asInteger;
-			fileName = imageOut +/+ def["shortName"] ++ "_" ++ t.asString ++ ".png";
+			fileName = imageOut +/+ def["category"] +/+ def["shortName"] ++ "_" ++ t.asString ++ ".png";
 			"queing screenShot at %".format(fileName).postln;
 			if (server.queueScreenShotSync(fileName, "image/png",
 				{ |r| d.test = true; d.signal; }, c).not, {
