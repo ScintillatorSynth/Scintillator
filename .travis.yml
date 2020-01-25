@@ -48,6 +48,7 @@ before_script:
     - cmake -DSCIN_USE_OWN_VULKAN=ON ..
     - make -j2 install
     - make -j2 local-vulkan-utils
+    - cd ../../../
     - mkdir third_party/sclang-dev/build && cd third_party/sclang-dev/build
     - make -j2 install
     - cd ../../../build
