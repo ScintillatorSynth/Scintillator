@@ -7,6 +7,8 @@ cache: ccache
 
 addons:
     apt:
+        sources:
+            - sourceline: 'universe'
         update: true
         packages: &common_packages
             - build-essential
