@@ -8,7 +8,7 @@ cache: ccache
 addons:
     apt:
         sources:
-            - sourceline: 'deb http://archive.ubuntu.com/ubuntu/ bionic universe'
+            # - sourceline: 'deb http://archive.ubuntu.com/ubuntu/ bionic universe'
             - sourceline: 'deb https://packages.lunarg.com/vulkan bionic main'
               key_url: 'http://packages.lunarg.com/lunarg-signing-key-pub.asc'
         update: true
@@ -42,8 +42,11 @@ addons:
             - zlib1g
             - shaderc
             - spirv-headers
-            - spriv-tools
+            - spirv-tools
             - glslang-dev
+            - vulkan-headers
+            - libvulkan-dev
+            - vulkan-validationlayers
 
 env:
     - CC=clang-8 CXX=clang++-8
