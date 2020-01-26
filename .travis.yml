@@ -9,6 +9,7 @@ addons:
     apt:
         sources:
             - sourceline: 'universe'
+            - sourceline: 'deb http://us.archive.ubuntu.com/ubuntu/ bionic universe'
         update: true
         packages: &common_packages
             - build-essential
