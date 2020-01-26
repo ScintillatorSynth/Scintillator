@@ -36,6 +36,10 @@ addons:
             - python3-distutils
             - python3-yaml
             - zlib1g
+            - shaderc
+            - spirv-headers
+            - spriv-tools
+            - glslang-dev
 
 env:
     - CC=clang-8 CXX=clang++-8
