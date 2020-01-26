@@ -38,7 +38,7 @@ addons:
             - zlib1g
 
 env:
-    - CC=clang-8 CXX=clang++-8 DISPLAY=:0
+    - CC=clang-8 CXX=clang++-8
 
 before_install:
 
