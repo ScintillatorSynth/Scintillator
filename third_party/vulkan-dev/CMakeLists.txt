@@ -105,13 +105,13 @@ endif() # SCIN_USE_OWN_VULKAN
 # See https://github.com/google/amber/issues/754 for discussion of shared linker flag.
 ExternalProject_Add(swiftshader
     PREFIX ext
-    STEP_TARGETS build
+    STEP_TARGETS install
     EXCLUDE_FROM_ALL
     GIT_REPOSITORY https://github.com/google/swiftshader
     GIT_TAG cd55f0518d6807f8505fcff11bd18044fcc191ee
     GIT_PROGRESS ON
     UPDATE_COMMAND ""
-    CMAKE_ARGS -DBUILD_SAMPLES=OFF -DBUILD_TESTS=OFF -DBUILD_VULKAN=ON -DBUILD_EGL=OFF -DBUILD_GLESV2=OFF -DBUILD_GLES_CM=OFF -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=gold"
+    CMAKE_ARGS -DCMAKE_BUILD_TYPE=Debug -DBUILD_SAMPLES=OFF -DBUILD_TESTS=OFF -DBUILD_VULKAN=ON -DBUILD_EGL=OFF -DBUILD_GLESV2=OFF -DBUILD_GLES_CM=OFF -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=gold"
     INSTALL_COMMAND cp "<BINARY_DIR>/Linux/libvk_swiftshader.so" "<BINARY_DIR>/Linux/vk_swiftshader_icd.json" "${INSTALL_EXT_DIR}/share/vulkan/icd.d"
 )
 
@@ -119,7 +119,7 @@ ExternalProject_Add(swiftshader
 # so this target will do that.
 add_custom_target(local-vulkan-utils)
 add_dependencies(local-vulkan-utils
-    swiftshader-build
+    swiftshader-install
 )
 if (SCIN_USE_OWN_VULKAN)
     add_dependencies(local-vulkan-utils

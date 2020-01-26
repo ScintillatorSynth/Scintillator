@@ -11,6 +11,9 @@ ScinServerOptions {
 	var <>keepOnTop;
 	var <>swiftshader;
 
+	// Can install a function to call if server exits with a non-zero error code.
+	var <>onServerError;
+
 	*initClass {
 		defaultValues = IdentityDictionary.newFrom(
 			(
@@ -33,6 +36,7 @@ ScinServerOptions {
 
 	init {
 		defaultValues.keysValuesDo({ |key, value| this.instVarPut(key, value); });
+		onServerError = {};
 	}
 
 	asOptionsString {
@@ -112,6 +116,9 @@ ScinServer {
 
 		scinPid = commandLine.unixCmd({ |exitCode, exitPid|
 			"*** got scinsynth exit code %".format(exitCode).postln;
+			if (exitCode != 0, {
+				options.onServerError.value(exitCode);
+			});
 		});
 
 		if (ScinServer.default.isNil, {

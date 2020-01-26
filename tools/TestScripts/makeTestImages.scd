@@ -26,6 +26,10 @@ fork {
 	options.width = 400;
 	options.height = 400;
 	options.swiftshader = true;
+	options.onServerError = { |exitCode|
+		"*** nonzero exit code % on server, exiting.".format(exitCode).postln;
+		exitCode.exit;
+	};
 	server = ScinServer.new(options);
 	server.bootSync(c);
 
