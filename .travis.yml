@@ -9,6 +9,8 @@ addons:
     apt:
         sources:
             - sourceline: 'deb http://archive.ubuntu.com/ubuntu/ bionic universe'
+            - sourceline: 'deb https://packages.lunarg.com/vulkan bionic main'
+              key_url: 'http://packages.lunarg.com/lunarg-signing-key-pub.asc'
         update: true
         packages: &common_packages
             - build-essential
