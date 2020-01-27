@@ -2,6 +2,8 @@
 
 #include "vulkan/Device.hpp"
 
+#include "spdlog/spdlog.h"
+
 namespace scin { namespace vk {
 
 Shader::Shader(Kind kind, std::shared_ptr<Device> device, const std::string& entryPoint):
@@ -17,6 +19,10 @@ bool Shader::create(const char* spvBytes, size_t byteSize) {
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.codeSize = byteSize;
     createInfo.pCode = reinterpret_cast<const uint32_t*>(spvBytes);
+    if (spvBytes == nullptr || byteSize == 0) {
+        spdlog::error("Failed to create empty shader.");
+        return false;
+    }
     return (vkCreateShaderModule(m_device->get(), &createInfo, nullptr, &m_shaderModule) == VK_SUCCESS);
 }
 
