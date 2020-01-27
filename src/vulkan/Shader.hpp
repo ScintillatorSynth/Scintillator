@@ -26,6 +26,7 @@ private:
     Kind m_kind;
     std::shared_ptr<Device> m_device;
     std::string m_entryPoint;
+    std::unique_ptr<uint32_t[]> m_spvBytes;
     VkShaderModule m_shaderModule;
 };
 

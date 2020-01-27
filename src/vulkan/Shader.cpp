@@ -15,14 +15,18 @@ Shader::Shader(Kind kind, std::shared_ptr<Device> device, const std::string& ent
 Shader::~Shader() { destroy(); }
 
 bool Shader::create(const char* spvBytes, size_t byteSize) {
-    VkShaderModuleCreateInfo createInfo = {};
-    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    createInfo.codeSize = byteSize;
-    createInfo.pCode = reinterpret_cast<const uint32_t*>(spvBytes);
     if (spvBytes == nullptr || byteSize == 0) {
         spdlog::error("Failed to create empty shader.");
         return false;
     }
+    // Copy the shader bytes to our own memory. Shaderc guarantees the pointer is castable to a uint32_t* if
+    // bytecode compliation was requested.
+    m_spvBytes.reset(new uint32_t[byteSize / sizeof(uint32_t)]);
+    std::memcpy(m_spvBytes.get(), spvBytes, byteSize);
+    VkShaderModuleCreateInfo createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    createInfo.codeSize = byteSize;
+    createInfo.pCode = m_spvBytes.get();
     return (vkCreateShaderModule(m_device->get(), &createInfo, nullptr, &m_shaderModule) == VK_SUCCESS);
 }
 
