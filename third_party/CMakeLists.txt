@@ -5,7 +5,7 @@ file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d")
 
 #### Swiftshader (Linux-only Vulkan software renderer)
 # See https://github.com/google/amber/issues/754 for discussion of shared linker flag.
-# TODO: figure out why non-Debug builds crash on Pipeline creation.
+# TODO(43): figure out why non-Debug builds crash on Pipeline creation.
 ExternalProject_Add(swiftshader
     PREFIX ext
     STEP_TARGETS install
