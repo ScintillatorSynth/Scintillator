@@ -8,7 +8,6 @@ cache: ccache
 addons:
     apt:
         sources:
-            # - sourceline: 'deb http://archive.ubuntu.com/ubuntu/ bionic universe'
             - sourceline: 'deb https://packages.lunarg.com/vulkan bionic main'
               key_url: 'http://packages.lunarg.com/lunarg-signing-key-pub.asc'
         update: true
@@ -18,6 +17,7 @@ addons:
             - clang-format-8
             - cmake
             - doxygen
+            - glslang-dev
             - gperf
             - imagemagick
             - libasound2-dev
@@ -30,6 +30,7 @@ addons:
             - libjack-jackd2-dev
             - libreadline6-dev
             - libudev-dev
+            - libvulkan-dev
             - libwayland-dev
             - libxcursor-dev
             - libxi-dev
@@ -39,14 +40,12 @@ addons:
             - pkg-config
             - python3-distutils
             - python3-yaml
-            - zlib1g
             - shaderc
             - spirv-headers
             - spirv-tools
-            - glslang-dev
             - vulkan-headers
-            - libvulkan-dev
             - vulkan-validationlayers
+            - zlib1g
 
 env:
     - CC=clang-8 CXX=clang++-8
@@ -55,18 +54,14 @@ before_install:
 
 before_script:
     - mkdir build
-    - mkdir third_party/vulkan-dev/build && cd third_party/vulkan-dev/build
-    - cmake -DSCIN_USE_OWN_VULKAN=ON ..
-    - make -j2 install
-    - make -j2 local-vulkan-utils
-    - cd ../../../
     - mkdir third_party/sclang-dev/build && cd third_party/sclang-dev/build
     - cmake ..
     - make -j2 install
     - cd ../../../build
-    - cmake -DSCIN_BUILD_DOCS=ON -DSCIN_USE_OWN_VULKAN=ON -DCMAKE_BUILD_TYPE=Coverage -DLLVM_COV="llvm-cov-8" -DLLVM_PROFDATA="llvm-profdata-8" -DPYTHON_EXECUTABLE=`which python3` -DSCIN_SCLANG=$TRAVIS_BUILD_DIR/build/install-ext/bin/sclang ..
+    - cmake -DSCIN_BUILD_DOCS=ON -DCMAKE_BUILD_TYPE=Coverage -DLLVM_COV="llvm-cov-8" -DLLVM_PROFDATA="llvm-profdata-8" -DPYTHON_EXECUTABLE=`which python3` -DSCIN_SCLANG=$TRAVIS_BUILD_DIR/build/install-ext/bin/sclang ..
 
 script:
+    - make -j2 swiftshader-local
     - make -j2 compare_images
     - make -j2 coverage_report
     - make -j2 lintall

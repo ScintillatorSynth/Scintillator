@@ -4,7 +4,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED)
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
-    ${SCIN_EXT_INSTALL_DIR}/include
 )
 
 #### "Core" files (without external dependencies)
@@ -145,8 +144,10 @@ set(scintillator_synth_files
 
 add_executable(scinsynth ${scintillator_synth_files})
 
+find_package(Vulkan REQUIRED FATAL_ERROR)
+
 target_link_libraries(scinsynth
-    "${SCIN_EXT_INSTALL_DIR}/lib/libshaderc_shared.so"
+    "${Vulkan_LIBRARY}"
     VulkanMemoryAllocator
     avcodec
     avformat
@@ -154,25 +155,12 @@ target_link_libraries(scinsynth
     gflags
     glfw
     glm
+    shaderc_combined
     oscpack
     scintillator_core
     spdlog
     stdc++fs
 )
-
-add_dependencies(scinsynth
-    shaderc-install
-)
-
-# Add the Vulkan loader if we rolled our own.
-if (SCIN_USE_OWN_VULKAN)
-    target_link_libraries(scinsynth
-        "${SCIN_EXT_INSTALL_DIR}/lib/libvulkan.so"
-    )
-else()
-    find_package(Vulkan REQUIRED FATAL_ERROR)
-    target_link_libraries(scinsynth "${Vulkan_LIBRARY}")
-endif()
 
 #### Automatic Code Formatting and Linting
 if (NOT DEFINED CLANG_FORMAT)
