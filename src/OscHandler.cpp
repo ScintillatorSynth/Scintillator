@@ -2,11 +2,12 @@
 
 #include "Async.hpp"
 #include "Compositor.hpp"
-#include "LogLevels.hpp"
+#include "Logger.hpp"
 #include "OscCommand.hpp"
 #include "Version.hpp"
 #include "av/ImageEncoder.hpp"
 #include "core/Archetypes.hpp"
+#include "vulkan/FrameTimer.hpp"
 #include "vulkan/Offscreen.hpp"
 
 #include "ip/UdpSocket.h"
@@ -27,14 +28,17 @@ namespace scin {
 
 class OscHandler::OscListener : public osc::OscPacketListener {
 public:
-    OscListener(std::shared_ptr<Async> async, std::shared_ptr<core::Archetypes> archetypes,
-                std::shared_ptr<Compositor> compositor, std::shared_ptr<vk::Offscreen> offscreen,
+    OscListener(std::shared_ptr<Logger> logger, std::shared_ptr<Async> async,
+                std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
+                std::shared_ptr<vk::Offscreen> offscreen, std::shared_ptr<const vk::FrameTimer> frameTimer,
                 std::function<void()> quitHandler):
         osc::OscPacketListener(),
+        m_logger(logger),
         m_async(async),
         m_archetypes(archetypes),
         m_compositor(compositor),
         m_offscreen(offscreen),
+        m_frameTimer(frameTimer),
         m_quitHandler(quitHandler),
         m_encodersSerial(0),
         m_sendQuitDone(false),
@@ -76,22 +80,34 @@ public:
                 // TBD the server having something to notify about.
                 break;
 
-            case kStatus:
-                // TBD meaningful status.
-                break;
+            case kStatus: {
+                size_t numberOfWarnings = 0;
+                size_t numberOfErrors = 0;
+                m_logger->getCounts(numberOfWarnings, numberOfErrors);
+                size_t graphicsBytesUsed = 0;
+                size_t graphicsBytesAvailable = 0;
+                m_compositor->getGraphicsMemoryBudget(graphicsBytesUsed, graphicsBytesAvailable);
+                int targetFrameRate = 0;
+                double meanFrameRate = 0;
+                size_t lateFrames = 0;
+                m_frameTimer->getStats(targetFrameRate, meanFrameRate, lateFrames);
+                sendMessage(endpoint, "/scin_status.reply", m_compositor->numberOfRunningScinths(), 1,
+                            static_cast<int32_t>(m_archetypes->numberOfAbstractScinthDefs()),
+                            static_cast<int32_t>(numberOfWarnings), static_cast<int32_t>(numberOfErrors),
+                            static_cast<double>(graphicsBytesUsed), static_cast<double>(graphicsBytesAvailable),
+                            targetFrameRate, meanFrameRate, static_cast<int32_t>(lateFrames));
+            } break;
 
-            case kQuit:
+            case kQuit: {
                 spdlog::info("scinsynth got OSC quit command, terminating.");
                 m_quitEndpoint = endpoint;
                 m_sendQuitDone = true;
                 m_quitHandler();
-                break;
+            } break;
 
             case kDumpOSC: {
                 osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
                 int dump = (args++)->AsInt32();
-                if (args != message.ArgumentsEnd())
-                    throw osc::ExcessArgumentException();
                 if (dump == 0) {
                     spdlog::info("Turning off OSC message dumping to the log.");
                     m_dumpOSC = false;
@@ -101,28 +117,22 @@ public:
                 }
             } break;
 
+            case kSync: {
+                osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
+                int syncId = (args++)->AsInt32();
+                m_async->sync([this, syncId, endpoint]() { sendMessage(endpoint, "/scin_synced", syncId); });
+            } break;
+
             case kLogLevel: {
                 osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
                 int logLevel = (args++)->AsInt32();
-                if (args != message.ArgumentsEnd())
-                    throw osc::ExcessArgumentException();
                 spdlog::info("Setting log level to {}.", logLevel);
-                setGlobalLogLevel(logLevel);
+                m_logger->setConsoleLogLevel(logLevel);
             } break;
 
             case kVersion: {
-                UdpTransmitSocket responseSocket(endpoint);
-                std::array<char, 1024> buffer;
-                osc::OutboundPacketStream p(buffer.data(), sizeof(buffer));
-                p << osc::BeginMessage("/scin_version.reply");
-                p << "scinsynth";
-                p << kScinVersionMajor;
-                p << kScinVersionMinor;
-                p << kScinVersionPatch;
-                p << kScinBranch;
-                p << kScinCommitHash;
-                p << osc::EndMessage;
-                responseSocket.Send(p.Data(), p.Size());
+                sendMessage(endpoint, "/scin_version.reply", "scinsynth", kScinVersionMajor, kScinVersionMinor,
+                            kScinVersionPatch, kScinBranch, kScinCommitHash);
             } break;
 
             case kDRecv: {
@@ -134,7 +144,7 @@ public:
                     if (onCompletion) {
                         ProcessPacket(onCompletion.get(), completionMessageSize, endpoint);
                     }
-                    sendDoneMessage(endpoint);
+                    sendMessage(endpoint, "/scin_done");
                 });
             } break;
 
@@ -147,7 +157,7 @@ public:
                     if (onCompletion) {
                         ProcessPacket(onCompletion.get(), completionMessageSize, endpoint);
                     }
-                    sendDoneMessage(endpoint);
+                    sendMessage(endpoint, "/scin_done");
                 });
             } break;
 
@@ -160,7 +170,7 @@ public:
                     if (onCompletion) {
                         ProcessPacket(onCompletion.get(), completionMessageSize, endpoint);
                     }
-                    sendDoneMessage(endpoint);
+                    sendMessage(endpoint, "/scin_done");
                 });
             } break;
 
@@ -211,20 +221,17 @@ public:
                     int serial = m_encodersSerial.fetch_add(1);
                     std::shared_ptr<av::ImageEncoder> imageEncoder(new av::ImageEncoder(
                         m_offscreen->width(), m_offscreen->height(), [this, endpoint, fileName, serial](bool valid) {
-                            spdlog::debug("Screenshot finished encode of '{}', valid: {}", fileName, valid);
-                            std::array<char, 128> buffer;
-                            UdpTransmitSocket socket(endpoint);
-                            osc::OutboundPacketStream p(buffer.data(), sizeof(buffer));
-                            p << osc::BeginMessage("/scin_done") << "/scin_nrt_screenShot" << fileName.data();
-                            p << osc::EndMessage;
-                            socket.Send(p.Data(), p.Size());
+                            spdlog::info("Screenshot finished encode of '{}', valid: {}", fileName, valid);
+                            sendMessage(endpoint, "/scin_done", "/scin_nrt_screenShot", fileName.data(), valid);
                             {
                                 std::lock_guard<std::mutex> lock(m_encodersMutex);
                                 m_encoders.erase(serial);
                             }
                         }));
+                    bool valid = false;
                     if (imageEncoder->createFile(fileName, mimeType)) {
                         spdlog::info("Screenshot '{}' enqueued for encode.", fileName);
+                        valid = true;
                         m_offscreen->addEncoder(imageEncoder);
                         {
                             std::lock_guard<std::mutex> lock(m_encodersMutex);
@@ -233,8 +240,23 @@ public:
                     } else {
                         spdlog::error("Screenshot failed to create file '{}' with mimeType '{}'", fileName, mimeType);
                     }
+                    sendMessage(endpoint, "/scin_nrt_screenShot.ready", fileName.data(), valid);
                 } else {
                     spdlog::error("Screenshot requested but scinsynth is not running in non-realtime.");
+                }
+            } break;
+
+            case kNRTAdvanceFrame: {
+                if (m_offscreen && m_offscreen->isSnapShotMode()) {
+                    osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
+                    int numerator = (args++)->AsInt32();
+                    int denominator = (args++)->AsInt32();
+                    double dt = static_cast<double>(numerator) / static_cast<double>(denominator);
+                    m_offscreen->advanceFrame(dt, [this, endpoint](size_t frameNumber) {
+                        sendMessage(endpoint, "/scin_done", "/scin_nrt_advanceFrame");
+                    });
+                } else {
+                    spdlog::error("Advance Frame requested but scinsynth not in snap shot mode.");
                 }
             } break;
             }
@@ -243,18 +265,30 @@ public:
         }
     }
 
-    void sendDoneMessage(const IpEndpointName& endpoint) {
-        std::array<char, 32> buffer;
-        UdpTransmitSocket socket(endpoint);
-        osc::OutboundPacketStream p(buffer.data(), sizeof(buffer));
-        p << osc::BeginMessage("/scin_done") << osc::EndMessage;
-        socket.Send(p.Data(), p.Size());
-    }
-
     void sendQuitDone() {
         if (m_sendQuitDone) {
-            sendDoneMessage(m_quitEndpoint);
+            sendMessage(m_quitEndpoint, "/scin_done");
         }
+    }
+
+    // Starting call, constructs the packet stream and streams the command into it.
+    template <typename... Targs> void sendMessage(const IpEndpointName& endpoint, const char* command, Targs... Fargs) {
+        std::array<char, 1024> buffer;
+        osc::OutboundPacketStream p(buffer.data(), sizeof(buffer));
+        p << osc::BeginMessage(command);
+        sendMessage(endpoint, p, Fargs...);
+    }
+    // Recursive call, extracts next argument in list and streams to outbound packet stream.
+    template <typename T, typename... Targs>
+    void sendMessage(const IpEndpointName& endpoint, osc::OutboundPacketStream& p, T value, Targs... Fargs) {
+        p << value;
+        sendMessage(endpoint, p, Fargs...);
+    }
+    // Base call, finishes the message and sends it.
+    void sendMessage(const IpEndpointName& endpoint, osc::OutboundPacketStream& p) {
+        p << osc::EndMessage;
+        UdpTransmitSocket socket(endpoint);
+        socket.Send(p.Data(), p.Size());
     }
 
     std::shared_ptr<char[]> extractMessage(const osc::ReceivedMessage& message,
@@ -271,10 +305,12 @@ public:
     }
 
 private:
+    std::shared_ptr<Logger> m_logger;
     std::shared_ptr<Async> m_async;
     std::shared_ptr<core::Archetypes> m_archetypes;
     std::shared_ptr<Compositor> m_compositor;
     std::shared_ptr<vk::Offscreen> m_offscreen;
+    std::shared_ptr<const vk::FrameTimer> m_frameTimer;
     std::function<void()> m_quitHandler;
     std::atomic<int> m_encodersSerial;
     std::mutex m_encodersMutex;
@@ -290,13 +326,20 @@ OscHandler::OscHandler(const std::string& bindAddress, int listenPort):
 
 OscHandler::~OscHandler() {}
 
-void OscHandler::run(std::shared_ptr<Async> async, std::shared_ptr<core::Archetypes> archetypes,
-                     std::shared_ptr<Compositor> compositor, std::shared_ptr<vk::Offscreen> offscreen,
+bool OscHandler::run(std::shared_ptr<Logger> logger, std::shared_ptr<Async> async,
+                     std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
+                     std::shared_ptr<vk::Offscreen> offscreen, std::shared_ptr<const vk::FrameTimer> frameTimer,
                      std::function<void()> quitHandler) {
-    m_listener.reset(new OscListener(async, archetypes, compositor, offscreen, quitHandler));
-    m_listenSocket.reset(
-        new UdpListeningReceiveSocket(IpEndpointName(m_bindAddress.data(), m_listenPort), m_listener.get()));
+    m_listener.reset(new OscListener(logger, async, archetypes, compositor, offscreen, frameTimer, quitHandler));
+    try {
+        m_listenSocket.reset(
+            new UdpListeningReceiveSocket(IpEndpointName(m_bindAddress.data(), m_listenPort), m_listener.get()));
+    } catch (std::runtime_error e) {
+        spdlog::error("caught exception opening socket: {}", e.what());
+        return false;
+    }
     m_socketThread = std::thread([this] { m_listenSocket->Run(); });
+    return true;
 }
 
 void OscHandler::shutdown() {

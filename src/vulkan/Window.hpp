@@ -20,6 +20,7 @@ namespace vk {
 class Canvas;
 class CommandBuffer;
 class Device;
+class FrameTimer;
 class ImageSet;
 class Instance;
 class Offscreen;
@@ -59,6 +60,10 @@ public:
      */
     std::shared_ptr<Offscreen> offscreen();
 
+    /*! Access Window's FrameTimer object for read-only queries about performance statistics.
+     */
+    std::shared_ptr<const FrameTimer> frameTimer();
+
 private:
     void runDirectRendering(std::shared_ptr<Compositor> compositor);
     void runFixedFrameRate(std::shared_ptr<Compositor> compositor);
@@ -74,6 +79,7 @@ private:
     VkSurfaceKHR m_surface;
     std::shared_ptr<Swapchain> m_swapchain;
     std::shared_ptr<RenderSync> m_renderSync;
+    std::shared_ptr<FrameTimer> m_frameTimer;
 
     // We keep the shared pointers to the command buffers until the frame is being re-rendered. This allows
     // the Compositor to change command buffers arbitrarily, and they won't get reclaimed by the system until

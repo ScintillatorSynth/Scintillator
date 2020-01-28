@@ -32,5 +32,5 @@ dimensions:
       outputs: 3
     - inputs: 4
       outputs: 4
-shader: "@out = frac((@time + @phase) * @freq);"
+shader: "@out = fract((@time + @phase) * @freq);"
 

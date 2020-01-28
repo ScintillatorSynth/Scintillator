@@ -10,6 +10,7 @@
 
 namespace {
 const std::vector<const char*> windowDeviceExtensions { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+static const char* kMemoryBudgetExtension = "VK_EXT_memory_budget";
 }
 
 namespace scin { namespace vk {
@@ -19,7 +20,9 @@ DeviceInfo::DeviceInfo(std::shared_ptr<Instance> instance, VkPhysicalDevice devi
     m_physicalDevice(device),
     m_presentFamilyIndex(-1),
     m_graphicsFamilyIndex(-1),
-    m_supportsWindow(false) {}
+    m_numberOfMemoryHeaps(0),
+    m_supportsWindow(false),
+    m_supportsMemoryBudget(false) {}
 
 bool DeviceInfo::build() {
     vkGetPhysicalDeviceProperties(m_physicalDevice, &m_properties);
@@ -48,28 +51,37 @@ bool DeviceInfo::build() {
 
         ++familyIndex;
     }
-
     if (m_graphicsFamilyIndex == -1) {
         spdlog::warn("Device {} missing a graphics queue family, not usable for graphics.", name());
         return false;
     }
 
-    // Windowing support requires some extensions, check for them.
+    // Get some information about the memory properties of this device.
+    VkPhysicalDeviceMemoryProperties memoryProperties = {};
+    vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &memoryProperties);
+    m_numberOfMemoryHeaps = memoryProperties.memoryHeapCount;
+
+    // Base and windowing support requires some extensions, check for them.
     uint32_t extensionCount = 0;
     vkEnumerateDeviceExtensionProperties(m_physicalDevice, nullptr, &extensionCount, nullptr);
     std::vector<VkExtensionProperties> availableExtensions(extensionCount);
     vkEnumerateDeviceExtensionProperties(m_physicalDevice, nullptr, &extensionCount, availableExtensions.data());
-    std::set<std::string> requiredExtensions(windowDeviceExtensions.begin(), windowDeviceExtensions.end());
+    std::set<std::string> optionalExtensions({ kMemoryBudgetExtension });
+    std::set<std::string> windowExtensions(windowDeviceExtensions.begin(), windowDeviceExtensions.end());
     for (const auto& extension : availableExtensions) {
-        requiredExtensions.erase(extension.extensionName);
+        optionalExtensions.erase(extension.extensionName);
+        windowExtensions.erase(extension.extensionName);
     }
-    m_supportsWindow = requiredExtensions.empty();
+    m_supportsMemoryBudget = optionalExtensions.empty();
+    m_supportsWindow = windowExtensions.empty();
 
     return true;
 }
 
 // static
 const std::vector<const char*>& DeviceInfo::windowExtensions() { return windowDeviceExtensions; }
+// static
+const char* DeviceInfo::memoryBudgetExtension() { return kMemoryBudgetExtension; }
 
 bool DeviceInfo::isSwiftShader() const { return std::strncmp(name(), "SwiftShader", 11) == 0; }
 

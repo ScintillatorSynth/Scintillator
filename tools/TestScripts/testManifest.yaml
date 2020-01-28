@@ -1,0 +1,19 @@
+- name: "First Frame Empty"
+  category: "base"
+  comment: "Test the first frame of the server is cleared to default clear color"
+  shortName: "firstFrame"
+  scinthDef: ""
+  captureTimes: [ 1 ]
+- name: "ScinOsc Bullseye"
+  category: "VOsc"
+  comment: "ScinOsc frequency as a function of distance from center."
+  shortName: "scinOsc"
+  scinthDef: "{ BWOut.fg(ScinOsc.fg(Length.fg(NormPos.fg))); }"
+  captureTimes: [ 1, 1, 1, 1, 1 ]
+- name: "VSaw Checker"
+  category: "VOsc"
+  comment: "VSaw two color checker pattern."
+  shortName: "gingham"
+  scinthDef: "{ var pos = NormPos.fg;
+    RGBOut.fg(VSaw.fg(1.0, VX.fg(pos)), VSaw.fg(1.5, VY.fg(pos)), VSaw.fg(VX.fg(NormPos.fg))); }"
+  captureTimes: [ 1, 1 ]

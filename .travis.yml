@@ -7,6 +7,9 @@ cache: ccache
 
 addons:
     apt:
+        sources:
+            - sourceline: 'deb https://packages.lunarg.com/vulkan bionic main'
+              key_url: 'http://packages.lunarg.com/lunarg-signing-key-pub.asc'
         update: true
         packages: &common_packages
             - build-essential
@@ -14,19 +17,34 @@ addons:
             - clang-format-8
             - cmake
             - doxygen
+            - glslang-dev
             - gperf
+            - imagemagick
+            - libasound2-dev
             - libavcodec-dev
             - libavformat-dev
             - libc++-8-dev
             - libc++abi-8-dev
+            - libfftw3-dev
+            - libicu-dev
+            - libjack-jackd2-dev
+            - libreadline6-dev
+            - libudev-dev
+            - libvulkan-dev
             - libwayland-dev
             - libxcursor-dev
             - libxi-dev
             - libxinerama-dev
             - libxrandr-dev
             - llvm-8-dev
+            - pkg-config
             - python3-distutils
-            - supercollider-language
+            - python3-yaml
+            - shaderc
+            - spirv-headers
+            - spirv-tools
+            - vulkan-headers
+            - vulkan-validationlayers
             - zlib1g
 
 env:
@@ -36,23 +54,24 @@ before_install:
 
 before_script:
     - mkdir build
-    - mkdir third_party/vulkan-dev/build && cd third_party/vulkan-dev/build
-    - cmake -DSCIN_USE_OWN_VULKAN=ON ..
+    - mkdir third_party/sclang-dev/build && cd third_party/sclang-dev/build
+    - cmake ..
     - make -j2 install
-    - make -j2 local-vulkan-utils
     - cd ../../../build
-    - cmake -DSCIN_BUILD_DOCS=ON -DSCIN_USE_OWN_VULKAN=ON -DCMAKE_BUILD_TYPE=Coverage -DLLVM_COV="llvm-cov-8" -DLLVM_PROFDATA="llvm-profdata-8" -DPYTHON_EXECUTABLE=`which python3` ..
+    - cmake -DSCIN_BUILD_DOCS=ON -DCMAKE_BUILD_TYPE=Coverage -DLLVM_COV="llvm-cov-8" -DLLVM_PROFDATA="llvm-profdata-8" -DPYTHON_EXECUTABLE=`which python3` -DSCIN_SCLANG=$TRAVIS_BUILD_DIR/build/install-ext/bin/sclang ..
 
 script:
-    - make -j2
-    - make coverage_report
-    - make lintall
-    - make docs
+    - make -j2 swiftshader-local
+    - make -j2 compare_images
+    - make -j2 coverage_report
+    - make -j2 lintall
+    - make -j2 docs
 
 before_deploy:
     - mkdir -p $HOME/artifacts/coverage
     - cp $TRAVIS_BUILD_DIR/build/src/scinsynth_coverage.json $HOME/artifacts
     - cp -R $TRAVIS_BUILD_DIR/build/doc $HOME/artifacts
+    - cp -R $TRAVIS_BUILD_DIR/build/report $HOME/artifacts
 
 deploy:
     - provider: s3

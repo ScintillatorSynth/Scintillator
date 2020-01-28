@@ -30,6 +30,7 @@ Window::Window(std::shared_ptr<Instance> instance, std::shared_ptr<Device> devic
     m_directRendering(frameRate < 0),
     m_window(nullptr),
     m_surface(VK_NULL_HANDLE),
+    m_frameTimer(new FrameTimer(frameRate)),
     m_stop(false) {}
 
 Window::~Window() {}
@@ -57,8 +58,8 @@ bool Window::create() {
     }
 
     if (!m_directRendering) {
-        m_offscreen.reset(new Offscreen(m_device));
-        if (!m_offscreen->create(m_width, m_height, m_swapchain->numberOfImages() + 1)) {
+        m_offscreen.reset(new Offscreen(m_device, m_width, m_height, m_frameRate));
+        if (!m_offscreen->create(m_swapchain->numberOfImages() + 1)) {
             spdlog::error("Window failed to create Offscreen rendering environment.");
             return false;
         }
@@ -91,7 +92,6 @@ void Window::destroy() {
     glfwDestroyWindow(m_window);
 }
 
-
 std::shared_ptr<Canvas> Window::canvas() {
     if (m_directRendering) {
         return m_swapchain->canvas();
@@ -101,10 +101,16 @@ std::shared_ptr<Canvas> Window::canvas() {
 
 std::shared_ptr<Offscreen> Window::offscreen() { return m_offscreen; }
 
+std::shared_ptr<const FrameTimer> Window::frameTimer() {
+    if (m_directRendering) {
+        return m_frameTimer;
+    }
+    return m_offscreen->frameTimer();
+}
+
 void Window::runDirectRendering(std::shared_ptr<Compositor> compositor) {
     spdlog::info("Window starting direct rendering loop.");
-    FrameTimer frameTimer(true);
-    frameTimer.start();
+    m_frameTimer->start();
 
     while (!m_stop && !glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
@@ -116,9 +122,9 @@ void Window::runDirectRendering(std::shared_ptr<Compositor> compositor) {
         // available.
         uint32_t imageIndex = m_renderSync->acquireNextImage(0, m_swapchain.get());
 
-        frameTimer.markFrame();
+        m_frameTimer->markFrame();
 
-        m_commandBuffers = compositor->prepareFrame(imageIndex, frameTimer.elapsedTime());
+        m_commandBuffers = compositor->prepareFrame(imageIndex, m_frameTimer->elapsedTime());
 
         VkSemaphore imageAvailable[] = { m_renderSync->imageAvailable(0) };
         VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
@@ -168,7 +174,7 @@ void Window::runDirectRendering(std::shared_ptr<Compositor> compositor) {
 
 void Window::runFixedFrameRate(std::shared_ptr<Compositor> compositor) {
     spdlog::info("Window starting offscreen rendering loop.");
-    m_offscreen->runThreaded(compositor, m_frameRate);
+    m_offscreen->runThreaded(compositor);
 
     std::chrono::high_resolution_clock::time_point lastFrame = std::chrono::high_resolution_clock::now();
     while (!m_stop && !glfwWindowShouldClose(m_window)) {

@@ -15,6 +15,7 @@ enum OscCommand : int {
     kStatus = 2,
     kQuit = 3,
     kDumpOSC = 39,
+    kSync = 52,
     kLogLevel = 58,
     kVersion = 64,
 
@@ -33,6 +34,7 @@ enum OscCommand : int {
 
     // Non Real Time Commands
     kNRTScreenShot = 67,
+    kNRTAdvanceFrame = 68
 };
 
 }  // namespace scin
@@ -49,6 +51,7 @@ notify,             scin::OscCommand::kNotify
 status,             scin::OscCommand::kStatus
 quit,               scin::OscCommand::kQuit
 dumpOSC,            scin::OscCommand::kDumpOSC
+sync,               scin::OscCommand::kSync
 logLevel,           scin::OscCommand::kLogLevel
 version,            scin::OscCommand::kVersion
 d_recv,             scin::OscCommand::kDRecv
@@ -59,6 +62,7 @@ n_free,             scin::OscCommand::kNFree
 n_run,              scin::OscCommand::kNRun
 s_new,              scin::OscCommand::kSNew
 nrt_screenShot,     scin::OscCommand::kNRTScreenShot
+nrt_advanceFrame,   scin::OscCommand::kNRTAdvanceFrame
 %%
 
 }  // namespace

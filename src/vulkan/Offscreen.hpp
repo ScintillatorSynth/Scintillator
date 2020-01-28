@@ -29,6 +29,7 @@ class CommandBuffer;
 class CommandPool;
 class Device;
 class Framebuffer;
+class FrameTimer;
 class ImageSet;
 class RenderSync;
 class Swapchain;
@@ -37,7 +38,7 @@ class Swapchain;
  */
 class Offscreen {
 public:
-    Offscreen(std::shared_ptr<Device> device);
+    Offscreen(std::shared_ptr<Device> device, int width, int height, int frameRate);
     ~Offscreen();
 
     /*! Offscreen will pipeline rendering to numberOfImages frames. Also starts the render thread, in a  paused state.
@@ -46,7 +47,7 @@ public:
      *
      * \param numberOfImages Should be at least 2.
      */
-    bool create(int width, int height, size_t numberOfImages);
+    bool create(size_t numberOfImages);
 
     /*! If this Offscreen is contained in a Window, we prepare an additional set of command buffers to blit from the
      * framebuffer images directly to the swapchain present images, with synchronization primitives provided by the
@@ -61,11 +62,11 @@ public:
 
     /*! Start a thread to render at the provided framerate.
      */
-    void runThreaded(std::shared_ptr<Compositor> compositor, int frameRate);
+    void runThreaded(std::shared_ptr<Compositor> compositor);
 
     /*! Render at the provided framerate on this thread.
      */
-    void run(std::shared_ptr<Compositor> compositor, int frameRate);
+    void run(std::shared_ptr<Compositor> compositor);
 
     /*! Adds a video or image encoder to the list of encoders to call with readback images from subsequent frames.
      */
@@ -82,15 +83,12 @@ public:
      */
     void pause();
 
-    /*! For nonzero framerate, when paused, will render one additional frame.
-     */
-    void advanceFrame();
-
-    /*! For zero framerate, will advance time by dt and then render one additional frame.
+    /*! For zero framerate, will render one frame, then advance time by dt and call the supplied callback.
      *
      * \param dt The amount of time to advance the frame by. Must be >= 0.
+     * \param callback A function to call on completion of render, argument is the frame number.
      */
-    void renderFrame(double dt);
+    void advanceFrame(double dt, std::function<void(size_t)> callback);
 
     /*! For stop the render thread and release all associated resources.
      */
@@ -103,6 +101,12 @@ public:
     std::shared_ptr<Canvas> canvas();
     int width() const { return m_width; }
     int height() const { return m_height; }
+
+    /*! Returns true if the Offscreen is in snap shot mode (frameRate == 0).
+     */
+    bool isSnapShotMode() const { return m_snapShotMode; }
+
+    std::shared_ptr<const FrameTimer> frameTimer() { return m_frameTimer; }
 
 private:
     void threadMain(std::shared_ptr<Compositor> compositor);
@@ -120,6 +124,7 @@ private:
     int m_width;
     int m_height;
 
+    std::shared_ptr<FrameTimer> m_frameTimer;
     std::shared_ptr<Framebuffer> m_framebuffer;
     std::unique_ptr<RenderSync> m_renderSync;
     std::shared_ptr<CommandPool> m_commandPool;
@@ -144,6 +149,9 @@ private:
     std::list<std::shared_ptr<scin::av::Encoder>> m_encoders;
     std::shared_ptr<CommandBuffer> m_readbackCommands;
 
+    // Not mutex-protected read-only indicator if the frame rate is zero.
+    bool m_snapShotMode;
+
     // Protects the render flag and the framerate, and deltaTime.
     std::mutex m_renderMutex;
     std::condition_variable m_renderCondition;
@@ -152,6 +160,7 @@ private:
     uint32_t m_swapchainImageIndex;
     int m_frameRate;
     double m_deltaTime;
+    std::function<void(size_t)> m_flushCallback;
 };
 
 } // namespace vk

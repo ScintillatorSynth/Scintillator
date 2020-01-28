@@ -11,6 +11,19 @@ libavformat-dev libwayland-dev
 
 Also the Vulkan SDK, instructions at https://vulkan.lunarg.com/doc/view/1.1.114.0/linux/getting_started_ubuntu.html
 
+From the Vulkan ppa you will want:
+
+```
+sudo apt-get install shaderc spirv-headers spirv-tools glslang-dev vulkan-headers libvulkan-dev vulkan-validationlayers
+```
+
+If you want to run the integration tests you'll need to build SwiftShader and will also need to install some additional
+dependencies:
+
+```
+sudo apt-get install python3-yaml imagemagick
+```
+
 ## Python 3
 
 Recent builds of some of the vulkan-related dependencies (effcee at least) are using a cmake command to locate python

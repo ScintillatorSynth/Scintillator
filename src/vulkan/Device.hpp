@@ -32,6 +32,14 @@ public:
 
     void destroy();
 
+    /*! Query the grpahics memory allocator for current memory budget information. Uses a cheaper query but the
+     * information is approximate.
+     *
+     * \param bytesUsedOut The number of graphics memory bytes consumed by scintillator.
+     * \param bytesBudgetOut The maximum amount of graphics memory that scintillator can safely consume.
+     * \return true on success, false on query falure.
+     */
+    bool getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudgetOut);
 
     VkDevice get() { return m_device; }
     VkPhysicalDevice physical() { return m_physicalDevice; }
@@ -48,6 +56,8 @@ private:
     std::string m_name;
     int m_graphicsFamilyIndex;
     int m_presentFamilyIndex;
+    int m_numberOfMemoryHeaps;
+    int m_supportsMemoryBudget;
     VkDevice m_device;
     VmaAllocator m_allocator;
     VkQueue m_graphicsQueue;

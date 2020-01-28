@@ -18,6 +18,27 @@ definitionlist::
 ## Asynchronous. || Replies to sender with strong::/scin_done:: just before completion.
 ::
 
+subsection::/scin_status
+
+Query the status. Replies to sender with the following message:
+
+definitionlist::
+## /scin_status.reply || table::
+## strong::int:: || number of running Scinths.
+## strong::int:: || number of groups.
+## strong::int:: || number of loaded Scinth defintions.
+## strong::int:: || number of warnings in log.
+## strong::int:: || number of errors in log.
+## strong::double:: || approximate graphics memory consumed, in bytes.
+## strong::double:: || approximage graphics memory available, in bytes. Some graphics devices don't support this statistic, in which case it will be 0.
+## strong::int:: || target frame rate in frames per second (can be -1 or 0)
+## strong::double:: || computed mean framerate.
+## strong::int:: || number of dropped frames, if running real time, 0 otherwise.
+::
+
+note:: teletype::/status:: messages won't be posted, if the server is in teletype::/dumpOSC:: mode::
+::
+
 subsection::/scin_dumpOSC
 Log incoming OSC messages.
 
@@ -25,8 +46,21 @@ table::
 ## strong::int:: || 0 to disable logging. Nonzero to enable.
 ::
 
+subsection::/scin_sync
+
+Notify when all outstanding aync commands have completed.
+
+Replies with a teletype::/scin_synced:: message when all asynchronous commands received before this one have completed. The reply will contain the sent unique ID.
+
+definitionlist::
+## Asynchronous. || Replies to sender with strong::/scin_synced, ID:: when complete.
+::
+
+
 subsection::/scin_logLevel
 Set the logging level for the log streams. Lower log levels are inclusive of all higher log levels, so they tend to log more, and the highest log level turns off logging. This overrides any command-line argument supplied to scinsynth at startup.
+
+This command is similar to the SuperCollider server command teletype::/error:: but offers more options for access to the built-in logging.
 
 table::
 ## strong::int:: || log level
@@ -179,5 +213,19 @@ table::
 ::
 
 definitionlist::
-## Asynchronous. || Replies to sender with strong::/scin_done:: followed by strong::/scin_nrt_screenShot:: and the name of the file saved when complete.
+## Asynchronous. || Replies to sender twice with updates. The first response is strong::/scin_nrt_screenShot.ready::, followed by the file name, which is sent once the screenshot is ready to record, and lastly a boolean with file status. The second reponse is on completion of the saving of the screenshot file, the server replies with strong::/scin_done:: followed by strong::/scin_nrt_screenShot::, the name of the file saved, and a boolean with status on completion.
 ::
+
+subsection::/scin_nrt_advanceFrame
+
+If framerate is at zero, renders one frame at the current time and then advances the time by the supplied fractional increment, in seconds.
+
+table::
+## strong::int:: || numerator for fractional time advancement
+## strong::int:: || denominator for fractional time advancement
+::
+
+definitionlist::
+## Asynchronous. || Replies to sender with strong::/scin_done:: followed by strong::/scin_nrt_advanceFrame::.
+::
+

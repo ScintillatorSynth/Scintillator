@@ -1,4 +1,3 @@
 bin
 build
-third_party/vulkan-dev/build
-
+third_party/sclang-dev/build
