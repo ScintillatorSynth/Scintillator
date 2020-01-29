@@ -68,7 +68,7 @@ std::unique_ptr<Shader> ShaderCompiler::compile(std::shared_ptr<Device> device, 
         } else {
             if (shaderc_result_get_num_warnings(result)) {
                 spdlog::warn("shaderc compiled but returned some warnings for source {}: {}.", name,
-                        shaderc_result_get_error_message(result));
+                             shaderc_result_get_error_message(result));
             } else {
                 spdlog::info("successfully compiled shader source {}.", name);
             }

@@ -137,6 +137,8 @@ public:
 
             case kDRecv: {
                 osc::ReceivedMessage::const_iterator args = message.ArgumentsBegin();
+                // TODO: this is crashing without a null terminator, usually on packets that have been truncated for
+                // length (> 4096 bytes)
                 std::string yaml = (args++)->AsString();
                 int completionMessageSize;
                 std::shared_ptr<char[]> onCompletion = extractMessage(message, args, completionMessageSize);
