@@ -4,6 +4,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED)
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
+    ${SCIN_EXT_INSTALL_DIR}/include
 )
 
 #### "Core" files (without external dependencies)
@@ -62,23 +63,22 @@ target_link_libraries(run_unittests
 
 #### Scintillator Binary
 configure_file(Version.hpp.in "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp")
-add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
-    COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp" "${CMAKE_CURRENT_SOURCE_DIR}/OscCommand.hpp.in"
-    MAIN_DEPENDENCY OscCommand.hpp.in
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/osc/commands")
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp"
+    COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/osc/commands/Command.cpp.in"
+    MAIN_DEPENDENCY osc/commands/Command.cpp.in
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/osc/commands"
 )
 
 set(scintillator_synth_files
-    "${CMAKE_CURRENT_BINARY_DIR}/OscCommand.hpp"
     "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp"
+    "${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp"
     Async.cpp
     Async.hpp
     Compositor.cpp
     Compositor.hpp
     Logger.cpp
     Logger.hpp
-    OscHandler.cpp
-    OscHandler.hpp
     Scinth.cpp
     Scinth.hpp
     ScinthDef.cpp
@@ -98,6 +98,42 @@ set(scintillator_synth_files
     av/ImageEncoder.hpp
     av/Packet.cpp
     av/Packet.hpp
+
+    osc/Dispatcher.cpp
+    osc/Dispatcher.hpp
+    osc/commands/AdvanceFrame.cpp
+    osc/commands/AdvanceFrame.hpp
+    osc/commands/DefFree.cpp
+    osc/commands/DefFree.hpp
+    osc/commands/DefLoad.cpp
+    osc/commands/DefLoad.hpp
+    osc/commands/DefLoadDir.cpp
+    osc/commands/DefLoadDir.hpp
+    osc/commands/DefReceive.cpp
+    osc/commands/DefReceive.hpp
+    osc/commands/DumpOSC.cpp
+    osc/commands/DumpOSC.hpp
+    osc/commands/Command.hpp
+    osc/commands/LogLevel.cpp
+    osc/commands/LogLevel.hpp
+    osc/commands/NodeFree.cpp
+    osc/commands/NodeFree.hpp
+    osc/commands/NodeRun.cpp
+    osc/commands/NodeRun.hpp
+    osc/commands/Notify.cpp
+    osc/commands/Notify.hpp
+    osc/commands/Quit.cpp
+    osc/commands/Quit.hpp
+    osc/commands/ScinthNew.cpp
+    osc/commands/ScinthNew.hpp
+    osc/commands/ScreenShot.cpp
+    osc/commands/ScreenShot.hpp
+    osc/commands/Status.cpp
+    osc/commands/Status.hpp
+    osc/commands/Sync.cpp
+    osc/commands/Sync.hpp
+    osc/commands/Version.cpp
+    osc/commands/Version.hpp
 
     vulkan/Buffer.cpp
     vulkan/Buffer.hpp
@@ -147,6 +183,7 @@ add_executable(scinsynth ${scintillator_synth_files})
 find_package(Vulkan REQUIRED FATAL_ERROR)
 
 target_link_libraries(scinsynth
+    "${SCIN_EXT_INSTALL_DIR}/lib/liblo.a"
     "${Vulkan_LIBRARY}"
     VulkanMemoryAllocator
     avcodec
@@ -155,11 +192,14 @@ target_link_libraries(scinsynth
     gflags
     glfw
     glm
-    shaderc_combined
-    oscpack
     scintillator_core
+    shaderc_combined
     spdlog
     stdc++fs
+)
+
+add_dependencies(scinsynth
+    liblo-install
 )
 
 #### Automatic Code Formatting and Linting
