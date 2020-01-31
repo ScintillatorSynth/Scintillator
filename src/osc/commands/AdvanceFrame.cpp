@@ -25,7 +25,7 @@ void AdvanceFrame::processMessage(int argc, lo_arg** argv, const char* types, lo
     double dt = static_cast<double>(numerator) / static_cast<double>(denominator);
     lo_address address = lo_message_get_source(message);
     m_dispatcher->offscreen()->advanceFrame(dt, [this, address](size_t frameNumber) {
-     //   sendMessage(address, "/scin_done", "/scin_nrt_advanceFrame");
+        m_dispatcher->respond(address, "/scin_done", "/scin_nrt_advanceFrame");
     });
 }
 

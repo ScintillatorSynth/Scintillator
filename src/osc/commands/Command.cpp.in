@@ -9,7 +9,7 @@ namespace {
 %}
 %language=C++
 %struct-type
-struct CommandPair { const char* name; scin::osc::commands::Command::Number command; };
+struct CommandPair { const char* name; scin::osc::commands::Command::Number number; };
 %%
 notify,             scin::osc::commands::Command::Number::kNotify
 status,             scin::osc::commands::Command::Number::kStatus
@@ -39,7 +39,7 @@ Command::Number Command::getNumberNamed(const char* name, size_t length) {
     if (!pair) {
         return Command::Number::kNone;
     }
-    return pair->command;
+    return pair->number;
 }
 
 Command::Command(Dispatcher* dispatcher): m_dispatcher(dispatcher) { }

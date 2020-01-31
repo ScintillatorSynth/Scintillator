@@ -60,13 +60,48 @@ public:
     void stop();
     void destroy();
 
+    // Starting call, constructs message with path.
+    template <typename... Targs>
+    void respond(lo_address address, const char* path, Targs... Fargs) {
+        lo_message message = lo_message_new();
+        respond(address, path, message, Fargs...);
+    }
+    // Recursive call specializations, adds next argument to message.
+    template <typename... Targs>
+    void respond(lo_address address, const char* path, lo_message message, int32_t value, Targs... Fargs) {
+        lo_message_add_int32(message, value);
+        respond(address, path, message, Fargs...);
+    }
+    template <typename... Targs>
+    void respond(lo_address address, const char* path, lo_message message, const char* value, Targs... Fargs) {
+        lo_message_add_string(message, value);
+        respond(address, path, message, Fargs...);
+    }
+    template <typename... Targs>
+    void respond(lo_address address, const char* path, lo_message message, double value, Targs... Fargs) {
+        lo_message_add_double(message, value);
+        respond(address, path, message, Fargs...);
+    }
+    // Base call, finishes the message and sends it on appropriate server thread.
+    void respond(lo_address address, const char* path, lo_message message) {
+        if (lo_address_get_protocol(address) == LO_TCP) {
+            lo_send_message_from(address, m_tcpServer, path, message);
+        } else {
+            lo_send_message_from(address, m_udpServer, path, message);
+        }
+        lo_message_free(message);
+    }
+
+    // Accessor methods primarily used by Command subclasses to talk to rest of scintillator subsystems.
     std::shared_ptr<Logger> logger() { return m_logger; }
     std::shared_ptr<Async> async() { return m_async; }
     std::shared_ptr<core::Archetypes> archetypes() { return m_archetypes; }
     std::shared_ptr<Compositor> compositor() { return m_compositor; }
     std::shared_ptr<vk::Offscreen> offscreen() { return m_offscreen; }
     std::shared_ptr<const vk::FrameTimer> frameTimer() { return m_frameTimer; }
-    std::function<void()> quitHandler() { return m_quitHandler; }
+    void callQuitHandler(lo_address quitOrigin);
+    void setDumpOSC(bool enable) { m_dumpOSC = enable; }
+    void processMessageFrom(lo_address address, std::shared_ptr<uint8_t[]> data, uint32_t dataSize);
 
 private:
     static void loError(int number, const char* message, const char* path);
@@ -86,6 +121,8 @@ private:
     lo_server m_tcpServer;
     lo_server_thread m_udpThread;
     lo_server m_udpServer;
+    lo_address m_quitOrigin;
+    bool m_dumpOSC;
 };
 
 } // namespace osc

@@ -1,14 +1,14 @@
-#ifndef SRC_OSC_COMMANDS_VERSION_HPP_
-#define SRC_OSC_COMMANDS_VERSION_HPP_
+#ifndef SRC_OSC_COMMANDS_SCIN_VERSION_HPP_
+#define SRC_OSC_COMMANDS_SCIN_VERSION_HPP_
 
 #include "osc/commands/Command.hpp"
 
 namespace scin { namespace osc { namespace commands {
 
-class Version : public Command {
+class ScinVersion : public Command {
 public:
-    Version(osc::Dispatcher* dispatcher);
-    virtual ~Version();
+    ScinVersion(osc::Dispatcher* dispatcher);
+    virtual ~ScinVersion();
 
     void processMessage(int argc, lo_arg** argv, const char* types, lo_message message) override;
 };
@@ -17,4 +17,4 @@ public:
 } // namespace osc
 } // namespace scin
 
-#endif // SRC_OSC_COMMANDS_VERSION_HPP_
+#endif // SRC_OSC_COMMANDS_SCIN_VERSION_HPP_

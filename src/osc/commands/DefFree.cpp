@@ -8,7 +8,9 @@ DefFree::DefFree(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 DefFree::~DefFree() {}
 
-void DefFree::processMessage(int argc, lo_arg** argv, const char* types, lo_message message) {}
+void DefFree::processMessage(int argc, lo_arg** argv, const char* types, lo_message message) {
+
+}
 
 } // namespace commands
 } // namespace osc

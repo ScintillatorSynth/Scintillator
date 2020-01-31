@@ -103,6 +103,7 @@ set(scintillator_synth_files
     osc/Dispatcher.hpp
     osc/commands/AdvanceFrame.cpp
     osc/commands/AdvanceFrame.hpp
+    osc/commands/Command.hpp
     osc/commands/DefFree.cpp
     osc/commands/DefFree.hpp
     osc/commands/DefLoad.cpp
@@ -113,7 +114,6 @@ set(scintillator_synth_files
     osc/commands/DefReceive.hpp
     osc/commands/DumpOSC.cpp
     osc/commands/DumpOSC.hpp
-    osc/commands/Command.hpp
     osc/commands/LogLevel.cpp
     osc/commands/LogLevel.hpp
     osc/commands/NodeFree.cpp
@@ -124,6 +124,8 @@ set(scintillator_synth_files
     osc/commands/Notify.hpp
     osc/commands/Quit.cpp
     osc/commands/Quit.hpp
+    osc/commands/ScinVersion.cpp
+    osc/commands/ScinVersion.hpp
     osc/commands/ScinthNew.cpp
     osc/commands/ScinthNew.hpp
     osc/commands/ScreenShot.cpp
@@ -132,8 +134,6 @@ set(scintillator_synth_files
     osc/commands/Status.hpp
     osc/commands/Sync.cpp
     osc/commands/Sync.hpp
-    osc/commands/Version.cpp
-    osc/commands/Version.hpp
 
     vulkan/Buffer.cpp
     vulkan/Buffer.hpp
