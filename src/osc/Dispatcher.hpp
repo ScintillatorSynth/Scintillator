@@ -1,6 +1,7 @@
 #ifndef SRC_OSC_DISPATCHER_HPP_
 #define SRC_OSC_DISPATCHER_HPP_
 
+#include "osc/Address.hpp"
 #include "osc/commands/Command.hpp"
 
 #include "lo/lo.h"
@@ -51,9 +52,10 @@ public:
     /*! Bind the TCP and UDP ports and set up the data structues to dispatch OSC commands for handling.
      *
      * \param bindPort Which port to open UDP and TCP listeners on.
+     * \param dumpOSC If true the Dispatcher will log all incoming OSC messages.
      * \return true on success, false on failure.
      */
-    bool create(const std::string& bindPort);
+    bool create(const std::string& bindPort, bool dumpOSC);
 
     bool run();
 
@@ -61,28 +63,30 @@ public:
     void destroy();
 
     // Starting call, constructs message with path.
-    template <typename... Targs> void respond(lo_address address, const char* path, Targs... Fargs) {
+    template <typename... Targs> void respond(std::shared_ptr<Address> address, const char* path, Targs... Fargs) {
         lo_message message = lo_message_new();
         respond(address, path, message, Fargs...);
     }
     // Recursive call specializations, adds next argument to message.
     template <typename... Targs>
-    void respond(lo_address address, const char* path, lo_message message, int32_t value, Targs... Fargs) {
+    void respond(std::shared_ptr<Address> address, const char* path, lo_message message, int32_t value,
+                 Targs... Fargs) {
         lo_message_add_int32(message, value);
         respond(address, path, message, Fargs...);
     }
     template <typename... Targs>
-    void respond(lo_address address, const char* path, lo_message message, const char* value, Targs... Fargs) {
+    void respond(std::shared_ptr<Address> address, const char* path, lo_message message, const char* value,
+                 Targs... Fargs) {
         lo_message_add_string(message, value);
         respond(address, path, message, Fargs...);
     }
     template <typename... Targs>
-    void respond(lo_address address, const char* path, lo_message message, double value, Targs... Fargs) {
+    void respond(std::shared_ptr<Address> address, const char* path, lo_message message, double value, Targs... Fargs) {
         lo_message_add_double(message, value);
         respond(address, path, message, Fargs...);
     }
     template <typename... Targs>
-    void respond(lo_address address, const char* path, lo_message message, bool value, Targs... Fargs) {
+    void respond(std::shared_ptr<Address> address, const char* path, lo_message message, bool value, Targs... Fargs) {
         if (value) {
             lo_message_add_true(message);
         } else {
@@ -91,11 +95,11 @@ public:
         respond(address, path, message, Fargs...);
     }
     // Base call, finishes the message and sends it on appropriate server thread.
-    void respond(lo_address address, const char* path, lo_message message) {
-        if (lo_address_get_protocol(address) == LO_TCP) {
-            lo_send_message_from(address, m_tcpServer, path, message);
+    void respond(std::shared_ptr<Address> address, const char* path, lo_message message) {
+        if (lo_address_get_protocol(address->get()) == LO_TCP) {
+            lo_send_message_from(address->get(), m_tcpServer, path, message);
         } else {
-            lo_send_message_from(address, m_udpServer, path, message);
+            lo_send_message_from(address->get(), m_udpServer, path, message);
         }
         lo_message_free(message);
     }
@@ -107,9 +111,9 @@ public:
     std::shared_ptr<Compositor> compositor() { return m_compositor; }
     std::shared_ptr<vk::Offscreen> offscreen() { return m_offscreen; }
     std::shared_ptr<const vk::FrameTimer> frameTimer() { return m_frameTimer; }
-    void callQuitHandler(lo_address quitOrigin);
+    void callQuitHandler(std::shared_ptr<Address> quitOrigin);
     void setDumpOSC(bool enable) { m_dumpOSC = enable; }
-    void processMessageFrom(lo_address address, std::shared_ptr<uint8_t[]> data, uint32_t dataSize);
+    void processMessageFrom(std::shared_ptr<Address> address, std::shared_ptr<uint8_t[]> data, uint32_t dataSize);
 
 private:
     static void loError(int number, const char* message, const char* path);
@@ -130,7 +134,7 @@ private:
     lo_server m_tcpServer;
     lo_server_thread m_udpThread;
     lo_server m_udpServer;
-    lo_address m_quitOrigin;
+    std::shared_ptr<Address> m_quitOrigin;
     bool m_dumpOSC;
 };
 

@@ -23,6 +23,7 @@ public:
         kSync = 52,
         kLogLevel = 58,
         kVersion = 64,
+        kEcho = 69,
 
         // Scinth Definition Commands
         kDRecv = 5,
@@ -42,7 +43,7 @@ public:
         kNRTAdvanceFrame = 68,
 
         // Not a command, an upper bound for Command counts.
-        kCommandCount = 70
+        kCommandCount = 71
     };
 
     /*! Returns Number enum associated with name, or kNone if no Command found by that name.

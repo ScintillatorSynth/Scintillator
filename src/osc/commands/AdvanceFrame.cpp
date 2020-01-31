@@ -1,5 +1,6 @@
 #include "osc/commands/AdvanceFrame.hpp"
 
+#include "osc/Address.hpp"
 #include "osc/Dispatcher.hpp"
 #include "vulkan/Offscreen.hpp"
 
@@ -23,8 +24,9 @@ void AdvanceFrame::processMessage(int argc, lo_arg** argv, const char* types, lo
     int32_t numerator = *reinterpret_cast<int32_t*>(argv[0]);
     int32_t denominator = *reinterpret_cast<int32_t*>(argv[1]);
     double dt = static_cast<double>(numerator) / static_cast<double>(denominator);
-    m_dispatcher->offscreen()->advanceFrame(dt, [this, address](size_t frameNumber) {
-        m_dispatcher->respond(address, "/scin_done", "/scin_nrt_advanceFrame");
+    std::shared_ptr<Address> origin(new Address(address));
+    m_dispatcher->offscreen()->advanceFrame(dt, [this, origin](size_t frameNumber) {
+        m_dispatcher->respond(origin, "/scin_done", "/scin_nrt_advanceFrame");
     });
 }
 

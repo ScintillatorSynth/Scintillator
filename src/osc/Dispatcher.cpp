@@ -12,6 +12,7 @@
 #include "osc/commands/DefLoadDir.hpp"
 #include "osc/commands/DefReceive.hpp"
 #include "osc/commands/DumpOSC.hpp"
+#include "osc/commands/Echo.hpp"
 #include "osc/commands/LogLevel.hpp"
 #include "osc/commands/NodeFree.hpp"
 #include "osc/commands/NodeRun.hpp"
@@ -52,7 +53,8 @@ Dispatcher::Dispatcher(std::shared_ptr<Logger> logger, std::shared_ptr<Async> as
 
 Dispatcher::~Dispatcher() { destroy(); }
 
-bool Dispatcher::create(const std::string& bindPort) {
+bool Dispatcher::create(const std::string& bindPort, bool dumpOSC) {
+    m_dumpOSC = dumpOSC;
     m_tcpThread = lo_server_thread_new_with_proto(bindPort.data(), LO_TCP, loError);
     if (!m_tcpThread) {
         spdlog::error("Unable to create OSC listener on TCP port {}", bindPort);
@@ -68,7 +70,7 @@ bool Dispatcher::create(const std::string& bindPort) {
     m_udpServer = lo_server_thread_get_server(m_udpThread);
 
     // We use the same handler and our own pattern matching to dispatch all commands so we only add the one handler
-    // to lo and set it to match all incoming patterns.
+    // per server and set it to match all incoming patterns.
     lo_server_thread_add_method(m_tcpThread, nullptr, nullptr, loHandle, this);
     lo_server_thread_add_method(m_udpThread, nullptr, nullptr, loHandle, this);
 
@@ -80,6 +82,7 @@ bool Dispatcher::create(const std::string& bindPort) {
     m_commands[commands::Command::kSync].reset(new commands::Sync(this));
     m_commands[commands::Command::kLogLevel].reset(new commands::LogLevel(this));
     m_commands[commands::Command::kVersion].reset(new commands::ScinVersion(this));
+    m_commands[commands::Command::kEcho].reset(new commands::Echo(this));
     m_commands[commands::Command::kDRecv].reset(new commands::DefReceive(this));
     m_commands[commands::Command::kDLoad].reset(new commands::DefLoad(this));
     m_commands[commands::Command::kDLoadDir].reset(new commands::DefLoadDir(this));
@@ -130,12 +133,13 @@ void Dispatcher::destroy() {
     }
 }
 
-void Dispatcher::callQuitHandler(lo_address quitOrigin) {
+void Dispatcher::callQuitHandler(std::shared_ptr<Address> quitOrigin) {
     m_quitOrigin = quitOrigin;
     m_quitHandler();
 }
 
-void Dispatcher::processMessageFrom(lo_address address, std::shared_ptr<uint8_t[]> data, uint32_t dataSize) {
+void Dispatcher::processMessageFrom(std::shared_ptr<Address> address, std::shared_ptr<uint8_t[]> data,
+                                    uint32_t dataSize) {
     // TODO: Internally this is how lo extracts address from an OSC message binary. Any way to make this safer?
     char* path = reinterpret_cast<char*>(data.get());
     //    int pathLength = lo_validate_string(path, dataSize);
@@ -149,7 +153,8 @@ void Dispatcher::processMessageFrom(lo_address address, std::shared_ptr<uint8_t[
         spdlog::error("Dispatcher failed to deserialize injected message.");
         return;
     }
-    dispatch(path, lo_message_get_argc(message), lo_message_get_argv(message), lo_message_get_types(message), address);
+    dispatch(path, lo_message_get_argc(message), lo_message_get_argv(message), lo_message_get_types(message),
+             address->get());
     lo_message_free(message);
 }
 

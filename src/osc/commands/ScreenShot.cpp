@@ -1,6 +1,7 @@
 #include "osc/commands/ScreenShot.hpp"
 
 #include "av/ImageEncoder.hpp"
+#include "osc/Address.hpp"
 #include "osc/Dispatcher.hpp"
 #include "vulkan/Offscreen.hpp"
 
@@ -28,6 +29,7 @@ void ScreenShot::processMessage(int argc, lo_arg** argv, const char* types, lo_a
     if (argc > 1 && types[1] == LO_STRING) {
         mimeType = std::string(reinterpret_cast<const char*>(argv[1]));
     }
+    std::shared_ptr<Address> origin(new Address(address));
     std::shared_ptr<av::ImageEncoder> encoder;
     size_t serial = 0;
     {
@@ -35,9 +37,9 @@ void ScreenShot::processMessage(int argc, lo_arg** argv, const char* types, lo_a
         serial = ++m_encodersSerial;
         encoder.reset(new av::ImageEncoder(
             m_dispatcher->offscreen()->width(), m_dispatcher->offscreen()->height(),
-            [this, address, fileName, serial](bool valid) {
+            [this, origin, fileName, serial](bool valid) {
                 spdlog::info("Screenshot finished encode of '{}', valid: {}", fileName, valid);
-                m_dispatcher->respond(address, "/scin_done", "/scin_nrt_screenShot", fileName.data(), valid);
+                m_dispatcher->respond(origin, "/scin_done", "/scin_nrt_screenShot", fileName.data(), valid);
                 {
                     std::lock_guard<std::mutex> lock(m_mutex);
                     m_encoders.erase(serial);
@@ -56,6 +58,7 @@ void ScreenShot::processMessage(int argc, lo_arg** argv, const char* types, lo_a
         spdlog::error("OSC ScreenShot failed to create file '{}' with mime type '{}'", fileName, mimeType);
         m_encoders.erase(serial);
     }
+    m_dispatcher->respond(origin, "/scin_nrt_screenShot.ready", fileName.c_str(), valid);
 }
 
 } // namespace commands

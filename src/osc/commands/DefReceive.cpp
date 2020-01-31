@@ -1,6 +1,7 @@
 #include "osc/commands/DefReceive.hpp"
 
 #include "Async.hpp"
+#include "osc/Address.hpp"
 #include "osc/Dispatcher.hpp"
 
 #include "spdlog/spdlog.h"
@@ -30,11 +31,12 @@ void DefReceive::processMessage(int argc, lo_arg** argv, const char* types, lo_a
             std::memcpy(onCompletion.get(), lo_blob_dataptr(blob), completionMessageSize);
         }
     }
-    m_dispatcher->async()->scinthDefParseString(yaml, [this, address, completionMessageSize, onCompletion](bool) {
+    std::shared_ptr<Address> origin(new Address(address));
+    m_dispatcher->async()->scinthDefParseString(yaml, [this, origin, completionMessageSize, onCompletion](bool) {
         if (onCompletion) {
-            m_dispatcher->processMessageFrom(address, onCompletion, completionMessageSize);
+            m_dispatcher->processMessageFrom(origin, onCompletion, completionMessageSize);
         }
-        m_dispatcher->respond(address, "/scin_done");
+        m_dispatcher->respond(origin, "/scin_done");
     });
 }
 

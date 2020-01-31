@@ -34,6 +34,7 @@
 DEFINE_bool(print_version, false, "Print the Scintillator version and exit.");
 DEFINE_bool(print_devices, false, "Print the detected devices and exit.");
 DEFINE_string(port_number, "5511", "A port number 1024-65535.");
+DEFINE_bool(dump_osc, false, "Start dumping OSC messages immediately on bootup.");
 // TODO: find a way to get liblo to bind less widely.
 // DEFINE_string(bind_to_address, "127.0.0.1", "Bind the UDP socket to this address.");
 
@@ -214,7 +215,7 @@ int main(int argc, char* argv[]) {
         quitHandler = [offscreen] { offscreen->stop(); };
     }
     scin::osc::Dispatcher dispatcher(logger, async, archetypes, compositor, offscreen, frameTimer, quitHandler);
-    if (!dispatcher.create(FLAGS_port_number)) {
+    if (!dispatcher.create(FLAGS_port_number, FLAGS_dump_osc)) {
         spdlog::error("Failed creating OSC command dispatcher.");
         return EXIT_FAILURE;
     }

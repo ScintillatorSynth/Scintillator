@@ -99,6 +99,8 @@ set(scintillator_synth_files
     av/Packet.cpp
     av/Packet.hpp
 
+    osc/Address.cpp
+    osc/Address.hpp
     osc/Dispatcher.cpp
     osc/Dispatcher.hpp
     osc/commands/AdvanceFrame.cpp
@@ -114,6 +116,8 @@ set(scintillator_synth_files
     osc/commands/DefReceive.hpp
     osc/commands/DumpOSC.cpp
     osc/commands/DumpOSC.hpp
+    osc/commands/Echo.cpp
+    osc/commands/Echo.hpp
     osc/commands/LogLevel.cpp
     osc/commands/LogLevel.hpp
     osc/commands/NodeFree.cpp
