@@ -61,8 +61,7 @@ public:
     void destroy();
 
     // Starting call, constructs message with path.
-    template <typename... Targs>
-    void respond(lo_address address, const char* path, Targs... Fargs) {
+    template <typename... Targs> void respond(lo_address address, const char* path, Targs... Fargs) {
         lo_message message = lo_message_new();
         respond(address, path, message, Fargs...);
     }
@@ -80,6 +79,15 @@ public:
     template <typename... Targs>
     void respond(lo_address address, const char* path, lo_message message, double value, Targs... Fargs) {
         lo_message_add_double(message, value);
+        respond(address, path, message, Fargs...);
+    }
+    template <typename... Targs>
+    void respond(lo_address address, const char* path, lo_message message, bool value, Targs... Fargs) {
+        if (value) {
+            lo_message_add_true(message);
+        } else {
+            lo_message_add_false(message);
+        }
         respond(address, path, message, Fargs...);
     }
     // Base call, finishes the message and sends it on appropriate server thread.
@@ -107,6 +115,7 @@ private:
     static void loError(int number, const char* message, const char* path);
     static int loHandle(const char* path, const char* types, lo_arg** argv, int argc, lo_message message,
                         void* userData);
+    void dispatch(const char* path, int argc, lo_arg** argv, const char* types, lo_address address);
 
     std::shared_ptr<Logger> m_logger;
     std::shared_ptr<Async> m_async;

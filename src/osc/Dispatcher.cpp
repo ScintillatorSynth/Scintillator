@@ -136,20 +136,21 @@ void Dispatcher::callQuitHandler(lo_address quitOrigin) {
 }
 
 void Dispatcher::processMessageFrom(lo_address address, std::shared_ptr<uint8_t[]> data, uint32_t dataSize) {
+    // TODO: Internally this is how lo extracts address from an OSC message binary. Any way to make this safer?
     char* path = reinterpret_cast<char*>(data.get());
-    int pathLength = lo_validate_string(path, dataSize);
-    if (pathLength < 1) {
-        spdlog::error("Dispatcher failed to extract path from injected message data.");
-        return;
-    }
+    //    int pathLength = lo_validate_string(path, dataSize);
+    // if (pathLength < 0) {
+    //    spdlog::error("Dispatcher failed to extract path from injected message data.");
+    //    return;
+    //}
 
     lo_message message = lo_message_deserialise(data.get(), dataSize, nullptr);
     if (!message) {
         spdlog::error("Dispatcher failed to deserialize injected message.");
         return;
     }
-
-    Dispatcher::loHandle(path, 
+    dispatch(path, lo_message_get_argc(message), lo_message_get_argv(message), lo_message_get_types(message), address);
+    lo_message_free(message);
 }
 
 // static
@@ -161,28 +162,34 @@ void Dispatcher::loError(int number, const char* message, const char* path) {
 int Dispatcher::loHandle(const char* path, const char* types, lo_arg** argv, int argc, lo_message message,
                          void* userData) {
     Dispatcher* dispatcher = static_cast<Dispatcher*>(userData);
-    if (dispatcher->m_dumpOSC) {
+    lo_address address = lo_message_get_source(message);
+    dispatcher->dispatch(path, argc, argv, types, address);
+    return 0;
+}
+
+void Dispatcher::dispatch(const char* path, int argc, lo_arg** argv, const char* types, lo_address address) {
+    if (m_dumpOSC) {
         std::string osc = fmt::format("OSC: [ {}", path);
         for (int i = 0; i < argc; ++i) {
             switch (types[i]) {
-                case LO_INT32:
-                    osc += fmt::format(", {}", *reinterpret_cast<int32_t*>(argv[i]));
-                    break;
+            case LO_INT32:
+                osc += fmt::format(", {}", *reinterpret_cast<int32_t*>(argv[i]));
+                break;
 
-                case LO_FLOAT:
-                    osc += fmt::format(", {}", *reinterpret_cast<float*>(argv[i]));
-                    break;
+            case LO_FLOAT:
+                osc += fmt::format(", {}", *reinterpret_cast<float*>(argv[i]));
+                break;
 
-                case LO_STRING:
-                    osc += fmt::format(", {}", reinterpret_cast<const char*>(argv[i]));
-                    break;
+            case LO_STRING:
+                osc += fmt::format(", {}", reinterpret_cast<const char*>(argv[i]));
+                break;
 
-                case LO_BLOB:
-                    osc += std::string(", <binary blob>");
+            case LO_BLOB:
+                osc += std::string(", <binary blob>");
 
-                default:
-                    osc += fmt::format(", <unrecognized type {}>", types[i]);
-                    break;
+            default:
+                osc += fmt::format(", <unrecognized type {}>", types[i]);
+                break;
             }
         }
         osc += " ]";
@@ -196,18 +203,15 @@ int Dispatcher::loHandle(const char* path, const char* types, lo_arg** argv, int
     size_t length = std::strlen(path);
     if (length < kPrefixLength || std::strncmp(path, kPrefix, kPrefixLength) != 0) {
         spdlog::error("OSC command {} does not have {} prefix, is not a scinsynth command.", path, kPrefix);
-        return 0;
     }
 
     commands::Command::Number number = commands::Command::getNumberNamed(path + kPrefixLength, length - kPrefixLength);
 
-    if (!dispatcher->m_commands[number]) {
+    if (m_commands[number]) {
+        m_commands[number]->processMessage(argc, argv, types, address);
+    } else {
         spdlog::error("Received unsupported OSC command {}, number: {}", path, number);
-        return 0;
     }
-
-    dispatcher->m_commands[number]->processMessage(argc, argv, types, message);
-    return 0;
 }
 
 } // namespace osc

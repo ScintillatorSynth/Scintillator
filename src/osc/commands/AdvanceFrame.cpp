@@ -11,7 +11,7 @@ AdvanceFrame::AdvanceFrame(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 AdvanceFrame::~AdvanceFrame() {}
 
-void AdvanceFrame::processMessage(int argc, lo_arg** argv, const char* types, lo_message message) {
+void AdvanceFrame::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
     if (!m_dispatcher->offscreen() || !m_dispatcher->offscreen()->isSnapShotMode()) {
         spdlog::error("Advance Frame requested but scinsynth not in snap shot mode.");
         return;
@@ -23,7 +23,6 @@ void AdvanceFrame::processMessage(int argc, lo_arg** argv, const char* types, lo
     int32_t numerator = *reinterpret_cast<int32_t*>(argv[0]);
     int32_t denominator = *reinterpret_cast<int32_t*>(argv[1]);
     double dt = static_cast<double>(numerator) / static_cast<double>(denominator);
-    lo_address address = lo_message_get_source(message);
     m_dispatcher->offscreen()->advanceFrame(dt, [this, address](size_t frameNumber) {
         m_dispatcher->respond(address, "/scin_done", "/scin_nrt_advanceFrame");
     });

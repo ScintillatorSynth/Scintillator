@@ -8,8 +8,7 @@ LogLevel::LogLevel(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 LogLevel::~LogLevel() {}
 
-void LogLevel::processMessage(int argc, lo_arg** argv, const char* types, lo_message message) {
-}
+void LogLevel::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {}
 
 } // namespace commands
 } // namespace osc

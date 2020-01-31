@@ -8,7 +8,7 @@ Notify::Notify(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 Notify::~Notify() {}
 
-void Notify::processMessage(int argc, lo_arg** argv, const char* types, lo_message message) {
+void Notify::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
     // TBD rest of notification system.
 }
 

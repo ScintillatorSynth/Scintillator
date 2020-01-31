@@ -8,7 +8,7 @@ Sync::Sync(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 Sync::~Sync() {}
 
-void Sync::processMessage(int argc, lo_arg** argv, const char* types, lo_message message) {}
+void Sync::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {}
 
 } // namespace commands
 } // namespace osc

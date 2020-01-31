@@ -62,7 +62,7 @@ public:
      * \param argv A table of lo_arg data structures with the unpacked argument values.
      * \param types A string of length argc with type codes for each element.
      */
-    virtual void processMessage(int argc, lo_arg** argv, const char* types, lo_message message) = 0;
+    virtual void processMessage(int argc, lo_arg** argv, const char* types, lo_address address) = 0;
 
 protected:
     Dispatcher* m_dispatcher;

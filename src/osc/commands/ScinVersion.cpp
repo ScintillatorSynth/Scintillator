@@ -9,10 +9,9 @@ ScinVersion::ScinVersion(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 ScinVersion::~ScinVersion() {}
 
-void ScinVersion::processMessage(int argc, lo_arg** argv, const char* types, lo_message message) {
-    lo_address address = lo_message_get_source(message);
+void ScinVersion::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
     m_dispatcher->respond(address, "/scin_version.reply", "scinsynth", kScinVersionMajor, kScinVersionMinor,
-            kScinVersionPatch, kScinBranch, kScinCommitHash);
+                          kScinVersionPatch, kScinBranch, kScinCommitHash);
 }
 
 } // namespace commands

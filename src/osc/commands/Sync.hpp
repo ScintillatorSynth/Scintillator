@@ -10,7 +10,7 @@ public:
     Sync(osc::Dispatcher* dispatcher);
     virtual ~Sync();
 
-    void processMessage(int argc, lo_arg** argv, const char* types, lo_message message) override;
+    void processMessage(int argc, lo_arg** argv, const char* types, lo_address address) override;
 };
 
 } // namespace commands
