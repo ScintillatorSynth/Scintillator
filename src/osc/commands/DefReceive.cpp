@@ -24,7 +24,7 @@ void DefReceive::processMessage(int argc, lo_arg** argv, const char* types, lo_a
     std::shared_ptr<uint8_t[]> onCompletion;
     uint32_t completionMessageSize = 0;
     if (argc > 1 && types[1] == LO_BLOB) {
-        lo_blob blob = *reinterpret_cast<lo_blob*>(argv[1]);
+        lo_blob blob = reinterpret_cast<lo_blob>(argv[1]);
         completionMessageSize = std::min(lo_blob_datasize(blob), static_cast<uint32_t>(LO_MAX_MSG_SIZE));
         if (completionMessageSize > 0) {
             onCompletion.reset(new uint8_t[completionMessageSize]);

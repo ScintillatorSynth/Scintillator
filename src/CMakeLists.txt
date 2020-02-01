@@ -118,6 +118,8 @@ set(scintillator_synth_files
     osc/commands/DumpOSC.hpp
     osc/commands/Echo.cpp
     osc/commands/Echo.hpp
+    osc/commands/LogAppend.cpp
+    osc/commands/LogAppend.hpp
     osc/commands/LogLevel.cpp
     osc/commands/LogLevel.hpp
     osc/commands/NodeFree.cpp
@@ -134,6 +136,8 @@ set(scintillator_synth_files
     osc/commands/ScinthNew.hpp
     osc/commands/ScreenShot.cpp
     osc/commands/ScreenShot.hpp
+    osc/commands/SleepFor.cpp
+    osc/commands/SleepFor.hpp
     osc/commands/Status.cpp
     osc/commands/Status.hpp
     osc/commands/Sync.cpp
@@ -262,6 +266,13 @@ add_custom_target(compare_images
     DEPENDS test_images reference_images-update
     COMMAND ${PYTHON_EXECUTABLE} ../tools/compare-test-images.py "${PROJECT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/ref/src/reference_images" ${GIT_COMMIT_HASH} ${SCIN_TEST_IMAGE_HASH} "${PROJECT_BINARY_DIR}/report"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+    VERBATIM
+)
+
+add_custom_target(test_osc_commands
+    DEPENDS ${SCLANG_SCIN_CONFIG} scinsynth
+    COMMAND ${SCIN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/oscTest.scd" "${PROJECT_SOURCE_DIR}" ${PROJECT_VERSION_MAJOR} ${PROJECT_VERSION_MINOR} ${PROJECT_VERSION_PATCH} ${GIT_BRANCH} ${GIT_COMMIT_HASH}
+    COMMENT "testing OSC commands on scinsynth"
     VERBATIM
 )
 

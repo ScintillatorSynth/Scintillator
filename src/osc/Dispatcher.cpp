@@ -13,6 +13,7 @@
 #include "osc/commands/DefReceive.hpp"
 #include "osc/commands/DumpOSC.hpp"
 #include "osc/commands/Echo.hpp"
+#include "osc/commands/LogAppend.hpp"
 #include "osc/commands/LogLevel.hpp"
 #include "osc/commands/NodeFree.hpp"
 #include "osc/commands/NodeRun.hpp"
@@ -21,6 +22,7 @@
 #include "osc/commands/ScinVersion.hpp"
 #include "osc/commands/ScinthNew.hpp"
 #include "osc/commands/ScreenShot.hpp"
+#include "osc/commands/SleepFor.hpp"
 #include "osc/commands/Status.hpp"
 #include "osc/commands/Sync.hpp"
 #include "vulkan/FrameTimer.hpp"
@@ -82,7 +84,6 @@ bool Dispatcher::create(const std::string& bindPort, bool dumpOSC) {
     m_commands[commands::Command::kSync].reset(new commands::Sync(this));
     m_commands[commands::Command::kLogLevel].reset(new commands::LogLevel(this));
     m_commands[commands::Command::kVersion].reset(new commands::ScinVersion(this));
-    m_commands[commands::Command::kEcho].reset(new commands::Echo(this));
     m_commands[commands::Command::kDRecv].reset(new commands::DefReceive(this));
     m_commands[commands::Command::kDLoad].reset(new commands::DefLoad(this));
     m_commands[commands::Command::kDLoadDir].reset(new commands::DefLoadDir(this));
@@ -92,6 +93,9 @@ bool Dispatcher::create(const std::string& bindPort, bool dumpOSC) {
     m_commands[commands::Command::kSNew].reset(new commands::ScinthNew(this));
     m_commands[commands::Command::kNRTScreenShot].reset(new commands::ScreenShot(this));
     m_commands[commands::Command::kNRTAdvanceFrame].reset(new commands::AdvanceFrame(this));
+    m_commands[commands::Command::kEcho].reset(new commands::Echo(this));
+    m_commands[commands::Command::kLogAppend].reset(new commands::LogAppend(this));
+    m_commands[commands::Command::kSleepFor].reset(new commands::SleepFor(this));
 
     return true;
 }
@@ -191,6 +195,7 @@ void Dispatcher::dispatch(const char* path, int argc, lo_arg** argv, const char*
 
             case LO_BLOB:
                 osc += std::string(", <binary blob>");
+                break;
 
             default:
                 osc += fmt::format(", <unrecognized type {}>", types[i]);

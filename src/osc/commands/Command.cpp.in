@@ -18,7 +18,6 @@ dumpOSC,            scin::osc::commands::Command::Number::kDumpOSC
 sync,               scin::osc::commands::Command::Number::kSync
 logLevel,           scin::osc::commands::Command::Number::kLogLevel
 version,            scin::osc::commands::Command::Number::kVersion
-echo,               scin::osc::commands::Command::Number::kEcho
 d_recv,             scin::osc::commands::Command::Number::kDRecv
 d_load,             scin::osc::commands::Command::Number::kDLoad
 d_loadDir,          scin::osc::commands::Command::Number::kDLoadDir
@@ -28,6 +27,9 @@ n_run,              scin::osc::commands::Command::Number::kNRun
 s_new,              scin::osc::commands::Command::Number::kSNew
 nrt_screenShot,     scin::osc::commands::Command::Number::kNRTScreenShot
 nrt_advanceFrame,   scin::osc::commands::Command::Number::kNRTAdvanceFrame
+echo,               scin::osc::commands::Command::Number::kEcho
+logAppend,          scin::osc::commands::Command::Number::kLogAppend
+sleepFor,           scin::osc::commands::Command::Number::kSleepFor
 %%
 
 } // namespace

@@ -7,6 +7,8 @@
 #include "fmt/core.h"
 #include "spdlog/spdlog.h"
 
+#include <chrono>
+
 namespace scin {
 
 Async::Async(std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor):
@@ -80,6 +82,14 @@ void Async::scinthDefParseString(std::string yaml, std::function<void(int)> comp
     {
         std::lock_guard<std::mutex> lock(m_jobQueueMutex);
         m_jobQueue.emplace_back([this, yaml, completion]() { asyncScinthDefParseString(yaml, completion); });
+    }
+    m_jobQueueCondition.notify_one();
+}
+
+void Async::sleepFor(int seconds, std::function<void()> completion) {
+    {
+        std::lock_guard<std::mutex> lock(m_jobQueueMutex);
+        m_jobQueue.emplace_back([this, seconds, completion]() { asyncSleepFor(seconds, completion); });
     }
     m_jobQueueCondition.notify_one();
 }
@@ -265,6 +275,12 @@ void Async::asyncScinthDefParseString(std::string yaml, std::function<void(int)>
         m_compositor->buildScinthDef(scinthDef);
     }
     completion(scinthDefs.size());
+}
+
+void Async::asyncSleepFor(int seconds, std::function<void()> completion) {
+    spdlog::info("worker thread sleeping for {} seconds", seconds);
+    std::this_thread::sleep_for(std::chrono::seconds(seconds));
+    completion();
 }
 
 } // namespace scin

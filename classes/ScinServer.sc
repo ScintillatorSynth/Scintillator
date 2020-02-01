@@ -246,4 +246,6 @@ ScinServer {
 
 	serverRunning { ^statusPoller.serverRunning; }
 	serverBooting { ^statusPoller.serverBooting; }
+	numberOfWarnings { ^statusPoller.numberOfWarnings; }
+	numberOfErrors { ^statusPoller.numberOfErrors; }
 }
