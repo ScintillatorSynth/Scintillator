@@ -335,12 +335,12 @@ fork {
 		if (defCount == msg[3], {
 			valid = true;
 		});
-		c.test = true;
-		c.signal;
+		d.test = true;
+		d.signal;
 	}, '/scin_status.reply');
-	c.test = false;
+	d.test = false;
 	udp.sendMsg('/scin_status');
-	c.wait;
+	d.wait;
 
 	if (valid.not, {
 		"*** calling /scin_d_loadDir with invalid path caused change in def count.".postln;
@@ -349,10 +349,12 @@ fork {
 
 	// Loading testDefPath should add one new def (t3) to the defs.
 	c.test = false;
+	d.test = false;
 	valid = false;
 	defCount = defCount + 1;
 	udp.sendMsg('/scin_d_loadDir', testDefPath, ['/scin_status']);
 	c.wait;
+	d.wait;
 	if (valid.not, {
 		"*** calling /scin_d_loadDir on % resulted in incorrect def count".format(testDefPath).postln;
 		1.exit;
