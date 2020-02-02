@@ -149,6 +149,7 @@ fork {
 
 	// Now put a few workers to sleep and wait for sync again.
 	c.test = false;
+	d.test = false;
 	valid = false;
 	response = OSCFunc.new({ |msg|
 		if (msg[1] == 19, {
@@ -159,14 +160,28 @@ fork {
 	}, '/scin_synced').oneShot;
 	awakeCount = 0;
 	awakeFunc = OSCFunc.new({ |msg|
+		if (awakeCount == 0, {
+			d.test = true;
+			d.signal;
+		});
 		awakeCount = awakeCount + 1;
+		if (awakeCount == 10, {
+			d.test = true;
+			d.signal;
+		});
 	}, '/scin_awake');
-	5.do({
+	10.do({
 		udp.sendMsg('/scin_sleepFor', 1);
 	});
+	// Wait until we've gotten at least one of the awakes back, to break
+	// the race of the scin_sync being processed before any of sleeps are
+	// enqueued.
+	d.wait;
+	d.test = false;
 	udp.sendMsg('/scin_sync', 19);
 	c.wait;
-	if (valid.not or: { awakeCount != 5 }, {
+	d.wait;
+	if (valid.not or: { awakeCount != 10 }, {
 		"*** /scin_sync test on busy queue failed!".postln;
 		"expected 5 dones, got back %".format(awakeCount).postln;
 		1.exit;
