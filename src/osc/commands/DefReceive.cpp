@@ -2,6 +2,7 @@
 
 #include "Async.hpp"
 #include "osc/Address.hpp"
+#include "osc/BlobMessage.hpp"
 #include "osc/Dispatcher.hpp"
 
 #include "spdlog/spdlog.h"
@@ -22,20 +23,19 @@ void DefReceive::processMessage(int argc, lo_arg** argv, const char* types, lo_a
         return;
     }
     std::string yaml(reinterpret_cast<const char*>(argv[0]));
-    std::shared_ptr<uint8_t[]> onCompletion;
-    uint32_t completionMessageSize = 0;
+    std::shared_ptr<BlobMessage> onCompletion;
     if (argc > 1 && types[1] == LO_BLOB) {
-        lo_blob blob = reinterpret_cast<lo_blob>(argv[1]);
-        completionMessageSize = std::min(lo_blob_datasize(blob), static_cast<uint32_t>(LO_MAX_MSG_SIZE));
-        if (completionMessageSize > 0) {
-            onCompletion.reset(new uint8_t[completionMessageSize]);
-            std::memcpy(onCompletion.get(), lo_blob_dataptr(blob), completionMessageSize);
+        onCompletion.reset(new BlobMessage());
+        if (!onCompletion->extract(reinterpret_cast<lo_blob>(argv[1]))) {
+            spdlog::error("OSC DefReceive failed to extract blob message argument.");
+            m_dispatcher->respond(address, "/scin_done");
+            return;
         }
     }
     std::shared_ptr<Address> origin(new Address(address));
-    m_dispatcher->async()->scinthDefParseString(yaml, [this, origin, completionMessageSize, onCompletion](bool) {
+    m_dispatcher->async()->scinthDefParseString(yaml, [this, origin, onCompletion](bool) {
         if (onCompletion) {
-            m_dispatcher->processMessageFrom(origin->get(), onCompletion, completionMessageSize);
+            m_dispatcher->processMessageFrom(origin->get(), onCompletion);
         }
         m_dispatcher->respond(origin->get(), "/scin_done");
     });

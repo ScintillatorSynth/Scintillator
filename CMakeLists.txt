@@ -22,11 +22,11 @@ endif()
 # project. This version is manually kept in sync and should be updated to match. Both C++ and sclang Scintillator code
 # is developed in parallel, and is designed to be released together.
 project(Scintillator VERSION 0.0.1 LANGUAGES C CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED)
 
 option(SCIN_BUILD_DOCS
     "Add docs build target to build C++ documentation with Doxygen" ON)
-option(SCIN_USE_OWN_VULKAN
-    "Use the Vulkan built from third_party/vulkan-dev instead of system-installed Vulkan SDK" OFF)
 
 # If this is a git checkout we can extract the git hash and branch. This code copied verbatim or close to it from the
 # SuperCollider CMake files.
@@ -58,6 +58,8 @@ set(CMAKE_CXX_FLAGS_COVERAGE
 set(CMAKE_C_FLAGS_COVERAGE
     "${CMAKE_C_FLAGS_DEBUG} -fprofile-instr-generate -fcoverage-mapping"
     CACHE STRING "C coverage compile flags" FORCE)
+
+find_package(Vulkan REQUIRED FATAL_ERROR)
 
 add_subdirectory(third_party)
 add_subdirectory(src)
