@@ -33,7 +33,7 @@ options.height = 200;
 options.dumpOSC = true;
 binPath = quarkPath +/+ "build/src/scinsynth";
 fork {
-	var commandLine, scinPid, udp, c, valid, response;
+	var commandLine, scinPid, udp, c, d, valid, response;
 	var gotFrameRate, numWarn, numError, gotWarn, gotError;
 	var awakeCount, awakeFunc;
 	var testDef, defCount, callbackFunc;
@@ -55,6 +55,7 @@ fork {
 	// We'll poll until we get a response.
 	udp = NetAddr.new("127.0.0.1", options.portNumber);
 	c = Condition.new;
+	d = Condition.new;
 	c.test = false;
 	fork {
 		var booted = false;
@@ -250,6 +251,7 @@ fork {
 	});
 
 	c.test = false;
+	d.test = false;
 	valid = false;
 	testDef = ScinthDef.new(\t, { BWOut.fg(1.0); });
 	response = OSCFunc.new({ |msg|
@@ -260,10 +262,13 @@ fork {
 		if (defCount == msg[3], {
 			valid = true;
 		});
+		d.test = true;
+		d.signal;
 	}, '/scin_status.reply').oneShot;
 	defCount = defCount + 1;
 	udp.sendMsg('/scin_d_recv', testDef.asYAML, ['/scin_status']);
 	c.wait;
+	d.wait;
 	if (valid.not, {
 		"*** /scin_d_recv status def count not received or incorrect.".postln;
 		1.exit;
@@ -297,15 +302,19 @@ fork {
 
 	// Valid YAML file.
 	c.test = false;
+	d.test = false;
 	valid = false;
 	callbackFunc = OSCFunc.new({ |msg|
 		if (defCount == msg[3], {
 			valid = true;
 		});
+		d.test = true;
+		d.signal;
 	}, '/scin_status.reply').oneShot;
 	defCount = defCount + 2;
 	udp.sendMsg('/scin_d_load', testDefPath +/+ "t1-2.yaml", ['/scin_status']);
 	c.wait;
+	d.wait;
 	response.free;
 	if (valid.not, {
 		"*** /scin_d_load got incorrect def count back.".postln;
