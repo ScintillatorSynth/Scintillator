@@ -1,5 +1,6 @@
 ScinServerStatusPoller {
 	var scinServer;
+	var pingPeriod;
 	var statusReplyFunc;
 	var shouldStop;
 	var pingTask;
@@ -20,16 +21,17 @@ ScinServerStatusPoller {
 	var <meanFrameRate;
 	var <numberOfDroppedFrames;
 
-	*new { |scinServer|
-		^super.newCopyArgs(scinServer).init;
+	*new { |scinServer, pingPeriod=1.0|
+		^super.newCopyArgs(scinServer, pingPeriod).init;
 	}
 
 	init {
 		bootCallbacks = List.new;
 		serverRunning = false;
 		serverBooting = false;
+		lastPingReceived = false;
 		statusReplyFunc = OSCFunc.new({ |msg, time, addr|
-			lastPingReceived = time;
+			lastPingReceived = true;
 			numberOfScinths = msg[1];
 			numberOfGroups = msg[2];
 			numberOfScinthDefs = msg[3];
@@ -46,7 +48,7 @@ ScinServerStatusPoller {
 		shouldStop = false;
 		pingTask = SkipJack.new({
 			var now = Main.elapsedTime;
-			if (lastPingReceived.notNil and: { now - lastPingReceived < 1.0 }, {
+			if (lastPingReceived, {
 				if (serverRunning.not, {
 					serverRunning = true;
 					serverBooting = false;
@@ -58,9 +60,10 @@ ScinServerStatusPoller {
 					this.prOnRunningStop;
 				});
 			});
+			lastPingReceived = false;
 			scinServer.sendMsg('/scin_status');
 		},
-		dt: 0.5,
+		dt: pingPeriod,
 		stopTest: { shouldStop },
 		name: "ScinServerStatusPoller");
 	}

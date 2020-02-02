@@ -15,11 +15,11 @@ VGen : AbstractFunction {
 		^super.new.rate_(rate).addToScinth.init(*args);
 	}
 
-	*multiNew { | ... args |
+	*multiNew { |... args|
 		^this.multiNewList(args)
 	}
 
-	*multiNewList { | argList |
+	*multiNewList { |argList|
 		var size = 0, newArgList, results;
 
 		// Flatten AbstractFunction descendants in argument list to VGens.
@@ -57,11 +57,11 @@ VGen : AbstractFunction {
 		inputs = theInputs;
 	}
 
-	composeUnaryOp { | selector |
+	composeUnaryOp { |selector|
 		^UnaryOpVGen.new(selector, this);
 	}
 
-	composeBinaryOp { | selector, input |
+	composeBinaryOp { |selector, input|
 		if (input.isValidVGenInput, {
 			^BinaryOpVGen.new(selector, this, input);
 		}, {
@@ -69,11 +69,11 @@ VGen : AbstractFunction {
 		});
 	}
 
-	reverseComposeBinaryOp { | selector, something, adverb |
-		^thisMethod.notYetImplemented;
+	reverseComposeBinaryOp { |selector, vgen|
+		^BinaryOpVGen.new(selector, vgen, this);
 	}
 
-	composeNAryOp {  | selector, argList |
+	composeNAryOp {  |selector, argList|
 		^thisMethod.notYetImplemented;
 	}
 
@@ -89,10 +89,6 @@ VGen : AbstractFunction {
 	isVGen { ^true }
 	name { ^this.class.asString }
 	numOutputs { this.outputDimensions.length }
-
-	madd { | mul = 1.0, add = 0.0 |
-		^VMulAdd.new(this, mul, add);
-	}
 
 	inputDimensions {
 		^[];
@@ -118,6 +114,9 @@ VGen : AbstractFunction {
 	}
 
 	isValidVGenInput { ^true }
+
+	// could add some additional interesting ops ugens here, thinking
+	// .dot, .cross, etc.
 }
 
 + Array {

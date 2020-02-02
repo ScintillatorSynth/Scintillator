@@ -2,7 +2,8 @@ ScinServerOptions {
 	classvar defaultValues;
 
 	var <>quarkPath;
-	var <>udpPortNumber;
+	var <>portNumber;
+	var <>dumpOSC;
 	var <>frameRate;
 	var <>createWindow;
 	var <>logLevel;
@@ -18,7 +19,8 @@ ScinServerOptions {
 		defaultValues = IdentityDictionary.newFrom(
 			(
 				quarkPath: nil,
-				udpPortNumber: 5511,
+				portNumber: 5511,
+				dumpOSC: false,
 				frameRate: -1,
 				createWindow: true,
 				logLevel: 3,
@@ -41,8 +43,11 @@ ScinServerOptions {
 
 	asOptionsString {
 		var o = "--quark_dir=" ++ quarkPath;
-		if (udpPortNumber != defaultValues[\udpPortNumber], {
-			o = o + "--udp_port_number=" ++ udpPortNumber;
+		if (portNumber != defaultValues[\portNumber], {
+			o = o + "--port_number=" ++ portNumber;
+		});
+		if (dumpOSC != defaultValues[\dumpOSC], {
+			o = o + "--dump_osc=" ++ dumpOSC;
 		});
 		if (frameRate != defaultValues[\frameRate], {
 			o = o + "--frame_rate=" ++ frameRate;
@@ -124,7 +129,7 @@ ScinServer {
 		if (ScinServer.default.isNil, {
 			ScinServer.default = this;
 		});
-		addr = NetAddr.new("127.0.0.1", options.udpPortNumber);
+		addr = NetAddr.new("127.0.0.1", options.portNumber);
 		^this;
 	}
 
@@ -212,12 +217,14 @@ ScinServer {
 		condition.test = false;
 		id = UniqueID.next;
 		response = OSCFunc.new({ |msg|
+			"got sync: %".format(msg[1]).postln;
 			if (msg[1] == id, {
 				response.free;
 				condition.test = true;
 				condition.signal;
 			});
 		}, '/scin_synced');
+		"sending sync: %".format(id).postln;
 		this.sendMsg('/scin_sync', id);
 		condition.wait;
 	}
@@ -239,4 +246,6 @@ ScinServer {
 
 	serverRunning { ^statusPoller.serverRunning; }
 	serverBooting { ^statusPoller.serverBooting; }
+	numberOfWarnings { ^statusPoller.numberOfWarnings; }
+	numberOfErrors { ^statusPoller.numberOfErrors; }
 }

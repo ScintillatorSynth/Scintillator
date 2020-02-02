@@ -8,6 +8,8 @@ While the SuperCollider synth programs support a variety of connection modalitie
 
 In general Scintillator attempts to follow a similar command list and structure to that of the SuperCollider sound synthesis servers, with the addition of a code::/scin_:: prefix to each OSC command and response.
 
+Some commands are marked as strong::asynchronous::, which in this context means they will send a response message back to the sender, sometimes strong::/scin_done::, upon completion of the command. For any command marked as asynchronous Scintillator is designed to always return a message, even if the execution of the command failed or the message body didn't parse.
+
 section::Master Controls
 
 subsection::/scin_quit
@@ -35,8 +37,6 @@ definitionlist::
 ## strong::double:: || computed mean framerate.
 ## strong::int:: || number of dropped frames, if running real time, 0 otherwise.
 ::
-
-note:: teletype::/status:: messages won't be posted, if the server is in teletype::/dumpOSC:: mode::
 ::
 
 subsection::/scin_dumpOSC
@@ -229,3 +229,43 @@ definitionlist::
 ## Asynchronous. || Replies to sender with strong::/scin_done:: followed by strong::/scin_nrt_advanceFrame::.
 ::
 
+section::Testing Commands
+
+Commands useful for accessing diagnostic functions or automated validation of scinsynth behavior.
+
+subsection::/scin_echo
+
+Respond back to the caller with the provided message.
+
+table::
+## strong::bytes:: || An OSC message to respond to the caller with.
+::
+
+definitionList::
+## Asynchronous. || Replies to the sender immediately with the provided message blob.
+::
+
+subsection::/scin_logAppend
+
+Add the supplied string to the logs at the supplied level.
+
+table::
+## strong::int:: || A log level, from 0-6, to associate with this log entry. See the table in strong::/scin_logLevel:: for the log levels.
+## strong::string:: || The string to place in the logs.
+::
+
+subsection::/scin_sleepFor
+
+Puts one of the asynchronous worker threads to sleep for the specified number of seconds.
+
+table::
+## strong::int:: || The number of seconds to sleep for.
+::
+
+note::
+This will tie up one of the available threads on the server, and is therefore not recommended for use in a performance or recording context.
+::
+
+definitionList::
+## Asynchronous. || Replies to the sender on wakeup with strong::/scin_awake::.
+::

@@ -3,7 +3,7 @@ set(SCIN_EXT_INSTALL_DIR "${PROJECT_BINARY_DIR}/install-ext" CACHE PATH "Scintal
 file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}")
 file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d")
 
-#### Swiftshader (Linux-only Vulkan software renderer)
+#### Swiftshader software renderer
 # See https://github.com/google/amber/issues/754 for discussion of shared linker flag.
 # TODO(43): figure out why non-Debug builds crash on Pipeline creation.
 ExternalProject_Add(swiftshader
@@ -24,6 +24,19 @@ add_custom_target(swiftshader-local
     COMMENT "installing swiftshader in $ENV{HOME}/.local/share/vulkan/icd.d"
     DEPENDS swiftshader-install
     VERBATIM
+)
+
+#### liblo
+ExternalProject_Add(liblo
+    PREFIX ext
+    STEP_TARGETS install
+    EXCLUDE_FROM_ALL ON
+    GIT_REPOSITORY https://github.com/radarsat1/liblo.git
+    GIT_TAG master
+    GIT_PROGRESS ON
+    UPDATE_COMMAND ""
+    CMAKE_ARGS -DWITH_TOOLS=OFF -DWITH_TESTS=OFF -DWITH_EXAMPLES=OFF -DWITH_CPP_TESTS=OFF -DWITH_STATIC=ON -DWITH_THREADING=ON -DCMAKE_INSTALL_PREFIX=${SCIN_EXT_INSTALL_DIR}
+    SOURCE_SUBDIR cmake
 )
 
 #### fmt
@@ -54,11 +67,6 @@ target_include_directories(VulkanMemoryAllocator INTERFACE VulkanMemoryAllocator
 
 #### googletest
 add_subdirectory(googletest)
-
-#### oscpack
-include_directories(oscpack_1_1_0)
-add_library(oscpack STATIC "OSCPackBuild.cpp")
-target_include_directories(oscpack INTERFACE oscpack_1_1_0)
 
 #### yaml-cpp
 add_subdirectory(yaml-cpp)

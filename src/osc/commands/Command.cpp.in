@@ -1,0 +1,56 @@
+%{
+// Generated file, please edit original file at src/osc/commands/Command.cpp.in
+#include "osc/commands/Command.hpp"
+
+#include <cstring>
+
+namespace {
+
+%}
+%language=C++
+%struct-type
+struct CommandPair { const char* name; scin::osc::commands::Command::Number number; };
+%%
+notify,             scin::osc::commands::Command::Number::kNotify
+status,             scin::osc::commands::Command::Number::kStatus
+quit,               scin::osc::commands::Command::Number::kQuit
+dumpOSC,            scin::osc::commands::Command::Number::kDumpOSC
+sync,               scin::osc::commands::Command::Number::kSync
+logLevel,           scin::osc::commands::Command::Number::kLogLevel
+version,            scin::osc::commands::Command::Number::kVersion
+d_recv,             scin::osc::commands::Command::Number::kDRecv
+d_load,             scin::osc::commands::Command::Number::kDLoad
+d_loadDir,          scin::osc::commands::Command::Number::kDLoadDir
+d_free,             scin::osc::commands::Command::Number::kDFree
+n_free,             scin::osc::commands::Command::Number::kNFree
+n_run,              scin::osc::commands::Command::Number::kNRun
+s_new,              scin::osc::commands::Command::Number::kSNew
+nrt_screenShot,     scin::osc::commands::Command::Number::kNRTScreenShot
+nrt_advanceFrame,   scin::osc::commands::Command::Number::kNRTAdvanceFrame
+echo,               scin::osc::commands::Command::Number::kEcho
+logAppend,          scin::osc::commands::Command::Number::kLogAppend
+sleepFor,           scin::osc::commands::Command::Number::kSleepFor
+%%
+
+} // namespace
+
+namespace scin { namespace osc { namespace commands {
+
+// static
+Command::Number Command::getNumberNamed(const char* name, size_t length) {
+    const CommandPair* pair = Perfect_Hash::in_word_set(name, length);
+    if (!pair) {
+        return Command::Number::kNone;
+    }
+    return pair->number;
+}
+
+Command::Command(Dispatcher* dispatcher): m_dispatcher(dispatcher) { }
+
+Command::~Command() {}
+
+} // namespace commands
+
+} // namespace osc
+
+} // namespace scin

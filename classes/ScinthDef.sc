@@ -4,11 +4,11 @@ ScinthDef {
 	var <>children;
 	var <>defServer;
 
-	*new { | name, vGenGraphFunc |
+	*new { |name, vGenGraphFunc|
 		^super.newCopyArgs(name.asSymbol).children_(Array.new(64)).build(vGenGraphFunc);
 	}
 
-	build { | vGenGraphFunc |
+	build { |vGenGraphFunc|
 		VGen.buildScinthDef = this;
 		func = vGenGraphFunc;
 		func.valueArray();

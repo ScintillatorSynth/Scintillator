@@ -80,6 +80,12 @@ public:
      */
     void scinthDefParseString(std::string yaml, std::function<void(int)> completion);
 
+    /*! Puts on of the async worker threads to sleep for the provided number of seconds. Useful for testing.
+     *
+     * \param seconds The number of seconds to sleep for.
+     */
+    void sleepFor(int seconds, std::function<void()> completion);
+
 private:
     void workerThreadMain(std::string threadName);
     void syncThreadMain();
@@ -89,6 +95,8 @@ private:
     void asyncScinthDefLoadDirectory(fs::path path, std::function<void(int)> completion);
     void asyncScinthDefLoadFile(fs::path path, std::function<void(int)> completion);
     void asyncScinthDefParseString(std::string yaml, std::function<void(int)> completion);
+
+    void asyncSleepFor(int seconds, std::function<void()> completion);
 
     std::shared_ptr<core::Archetypes> m_archetypes;
     std::shared_ptr<Compositor> m_compositor;

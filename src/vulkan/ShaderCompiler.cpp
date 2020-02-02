@@ -24,7 +24,6 @@ void ShaderCompiler::releaseCompiler() {
     }
 }
 
-// TODO: this may not be multi threading well. May need a mutex to protect.
 std::unique_ptr<Shader> ShaderCompiler::compile(std::shared_ptr<Device> device, const std::string& source,
                                                 const std::string& name, const std::string& entryPoint,
                                                 Shader::Kind kind) {
@@ -67,7 +66,12 @@ std::unique_ptr<Shader> ShaderCompiler::compile(std::shared_ptr<Device> device, 
             spdlog::error("error creating shader from compiled source {}.", name);
             shader.reset(nullptr);
         } else {
-            spdlog::info("successfully compiled shader source {}.", name);
+            if (shaderc_result_get_num_warnings(result)) {
+                spdlog::warn("shaderc compiled but returned some warnings for source {}: {}.", name,
+                             shaderc_result_get_error_message(result));
+            } else {
+                spdlog::info("successfully compiled shader source {}.", name);
+            }
         }
     } else {
         spdlog::error("error compiling shader {}: {}", name, shaderc_result_get_error_message(result));

@@ -34,8 +34,7 @@ Offscreen::Offscreen(std::shared_ptr<Device> device, int width, int height, int 
     m_swapBlitRequested(false),
     m_swapchainImageIndex(0),
     m_frameRate(frameRate),
-    m_deltaTime(0),
-    m_flushCallback([](size_t) {}) {
+    m_deltaTime(0) {
     if (frameRate > 0) {
         m_deltaTime = 1.0 / static_cast<double>(frameRate);
         m_snapShotMode = false;
@@ -184,11 +183,11 @@ void Offscreen::advanceFrame(double dt, std::function<void(size_t)> callback) {
     }
 
     {
+        std::lock_guard<std::mutex> lock(m_renderMutex);
         if (m_render) {
-            spdlog::error("Offscreen detects snapshot render already requested");
+            spdlog::warn("Offscreen detects snapshot render already requested, ignoring");
             return;
         }
-        std::lock_guard<std::mutex> lock(m_renderMutex);
         m_deltaTime = dt;
         m_flushCallback = callback;
         m_render = true;
@@ -236,6 +235,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
         bool render = false;
         bool swapBlit = false;
         uint32_t swapImageIndex = 0;
+        std::function<void(size_t)> flushCallback;
 
         {
             std::unique_lock<std::mutex> lock(m_renderMutex);
@@ -259,6 +259,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
                 m_render = false;
                 flush = true;
                 m_deltaTime = 0.0;
+                flushCallback = m_flushCallback;
             }
         }
 
@@ -325,6 +326,9 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
         if (flush) {
             m_renderSync->waitForFrame(frameIndex);
             processPendingEncodes(frameIndex);
+            if (flushCallback) {
+                m_flushCallback(frameNumber);
+            }
         }
 
         time += deltaTime;

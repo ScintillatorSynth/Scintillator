@@ -1,11 +1,11 @@
 #include "Async.hpp" // TODO: audit includes
 #include "Compositor.hpp"
 #include "Logger.hpp"
-#include "OscHandler.hpp"
 #include "Version.hpp"
 #include "av/AVIncludes.hpp"
 #include "core/Archetypes.hpp"
 #include "core/FileSystem.hpp"
+#include "osc/Dispatcher.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
@@ -33,8 +33,10 @@
 // Command-line options specified to gflags.
 DEFINE_bool(print_version, false, "Print the Scintillator version and exit.");
 DEFINE_bool(print_devices, false, "Print the detected devices and exit.");
-DEFINE_int32(udp_port_number, 5511, "A port number 1024-65535.");
-DEFINE_string(bind_to_address, "127.0.0.1", "Bind the UDP socket to this address.");
+DEFINE_string(port_number, "5511", "A port number 1024-65535.");
+DEFINE_bool(dump_osc, false, "Start dumping OSC messages immediately on bootup.");
+// TODO: find a way to get liblo to bind less widely.
+// DEFINE_string(bind_to_address, "127.0.0.1", "Bind the UDP socket to this address.");
 
 DEFINE_int32(log_level, 3,
              "Verbosity of logs, lowest value of 0 logs everything, highest value of 6 disables all "
@@ -73,10 +75,6 @@ int main(int argc, char* argv[]) {
     if (FLAGS_print_version) {
         fmt::print(version);
         return EXIT_SUCCESS;
-    }
-    if (FLAGS_udp_port_number < 1024 || FLAGS_udp_port_number > 65535) {
-        fmt::print("scinsynth requires a UDP port number between 1024 and 65535. Specify with --udp_port_number");
-        return EXIT_FAILURE;
     }
     if (!fs::exists(FLAGS_quark_dir)) {
         fmt::print("invalid or nonexistent path {} supplied for --quark_dir, terminating.", FLAGS_quark_dir);
@@ -210,17 +208,19 @@ int main(int argc, char* argv[]) {
                                       [](int) { spdlog::info("finished loading predefined VGens and ScinthDefs."); });
     });
 
-    // Start listening for incoming OSC commands on UDP.
-    scin::OscHandler oscHandler(FLAGS_bind_to_address, FLAGS_udp_port_number);
     std::function<void()> quitHandler;
     if (FLAGS_create_window) {
         quitHandler = [window] { window->stop(); };
     } else {
         quitHandler = [offscreen] { offscreen->stop(); };
     }
-
-    if (!oscHandler.run(logger, async, archetypes, compositor, offscreen, frameTimer, quitHandler)) {
-        spdlog::error("failed starting OSC communications thread.");
+    scin::osc::Dispatcher dispatcher(logger, async, archetypes, compositor, offscreen, frameTimer, quitHandler);
+    if (!dispatcher.create(FLAGS_port_number, FLAGS_dump_osc)) {
+        spdlog::error("Failed creating OSC command dispatcher.");
+        return EXIT_FAILURE;
+    }
+    if (!dispatcher.run()) {
+        spdlog::error("Failed starting OSC communications threads.");
         return EXIT_FAILURE;
     }
 
@@ -245,7 +245,8 @@ int main(int argc, char* argv[]) {
     // ========== glfw cleanup.
     glfwTerminate();
 
-    oscHandler.shutdown();
+    dispatcher.stop();
+    dispatcher.destroy();
 
     spdlog::info("scinsynth exited normally.");
     return EXIT_SUCCESS;
