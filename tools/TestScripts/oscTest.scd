@@ -301,15 +301,19 @@ fork {
 
 	// Empty YAML file.
 	c.test = false;
+	d.test = false;
 	valid = false;
 	testDefPath = quarkPath +/+ "tools" +/+ "TestScripts" +/+ "testDefs";
 	callbackFunc = OSCFunc.new({ |msg|
 		if (msg[1] == 'xx', {
 			valid = true;
 		});
+		d.test = true;
+		d.signal;
 	}, '/bounceBack').oneShot;
 	udp.sendMsg('/scin_d_load', testDefPath +/+ "emptyYAML.yaml",  ['/scin_echo', ['/bounceBack', "xx"].asRawOSC]);
 	c.wait;
+	d.wait;
 	if (valid.not, {
 		"*** /scin_d_load echo back not received.".postln;
 		1.exit;

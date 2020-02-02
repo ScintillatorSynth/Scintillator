@@ -227,6 +227,50 @@ add_custom_target(formatall
     VERBATIM
 )
 
+#### Code Coverage Computation
+if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
+    if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        message(FATAL_ERROR "Scintillator code coverage analysis requires Clang to build")
+    endif()
+
+    if(NOT DEFINED LLVM_PROFDATA)
+        set(LLVM_PROFDATA llvm-profdata)
+    endif()
+    if (NOT DEFINED LLVM_COV)
+        set(LLVM_COV llvm-cov)
+    endif()
+
+    set(SCIN_TEST_IMAGES_ENV "LLVM_PROFILE_FILE=scin_test_images.profraw")
+    set(SCIN_TEST_OSC_ENV "LLVM_PROFILE_FILE=scin_test_osc.profraw")
+
+    add_custom_command(OUTPUT scinsynth_coverage.profdata
+        COMMAND ${CMAKE_COMMAND} -E env "LLVM_PROFILE_FILE=run_unittests.profraw" ./run_unittests
+        COMMAND ${LLVM_PROFDATA} merge -sparse run_unittests.profraw scin_test_images.profraw scin_test_osc.profraw -o scinsynth_coverage.profdata
+        DEPENDS run_unittests compare_images test_osc_commands ${SCLANG_SCIN_CONFIG}
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        COMMENT "collecting test coverage data."
+        VERBATIM
+    )
+    add_custom_command(OUTPUT scinsynth_coverage.json
+        DEPENDS scinsynth_coverage.profdata
+        COMMAND ${LLVM_COV} export -object run_unittests -object scinsynth -instr-profile=scinsynth_coverage.profdata -summary-only > scinsynth_coverage_raw.json
+        COMMAND ${PYTHON_EXECUTABLE} ../../tools/filter-coverage-report.py scinsynth_coverage_raw.json "${CMAKE_CURRENT_SOURCE_DIR}" ${GIT_COMMIT_HASH} scinsynth_coverage.json
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        COMMENT "summarizing coverage data."
+        VERBATIM
+    )
+    add_custom_target(coverage_report
+        DEPENDS scinsynth_coverage.json
+        COMMAND ${LLVM_COV} report -object scinsynth -object run_unittests -instr-profile=scinsynth_coverage.profdata
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        VERBATIM
+    )
+else()
+    set(SCIN_TEST_IMAGES_ENV "")
+    set(SCIN_TEST_OSC_ENV "")
+endif()
+
+
 #### Integration Testing
 file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/testing")
 
@@ -242,10 +286,9 @@ add_custom_command(OUTPUT ${SCLANG_SCIN_CONFIG}
     VERBATIM
 )
 
-set(SCIN_MAKE_TEST_IMAGES ${SCIN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/makeTestImages.scd" "${PROJECT_SOURCE_DIR}")
 add_custom_target(test_images
     DEPENDS ${SCLANG_SCIN_CONFIG} scinsynth
-    COMMAND ${SCIN_MAKE_TEST_IMAGES}
+    COMMAND  ${SCIN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/makeTestImages.scd" "${PROJECT_SOURCE_DIR}" ${SCIN_TEST_IMAGES_ENV}
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     VERBATIM
 )
@@ -270,50 +313,12 @@ add_custom_target(compare_images
 )
 
 add_custom_target(test_osc_commands
-    DEPENDS ${SCLANG_SCIN_CONFIG} scinsynth
-    COMMAND ${SCIN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/oscTest.scd" "${PROJECT_SOURCE_DIR}" ${PROJECT_VERSION_MAJOR} ${PROJECT_VERSION_MINOR} ${PROJECT_VERSION_PATCH} ${GIT_BRANCH} ${GIT_COMMIT_HASH}
+    # Artificial dependency to force serialization of the two integration tests during coverage build.
+    DEPENDS compare_images
+    COMMAND ${SCIN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/oscTest.scd" "${PROJECT_SOURCE_DIR}" ${PROJECT_VERSION_MAJOR} ${PROJECT_VERSION_MINOR} ${PROJECT_VERSION_PATCH} ${GIT_BRANCH} ${GIT_COMMIT_HASH} ${SCIN_TEST_OSC_ENV}
     COMMENT "testing OSC commands on scinsynth"
     VERBATIM
 )
-
-#### Code Coverage Computation
-if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
-    if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        message(FATAL_ERROR "Scintillator code coverage analysis requires Clang to build")
-    endif()
-
-    if(NOT DEFINED LLVM_PROFDATA)
-        set(LLVM_PROFDATA llvm-profdata)
-    endif()
-    if (NOT DEFINED LLVM_COV)
-        set(LLVM_COV llvm-cov)
-    endif()
-
-    add_custom_command(OUTPUT scinsynth_coverage.profdata
-        COMMAND rm -f scinsynth_coverage.profdata run_unittests.profraw scin_test_images.profraw
-        COMMAND ${CMAKE_COMMAND} -E env "LLVM_PROFILE_FILE=run_unittests.profraw" ./run_unittests
-        COMMAND ${SCIN_MAKE_TEST_IMAGES} "LLVM_PROFILE_FILE=scin_test_images.profraw"
-        COMMAND ${LLVM_PROFDATA} merge -sparse run_unittests.profraw scin_test_images.profraw -o scinsynth_coverage.profdata
-        DEPENDS run_unittests scinsynth ${SCLANG_SCIN_CONFIG}
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-        COMMENT "collecting test coverage data."
-        VERBATIM
-    )
-    add_custom_command(OUTPUT scinsynth_coverage.json
-        DEPENDS scinsynth_coverage.profdata
-        COMMAND ${LLVM_COV} export -object run_unittests -object scinsynth -instr-profile=scinsynth_coverage.profdata -summary-only > scinsynth_coverage_raw.json
-        COMMAND ${PYTHON_EXECUTABLE} ../../tools/filter-coverage-report.py scinsynth_coverage_raw.json "${CMAKE_CURRENT_SOURCE_DIR}" ${GIT_COMMIT_HASH} scinsynth_coverage.json
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-        COMMENT "summarizing coverage data."
-        VERBATIM
-    )
-    add_custom_target(coverage_report
-        DEPENDS scinsynth_coverage.json
-        COMMAND ${LLVM_COV} report -object scinsynth -object run_unittests -instr-profile=scinsynth_coverage.profdata
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-        VERBATIM
-    )
-endif()
 
 #### Doxygen Documentation
 if (SCIN_BUILD_DOCS)
