@@ -104,7 +104,7 @@ ScinServer {
             scinQuarkVersion = "unknown";
         });
 
-        scinBinaryPath = options.quarkPath +/+ "build/src/scinsynth";
+		scinBinaryPath = options.quarkPath +/+ "bin" +/+ "scinsynth";
 		statusPoller = ScinServerStatusPoller.new(this);
 	}
 

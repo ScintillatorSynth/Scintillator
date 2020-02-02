@@ -147,7 +147,7 @@ void Dispatcher::callQuitHandler(std::shared_ptr<Address> quitOrigin) {
 void Dispatcher::processMessageFrom(lo_address address, std::shared_ptr<BlobMessage> blobMessage) {
     lo_message message = blobMessage->message();
     dispatch(blobMessage->path(), lo_message_get_argc(message), lo_message_get_argv(message),
-            lo_message_get_types(message), address);
+             lo_message_get_types(message), address);
 }
 
 // static

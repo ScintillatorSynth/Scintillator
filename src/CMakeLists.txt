@@ -243,7 +243,10 @@ add_dependencies(scinsynth
     liblo-install
 )
 
-set_property(TARGET scinsynth PROPERTY CXX_STANDARD 17)
+file(MAKE_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
+install(TARGETS scinsynth
+    RUNTIME
+    DESTINATION "${PROJECT_SOURCE_DIR}/bin")
 
 #### Automatic Code Formatting and Linting
 if (NOT DEFINED CLANG_FORMAT)
