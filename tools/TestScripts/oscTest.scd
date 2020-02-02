@@ -33,7 +33,7 @@ options.height = 200;
 options.dumpOSC = true;
 binPath = quarkPath +/+ "build/src/scinsynth";
 fork {
-	var commandLine, scinPid, udp, c, valid, response;
+	var commandLine, scinPid, udp, c, d, valid, response;
 	var gotFrameRate, numWarn, numError, gotWarn, gotError;
 	var awakeCount, awakeFunc;
 	var testDef, defCount, callbackFunc;
@@ -55,6 +55,7 @@ fork {
 	// We'll poll until we get a response.
 	udp = NetAddr.new("127.0.0.1", options.portNumber);
 	c = Condition.new;
+	d = Condition.new;
 	c.test = false;
 	fork {
 		var booted = false;
@@ -148,6 +149,7 @@ fork {
 
 	// Now put a few workers to sleep and wait for sync again.
 	c.test = false;
+	d.test = false;
 	valid = false;
 	response = OSCFunc.new({ |msg|
 		if (msg[1] == 19, {
@@ -158,14 +160,28 @@ fork {
 	}, '/scin_synced').oneShot;
 	awakeCount = 0;
 	awakeFunc = OSCFunc.new({ |msg|
+		if (awakeCount == 0, {
+			d.test = true;
+			d.signal;
+		});
 		awakeCount = awakeCount + 1;
+		if (awakeCount == 10, {
+			d.test = true;
+			d.signal;
+		});
 	}, '/scin_awake');
-	5.do({
+	10.do({
 		udp.sendMsg('/scin_sleepFor', 1);
 	});
+	// Wait until we've gotten at least one of the awakes back, to break
+	// the race of the scin_sync being processed before any of sleeps are
+	// enqueued.
+	d.wait;
+	d.test = false;
 	udp.sendMsg('/scin_sync', 19);
 	c.wait;
-	if (valid.not or: { awakeCount != 5 }, {
+	d.wait;
+	if (valid.not or: { awakeCount != 10 }, {
 		"*** /scin_sync test on busy queue failed!".postln;
 		"expected 5 dones, got back %".format(awakeCount).postln;
 		1.exit;
@@ -250,6 +266,7 @@ fork {
 	});
 
 	c.test = false;
+	d.test = false;
 	valid = false;
 	testDef = ScinthDef.new(\t, { BWOut.fg(1.0); });
 	response = OSCFunc.new({ |msg|
@@ -260,10 +277,13 @@ fork {
 		if (defCount == msg[3], {
 			valid = true;
 		});
+		d.test = true;
+		d.signal;
 	}, '/scin_status.reply').oneShot;
 	defCount = defCount + 1;
 	udp.sendMsg('/scin_d_recv', testDef.asYAML, ['/scin_status']);
 	c.wait;
+	d.wait;
 	if (valid.not, {
 		"*** /scin_d_recv status def count not received or incorrect.".postln;
 		1.exit;
@@ -297,15 +317,19 @@ fork {
 
 	// Valid YAML file.
 	c.test = false;
+	d.test = false;
 	valid = false;
 	callbackFunc = OSCFunc.new({ |msg|
 		if (defCount == msg[3], {
 			valid = true;
 		});
+		d.test = true;
+		d.signal;
 	}, '/scin_status.reply').oneShot;
 	defCount = defCount + 2;
 	udp.sendMsg('/scin_d_load', testDefPath +/+ "t1-2.yaml", ['/scin_status']);
 	c.wait;
+	d.wait;
 	response.free;
 	if (valid.not, {
 		"*** /scin_d_load got incorrect def count back.".postln;
@@ -326,12 +350,12 @@ fork {
 		if (defCount == msg[3], {
 			valid = true;
 		});
-		c.test = true;
-		c.signal;
+		d.test = true;
+		d.signal;
 	}, '/scin_status.reply');
-	c.test = false;
+	d.test = false;
 	udp.sendMsg('/scin_status');
-	c.wait;
+	d.wait;
 
 	if (valid.not, {
 		"*** calling /scin_d_loadDir with invalid path caused change in def count.".postln;
@@ -340,10 +364,12 @@ fork {
 
 	// Loading testDefPath should add one new def (t3) to the defs.
 	c.test = false;
+	d.test = false;
 	valid = false;
 	defCount = defCount + 1;
 	udp.sendMsg('/scin_d_loadDir', testDefPath, ['/scin_status']);
 	c.wait;
+	d.wait;
 	if (valid.not, {
 		"*** calling /scin_d_loadDir on % resulted in incorrect def count".format(testDefPath).postln;
 		1.exit;
