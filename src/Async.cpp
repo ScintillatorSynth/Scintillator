@@ -227,7 +227,7 @@ void Async::asyncVGenLoadDirectory(fs::path path, std::function<void(int)> compl
 
 void Async::asyncScinthDefLoadDirectory(fs::path path, std::function<void(int)> completion) {
     if (!fs::exists(path) || !fs::is_directory(path)) {
-        spdlog::error("nonexistent or not directory path {} for ScinthDefs.", path.string());
+        spdlog::error("nonexistent or not directory path '{}' for ScinthDefs.", path.string());
         completion(-1);
         return;
     }
@@ -253,7 +253,7 @@ void Async::asyncScinthDefLoadDirectory(fs::path path, std::function<void(int)> 
 
 void Async::asyncScinthDefLoadFile(fs::path path, std::function<void(int)> completion) {
     if (!fs::exists(path) || !fs::is_regular_file(path)) {
-        spdlog::error("nonexistent or nonfile path {} for ScinthDefs.", path.string());
+        spdlog::error("nonexistent or nonfile path '{}' for ScinthDefs.", path.string());
         completion(-1);
         return;
     }

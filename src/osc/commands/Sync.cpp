@@ -19,7 +19,7 @@ void Sync::processMessage(int argc, lo_arg** argv, const char* types, lo_address
     }
     int32_t id = *reinterpret_cast<int32_t*>(argv[0]);
     std::shared_ptr<Address> origin(new Address(address));
-    m_dispatcher->async()->sync([this, id, origin]() { m_dispatcher->respond(origin, "/scin_synced", id); });
+    m_dispatcher->async()->sync([this, id, origin]() { m_dispatcher->respond(origin->get(), "/scin_synced", id); });
 }
 
 } // namespace commands

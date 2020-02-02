@@ -18,6 +18,7 @@ DefReceive::~DefReceive() {}
 void DefReceive::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
     if (argc < 1 || types[0] != LO_STRING) {
         spdlog::error("OSC DefReceive missing/incorrect yaml string argument.");
+        m_dispatcher->respond(address, "/scin_done");
         return;
     }
     std::string yaml(reinterpret_cast<const char*>(argv[0]));
@@ -34,9 +35,9 @@ void DefReceive::processMessage(int argc, lo_arg** argv, const char* types, lo_a
     std::shared_ptr<Address> origin(new Address(address));
     m_dispatcher->async()->scinthDefParseString(yaml, [this, origin, completionMessageSize, onCompletion](bool) {
         if (onCompletion) {
-            m_dispatcher->processMessageFrom(origin, onCompletion, completionMessageSize);
+            m_dispatcher->processMessageFrom(origin->get(), onCompletion, completionMessageSize);
         }
-        m_dispatcher->respond(origin, "/scin_done");
+        m_dispatcher->respond(origin->get(), "/scin_done");
     });
 }
 

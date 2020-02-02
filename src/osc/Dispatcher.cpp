@@ -116,7 +116,7 @@ bool Dispatcher::run() {
 
 void Dispatcher::stop() {
     if (m_quitOrigin) {
-        respond(m_quitOrigin, "/scin_done");
+        respond(m_quitOrigin->get(), "/scin_done");
     }
     if (lo_server_thread_stop(m_tcpThread) < 0) {
         spdlog::error("Failed to stop OSC dispatcher TCP thread.");
@@ -142,8 +142,7 @@ void Dispatcher::callQuitHandler(std::shared_ptr<Address> quitOrigin) {
     m_quitHandler();
 }
 
-void Dispatcher::processMessageFrom(std::shared_ptr<Address> address, std::shared_ptr<uint8_t[]> data,
-                                    uint32_t dataSize) {
+void Dispatcher::processMessageFrom(lo_address address, std::shared_ptr<uint8_t[]> data, uint32_t dataSize) {
     // TODO: Internally this is how lo extracts address from an OSC message binary. Any way to make this safer?
     char* path = reinterpret_cast<char*>(data.get());
     //    int pathLength = lo_validate_string(path, dataSize);
@@ -157,8 +156,7 @@ void Dispatcher::processMessageFrom(std::shared_ptr<Address> address, std::share
         spdlog::error("Dispatcher failed to deserialize injected message.");
         return;
     }
-    dispatch(path, lo_message_get_argc(message), lo_message_get_argv(message), lo_message_get_types(message),
-             address->get());
+    dispatch(path, lo_message_get_argc(message), lo_message_get_argv(message), lo_message_get_types(message), address);
     lo_message_free(message);
 }
 

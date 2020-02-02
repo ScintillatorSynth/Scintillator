@@ -63,30 +63,28 @@ public:
     void destroy();
 
     // Starting call, constructs message with path.
-    template <typename... Targs> void respond(std::shared_ptr<Address> address, const char* path, Targs... Fargs) {
+    template <typename... Targs> void respond(lo_address address, const char* path, Targs... Fargs) {
         lo_message message = lo_message_new();
         respond(address, path, message, Fargs...);
     }
     // Recursive call specializations, adds next argument to message.
     template <typename... Targs>
-    void respond(std::shared_ptr<Address> address, const char* path, lo_message message, int32_t value,
-                 Targs... Fargs) {
+    void respond(lo_address address, const char* path, lo_message message, int32_t value, Targs... Fargs) {
         lo_message_add_int32(message, value);
         respond(address, path, message, Fargs...);
     }
     template <typename... Targs>
-    void respond(std::shared_ptr<Address> address, const char* path, lo_message message, const char* value,
-                 Targs... Fargs) {
+    void respond(lo_address address, const char* path, lo_message message, const char* value, Targs... Fargs) {
         lo_message_add_string(message, value);
         respond(address, path, message, Fargs...);
     }
     template <typename... Targs>
-    void respond(std::shared_ptr<Address> address, const char* path, lo_message message, double value, Targs... Fargs) {
+    void respond(lo_address address, const char* path, lo_message message, double value, Targs... Fargs) {
         lo_message_add_double(message, value);
         respond(address, path, message, Fargs...);
     }
     template <typename... Targs>
-    void respond(std::shared_ptr<Address> address, const char* path, lo_message message, bool value, Targs... Fargs) {
+    void respond(lo_address address, const char* path, lo_message message, bool value, Targs... Fargs) {
         if (value) {
             lo_message_add_true(message);
         } else {
@@ -95,11 +93,11 @@ public:
         respond(address, path, message, Fargs...);
     }
     // Base call, finishes the message and sends it on appropriate server thread.
-    void respond(std::shared_ptr<Address> address, const char* path, lo_message message) {
-        if (lo_address_get_protocol(address->get()) == LO_TCP) {
-            lo_send_message_from(address->get(), m_tcpServer, path, message);
+    void respond(lo_address address, const char* path, lo_message message) {
+        if (lo_address_get_protocol(address) == LO_TCP) {
+            lo_send_message_from(address, m_tcpServer, path, message);
         } else {
-            lo_send_message_from(address->get(), m_udpServer, path, message);
+            lo_send_message_from(address, m_udpServer, path, message);
         }
         lo_message_free(message);
     }
@@ -113,7 +111,7 @@ public:
     std::shared_ptr<const vk::FrameTimer> frameTimer() { return m_frameTimer; }
     void callQuitHandler(std::shared_ptr<Address> quitOrigin);
     void setDumpOSC(bool enable) { m_dumpOSC = enable; }
-    void processMessageFrom(std::shared_ptr<Address> address, std::shared_ptr<uint8_t[]> data, uint32_t dataSize);
+    void processMessageFrom(lo_address address, std::shared_ptr<uint8_t[]> data, uint32_t dataSize);
 
 private:
     static void loError(int number, const char* message, const char* path);

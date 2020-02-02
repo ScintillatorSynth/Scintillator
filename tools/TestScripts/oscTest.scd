@@ -1,5 +1,6 @@
 // Lower-level script for testing individual OSC commands to Scintillator Server. Bypasses the higher-level classes
 // in sclang and sends messages directly to the server.
+// TODO: add a timeout on the Condition waits so that missing messages don't hang this script.
 (
 var quarkPath, versionMajor, versionMinor, versionPatch, gitBranch, gitHash, options, binPath;
 if (thisProcess.argv.size < 6, {
@@ -35,7 +36,9 @@ fork {
 	var commandLine, scinPid, udp, c, valid, response;
 	var gotFrameRate, numWarn, numError, gotWarn, gotError;
 	var awakeCount, awakeFunc;
-	var testDef, echoFunc;
+	var testDef, defCount, callbackFunc;
+	var testDefPath;
+	var nodeCount;
 	commandLine = binPath + options.asOptionsString();
 	"*** booting scinsynth with command line: %".format(commandLine).postln;
 	scinPid = commandLine.unixCmd({ |exitCode, exitPid|
@@ -105,6 +108,7 @@ fork {
 	c.test = false;
 	valid = false;
 	response = OSCFunc.new({ |msg|
+		defCount = msg[3];
 		gotWarn = msg[4];
 		gotError = msg[5];
 		if (numWarn == gotWarn and: { numError == gotError }, {
@@ -157,7 +161,7 @@ fork {
 		awakeCount = awakeCount + 1;
 	}, '/scin_awake');
 	5.do({
-		udp.sendMsg('/scin_sleepFor', 2);
+		udp.sendMsg('/scin_sleepFor', 1);
 	});
 	udp.sendMsg('/scin_sync', 19);
 	c.wait;
@@ -207,26 +211,212 @@ fork {
 	});
 
 	"*** Testing /scin_d_recv".postln;
+	// Get def count.
+	c.test = false;
+	response = OSCFunc.new({ |msg|
+		defCount = msg[3];
+		c.test = true;
+		c.signal;
+	}, '/scin_status.reply').oneShot;
+	udp.sendMsg('/scin_status');
+	c.wait;
+
+	// Empty/absent def should still respond.
 	c.test = false;
 	valid = false;
 	response = OSCFunc.new({ |msg|
 		c.test = true;
 		c.signal;
 	}, '/scin_done').oneShot;
-	echoFunc = OSCFunc.new({ |msg|
-		if (msg[1] == 123, {
+	udp.sendMsg('/scin_d_recv');
+	c.wait;
+
+	// Expecting no increase to def count.
+	c.test = false;
+	valid = false;
+	response = OSCFunc.new({ | msg|
+		if (defCount == msg[3], {
 			valid = true;
 		});
-	}, '/scin_echoBack').oneShot;
-	testDef = ScinthDef.new(\t, { BWOut.fg(1.0); });
-	udp.sendMsg('/scin_d_recv', testDef.asYAML, ['/scin_echo', ['/scin_echoBack', 123].asRawOSC]);
+		c.test = true;
+		c.signal;
+	}, '/scin_status.reply');
+	udp.sendMsg('/scin_status');
 	c.wait;
+
 	if (valid.not, {
-		"*** /scin_d_recv echo back not received.".postln;
+		"*** /scin_d_recv added to valid def count but no valid def sent.".postln;
 		1.exit;
 	});
 
+	c.test = false;
+	valid = false;
+	testDef = ScinthDef.new(\t, { BWOut.fg(1.0); });
+	response = OSCFunc.new({ |msg|
+		c.test = true;
+		c.signal;
+	}, '/scin_done').oneShot;
+	callbackFunc = OSCFunc.new({ |msg|
+		if (defCount == msg[3], {
+			valid = true;
+		});
+	}, '/scin_status.reply').oneShot;
+	defCount = defCount + 1;
+	udp.sendMsg('/scin_d_recv', testDef.asYAML, ['/scin_status']);
+	c.wait;
+	if (valid.not, {
+		"*** /scin_d_recv status def count not received or incorrect.".postln;
+		1.exit;
+	});
+
+	"*** Testing /scin_d_load".postln;
+	// Empty/absent file path should still respond
+	c.test = false;
+	response = OSCFunc.new({ |msg|
+		c.test = true;
+		c.signal;
+	}, '/scin_done');
+	udp.sendMsg('/scin_d_load');
+	c.wait;
+
+	// Empty YAML file.
+	c.test = false;
+	valid = false;
+	testDefPath = quarkPath +/+ "tools" +/+ "TestScripts" +/+ "testDefs";
+	callbackFunc = OSCFunc.new({ |msg|
+		if (msg[1] == 'xx', {
+			valid = true;
+		});
+	}, '/bounceBack').oneShot;
+	udp.sendMsg('/scin_d_load', testDefPath +/+ "emptyYAML.yaml",  ['/scin_echo', ['/bounceBack', "xx"].asRawOSC]);
+	c.wait;
+	if (valid.not, {
+		"*** /scin_d_load echo back not received.".postln;
+		1.exit;
+	});
+
+	// Valid YAML file.
+	c.test = false;
+	valid = false;
+	callbackFunc = OSCFunc.new({ |msg|
+		if (defCount == msg[3], {
+			valid = true;
+		});
+	}, '/scin_status.reply').oneShot;
+	defCount = defCount + 2;
+	udp.sendMsg('/scin_d_load', testDefPath +/+ "t1-2.yaml", ['/scin_status']);
+	c.wait;
+	response.free;
+	if (valid.not, {
+		"*** /scin_d_load got incorrect def count back.".postln;
+		1.exit;
+	});
+
+	"*** Testing /scin_d_loadDir".postln;
+	// Bad path should result in no increase to def count.
+	c.test = false;
+	valid = false;
+	response = OSCFunc.new({ |msg|
+		c.test = true;
+		c.signal;
+	}, '/scin_done');
+	udp.sendMsg('/scin_d_loadDir', "");
+	c.wait;
+	callbackFunc = OSCFunc.new({ |msg|
+		if (defCount == msg[3], {
+			valid = true;
+		});
+		c.test = true;
+		c.signal;
+	}, '/scin_status.reply');
+	c.test = false;
+	udp.sendMsg('/scin_status');
+	c.wait;
+
+	if (valid.not, {
+		"*** calling /scin_d_loadDir with invalid path caused change in def count.".postln;
+		1.exit;
+	});
+
+	// Loading testDefPath should add one new def (t3) to the defs.
+	c.test = false;
+	valid = false;
+	defCount = defCount + 1;
+	udp.sendMsg('/scin_d_loadDir', testDefPath, ['/scin_status']);
+	c.wait;
+	if (valid.not, {
+		"*** calling /scin_d_loadDir on % resulted in incorrect def count".format(testDefPath).postln;
+		1.exit;
+	});
+	response.free;
+	callbackFunc.free;
+
+	"*** Testing /scin_d_free".postln;
+	// NOTE: Assumes t1, t2, and t3 have all been defined in previous tests.
+	valid = false;
+	c.test = false;
+	response = OSCFunc.new({ |msg|
+		nodeCount = msg[1];
+		if (defCount == msg[3], {
+			valid = true;
+		});
+		c.test = true;
+		c.signal;
+	}, '/scin_status.reply').oneShot;
+	defCount = defCount - 2;
+	udp.sendMsg('/scin_d_free', "t1", "t3");
+	udp.sendMsg('/scin_status');
+	c.wait;
+	if (valid.not, {
+		"*** calling /scin_d_free resulted in incorrect def count".postln;
+		1.exit;
+	});
+
+	// Important to test freeing a ScinthDef that has an active Scinth rendering.
+	response = OSCFunc.new({ |msg|
+		c.test = true;
+		c.signal;
+	}, '/scin_done');
+	udp.sendMsg('/scin_s_new', "t2", 1);
+	udp.sendMsg('/scin_s_new', "t2", 2);
+	udp.sendMsg('/scin_s_new', "t2", 3);
+	c.test = false;
+	udp.sendMsg('/scin_nrt_advanceFrame', 1, 1);
+	c.wait;
+	defCount = defCount - 1;
+	udp.sendMsg('/scin_d_free', "t2", "t3");
+	c.test = false;
+	valid = false;
+	udp.sendMsg('/scin_status');
+	c.wait;
+	if (valid.not, {
+		"*** calling /scin_d_free with already freed ScinthDef resulted in incorrect def count.".postln;
+		1.exit;
+	});
+	udp.sendMsg('/scin_n_run', 1, 0);
+	c.test = false;
+	udp.sendMsg('/scin_nrt_advanceFrame', 1, 1);
+	c.wait;
+
+	udp.sendMsg('/scin_n_free', 1);
+	c.test = false;
+	udp.sendMsg('/scin_nrt_advanceFrame', 1, 1);
+	c.wait;
+
+	udp.sendMsg('/scin_n_free', 2);
+	c.test = false;
+	udp.sendMsg('/scin_nrt_advanceFrame', 1, 1);
+	c.wait;
+
+	udp.sendMsg('/scin_n_free', 3);
+	c.test = false;
+	udp.sendMsg('/scin_nrt_advanceFrame', 1, 1);
+	c.wait;
+
+	response.free;
+
 	// We test quit last, should terminate the server but first send a final /scin_done message.
+	"*** Testing /scin_quit".postln;
 	valid = false;
 	response = OSCFunc.new({ |msg|
 		response.free;

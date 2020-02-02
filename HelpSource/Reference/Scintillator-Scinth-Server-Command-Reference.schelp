@@ -8,6 +8,8 @@ While the SuperCollider synth programs support a variety of connection modalitie
 
 In general Scintillator attempts to follow a similar command list and structure to that of the SuperCollider sound synthesis servers, with the addition of a code::/scin_:: prefix to each OSC command and response.
 
+Some commands are marked as strong::asynchronous::, which in this context means they will send a response message back to the sender, sometimes strong::/scin_done::, upon completion of the command. For any command marked as asynchronous Scintillator is designed to always return a message, even if the execution of the command failed or the message body didn't parse.
+
 section::Master Controls
 
 subsection::/scin_quit

@@ -1,6 +1,5 @@
 #include "osc/commands/Echo.hpp"
 
-#include "osc/Address.hpp"
 #include "osc/Dispatcher.hpp"
 
 #include "spdlog/spdlog.h"
@@ -31,8 +30,7 @@ void Echo::processMessage(int argc, lo_arg** argv, const char* types, lo_address
         return;
     }
 
-    std::shared_ptr<Address> origin(new Address(address));
-    m_dispatcher->respond(origin, reinterpret_cast<const char*>(blobData), message);
+    m_dispatcher->respond(address, reinterpret_cast<const char*>(blobData), message);
 }
 
 } // namespace commands

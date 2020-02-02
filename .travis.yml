@@ -63,6 +63,7 @@ before_script:
 script:
     - make -j2 swiftshader-local
     - make -j2 compare_images
+    - make -j2 test_osc_commands
     - make -j2 coverage_report
     - make -j2 lintall
     - make -j2 docs

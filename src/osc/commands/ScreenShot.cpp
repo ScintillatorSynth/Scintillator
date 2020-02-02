@@ -18,10 +18,12 @@ ScreenShot::~ScreenShot() {}
 void ScreenShot::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
     if (!m_dispatcher->offscreen()) {
         spdlog::error("OSC Screenshot requested on realtime framerate.");
+        m_dispatcher->respond(address, "/scin_done", "/scin_nrt_screenShot");
         return;
     }
     if (argc < 1 || types[0] != LO_STRING) {
         spdlog::error("OSC ScreenShot got absent or wrong type path argument.");
+        m_dispatcher->respond(address, "/scin_done", "scin_nrt_screenShot");
         return;
     }
     std::string fileName(reinterpret_cast<const char*>(argv[0]));
@@ -39,7 +41,7 @@ void ScreenShot::processMessage(int argc, lo_arg** argv, const char* types, lo_a
             m_dispatcher->offscreen()->width(), m_dispatcher->offscreen()->height(),
             [this, origin, fileName, serial](bool valid) {
                 spdlog::info("Screenshot finished encode of '{}', valid: {}", fileName, valid);
-                m_dispatcher->respond(origin, "/scin_done", "/scin_nrt_screenShot", fileName.data(), valid);
+                m_dispatcher->respond(origin->get(), "/scin_done", "/scin_nrt_screenShot", fileName.data(), valid);
                 {
                     std::lock_guard<std::mutex> lock(m_mutex);
                     m_encoders.erase(serial);
@@ -58,7 +60,7 @@ void ScreenShot::processMessage(int argc, lo_arg** argv, const char* types, lo_a
         spdlog::error("OSC ScreenShot failed to create file '{}' with mime type '{}'", fileName, mimeType);
         m_encoders.erase(serial);
     }
-    m_dispatcher->respond(origin, "/scin_nrt_screenShot.ready", fileName.c_str(), valid);
+    m_dispatcher->respond(address, "/scin_nrt_screenShot.ready", fileName.c_str(), valid);
 }
 
 } // namespace commands
