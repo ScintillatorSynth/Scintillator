@@ -42,6 +42,8 @@ public:
     const char* uuid() const { return m_uuid.data(); }
     bool supportsWindow() const { return m_supportsWindow; }
     bool supportsMemoryBudget() const { return m_supportsMemoryBudget; }
+    uint32_t deviceID() const { return m_properties.deviceID; }
+    uint32_t vendorID() const { return m_properties.vendorID; }
 
 private:
     std::shared_ptr<Instance> m_instance;

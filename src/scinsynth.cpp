@@ -108,8 +108,8 @@ int main(int argc, char* argv[]) {
     chooser.enumerateAllDevices();
     std::string deviceReport = fmt::format("found {} Vulkan devices:\n", chooser.devices().size());
     for (auto info : chooser.devices()) {
-        deviceReport += fmt::format("  device name: {}, type: {}, uuid: {}, swiftshader: {}\n", info.name(),
-                                    info.typeName(), info.uuid(), info.isSwiftShader());
+        deviceReport += fmt::format("  name: {}, type: {}, uuid: {}, vendorID: {:x}, deviceID: {:x}\n", info.name(),
+                                    info.typeName(), info.uuid(), info.vendorID(), info.deviceID());
     }
     if (FLAGS_print_devices) {
         fmt::print(deviceReport);
@@ -144,6 +144,7 @@ int main(int argc, char* argv[]) {
                     }
                     spdlog::info("Device uuid {} match, selecting {}", FLAGS_device_uuid, info.name());
                     device.reset(new scin::vk::Device(instance, info));
+                    // break;
                 }
             }
         }
