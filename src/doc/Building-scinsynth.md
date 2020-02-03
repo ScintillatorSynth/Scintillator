@@ -36,3 +36,15 @@ in varying levels of invasiveness, suggested on StackOverflow as well as elsewhe
 
 The way we do it on travis-ci right now is to supply -DPYTHON_EXECUTABLE=`which python3` to cmake as an argument.
 
+
+MacOS
+-----
+
+You will need the Vulkan SDK for macOS. The instructions
+[here](https://vulkan.lunarg.com/doc/sdk/1.1.130.0/mac/getting_started.html) detail how to install it. Running the
+install script makes for an easier configuration.
+
+```
+brew install ffmpeg doxygen
+```
+

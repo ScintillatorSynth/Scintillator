@@ -62,6 +62,7 @@ before_script:
 
 script:
     - make -j2 swiftshader-local
+    - make -j2 install
     - make -j2 coverage_report
     - make -j2 lintall
     - make -j2 docs

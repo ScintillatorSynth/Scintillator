@@ -49,10 +49,7 @@ std::unique_ptr<Shader> ShaderCompiler::compile(std::shared_ptr<Device> device, 
         return std::unique_ptr<Shader>();
     }
 
-    // Swiftshader currently assumes shaders are compiled in Vulkan 1.1 environment and may crash when constructing
-    // Pipelines that aren't built in that environment (https://issuetracker.google.com/issues/127454276).
-    shaderc_compile_options_set_target_env(options, shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
-
+    shaderc_compile_options_set_target_env(options, shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_0);
     shaderc_compilation_result_t result = shaderc_compile_into_spv(m_compiler, source.data(), source.size(), shaderKind,
                                                                    name.data(), entryPoint.data(), options);
 

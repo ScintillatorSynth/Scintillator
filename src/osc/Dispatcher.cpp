@@ -6,6 +6,8 @@
 #include "Version.hpp"
 #include "av/ImageEncoder.hpp"
 #include "core/Archetypes.hpp"
+#include "osc/Address.hpp"
+#include "osc/BlobMessage.hpp"
 #include "osc/commands/AdvanceFrame.hpp"
 #include "osc/commands/DefFree.hpp"
 #include "osc/commands/DefLoad.hpp"
@@ -142,22 +144,10 @@ void Dispatcher::callQuitHandler(std::shared_ptr<Address> quitOrigin) {
     m_quitHandler();
 }
 
-void Dispatcher::processMessageFrom(lo_address address, std::shared_ptr<uint8_t[]> data, uint32_t dataSize) {
-    // TODO: Internally this is how lo extracts address from an OSC message binary. Any way to make this safer?
-    char* path = reinterpret_cast<char*>(data.get());
-    //    int pathLength = lo_validate_string(path, dataSize);
-    // if (pathLength < 0) {
-    //    spdlog::error("Dispatcher failed to extract path from injected message data.");
-    //    return;
-    //}
-
-    lo_message message = lo_message_deserialise(data.get(), dataSize, nullptr);
-    if (!message) {
-        spdlog::error("Dispatcher failed to deserialize injected message.");
-        return;
-    }
-    dispatch(path, lo_message_get_argc(message), lo_message_get_argv(message), lo_message_get_types(message), address);
-    lo_message_free(message);
+void Dispatcher::processMessageFrom(lo_address address, std::shared_ptr<BlobMessage> blobMessage) {
+    lo_message message = blobMessage->message();
+    dispatch(blobMessage->path(), lo_message_get_argc(message), lo_message_get_argv(message),
+             lo_message_get_types(message), address);
 }
 
 // static

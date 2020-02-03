@@ -11,6 +11,7 @@ ScinServerOptions {
 	var <>height;
 	var <>keepOnTop;
 	var <>swiftshader;
+	var <>deviceUUID;
 
 	// Can install a function to call if server exits with a non-zero error code.
 	var <>onServerError;
@@ -27,7 +28,8 @@ ScinServerOptions {
 				width: 800,
 				height: 600,
 				keepOnTop: true,
-				swiftshader: false
+				swiftshader: false,
+				deviceUUID: nil
 			)
 		);
 	}
@@ -70,6 +72,9 @@ ScinServerOptions {
 		if (swiftshader != defaultValues[\swiftshader], {
 			o = o + "--swiftshader=" ++ swiftshader;
 		});
+		if (deviceUUID != defaultValues[\deviceUUID], {
+			o = o + "--device_uuid=" ++ deviceUUID;
+		});
 		^o;
 	}
 }
@@ -104,7 +109,7 @@ ScinServer {
             scinQuarkVersion = "unknown";
         });
 
-        scinBinaryPath = options.quarkPath +/+ "build/src/scinsynth";
+		scinBinaryPath = options.quarkPath +/+ "bin" +/+ "scinsynth";
 		statusPoller = ScinServerStatusPoller.new(this);
 	}
 
@@ -217,14 +222,12 @@ ScinServer {
 		condition.test = false;
 		id = UniqueID.next;
 		response = OSCFunc.new({ |msg|
-			"got sync: %".format(msg[1]).postln;
 			if (msg[1] == id, {
 				response.free;
 				condition.test = true;
 				condition.signal;
 			});
 		}, '/scin_synced');
-		"sending sync: %".format(id).postln;
 		this.sendMsg('/scin_sync', id);
 		condition.wait;
 	}

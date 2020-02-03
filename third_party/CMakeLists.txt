@@ -1,3 +1,7 @@
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CXX_EXTENSIONS OFF)
+
 include(ExternalProject)
 set(SCIN_EXT_INSTALL_DIR "${PROJECT_BINARY_DIR}/install-ext" CACHE PATH "Scintallor Vulkan SDK ")
 file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}")
@@ -55,6 +59,7 @@ add_subdirectory(spdlog)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory(glfw)
 
 #### glm
@@ -62,10 +67,12 @@ add_subdirectory(glm)
 
 #### VulkanMemoryAllocator
 include_directories(VulkanMemoryAllocator/src)
-add_library(VulkanMemoryAllocator STATIC "vulkan_memory_allocator_build.cc")
+include_directories(${Vulkan_INCLUDE_DIRS})
+add_library(VulkanMemoryAllocator STATIC "VulkanMemoryAllocatorBuild.cpp")
 target_include_directories(VulkanMemoryAllocator INTERFACE VulkanMemoryAllocator/src)
 
 #### googletest
+set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
 add_subdirectory(googletest)
 
 #### yaml-cpp

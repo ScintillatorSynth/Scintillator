@@ -32,6 +32,8 @@ bool Device::create(bool supportWindow) {
         uniqueQueueFamilies.insert(static_cast<uint32_t>(m_presentFamilyIndex));
     }
 
+    spdlog::info("Device {} has {} unique queue families.", m_name, uniqueQueueFamilies.size());
+
     float queuePriority = 1.0;
     for (uint32_t queueFamily : uniqueQueueFamilies) {
         VkDeviceQueueCreateInfo createInfo = {};

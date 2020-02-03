@@ -1,6 +1,7 @@
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CXX_EXTENSIONS OFF)
 
-set(CMAKE_CXX_STANDARD_REQUIRED)
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
@@ -39,8 +40,12 @@ target_link_libraries(scintillator_core
     glm
     spdlog
     yaml-cpp
-    stdc++fs
 )
+if (UNIX AND NOT APPLE)
+    target_link_libraries(scintillator_core
+        stdc++fs
+    )
+endif()
 
 #### Unit Testing for Core Files
 add_executable(run_unittests
@@ -58,10 +63,16 @@ target_link_libraries(run_unittests
     glm
     gtest
     scintillator_core
-    stdc++fs
 )
+if (UNIX AND NOT APPLE)
+    target_link_libraries(run_unittests
+        stdc++fs
+    )
+endif()
 
 #### Scintillator Binary
+
+
 configure_file(Version.hpp.in "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp")
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/osc/commands")
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp"
@@ -101,6 +112,8 @@ set(scintillator_synth_files
 
     osc/Address.cpp
     osc/Address.hpp
+    osc/BlobMessage.cpp
+    osc/BlobMessage.hpp
     osc/Dispatcher.cpp
     osc/Dispatcher.hpp
     osc/commands/AdvanceFrame.cpp
@@ -188,27 +201,52 @@ set(scintillator_synth_files
 
 add_executable(scinsynth ${scintillator_synth_files})
 
-find_package(Vulkan REQUIRED FATAL_ERROR)
+# Find the ffmpeg dependencies.
+find_path(AVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
+find_library(AVCODEC_LIBRARY avcodec)
+find_path(AVFORMAT_INCLUDE_DIR libavformat/avformat.h)
+find_library(AVFORMAT_LIBRARY avformat)
+find_path(AVUTIL_INCLUDE_DIR libavutil/avutil.h)
+find_library(AVUTIL_LIBRARY avutil)
+
+# Find shaderc
+find_library(SHADERC_LIBRARY shaderc_combined)
 
 target_link_libraries(scinsynth
     "${SCIN_EXT_INSTALL_DIR}/lib/liblo.a"
     "${Vulkan_LIBRARY}"
+    ${AVCODEC_LIBRARY}
+    ${AVFORMAT_LIBRARY}
+    ${AVUTIL_LIBRARY}
+    ${SHADERC_LIBRARY}
     VulkanMemoryAllocator
-    avcodec
-    avformat
-    avutil
     gflags
     glfw
     glm
     scintillator_core
-    shaderc_combined
     spdlog
-    stdc++fs
 )
+
+target_include_directories(scinsynth PRIVATE
+    ${AVCODEC_INCLUDE_DIR}
+    ${AVFORMAT_INCLUDE_DIR}
+    ${AVUTIL_INCLUDE_DIR}
+)
+
+if (UNIX AND NOT APPLE)
+    target_link_libraries(scinsynth
+        stdc++fs
+    )
+endif()
 
 add_dependencies(scinsynth
     liblo-install
 )
+
+file(MAKE_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
+install(TARGETS scinsynth
+    RUNTIME
+    DESTINATION "${PROJECT_SOURCE_DIR}/bin")
 
 #### Automatic Code Formatting and Linting
 if (NOT DEFINED CLANG_FORMAT)

@@ -1,7 +1,6 @@
 #ifndef SRC_OSC_DISPATCHER_HPP_
 #define SRC_OSC_DISPATCHER_HPP_
 
-#include "osc/Address.hpp"
 #include "osc/commands/Command.hpp"
 
 #include "lo/lo.h"
@@ -27,6 +26,9 @@ class Offscreen;
 }
 
 namespace osc {
+
+class Address;
+class BlobMessage;
 
 /*! The primary interface to the OSC subsystem. Manages bound ports and listening threads, and dispatches incoming OSC
  * commands for processing.
@@ -111,7 +113,7 @@ public:
     std::shared_ptr<const vk::FrameTimer> frameTimer() { return m_frameTimer; }
     void callQuitHandler(std::shared_ptr<Address> quitOrigin);
     void setDumpOSC(bool enable) { m_dumpOSC = enable; }
-    void processMessageFrom(lo_address address, std::shared_ptr<uint8_t[]> data, uint32_t dataSize);
+    void processMessageFrom(lo_address address, std::shared_ptr<BlobMessage> onCompletion);
 
 private:
     static void loError(int number, const char* message, const char* path);
