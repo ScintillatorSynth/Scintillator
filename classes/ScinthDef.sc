@@ -3,6 +3,7 @@ ScinthDef {
 	var <>func;
 	var <>children;
 	var <>defServer;
+	var <>controls;  // currently an array with one or no elements, a VControl object
 
 	*new { |name, vGenGraphFunc|
 		^super.newCopyArgs(name.asSymbol).children_(Array.new(64)).build(vGenGraphFunc);
@@ -11,10 +12,19 @@ ScinthDef {
 	build { |vGenGraphFunc|
 		VGen.buildScinthDef = this;
 		func = vGenGraphFunc;
-		func.valueArray();
+		this.prBuildControls;
+		func.valueArray(controls);
 		VGen.buildScinthDef = nil;
 		children.do({ |vgen, index| this.prFitDimensions(vgen) });
 		^this;
+	}
+
+	// All controls right now are at the fragment rate, so no grouping or sorting is needed, and we only
+	// create at most one element in the controls member Array
+	prBuildControls {
+		var names = func.def.argNames;
+		var defaultValues = func.def.prototypeFrame;
+		controls = [ VControl.fg(defaultValues); ];
 	}
 
 	prFitDimensions { |vgen|
@@ -23,8 +33,9 @@ ScinthDef {
 		vgen.inDims = Array.fill(vgen.inputs.size, { |i|
 			case
 			{ vgen.inputs[i].isNumber } { 1 }
+			{ vgen.inputs[i].isControlVGen } { 1 }
 			{ vgen.inputs[i].isVGen } { children[vgen.inputs[i].scinthIndex].outDims[0] }
-			{ this.notImplemented }
+			{ "*** vgen input class: %".format(vgen.inputs[i]).postln; nil; }
 		});
 
 		// Search for dimensions among list of supported input dimensions.
@@ -61,13 +72,16 @@ ScinthDef {
 						yaml = yaml ++ secondDepth ++ "  dimension:" + vgen.inDims[inputIndex] ++ "\n";
 						yaml = yaml ++ secondDepth ++ "  value:" + input.asString ++ "\n";
 					}
+					{ input.isControlVGen } {
+						"*** control yaml output".postln;
+					}
 					{ input.isVGen } {
 						yaml = yaml ++ secondDepth ++ "- type: vgen\n";
 						yaml = yaml ++ secondDepth ++ "  vgenIndex:" + input.scinthIndex.asString ++ "\n";
 						yaml = yaml ++ secondDepth ++ "  outputIndex: 0\n";
 						yaml = yaml ++ secondDepth ++ "  dimension:" + vgen.inDims[inputIndex] ++ "\n";
 					}
-					{ this.notImplemented }
+					{ thisMethod.notImplemented }
 				});
 			});
 			yaml = yaml ++ depthIndent ++ "  outputs:\n";

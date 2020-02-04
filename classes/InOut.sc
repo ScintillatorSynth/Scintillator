@@ -39,3 +39,27 @@ RGBAOut : VGen {
 		^[[4]];
 	}
 }
+
+VControl : MultiOutVGen {
+	var <>names;
+	var <>defaultValues;
+
+	// TODO: it is not accurate to call these fragment rate.
+	*fg { |values|
+		^this.multiNewList([\fragment] ++ values.asArray);
+	}
+
+	init { |...values|
+		^this.initOutputs(values.size, rate);
+	}
+
+	isControlVGen { ^true }
+
+	inputDimensions {
+		^[[]];
+	}
+
+	outputDimensions {
+		^[[1].stutter(names.size)];
+	}
+}
