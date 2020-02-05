@@ -57,9 +57,6 @@ VGen : AbstractFunction {
 	init { | ... theInputs |
 		inputs = theInputs;
 	}
-	copy {
-		^this;
-	}
 
 	composeUnaryOp { |selector|
 		^UnaryOpVGen.new(selector, this);
@@ -93,13 +90,14 @@ VGen : AbstractFunction {
 	isVGen { ^true }
 	name { ^this.class.asString }
 	numOutputs { this.outputDimensions.length }
+	outputIndex { ^0 }
 
 	inputDimensions {
-		^[];
+		^[[]];
 	}
 
 	outputDimensions {
-		^[];
+		^[[]];
 	}
 }
 
@@ -141,6 +139,9 @@ VOutputProxy : VGen {
 		scinthIndex = source.scinthIndex;
 	}
 
+	isControlVGen {
+		^source.isControlVGen;
+	}
 }
 
 // These extensions mostly do the same as their UGen counterparts,

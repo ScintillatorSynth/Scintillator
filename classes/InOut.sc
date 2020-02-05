@@ -50,10 +50,13 @@ VControl : MultiOutVGen {
 
 	init { |...argValues|
 		values = argValues;
-		if (scinthDef.notNil, {
-			scinthDef.controls = scinthDef.controls.addAll(values);
-		});
 		^this.initOutputs(values.size, rate);
+	}
+
+	addToScinth {
+		scinthDef = buildScinthDef;
+		// Although we are a VGen we should not be a part of the VGen graph, so we
+		// don't add ourselves to it here.
 	}
 
 	isControlVGen { ^true }
@@ -63,6 +66,6 @@ VControl : MultiOutVGen {
 	}
 
 	outputDimensions {
-		^[[1].stutter(values.size)];
+		^[[1].stutter(outputs.size)];
 	}
 }

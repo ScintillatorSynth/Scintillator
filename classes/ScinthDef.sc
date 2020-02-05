@@ -3,7 +3,8 @@ ScinthDef {
 	var <>func;
 	var <>children;
 	var <>defServer;
-	var <>controls;  // currently an array with one or no elements, a VControl object
+	var <>controls;
+	var <>controlNames;
 
 	*new { |name, vGenGraphFunc|
 		^super.newCopyArgs(name.asSymbol).children_(Array.new(64)).build(vGenGraphFunc);
@@ -12,8 +13,7 @@ ScinthDef {
 	build { |vGenGraphFunc|
 		VGen.buildScinthDef = this;
 		func = vGenGraphFunc;
-		this.prBuildControls;
-		func.valueArray(controls);
+		func.valueArray(this.prBuildControls);
 		VGen.buildScinthDef = nil;
 		children.do({ |vgen, index| this.prFitDimensions(vgen) });
 		^this;
@@ -22,12 +22,15 @@ ScinthDef {
 	// All controls right now are at the fragment rate, so no grouping or sorting is needed, and we only
 	// create at most one element in the controls member Array
 	prBuildControls {
-		var values;
-		var names = func.def.argNames;
-		if (names.isNil, { ^nil });
-		values = func.def.prototypeFrame.extend(names.size);
-		values = values.collect({ |value| value ? 0.0 });
-		^VControl.fg(values);
+		controlNames = func.def.argNames;
+		if (controlNames.isNil, {
+			controls = [];
+			^nil
+		}, {
+			controls = func.def.prototypeFrame.extend(controlNames.size);
+			controls = controls.collect({ |value| value ? 0.0 });
+			^VControl.fg(controls)
+		});
 	}
 
 	prFitDimensions { |vgen|
@@ -56,13 +59,21 @@ ScinthDef {
 	}
 
 	asYAML { |indentDepth = 0|
-		var yaml, indent, depthIndent, secondDepth;
+		var indent, depthIndent, secondDepth, yaml;
 		indent = "";
 		indentDepth.do({ indent = indent ++ "    " });
-		yaml = indent ++ "name: %\n".format(name);
-		yaml = yaml ++ indent ++ "vgens:\n";
 		depthIndent = indent ++ "    ";
 		secondDepth = depthIndent ++ "    ";
+
+		yaml = indent ++ "name: %\n".format(name);
+		if (controls.size > 0, {
+			yaml = yaml ++ indent ++ "parameters:\n";
+			controls.do({ |control, i|
+				yaml = yaml ++ depthIndent ++ "name: " ++ controlNames[i] ++ "\n";
+				yaml = yaml ++ depthIndent ++ "defaultValue: " ++ control.asString ++ "\n";
+			});
+		});
+		yaml = yaml ++ indent ++ "vgens:\n";
 		children.do({ | vgen, index |
 			yaml = yaml ++ depthIndent ++ "- className:"  + vgen.name ++ "\n";
 			yaml = yaml ++ depthIndent ++ "  rate: fragment\n";
@@ -76,7 +87,8 @@ ScinthDef {
 						yaml = yaml ++ secondDepth ++ "  value:" + input.asString ++ "\n";
 					}
 					{ input.isControlVGen } {
-						"*** control yaml output".postln;
+						yaml = yaml ++ secondDepth ++ "- type: parameter\n";
+						yaml = yaml ++ secondDepth ++ "  index: " + input.outputIndex ++ "\n";
 					}
 					{ input.isVGen } {
 						yaml = yaml ++ secondDepth ++ "- type: vgen\n";
