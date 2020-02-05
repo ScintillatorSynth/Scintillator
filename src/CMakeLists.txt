@@ -309,7 +309,7 @@ else()
 endif()
 
 
-#### Integration Testing
+#### Integration and SCLang Unit Testing
 file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/testing")
 
 if (NOT DEFINED SCIN_SCLANG)
@@ -327,6 +327,13 @@ add_custom_command(OUTPUT ${SCLANG_SCIN_CONFIG}
 add_custom_target(test_images
     DEPENDS ${SCLANG_SCIN_CONFIG} scinsynth
     COMMAND  ${SCIN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/makeTestImages.scd" "${PROJECT_SOURCE_DIR}" ${SCIN_TEST_IMAGES_ENV}
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    VERBATIM
+)
+
+add_custom_target(sclang_unit_tests
+    DEPENDS ${SCLANG_SCIN_CONFIG}
+    COMMAND ${SCIN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/runUnitTests.scd"
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     VERBATIM
 )

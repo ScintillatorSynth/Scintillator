@@ -25,7 +25,7 @@ ScinthDef {
 		controlNames = func.def.argNames;
 		if (controlNames.isNil, {
 			controls = [];
-			^nil
+			controlNames = [];
 		}, {
 			controls = func.def.prototypeFrame.extend(controlNames.size);
 			controls = controls.collect({ |value| value ? 0.0 });
@@ -69,8 +69,8 @@ ScinthDef {
 		if (controls.size > 0, {
 			yaml = yaml ++ indent ++ "parameters:\n";
 			controls.do({ |control, i|
-				yaml = yaml ++ depthIndent ++ "name: " ++ controlNames[i] ++ "\n";
-				yaml = yaml ++ depthIndent ++ "defaultValue: " ++ control.asString ++ "\n";
+				yaml = yaml ++ depthIndent ++ "- name: " ++ controlNames[i] ++ "\n";
+				yaml = yaml ++ depthIndent ++ "  defaultValue: " ++ control.asString ++ "\n";
 			});
 		});
 		yaml = yaml ++ indent ++ "vgens:\n";
