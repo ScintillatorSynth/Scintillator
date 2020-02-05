@@ -22,9 +22,12 @@ ScinthDef {
 	// All controls right now are at the fragment rate, so no grouping or sorting is needed, and we only
 	// create at most one element in the controls member Array
 	prBuildControls {
+		var values;
 		var names = func.def.argNames;
-		var defaultValues = func.def.prototypeFrame;
-		controls = [ VControl.fg(defaultValues); ];
+		if (names.isNil, { ^nil });
+		values = func.def.prototypeFrame.extend(names.size);
+		values = values.collect({ |value| value ? 0.0 });
+		^VControl.fg(values);
 	}
 
 	prFitDimensions { |vgen|

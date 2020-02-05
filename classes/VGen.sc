@@ -57,6 +57,9 @@ VGen : AbstractFunction {
 	init { | ... theInputs |
 		inputs = theInputs;
 	}
+	copy {
+		^this;
+	}
 
 	composeUnaryOp { |selector|
 		^UnaryOpVGen.new(selector, this);
@@ -123,7 +126,6 @@ MultiOutVGen : VGen {
 VOutputProxy : VGen {
 	var <>source;
 	var <>outputIndex;
-	var <>name;
 
 	*new { |rate, sourceVGen, index|
 		^super.singleNew(rate, sourceVGen, index)
@@ -138,6 +140,7 @@ VOutputProxy : VGen {
 		outputIndex = index;
 		scinthIndex = source.scinthIndex;
 	}
+
 }
 
 // These extensions mostly do the same as their UGen counterparts,
