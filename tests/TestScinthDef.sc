@@ -151,7 +151,6 @@ TestScinthDef : UnitTest {
 		this.assertEquals(0, def.controls[1]);
 		this.assertEquals(0, def.controls[2]);
 
-
 		this.sanityCheckBuild(def);
 		this.sanityCheckYAML(def, def.asYAML);
 	}
