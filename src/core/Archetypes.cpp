@@ -2,6 +2,7 @@
 
 #include "core/AbstractScinthDef.hpp"
 #include "core/AbstractVGen.hpp"
+#include "core/Parameter.hpp"
 #include "core/VGen.hpp"
 
 #include "spdlog/spdlog.h"
@@ -112,7 +113,7 @@ Archetypes::extractFromNodes(const std::vector<YAML::Node>& nodes) {
             continue;
         }
 
-        // Two currently required tags are "name" and "vgens", check they exist.
+        // Parse name of ScinthDef.
         if (!node["name"]) {
             spdlog::error("Missing ScinthDef name tag.");
             continue;
@@ -120,12 +121,43 @@ Archetypes::extractFromNodes(const std::vector<YAML::Node>& nodes) {
 
         std::string name = node["name"].as<std::string>();
 
+        // Parse parameter list if present.
+        bool parseError = false;
+        std::vector<Parameter> parameters;
+        if (node["parameters"]) {
+            if (!node["parameters"].IsSequence()) {
+                spdlog::error("ScinthDef named {} got non-sequence parameters key", name);
+                continue;
+            }
+
+            for (auto param : node["parameters"]) {
+                // Expecting a dictionary with two keys per entry, "name" and "defaultValue".
+                if (!param.IsMap()) {
+                    spdlog::error("ScinthDef {} got non-dictionary parameters entry.", name);
+                    parseError = true;
+                    break;
+                }
+
+                if (!param["name"] || !param["defaultValue"]) {
+                    spdlog::error("ScinthDef {} has parameters entry missing requires key.", name);
+                    parseError = true;
+                    break;
+                }
+
+                parameters.emplace_back(Parameter(param["name"].as<std::string>(), param["defaultValue"].as<float>()));
+            }
+
+            if (parseError) {
+                continue;
+            }
+        }
+
+        // Parse VGen list.
         if (!node["vgens"] || !node["vgens"].IsSequence()) {
             spdlog::error("ScinthDef named {} missing or not sequence vgens key", name);
             continue;
         }
 
-        bool parseError = false;
         std::vector<VGen> instances;
         for (auto vgen : node["vgens"]) {
             // className, rate, outputs, inputs (can be optional)
@@ -199,7 +231,8 @@ Archetypes::extractFromNodes(const std::vector<YAML::Node>& nodes) {
                                           className);
                             parseError = true;
                             break;
-                        } // TODO: higher-dimensional constants.
+                        }
+                        // TODO: higher-dimensional constants.
                         float constantValue = input["value"].as<float>();
                         instance.addConstantInput(constantValue);
                     } else if (inputType == "vgen") {
@@ -224,6 +257,15 @@ Archetypes::extractFromNodes(const std::vector<YAML::Node>& nodes) {
                             break;
                         }
                         instance.addVGenInput(vgenIndex, outputIndex, dimension);
+                    } else if (inputType == "parameter") {
+                        if (!input["index"]) {
+                            spdlog::error("ScinthDef {} has VGen {} parameter input with no index key.", name,
+                                          className);
+                            parseError = true;
+                            break;
+                        }
+                        int parameterIndex = input["index"].as<int>();
+                        instance.addParameterInput(parameterIndex);
                     } else {
                         spdlog::error("ScinthDef {} has VGen {} with undefined input type {}.", name, className,
                                       inputType);
@@ -245,7 +287,7 @@ Archetypes::extractFromNodes(const std::vector<YAML::Node>& nodes) {
         if (parseError)
             continue;
 
-        std::shared_ptr<AbstractScinthDef> scinthDef(new AbstractScinthDef(name, instances));
+        std::shared_ptr<AbstractScinthDef> scinthDef(new AbstractScinthDef(name, parameters, instances));
         if (!scinthDef->build()) {
             spdlog::error("ScinthDef {} failed to build shaders.", name);
             continue;

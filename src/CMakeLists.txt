@@ -29,6 +29,8 @@ add_library(scintillator_core STATIC
     core/Intrinsic.hpp
     core/Manifest.cpp
     core/Manifest.hpp
+    core/Parameter.cpp
+    core/Parameter.hpp
     core/Shape.cpp
     core/Shape.hpp
     core/VGen.cpp
@@ -139,6 +141,8 @@ set(scintillator_synth_files
     osc/commands/NodeFree.hpp
     osc/commands/NodeRun.cpp
     osc/commands/NodeRun.hpp
+    osc/commands/NodeSet.cpp
+    osc/commands/NodeSet.hpp
     osc/commands/Notify.cpp
     osc/commands/Notify.hpp
     osc/commands/Quit.cpp

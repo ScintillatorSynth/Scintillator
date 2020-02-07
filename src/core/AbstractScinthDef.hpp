@@ -1,9 +1,11 @@
 #ifndef SRC_CORE_ABSTRACT_SCINTHDEF_HPP_
 #define SRC_CORE_ABSTRACT_SCINTHDEF_HPP_
 
-#include "Intrinsic.hpp"
-#include "Manifest.hpp"
+#include "core/Intrinsic.hpp"
+#include "core/Manifest.hpp"
+#include "core/Parameter.hpp"
 
+#include <unordered_map>
 #include <unordered_set>
 #include <string>
 #include <vector>
@@ -20,8 +22,13 @@ class VGen;
 class AbstractScinthDef {
 public:
     /*! Copy the supplied list of VGens into self and construct an AbstractScinthDef.
+     *
+     * \param name The name of this ScinthDef.
+     * \param parameters A list of parameter objects, in order.
+     * \param instances The VGens in topological order from inputs to output.
      */
-    AbstractScinthDef(const std::string& name, const std::vector<VGen>& instances);
+    AbstractScinthDef(const std::string& name, const std::vector<Parameter>& parameters,
+                      const std::vector<VGen>& instances);
 
     /*! Destructs an AbstractScinthDef and all associated resources.
      */
@@ -42,9 +49,16 @@ public:
      */
     std::string nameForVGenOutput(int vgenIndex, int outputIndex) const;
 
+    /*! Returns the index for a given parameter name, or -1 if name not found.
+     *
+     * \name The name of the parameter to look up.
+     * \return The index of the parameter with the supplied name or -1 if not found.
+     */
+    int indexForParameterName(const std::string& name) const;
+
     const std::string& name() const { return m_name; }
-    const VGen& instanceAt(int index) const { return m_instances[index]; }
-    size_t numberOfInstances() const { return m_instances.size(); }
+    const std::vector<Parameter>& parameters() const { return m_parameters; }
+    const std::vector<VGen>& instances() const { return m_instances; }
     const Shape* shape() const { return m_shape.get(); }
     const std::unordered_set<Intrinsic> intrinsics() const { return m_intrinsics; }
     const std::string& prefix() const { return m_prefix; }
@@ -53,6 +67,7 @@ public:
     const Manifest& vertexManifest() const { return m_vertexManifest; }
     const Manifest& uniformManifest() const { return m_uniformManifest; }
     const std::string& vertexPositionElementName() const { return m_vertexPositionElementName; }
+    const std::string& parametersStructName() const { return m_parametersStructName; }
 
 private:
     bool buildNames();
@@ -61,10 +76,15 @@ private:
     bool buildFragmentShader();
 
     std::string m_name;
+    std::vector<Parameter> m_parameters;
     std::vector<VGen> m_instances;
     std::unique_ptr<Shape> m_shape;
 
     std::string m_prefix;
+    std::string m_vertexPositionElementName;
+    std::string m_fragmentOutputName;
+    std::string m_parametersStructName;
+    std::unordered_map<std::string, int> m_parameterIndices;
     std::unordered_set<Intrinsic> m_intrinsics;
     std::vector<std::vector<std::string>> m_inputs;
     std::vector<std::vector<std::string>> m_outputs;
@@ -73,8 +93,6 @@ private:
     std::string m_fragmentShader;
     Manifest m_vertexManifest;
     Manifest m_uniformManifest;
-    std::string m_vertexPositionElementName;
-    std::string m_fragmentOutputName;
 };
 
 } // namespace core

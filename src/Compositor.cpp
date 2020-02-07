@@ -86,8 +86,13 @@ bool Compositor::cue(const std::string& scinthDefName, int nodeID) {
     if (nodeID < 0) {
         nodeID = m_nodeSerial.fetch_sub(1);
     }
-    std::shared_ptr<Scinth> scinth = ScinthDef::cue(scinthDef, nodeID);
-    if (!scinth) {
+    std::shared_ptr<Scinth> scinth(new Scinth(m_device, nodeID, scinthDef));
+    // TODO:
+    // * deprecate ScinthDef::cue
+    // * expose members of ScinthDef to Scinth,
+    // * make Scinth::buildBuffers into private method rebuildBuffers()
+    // * have ScintH::create call it.
+    if (!scinth->create()) {
         spdlog::error("failed to build Scinth {} from ScinthDef {}.", nodeID, scinthDefName);
         return false;
     }
@@ -122,7 +127,7 @@ void Compositor::freeNodes(const std::vector<int>& nodeIDs) {
             }
             freeScinthLockAcquired(node);
         } else {
-            spdlog::warn("attempted to free nonexistent nodeID {}", nodeID);
+            spdlog::warn("Compositor attempted to free nonexistent nodeID {}", nodeID);
         }
     }
 
@@ -138,8 +143,28 @@ void Compositor::setRun(const std::vector<std::pair<int, int>>& pairs) {
         if (node != m_scinthMap.end()) {
             (*(node->second))->setRunning(pair.second != 0);
         } else {
-            spdlog::warn("attempted to set pause/play on nonexistent nodeID {}", pair.first);
+            spdlog::warn("Compositor attempted to set pause/play on nonexistent nodeID {}", pair.first);
         }
+    }
+
+    m_commandBufferDirty = true;
+}
+
+void Compositor::setNodeParameters(int nodeID, const std::vector<std::pair<std::string, float>>& namedValues,
+                                   const std::vector<std::pair<int, float>> indexedValues) {
+    std::lock_guard<std::mutex> lock(m_scinthMutex);
+    auto nodePair = m_scinthMap.find(nodeID);
+    if (nodePair == m_scinthMap.end()) {
+        spdlog::warn("Compositor attempted to set parameters on nonexistent nodeID {}", nodeID);
+        return;
+    }
+    auto node = *(nodePair->second);
+
+    for (auto namedPair : namedValues) {
+        node->setParameterByName(namedPair.first, namedPair.second);
+    }
+    for (auto indexedPair : indexedValues) {
+        node->setParameterByIndex(indexedPair.first, indexedPair.second);
     }
 
     m_commandBufferDirty = true;
@@ -213,7 +238,7 @@ bool Compositor::rebuildCommandBuffer() {
     VkClearValue clearValue = {};
     clearValue.color = clearColor;
 
-    spdlog::info("rebuilding Compositor command buffer with {} secondary command buffers", m_secondaryCommands.size());
+    spdlog::debug("rebuilding Compositor command buffer with {} secondary command buffers", m_secondaryCommands.size());
 
     for (auto i = 0; i < m_canvas->numberOfImages(); ++i) {
         VkCommandBufferBeginInfo beginInfo = {};
@@ -222,7 +247,7 @@ bool Compositor::rebuildCommandBuffer() {
         beginInfo.pInheritanceInfo = nullptr;
 
         if (vkBeginCommandBuffer(m_primaryCommands->buffer(i), &beginInfo) != VK_SUCCESS) {
-            spdlog::error("failed beginning clear command buffer for Compositor");
+            spdlog::error("Compositor failed beginning primary command buffer.");
             return false;
         }
 
@@ -250,6 +275,7 @@ bool Compositor::rebuildCommandBuffer() {
 
         vkCmdEndRenderPass(m_primaryCommands->buffer(i));
         if (vkEndCommandBuffer(m_primaryCommands->buffer(i)) != VK_SUCCESS) {
+            spdlog::error("Compositor failed ending primary command buffer.");
             return false;
         }
     }

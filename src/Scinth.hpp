@@ -27,19 +27,9 @@ public:
 
     /*! Do any one-time setup on this Scinth, including creating the Uniform Buffer.
      *
-     * \param startTime The point in time that this Scinth should treat as its start time.
-     * \param uniformLayout Uniform descriptor set, can be nullptr if no Uniform needed.
-     * \param numberOfImages Number of images in the Canvas. Each image will get its own Uniform buffer to allow for
-     *        independent rendering of the images.
      * \return true if successful, false if not.
      */
-    bool create(vk::UniformLayout* uniformLayout, size_t numberOfImages);
-
-    /*! Build the CommandBuffers to render this Scinth. Can be called multiple times to rebuild them as needed.
-     */
-    bool buildBuffers(std::shared_ptr<vk::CommandPool> commandPool, vk::Canvas* canvas,
-                      std::shared_ptr<vk::Buffer> vertexBuffer, std::shared_ptr<vk::Buffer> indexBuffer,
-                      std::shared_ptr<vk::Pipeline> pipeline);
+    bool create();
 
     /*! Prepare for the next frame to render.
      *
@@ -58,11 +48,27 @@ public:
      */
     void setRunning(bool run) { m_running = run; }
 
+    /*! Sets a parameter value by name. Will cause a command buffer rebuild on next call to prepareFrame().
+     *
+     * \param name The name of the parameter to set.
+     * \param value The value of the parameter.
+     */
+    void setParameterByName(const std::string& name, float value);
+
+    /*! Sets a parameter value by index. Will cause a command buffer rebuild on next call to prepareFrame().
+     *
+     * \param index The index of the parameter to set.
+     * \param value The new value of the parameter.
+     */
+    void setParameterByIndex(int index, float value);
+
     std::shared_ptr<vk::CommandBuffer> frameCommands() { return m_commands; }
     int nodeID() const { return m_nodeID; }
     bool running() const { return m_running; }
 
 private:
+    bool rebuildBuffers();
+
     std::shared_ptr<vk::Device> m_device;
     int m_nodeID;
     bool m_cueued;
@@ -74,6 +80,9 @@ private:
     std::shared_ptr<vk::Uniform> m_uniform;
     std::shared_ptr<vk::CommandBuffer> m_commands;
     bool m_running;
+    std::unique_ptr<float[]> m_parameterValues;
+    size_t m_numberOfParameters;
+    bool m_commandBuffersDirty;
 };
 
 } // namespace scin

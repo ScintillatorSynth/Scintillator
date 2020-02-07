@@ -63,28 +63,13 @@ bool ScinthDef::build(vk::ShaderCompiler* compiler) {
 
     m_pipeline.reset(new vk::Pipeline(m_device));
     if (!m_pipeline->create(m_abstractScinthDef->vertexManifest(), m_abstractScinthDef->shape(), m_canvas.get(),
-                            m_vertexShader, m_fragmentShader, m_uniformLayout)) {
+                            m_vertexShader, m_fragmentShader, m_uniformLayout,
+                            m_abstractScinthDef->parameters().size() * sizeof(float))) {
         spdlog::error("error creating pipeline for ScinthDef {}", m_abstractScinthDef->name());
         return false;
     }
 
     return true;
-}
-
-// static
-std::shared_ptr<Scinth> ScinthDef::cue(std::shared_ptr<ScinthDef> scinthDef, int nodeID) {
-    std::shared_ptr<Scinth> scinth(new Scinth(scinthDef->m_device, nodeID, scinthDef));
-    if (!scinth->create(scinthDef->m_uniformLayout.get(), scinthDef->m_canvas->numberOfImages())) {
-        spdlog::error("failed to create Scinth {} from ScinthDef {}", nodeID, scinthDef->m_abstractScinthDef->name());
-        return nullptr;
-    }
-    if (!scinth->buildBuffers(scinthDef->m_commandPool, scinthDef->m_canvas.get(), scinthDef->m_vertexBuffer,
-                              scinthDef->m_indexBuffer, scinthDef->m_pipeline)) {
-        spdlog::error("failed to build command buffers on Scinth {} from ScinthDef {}", nodeID,
-                      scinthDef->m_abstractScinthDef->name());
-        return nullptr;
-    }
-    return scinth;
 }
 
 bool ScinthDef::buildVertexData() {

@@ -23,6 +23,9 @@ ScinthDef {
 	// create at most one element in the controls member Array
 	prBuildControls {
 		controlNames = func.def.argNames;
+		if (controlNames.size >= 32, {
+			Error.new("Scintillator ScinthDes support a maximum of 32 arguments.").throw;
+		});
 		if (controlNames.isNil, {
 			controls = [];
 			controlNames = [];
@@ -89,6 +92,7 @@ ScinthDef {
 					{ input.isControlVGen } {
 						yaml = yaml ++ secondDepth ++ "- type: parameter\n";
 						yaml = yaml ++ secondDepth ++ "  index: " + input.outputIndex ++ "\n";
+						yaml = yaml ++ secondDepth ++ "  dimension: 1\n";
 					}
 					{ input.isVGen } {
 						yaml = yaml ++ secondDepth ++ "- type: vgen\n";

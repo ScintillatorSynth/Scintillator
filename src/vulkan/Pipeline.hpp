@@ -27,7 +27,7 @@ public:
 
     bool create(const core::Manifest& vertexManifest, const core::Shape* shape, Canvas* canvas,
                 std::shared_ptr<Shader> vertexShader, std::shared_ptr<Shader> fragmentShader,
-                std::shared_ptr<UniformLayout> uniformLayout);
+                std::shared_ptr<UniformLayout> uniformLayout, size_t pushConstantBlockSize);
     void destroy();
 
     VkPipeline get() { return m_pipeline; }

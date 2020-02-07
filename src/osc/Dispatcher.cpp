@@ -19,6 +19,7 @@
 #include "osc/commands/LogLevel.hpp"
 #include "osc/commands/NodeFree.hpp"
 #include "osc/commands/NodeRun.hpp"
+#include "osc/commands/NodeSet.hpp"
 #include "osc/commands/Notify.hpp"
 #include "osc/commands/Quit.hpp"
 #include "osc/commands/ScinVersion.hpp"
@@ -92,6 +93,7 @@ bool Dispatcher::create(const std::string& bindPort, bool dumpOSC) {
     m_commands[commands::Command::kDFree].reset(new commands::DefFree(this));
     m_commands[commands::Command::kNFree].reset(new commands::NodeFree(this));
     m_commands[commands::Command::kNRun].reset(new commands::NodeRun(this));
+    m_commands[commands::Command::kNSet].reset(new commands::NodeSet(this));
     m_commands[commands::Command::kSNew].reset(new commands::ScinthNew(this));
     m_commands[commands::Command::kNRTScreenShot].reset(new commands::ScreenShot(this));
     m_commands[commands::Command::kNRTAdvanceFrame].reset(new commands::AdvanceFrame(this));
