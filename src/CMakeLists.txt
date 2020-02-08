@@ -344,7 +344,7 @@ add_custom_target(sclang_unit_tests
 
 # Reference test images. We always use a specific git hash, to control which images we compare against.
 include(ExternalProject)
-set(SCIN_TEST_IMAGE_HASH "79b94eb88ae9371ed4c63befbd142ae9b8c15527")
+set(SCIN_TEST_IMAGE_HASH "848ac1b2586984844d49fb22000907e246b472c6")
 ExternalProject_Add(reference_images
     PREFIX ref
     STEP_TARGETS update

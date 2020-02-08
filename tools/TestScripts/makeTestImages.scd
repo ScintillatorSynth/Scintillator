@@ -34,7 +34,7 @@ fork {
 	server.bootSync(c);
 
 	testDefs.do({ |def|
-		var scinth, fileName, t;
+		var scinth, fileName, params, t;
 		// Make sure output subdirectory exists.
 		(imageOut +/+ def["category"]).mkdir;
 		if (def["scinthDef"].size > 0, {
@@ -43,9 +43,19 @@ fork {
 			server.sync;
 			scinth = Scinth.new(\test, 1);
 		});
+		if (def["parameters"].notNil, {
+			params = def["parameters"];
+		}, {
+			params = ["none"].extend(def["captureTimes"].size, "none");
+		});
+		// *** Need to add support for the new parameters: key right here.
 		t = 0;
-		def["captureTimes"].do({ |dt|
+		def["captureTimes"].do({ |dt, i|
 			d.test = false;
+			if (params[i].class == Dictionary, {
+				var pairs = params[i].asPairs.collect({ |item, j| if ((j % 2) == 1, { item.asFloat; }, { item }) });
+				scinth.set(*pairs);
+			});
 			dt = dt.asInteger;
 			fileName = imageOut +/+ def["category"] +/+ def["shortName"] ++ "_" ++ t.asString ++ ".png";
 			"queing screenShot at %".format(fileName).postln;
