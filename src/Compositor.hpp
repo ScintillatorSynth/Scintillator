@@ -74,6 +74,15 @@ public:
      */
     void setRun(const std::vector<std::pair<int, int>>& pairs);
 
+    /*! Change the parameter values for a node.
+     *
+     * \param nodeID The ID of the node to modify.
+     * \param namedValues A vector of pairs of parameter names and new values.
+     * \param indexedValues A vector of pairs of parameter indexes and new values.
+     */
+    void setNodeParameters(int nodeID, const std::vector<std::pair<std::string, float>>& namedValues,
+                           const std::vector<std::pair<int, float>> indexedValues);
+
     /*! Prepare and return a CommandBuffers that when executed in order will render the current frame.
      *
      * \param imageIndex The index of the imageView in the Canvas we will be rendering in to.

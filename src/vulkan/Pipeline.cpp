@@ -19,7 +19,7 @@ Pipeline::~Pipeline() { destroy(); }
 
 bool Pipeline::create(const core::Manifest& vertexManifest, const core::Shape* shape, Canvas* canvas,
                       std::shared_ptr<Shader> vertexShader, std::shared_ptr<Shader> fragmentShader,
-                      std::shared_ptr<UniformLayout> uniformLayout) {
+                      std::shared_ptr<UniformLayout> uniformLayout, size_t pushConstantBlockSize) {
     // Keep references to these graphics objects so they won't be destroyed until after this Pipeline is destroyed.
     m_vertexShader = vertexShader;
     m_fragmentShader = fragmentShader;
@@ -149,8 +149,18 @@ bool Pipeline::create(const core::Manifest& vertexManifest, const core::Shape* s
         pipelineLayoutInfo.setLayoutCount = 0;
         pipelineLayoutInfo.pSetLayouts = nullptr;
     }
-    pipelineLayoutInfo.pushConstantRangeCount = 0;
-    pipelineLayoutInfo.pPushConstantRanges = nullptr;
+    VkPushConstantRange pushConstantRange = {};
+    if (pushConstantBlockSize) {
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        pushConstantRange.offset = 0;
+        pushConstantRange.size = pushConstantBlockSize;
+        pipelineLayoutInfo.pushConstantRangeCount = 1;
+        pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+    } else {
+        pipelineLayoutInfo.pushConstantRangeCount = 0;
+        pipelineLayoutInfo.pPushConstantRanges = nullptr;
+    }
+
     if (vkCreatePipelineLayout(m_device->get(), &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS) {
         return false;
     }

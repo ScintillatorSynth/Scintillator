@@ -39,19 +39,13 @@ public:
      */
     bool build(vk::ShaderCompiler* compiler);
 
-    /*! Create a Scinth instance based from this ScinthDef.
-     *
-     * The Scinth needs a shared_ptr reference to the originating ScinthDef, so that the ScinthDef will remain allocated
-     * until all referencing Scinths are themselves deleted. So this is a static method that provides that shared
-     * pointer as the first argument.
-     * TODO: this is totally a code smell.
-     *
-     * \param scinthDef The ScinthDef to build this Scinth from.
-     * \param nodeID The unique ID to assign to the running Scinth.
-     */
-    static std::shared_ptr<Scinth> cue(std::shared_ptr<ScinthDef> scinthDef, int nodeID);
-
+    std::shared_ptr<vk::Canvas> canvas() const { return m_canvas; }
+    std::shared_ptr<vk::CommandPool> commandPool() const { return m_commandPool; }
     std::shared_ptr<const core::AbstractScinthDef> abstract() const { return m_abstractScinthDef; }
+    std::shared_ptr<vk::HostBuffer> vertexBuffer() const { return m_vertexBuffer; }
+    std::shared_ptr<vk::HostBuffer> indexBuffer() const { return m_indexBuffer; }
+    std::shared_ptr<vk::UniformLayout> uniformLayout() const { return m_uniformLayout; }
+    std::shared_ptr<vk::Pipeline> pipeline() const { return m_pipeline; }
 
 private:
     bool buildVertexData();

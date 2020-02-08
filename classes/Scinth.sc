@@ -17,4 +17,8 @@ Scinth {
 	run { |flag=true|
 		server.sendMsg('/scin_n_run', nodeID, flag.binaryValue);
 	}
+
+	set { |...args|
+		server.sendMsg('/scin_n_set', nodeID, *args);
+	}
 }

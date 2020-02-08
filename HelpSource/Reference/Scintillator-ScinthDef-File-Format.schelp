@@ -19,8 +19,16 @@ A ScinthDef file contains one or more YAML documents. Each document roughly foll
 table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
 ## code::name:: || string || name of the ScinthDef, used as primary means of identification
-## code::parameters:: || list || empty for now, and ignored
+## code::parameters:: || list || An emphasis::optional:: key, if the ScinthDef has parameters, will be Parameter YAML dictionaries in an ordered list
 ## code::vgens:: || list || the VGen YAML dictionaries in an ordered list
+::
+
+subsection::Parameter Dictionary Spec
+
+table::
+## strong::key:: || strong::YAML type:: || strong::notes::
+## code::name:: || string || Name of the parameter.
+## code::defaultValue:: || float || The default value of the parameter.
 ::
 
 subsection::VGen Dictionary Spec
@@ -61,10 +69,10 @@ table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
 ## code::value:: || float || All constants will be treated as floating point numbers
 ::
-## code::intrinsic:: ||
+## code::parameter:: ||
 table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
-## code::which:: || string || One of code::x_pos:: or the other predefined intrinsics (see link::Classes/ScinIntrinsic:: for details)
+## code::index:: || int || The parameter index to use.
 ::
 ::
 

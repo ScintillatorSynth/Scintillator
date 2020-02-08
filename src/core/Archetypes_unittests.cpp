@@ -258,9 +258,9 @@ TEST(ArchetypesTest, ValidYAMLStrings) {
                   .size());
     ASSERT_EQ(1, parser->numberOfAbstractScinthDefs());
     std::shared_ptr<const AbstractScinthDef> scinthDef = parser->getAbstractScinthDefNamed("firstScinth");
-    ASSERT_EQ(1, scinthDef->numberOfInstances());
-    EXPECT_EQ("NoInput", scinthDef->instanceAt(0).abstractVGen()->name());
-    EXPECT_EQ(0, scinthDef->instanceAt(0).numberOfInputs());
+    ASSERT_EQ(1, scinthDef->instances().size());
+    EXPECT_EQ("NoInput", scinthDef->instances()[0].abstractVGen()->name());
+    EXPECT_EQ(0, scinthDef->instances()[0].numberOfInputs());
 
     EXPECT_EQ(2,
               parser
@@ -308,32 +308,32 @@ TEST(ArchetypesTest, ValidYAMLStrings) {
     ASSERT_EQ(2, parser->numberOfAbstractScinthDefs());
 
     scinthDef = parser->getAbstractScinthDefNamed("firstScinth");
-    ASSERT_EQ(2, scinthDef->numberOfInstances());
-    EXPECT_EQ("OneInput", scinthDef->instanceAt(0).abstractVGen()->name());
-    ASSERT_EQ(1, scinthDef->instanceAt(0).numberOfInputs());
+    ASSERT_EQ(2, scinthDef->instances().size());
+    EXPECT_EQ("OneInput", scinthDef->instances()[0].abstractVGen()->name());
+    ASSERT_EQ(1, scinthDef->instances()[0].numberOfInputs());
     float inputValue = 0.0f;
     int vgenIndex = -1;
     int outputIndex = -2;
-    EXPECT_TRUE(scinthDef->instanceAt(0).getInputConstantValue(0, inputValue));
-    EXPECT_FALSE(scinthDef->instanceAt(0).getInputVGenIndex(0, vgenIndex, outputIndex));
+    EXPECT_TRUE(scinthDef->instances()[0].getInputConstantValue(0, inputValue));
+    EXPECT_FALSE(scinthDef->instances()[0].getInputVGenIndex(0, vgenIndex, outputIndex));
     EXPECT_EQ(-123.0f, inputValue);
     EXPECT_EQ(-1, vgenIndex); // vgenIndex should remain unmodified as the input is a constant.
     EXPECT_EQ(-2, outputIndex);
-    EXPECT_EQ("TwoInput", scinthDef->instanceAt(1).abstractVGen()->name());
-    ASSERT_EQ(2, scinthDef->instanceAt(1).numberOfInputs());
-    EXPECT_FALSE(scinthDef->instanceAt(1).getInputConstantValue(0, inputValue));
-    EXPECT_TRUE(scinthDef->instanceAt(1).getInputVGenIndex(0, vgenIndex, outputIndex));
+    EXPECT_EQ("TwoInput", scinthDef->instances()[1].abstractVGen()->name());
+    ASSERT_EQ(2, scinthDef->instances()[1].numberOfInputs());
+    EXPECT_FALSE(scinthDef->instances()[1].getInputConstantValue(0, inputValue));
+    EXPECT_TRUE(scinthDef->instances()[1].getInputVGenIndex(0, vgenIndex, outputIndex));
     EXPECT_EQ(-123.0f, inputValue); // inputValue should remain unmodified as the input is a VGen.
     EXPECT_EQ(0, vgenIndex);
 
     scinthDef = parser->getAbstractScinthDefNamed("secondScinth");
-    ASSERT_EQ(1, scinthDef->numberOfInstances());
-    EXPECT_EQ("ThreeInput", scinthDef->instanceAt(0).abstractVGen()->name());
-    EXPECT_TRUE(scinthDef->instanceAt(0).getInputConstantValue(0, inputValue));
+    ASSERT_EQ(1, scinthDef->instances().size());
+    EXPECT_EQ("ThreeInput", scinthDef->instances()[0].abstractVGen()->name());
+    EXPECT_TRUE(scinthDef->instances()[0].getInputConstantValue(0, inputValue));
     EXPECT_EQ(1.0f, inputValue);
-    EXPECT_TRUE(scinthDef->instanceAt(0).getInputConstantValue(1, inputValue));
+    EXPECT_TRUE(scinthDef->instances()[0].getInputConstantValue(1, inputValue));
     EXPECT_EQ(2.0f, inputValue);
-    EXPECT_TRUE(scinthDef->instanceAt(0).getInputConstantValue(2, inputValue));
+    EXPECT_TRUE(scinthDef->instances()[0].getInputConstantValue(2, inputValue));
     EXPECT_EQ(3.0f, inputValue);
 }
 

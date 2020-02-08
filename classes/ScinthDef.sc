@@ -3,6 +3,8 @@ ScinthDef {
 	var <>func;
 	var <>children;
 	var <>defServer;
+	var <>controls;
+	var <>controlNames;
 
 	*new { |name, vGenGraphFunc|
 		^super.newCopyArgs(name.asSymbol).children_(Array.new(64)).build(vGenGraphFunc);
@@ -11,10 +13,27 @@ ScinthDef {
 	build { |vGenGraphFunc|
 		VGen.buildScinthDef = this;
 		func = vGenGraphFunc;
-		func.valueArray();
+		func.valueArray(this.prBuildControls);
 		VGen.buildScinthDef = nil;
 		children.do({ |vgen, index| this.prFitDimensions(vgen) });
 		^this;
+	}
+
+	// All controls right now are at the fragment rate, so no grouping or sorting is needed, and we only
+	// create at most one element in the controls member Array
+	prBuildControls {
+		controlNames = func.def.argNames;
+		if (controlNames.size >= 32, {
+			Error.new("Scintillator ScinthDes support a maximum of 32 arguments.").throw;
+		});
+		if (controlNames.isNil, {
+			controls = [];
+			controlNames = [];
+		}, {
+			controls = func.def.prototypeFrame.extend(controlNames.size);
+			controls = controls.collect({ |value| value ? 0.0 });
+			^VControl.fg(controls)
+		});
 	}
 
 	prFitDimensions { |vgen|
@@ -23,8 +42,9 @@ ScinthDef {
 		vgen.inDims = Array.fill(vgen.inputs.size, { |i|
 			case
 			{ vgen.inputs[i].isNumber } { 1 }
+			{ vgen.inputs[i].isControlVGen } { 1 }
 			{ vgen.inputs[i].isVGen } { children[vgen.inputs[i].scinthIndex].outDims[0] }
-			{ this.notImplemented }
+			{ "*** vgen input class: %".format(vgen.inputs[i]).postln; nil; }
 		});
 
 		// Search for dimensions among list of supported input dimensions.
@@ -42,13 +62,21 @@ ScinthDef {
 	}
 
 	asYAML { |indentDepth = 0|
-		var yaml, indent, depthIndent, secondDepth;
+		var indent, depthIndent, secondDepth, yaml;
 		indent = "";
 		indentDepth.do({ indent = indent ++ "    " });
-		yaml = indent ++ "name: %\n".format(name);
-		yaml = yaml ++ indent ++ "vgens:\n";
 		depthIndent = indent ++ "    ";
 		secondDepth = depthIndent ++ "    ";
+
+		yaml = indent ++ "name: %\n".format(name);
+		if (controls.size > 0, {
+			yaml = yaml ++ indent ++ "parameters:\n";
+			controls.do({ |control, i|
+				yaml = yaml ++ depthIndent ++ "- name: " ++ controlNames[i] ++ "\n";
+				yaml = yaml ++ depthIndent ++ "  defaultValue: " ++ control.asString ++ "\n";
+			});
+		});
+		yaml = yaml ++ indent ++ "vgens:\n";
 		children.do({ | vgen, index |
 			yaml = yaml ++ depthIndent ++ "- className:"  + vgen.name ++ "\n";
 			yaml = yaml ++ depthIndent ++ "  rate: fragment\n";
@@ -61,13 +89,18 @@ ScinthDef {
 						yaml = yaml ++ secondDepth ++ "  dimension:" + vgen.inDims[inputIndex] ++ "\n";
 						yaml = yaml ++ secondDepth ++ "  value:" + input.asString ++ "\n";
 					}
+					{ input.isControlVGen } {
+						yaml = yaml ++ secondDepth ++ "- type: parameter\n";
+						yaml = yaml ++ secondDepth ++ "  index: " + input.outputIndex ++ "\n";
+						yaml = yaml ++ secondDepth ++ "  dimension: 1\n";
+					}
 					{ input.isVGen } {
 						yaml = yaml ++ secondDepth ++ "- type: vgen\n";
 						yaml = yaml ++ secondDepth ++ "  vgenIndex:" + input.scinthIndex.asString ++ "\n";
 						yaml = yaml ++ secondDepth ++ "  outputIndex: 0\n";
 						yaml = yaml ++ secondDepth ++ "  dimension:" + vgen.inDims[inputIndex] ++ "\n";
 					}
-					{ this.notImplemented }
+					{ thisMethod.notImplemented }
 				});
 			});
 			yaml = yaml ++ depthIndent ++ "  outputs:\n";

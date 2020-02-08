@@ -26,6 +26,12 @@ public:
     void addConstantInput(glm::vec3 constantValue);
     void addConstantInput(glm::vec4 constantValue);
 
+    /*! Add a named ScinthDef parameter as input.
+     *
+     * \param parameterIndex The index of the parameter in the overall parameter list.
+     */
+    void addParameterInput(int parameterIndex);
+
     /*! Add output from another VGen as input.
      *
      * \note  These values are not validated as they require knowledge outside of this VGen to validate.
@@ -34,6 +40,7 @@ public:
      * \param dimension The dimension of the input.
      */
     void addVGenInput(int vgenIndex, int outputIndex, int dimension);
+
 
     /*! Add an output to this VGen with supplied dimension.
      *
@@ -47,6 +54,15 @@ public:
      */
     bool validate() const;
 
+    enum InputType { kConstant, kVGen, kParameter, kInvalid };
+
+    /*! Return the type of input associated with the provided index.
+     *
+     * \param index The index of the input in question.
+     * \return InputType an enumeration of the type of input, or kInvalid on error.
+     */
+    InputType getInputType(int index) const;
+
     /*! If the input at index is a constant, return true and store the constant value in outValue.
      *
      * \param index The index of the input in question.
@@ -57,6 +73,14 @@ public:
     bool getInputConstantValue(int index, glm::vec2& outValue) const;
     bool getInputConstantValue(int index, glm::vec3& outValue) const;
     bool getInputConstantValue(int index, glm::vec4& outValue) const;
+
+    /*! If the input at index is a parameter, return true and store the parameter index value in outIndex.
+     *
+     * \param index The index of the input in question.
+     * \param outIndex The index of the parameter input assoicated with this VGen input.
+     * \return true if the input at index is a parameter, false otherwise.
+     */
+    bool getInputParameterIndex(int index, int& outIndex) const;
 
     /*! If the input at index is a VGen, return true and store the vgen index value in outIndex.
      *
@@ -76,7 +100,6 @@ public:
 
 private:
     struct VGenInput {
-        enum InputType { kConstant, kVGen };
         explicit VGenInput(float c): type(kConstant), dimension(1) { value.constant1 = c; }
         explicit VGenInput(glm::vec2 c): type(kConstant), dimension(2) { value.constant2 = c; }
         explicit VGenInput(glm::vec3 c): type(kConstant), dimension(3) { value.constant3 = c; }
@@ -84,11 +107,13 @@ private:
         explicit VGenInput(int index, int out, int dim): type(kVGen), dimension(dim) {
             value.vgen = glm::ivec2(index, out);
         }
+        explicit VGenInput(int paramIndex): type(kParameter), dimension(1) { value.parameterIndex = paramIndex; }
 
         InputType type;
         int dimension;
         union Value {
             float constant1;
+            int parameterIndex;
             glm::vec2 constant2;
             glm::vec3 constant3;
             glm::vec4 constant4;

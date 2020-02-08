@@ -22,7 +22,7 @@ public:
      *
      * \param name The name to use for this VGen, must be unique.
      * \param inputs A list of input names, can be empty.
-     * \param intermediates A list of names of intermediate or temporary variables, if any.
+     * \param ouptuts A list of output names, must be at least one.
      * \param inputDimensions Each subarray describes the allowable dimensions of the input at that index, and so should
      *        have the same number of entries as the number of inputs to the VGen. There should be the same number of
      *        subarrays in inputDimensions as there are in outputDimensions, and the values at each index of both arrays

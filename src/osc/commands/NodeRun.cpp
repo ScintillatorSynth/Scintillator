@@ -19,7 +19,7 @@ void NodeRun::processMessage(int argc, lo_arg** argv, const char* types, lo_addr
         spdlog::warn("OSC NodeRun got odd number of arguments, ignoring last value.");
         --argc;
     }
-    for (int i = 0; i < argc; i += 2) {
+    for (auto i = 0; i < argc; i += 2) {
         if (types[i] == LO_INT32 && types[i + 1] == LO_INT32) {
             pairs.emplace_back(
                 std::make_pair(*reinterpret_cast<int32_t*>(argv[i]), *reinterpret_cast<int32_t*>(argv[i + 1])));

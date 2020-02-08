@@ -161,12 +161,13 @@ BinaryOpVGen : BasicOpVGen {
 		inputs = [a, b];
 	}
 
+	// Allow scalar products with vectors to produce vectors.
 	inputDimensions {
-		^[[1, 1], [2, 2], [3, 3], [4, 4]];
+		^[[1, 1], [2, 2], [3, 3], [4, 4]] ++ [[1, 2], [1, 3], [1, 4]] ++ [[2, 1], [3, 1], [4, 1]];
 	}
 
 	outputDimensions {
-		^[[1], [2], [3], [4]];
+		^[[1], [2], [3], [4]] ++ [[2], [3], [4]] ++ [[2], [3], [4]];
 	}
 
 }

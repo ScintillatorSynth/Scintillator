@@ -39,3 +39,33 @@ RGBAOut : VGen {
 		^[[4]];
 	}
 }
+
+VControl : MultiOutVGen {
+	var <>values;
+
+	// TODO: it is not accurate to call these fragment rate.
+	*fg { |values|
+		^this.multiNewList([\fragment] ++ values.asArray);
+	}
+
+	init { |...argValues|
+		values = argValues;
+		^this.initOutputs(values.size, rate);
+	}
+
+	addToScinth {
+		scinthDef = buildScinthDef;
+		// Although we are a VGen we should not be a part of the VGen graph, so we
+		// don't add ourselves to it here.
+	}
+
+	isControlVGen { ^true }
+
+	inputDimensions {
+		^[[]];
+	}
+
+	outputDimensions {
+		^[[1].stutter(outputs.size)];
+	}
+}

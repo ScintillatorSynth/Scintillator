@@ -39,10 +39,10 @@ VGen : AbstractFunction {
 		});
 
 		// TODO: test multichannel, to understand this.
-		newArgList = Array.newClear(argList, size);
+		newArgList = Array.newClear(argList.size);
 		results = Array.newClear(size);
-		size.do({ | i |
-			argList.do({ | item, j |
+		size.do({ |i|
+			argList.do({ |item, j|
 				newArgList.put(j, if (item.class == Array, {
 					item.wrapAt(i);
 				}, {
@@ -51,6 +51,7 @@ VGen : AbstractFunction {
 			});
 			results.put(i, this.multiNewList(newArgList));
 		});
+		^results;
 	}
 
 	init { | ... theInputs |
@@ -89,13 +90,57 @@ VGen : AbstractFunction {
 	isVGen { ^true }
 	name { ^this.class.asString }
 	numOutputs { this.outputDimensions.length }
+	outputIndex { ^0 }
 
 	inputDimensions {
-		^[];
+		^[[]];
 	}
 
 	outputDimensions {
-		^[];
+		^[[]];
+	}
+}
+
+MultiOutVGen : VGen {
+	var <outputs;
+
+	initOutputs { |numOutputs, rate|
+		outputs = Array.fill(numOutputs, { |i|
+			VOutputProxy.new(rate, this, i);
+		});
+		if (numOutputs == 1, {
+			^outputs.at(0);
+		});
+		^outputs;
+	}
+
+	numOutputs { ^outputs.size }
+	scinthIndex_ { |index|
+		scinthIndex = index;
+		outputs.do({ |output| output.scinthIndex = index; });
+	}
+}
+
+VOutputProxy : VGen {
+	var <>source;
+	var <>outputIndex;
+
+	*new { |rate, sourceVGen, index|
+		^super.singleNew(rate, sourceVGen, index)
+	}
+
+	addToScinth {
+		scinthDef = buildScinthDef;
+	}
+
+	init { |sourceVGen, index|
+		source = sourceVGen;
+		outputIndex = index;
+		scinthIndex = source.scinthIndex;
+	}
+
+	isControlVGen {
+		^source.isControlVGen;
 	}
 }
 
@@ -106,6 +151,7 @@ VGen : AbstractFunction {
 	asVGenInput { ^this }
 	isValidVGenInput { ^false }
 	isVGen { ^false }
+	isControlVGen { ^false }
 }
 
 + AbstractFunction {
@@ -115,7 +161,7 @@ VGen : AbstractFunction {
 
 	isValidVGenInput { ^true }
 
-	// could add some additional interesting ops ugens here, thinking
+	// could add some additional interesting ops vgens here, thinking
 	// .dot, .cross, etc.
 }
 

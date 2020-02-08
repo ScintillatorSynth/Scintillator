@@ -12,8 +12,10 @@
 
 namespace scin { namespace core {
 
-AbstractScinthDef::AbstractScinthDef(const std::string& name, const std::vector<VGen>& instances):
+AbstractScinthDef::AbstractScinthDef(const std::string& name, const std::vector<Parameter>& parameters,
+                                     const std::vector<VGen>& instances):
     m_name(name),
+    m_parameters(parameters),
     m_instances(instances),
     m_shape(new Quad()) {}
 
@@ -37,6 +39,7 @@ bool AbstractScinthDef::build() {
 
 std::string AbstractScinthDef::nameForVGenOutput(int vgenIndex, int outputIndex) const {
     if (vgenIndex < 0 || outputIndex >= m_instances.size()) {
+        spdlog::error("Out of range request for VGenOutput in AbstractScinthDef");
         return std::string("");
     }
     if (vgenIndex == m_instances.size() - 1) {
@@ -45,29 +48,56 @@ std::string AbstractScinthDef::nameForVGenOutput(int vgenIndex, int outputIndex)
     return fmt::format("{}_out_{}_{}", m_prefix, vgenIndex, outputIndex);
 }
 
+int AbstractScinthDef::indexForParameterName(const std::string& name) const {
+    auto it = m_parameterIndices.find(name);
+    if (it == m_parameterIndices.end()) {
+        return -1;
+    }
+    return it->second;
+}
+
 bool AbstractScinthDef::buildNames() {
     std::random_device randomDevice;
     m_prefix = fmt::format("{}_{:08x}", m_name, randomDevice());
     m_vertexPositionElementName = m_prefix + "_inPosition";
     m_fragmentOutputName = m_prefix + "_outColor";
+    m_parametersStructName = m_prefix + "_parameters";
+    for (auto i = 0; i < m_parameters.size(); ++i) {
+        m_parameterIndices.insert(std::make_pair(m_parameters[i].name(), i));
+    }
 
     // Build the parameters for all VGens.
     for (auto i = 0; i < m_instances.size(); ++i) {
         // First process inputs, plugging in either constants or outputs from other VGens as necessary.
         std::vector<std::string> vgenInputs;
         for (auto j = 0; j < m_instances[i].numberOfInputs(); ++j) {
-            float constantValue;
-            int vgenIndex;
-            int vgenOutput;
-            // Inputs are either constants other vgen outputs. If a constant we simply supply the constant directly.
-            if (m_instances[i].getInputConstantValue(j, constantValue)) {
+            VGen::InputType type = m_instances[i].getInputType(j);
+            switch (type) {
+                // TODO: support for higher-dimensional constants? VGen has it, but we drop it here.
+            case VGen::InputType::kConstant: {
+                float constantValue;
+                m_instances[i].getInputConstantValue(j, constantValue);
                 vgenInputs.push_back(fmt::format("{}f", constantValue));
-            } else if (m_instances[i].getInputVGenIndex(j, vgenIndex, vgenOutput)) {
+            } break;
+
+            case VGen::InputType::kParameter: {
+                int parameterIndex;
+                m_instances[i].getInputParameterIndex(j, parameterIndex);
+                vgenInputs.push_back(fmt::format("{}.{}", m_parametersStructName, m_parameters[parameterIndex].name()));
+            } break;
+
+            case VGen::InputType::kVGen: {
+                int vgenIndex;
+                int vgenOutput;
                 // If a VGen index we use the output name of the VGen at that index.
+                m_instances[i].getInputVGenIndex(j, vgenIndex, vgenOutput);
                 vgenInputs.push_back(nameForVGenOutput(vgenIndex, vgenOutput));
-            } else {
+            } break;
+
+            case VGen::InputType::kInvalid: {
                 spdlog::error("AbstractScinthDesc {} VGen at index {} has unknown input type at index {}.", m_name, i,
                               j);
+            }
                 return false;
             }
         }
@@ -258,6 +288,19 @@ bool AbstractScinthDef::buildFragmentShader() {
         }
 
         m_fragmentShader += fmt::format("}} {}_ubo;\n", m_prefix);
+    }
+
+    // We pack the parameters into a push constant structure.
+    if (m_parameters.size()) {
+        m_fragmentShader += "\n"
+                            "// --- fragment shader parameter push constants\n"
+                            "layout(push_constant) uniform parametersBlock {\n";
+
+        for (const auto& param : m_parameters) {
+            m_fragmentShader += fmt::format("  float {};\n", param.name());
+        }
+
+        m_fragmentShader += fmt::format("}} {};\n", m_parametersStructName);
     }
 
     // Hard-coded single output which is color.

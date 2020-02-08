@@ -33,6 +33,7 @@ public:
         // Node Commands
         kNFree = 11,
         kNRun = 12,
+        kNSet = 15,
 
         // Scinth Commands
         kSNew = 9,

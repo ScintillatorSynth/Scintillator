@@ -173,6 +173,18 @@ list::
 
 Can take pairs of arguments and will apply the run flag to each provided node ID at the same time.
 
+subsection::/scin_n_set
+
+Set a node's control value(s).
+
+table::
+## strong::int:: || node ID
+## N * || table::
+## strong::int:: or strong::string:: || A control index or name
+## strong::float:: || A control value
+::
+::
+
 section::Scinth Commands
 
 subsection::/scin_s_new

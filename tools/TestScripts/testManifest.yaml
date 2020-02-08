@@ -14,6 +14,37 @@
   category: "VOsc"
   comment: "VSaw two color checker pattern."
   shortName: "gingham"
-  scinthDef: "{ var pos = NormPos.fg;
-    RGBOut.fg(VSaw.fg(1.0, VX.fg(pos)), VSaw.fg(1.5, VY.fg(pos)), VSaw.fg(VX.fg(NormPos.fg))); }"
+  scinthDef: "{
+    var pos = NormPos.fg;
+    RGBOut.fg(VSaw.fg(1.0, VX.fg(pos)), VSaw.fg(1.5, VY.fg(pos)), VSaw.fg(VX.fg(NormPos.fg)));
+  }"
   captureTimes: [ 1, 1 ]
+- name: "Param Colors"
+  category: "params"
+  comment: "Test default values of parameters and a simple change"
+  shortName: "paramColors"
+  scinthDef: "{ |r = 0.5, g = 0.1, b = 0.9|
+    RGBOut.fg(r, g, b);
+}"
+  captureTimes: [ 1, 1, 1 ]
+  parameters:
+    - "none"
+    - b: 0.1
+    - r: 0.8
+      g: 0.3
+- name: "Param Parabula"
+  category: "params"
+  comment: "Test parameters on a more complex ScinthDef"
+  shortName: "paramParab"
+  scinthDef: "{ |scale=2.0, xmod=0.5, ymod=0.5|
+    var pos = NormPos.fg() * scale;
+    var sawA = VSaw.fg(0.7, (VX.fg(pos) % xmod) * VY.fg(pos));
+    var sawB = VSaw.fg(0.9, VX.fg(pos) * (VY.fg(pos) % ymod));
+    BWOut.fg(sawA * sawB); }"
+  captureTimes: [ 1, 1, 1 ]
+  parameters:
+    - "none"
+    - "none"
+    - scale: 3.0
+      xmod: 1.0
+      ymod: 0.7
