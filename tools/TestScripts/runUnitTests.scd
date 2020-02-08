@@ -2,20 +2,28 @@
 (
 var exitCode = 0;
 var c = Condition.new;
+var d = Condition.new;
 c.test = false;
+d.test = false;
 fork {
+
 	var onFail = {
 		exitCode = 1;
 		c.test = true;
 		c.signal;
 	};
+	d.test = true;
+	d.signal;
+
 	TestScinthDef.onFail_(onFail).reportPasses_(false).run;
 	// Put more test objects here.
+
 	c.test = true;
 	c.signal;
 };
 fork {
-		c.wait;
-		exitCode.exit;
+	d.wait;
+	c.wait;
+	exitCode.exit;
 }
 )
