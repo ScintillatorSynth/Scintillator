@@ -203,18 +203,56 @@ set(scintillator_synth_files
     vulkan/Window.hpp
 )
 
-add_executable(scinsynth ${scintillator_synth_files})
+if (APPLE)
+    add_executable(scinsynth MACOSX_BUNDLE ${scintillator_synth_files})
+else()
+    add_executable(scinsynth ${scintillator_synth_files})
+endif()
 
-# Find the ffmpeg dependencies.
-find_path(AVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
-find_library(AVCODEC_LIBRARY avcodec)
-find_path(AVFORMAT_INCLUDE_DIR libavformat/avformat.h)
-find_library(AVFORMAT_LIBRARY avformat)
-find_path(AVUTIL_INCLUDE_DIR libavutil/avutil.h)
-find_library(AVUTIL_LIBRARY avutil)
-
-# Find shaderc
-find_library(SHADERC_LIBRARY shaderc_combined)
+if (NOT APPLE)
+    find_library(SHADERC_LIBRARY shaderc_combined)
+    find_path(AVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
+    find_library(AVCODEC_LIBRARY avcodec)
+    find_path(AVFORMAT_INCLUDE_DIR libavformat/avformat.h)
+    find_library(AVFORMAT_LIBRARY avformat)
+    find_path(AVUTIL_INCLUDE_DIR libavutil/avutil.h)
+    find_library(AVUTIL_LIBRARY avutil)
+else()
+    add_dependencies(scinsynth
+        macos-vulkan-sdk-install
+        macos-ffmpeg-include-install
+        macos-ffmpeg-lib-install
+    )
+    find_library(SHADERC_LIBRARY
+        shaderc_combined
+        PATHS "${SCIN_EXT_INSTALL_DIR}/macos-vulkan-sdk/macOS/lib"
+        NO_DEFAULT_PATH
+    )
+    find_library(AVCODEC_LIBRARY
+        NAMES avcodec libavcodec.58.dylib
+        PATHS "${SCIN_EXT_INSTALL_DIR}/macos-ffmpeg-lib/bin"
+        NO_DEFAULT_PATH
+    )
+    find_library(AVFORMAT_LIBRARY
+        NAMES avformat libavformat.58.dylib
+        PATHS "${SCIN_EXT_INSTALL_DIR}/macos-ffmpeg-lib/bin"
+        NO_DEFAULT_PATH
+    )
+    find_library(AVUTIL_LIBRARY
+        NAMES avutil libavutil.56.dylib
+        PATHS "${SCIN_EXT_INSTALL_DIR}/macos-ffmpeg-lib/bin"
+        NO_DEFAULT_PATH
+    )
+    find_library(Vulkan_LIBRARY
+        NAMES vulkan
+        PATHS "${SCIN_EXT_INSTALL_DIR}/macos-vulkan-sdk/macOS/lib"
+        NO_DEFAULT_PATH
+    )
+    target_include_directories(scinsynth PRIVATE
+        "${SCIN_EXT_INSTALL_DIR}/macos-vulkan-sdk/macOS/include"
+        "${SCIN_EXT_INSTALL_DIR}/macos-ffmpeg-include/include"
+    )
+endif()
 
 target_link_libraries(scinsynth
     "${SCIN_EXT_INSTALL_DIR}/lib/liblo.a"
@@ -237,7 +275,7 @@ target_include_directories(scinsynth PRIVATE
     ${AVUTIL_INCLUDE_DIR}
 )
 
-if (UNIX AND NOT APPLE)
+if (NOT APPLE)
     target_link_libraries(scinsynth
         stdc++fs
     )
@@ -248,9 +286,37 @@ add_dependencies(scinsynth
 )
 
 file(MAKE_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
-install(TARGETS scinsynth
-    RUNTIME
-    DESTINATION "${PROJECT_SOURCE_DIR}/bin")
+if (APPLE)
+    install(TARGETS scinsynth
+        BUNDLE DESTINATION "${PROJECT_SOURCE_DIR}/bin" COMPONENT Runtime
+    )
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/macos-vulkan-sdk/MoltenVK/macOS/dynamic/libMoltenVK.dylib"
+        DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Frameworks"
+    )
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/macos-vulkan-sdk/macOS/lib/libVkLayer_khronos_validation.dylib"
+        DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Frameworks"
+    )
+    install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/macos/Resources/vulkan"
+        DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Resources"
+    )
+    list(APPEND SCIN_MACOS_LIBS "${SCIN_EXT_INSTALL_DIR}/macos-vulkan-sdk/macOS/Frameworks")
+    list(APPEND SCIN_MACOS_LIBS "${SCIN_EXT_INSTALL_DIR}/macos-vulkan-sdk/macOS/lib")
+    list(APPEND SCIN_MACOS_LIBS "${SCIN_EXT_INSTALL_DIR}/macos-ffmpeg-lib/bin")
+    install(CODE "
+    include(BundleUtilities)
+    fixup_bundle(
+        \"${PROJECT_SOURCE_DIR}/bin/scinsynth.app\"
+        \"\"
+        \"${SCIN_MACOS_LIBS}\")"
+    VERBATIM)
+
+    set(CPACK_GENERATOR "DRAGNDROP")
+    include(CPack)
+else()
+    install(TARGETS scinsynth
+        RUNTIME
+        DESTINATION "${PROJECT_SOURCE_DIR}/bin")
+endif()
 
 #### Automatic Code Formatting and Linting
 if (NOT DEFINED CLANG_FORMAT)

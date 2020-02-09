@@ -96,6 +96,10 @@ int main(int argc, char* argv[]) {
 
     // ========== glfw setup, this also loads Vulkan for us via the Vulkan-Loader.
     glfwInit();
+    if (glfwVulkanSupported() != GLFW_TRUE) {
+        spdlog::error("This platform does not support Vulkan!");
+        return EXIT_FAILURE;
+    }
 
     // ========== Vulkan setup.
     std::shared_ptr<scin::vk::Instance> instance(new scin::vk::Instance(FLAGS_vulkan_validation));

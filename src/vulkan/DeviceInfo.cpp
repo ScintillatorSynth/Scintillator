@@ -73,7 +73,7 @@ bool DeviceInfo::build() {
         windowExtensions.erase(extension.extensionName);
     }
     m_supportsMemoryBudget = optionalExtensions.empty();
-    m_supportsWindow = windowExtensions.empty();
+    m_supportsWindow = windowExtensions.empty() && (m_presentFamilyIndex >= 0);
 
     return true;
 }

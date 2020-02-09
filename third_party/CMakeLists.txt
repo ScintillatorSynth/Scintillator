@@ -3,7 +3,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CXX_EXTENSIONS OFF)
 
 include(ExternalProject)
-set(SCIN_EXT_INSTALL_DIR "${PROJECT_BINARY_DIR}/install-ext" CACHE PATH "Scintallor Vulkan SDK ")
+set(SCIN_EXT_INSTALL_DIR "${PROJECT_BINARY_DIR}/install-ext" CACHE PATH "Scintallor External Dependencies")
 file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}")
 file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d")
 
@@ -29,6 +29,40 @@ add_custom_target(swiftshader-local
     DEPENDS swiftshader-install
     VERBATIM
 )
+
+// TODO: find a better source for these binary dependencies.
+if (APPLE)
+    ExternalProject_Add(macos-vulkan-sdk
+        PREFIX ext
+        STEP_TARGETS install
+        URL "https://sdk.lunarg.com/sdk/download/1.2.131.2/mac/vulkansdk-macos-1.2.131.2.tar.gz"
+        URL_MD5 bb02dace71421c934732af2913cce272
+        UPDATE_COMMAND ""
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND cp -R "<SOURCE_DIR>" "${SCIN_EXT_INSTALL_DIR}"
+    )
+    ExternalProject_Add(macos-ffmpeg-include
+        PREFIX ext
+        STEP_TARGETS install
+        URL "https://ffmpeg.zeranoe.com/builds/macos64/dev/ffmpeg-4.2.2-macos64-dev.zip"
+        URL_MD5 fc5343108964168076cf663decd50d66
+        UPDATE_COMMAND ""
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND cp -R "<SOURCE_DIR>" "${SCIN_EXT_INSTALL_DIR}"
+    )
+    ExternalProject_Add(macos-ffmpeg-lib
+        PREFIX ext
+        STEP_TARGETS install
+        URL "https://ffmpeg.zeranoe.com/builds/macos64/shared/ffmpeg-4.2.2-macos64-shared.zip"
+        URL_MD5 f9c0f1993f928e8c358acbcef1712c5b
+        UPDATE_COMMAND ""
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND cp -R "<SOURCE_DIR>" "${SCIN_EXT_INSTALL_DIR}"
+    )
+endif()
 
 #### liblo
 ExternalProject_Add(liblo
@@ -70,6 +104,10 @@ include_directories(VulkanMemoryAllocator/src)
 include_directories(${Vulkan_INCLUDE_DIRS})
 add_library(VulkanMemoryAllocator STATIC "VulkanMemoryAllocatorBuild.cpp")
 target_include_directories(VulkanMemoryAllocator INTERFACE VulkanMemoryAllocator/src)
+if (APPLE)
+    add_dependencies(VulkanMemoryAllocator macos-vulkan-sdk-install)
+    target_include_directories(VulkanMemoryAllocator PRIVATE "${SCIN_EXT_INSTALL_DIR}/macos-vulkan-sdk/macOS/include")
+endif()
 
 #### googletest
 set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
