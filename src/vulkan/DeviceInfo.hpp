@@ -4,7 +4,6 @@
 #include "vulkan/Vulkan.hpp"
 
 #include <memory>
-#include <string>
 #include <vector>
 
 namespace scin { namespace vk {
@@ -39,7 +38,6 @@ public:
     bool isSwiftShader() const;
     Type type() const;
     const char* typeName() const;
-    const char* uuid() const { return m_uuid.data(); }
     bool supportsWindow() const { return m_supportsWindow; }
     bool supportsMemoryBudget() const { return m_supportsMemoryBudget; }
     uint32_t deviceID() const { return m_properties.deviceID; }
@@ -49,7 +47,6 @@ private:
     std::shared_ptr<Instance> m_instance;
     VkPhysicalDevice m_physicalDevice;
     VkPhysicalDeviceProperties m_properties;
-    std::string m_uuid;
     int m_presentFamilyIndex;
     int m_graphicsFamilyIndex;
     int m_numberOfMemoryHeaps;

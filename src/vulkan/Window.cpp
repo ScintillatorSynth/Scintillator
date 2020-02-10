@@ -41,7 +41,9 @@ bool Window::create() {
     glfwWindowHint(GLFW_FLOATING, m_keepOnTop ? GLFW_TRUE : GLFW_FALSE);
     m_window = glfwCreateWindow(m_width, m_height, "ScintillatorSynth", nullptr, nullptr);
     if (glfwCreateWindowSurface(m_instance->get(), m_window, nullptr, &m_surface) != VK_SUCCESS) {
-        spdlog::error("Window failed to create surface");
+        const char* errorText = nullptr;
+        int code = glfwGetError(&errorText);
+        spdlog::error("Window failed to create surface, glfw error code {}, string {}", code, errorText);
         return false;
     }
 

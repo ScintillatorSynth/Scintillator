@@ -58,11 +58,11 @@ DEFINE_int32(frame_rate, -1,
              "framerate. Zero means non-interactive. Positive means to render at that frame per second rate.");
 DEFINE_bool(create_window, true, "If false, Scintillator will not create a window.");
 
-DEFINE_string(device_uuid, "",
+DEFINE_string(device_name, "",
               "If empty, will pick the highest performance device available. Otherwise, should be as "
-              "many characters of the uuid as needed to uniquely identify the device.");
+              "many characters of the name as needed to uniquely identify the device.");
 DEFINE_bool(swiftshader, false,
-            "If true, ignores --device_uuid and will always match the swiftshader device, if present.");
+            "If true, ignores --device_name and will always match the swiftshader device, if present.");
 
 int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
@@ -112,8 +112,8 @@ int main(int argc, char* argv[]) {
     chooser.enumerateAllDevices();
     std::string deviceReport = fmt::format("found {} Vulkan devices:\n", chooser.devices().size());
     for (auto info : chooser.devices()) {
-        deviceReport += fmt::format("  name: {}, type: {}, uuid: {}, vendorID: {:x}, deviceID: {:x}\n", info.name(),
-                                    info.typeName(), info.uuid(), info.vendorID(), info.deviceID());
+        deviceReport += fmt::format("  name: {}, type: {}, vendorID: {:x}, deviceID: {:x}\n", info.name(),
+                                    info.typeName(), info.vendorID(), info.deviceID());
     }
     if (FLAGS_print_devices) {
         fmt::print(deviceReport);
@@ -138,15 +138,14 @@ int main(int argc, char* argv[]) {
             return EXIT_FAILURE;
         }
     } else {
-        if (FLAGS_device_uuid.size()) {
+        if (FLAGS_device_name.size()) {
             for (auto info : chooser.devices()) {
-                if (std::strncmp(FLAGS_device_uuid.data(), info.uuid(), FLAGS_device_uuid.size()) == 0) {
+                if (std::strncmp(FLAGS_device_name.data(), info.name(), FLAGS_device_name.size()) == 0) {
                     if (FLAGS_create_window && !info.supportsWindow()) {
-                        spdlog::error("Device uuid {}, name {}, does not support rendering to a window.",
-                                      FLAGS_device_uuid, info.name());
+                        spdlog::error("Device name {}, does not support rendering to a window.", info.name());
                         return EXIT_FAILURE;
                     }
-                    spdlog::info("Device uuid {} match, selecting {}", FLAGS_device_uuid, info.name());
+                    spdlog::info("Device name {} match, selecting {}", FLAGS_device_name, info.name());
                     device.reset(new scin::vk::Device(instance, info));
                     // break;
                 }
@@ -236,6 +235,9 @@ int main(int argc, char* argv[]) {
         offscreen->run(compositor);
     }
 
+    dispatcher.stop();
+    dispatcher.destroy();
+
     // ========== Vulkan cleanup.
     async->stop();
     compositor->destroy();
@@ -249,9 +251,6 @@ int main(int argc, char* argv[]) {
 
     // ========== glfw cleanup.
     glfwTerminate();
-
-    dispatcher.stop();
-    dispatcher.destroy();
 
     spdlog::info("scinsynth exited normally.");
     return EXIT_SUCCESS;

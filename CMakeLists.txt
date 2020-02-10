@@ -59,9 +59,7 @@ set(CMAKE_C_FLAGS_COVERAGE
     "${CMAKE_C_FLAGS_DEBUG} -fprofile-instr-generate -fcoverage-mapping"
     CACHE STRING "C coverage compile flags" FORCE)
 
-if (NOT APPLE)
-    find_package(Vulkan REQUIRED FATAL_ERROR)
-endif()
+find_package(Vulkan REQUIRED FATAL_ERROR)
 
 add_subdirectory(third_party)
 add_subdirectory(src)
