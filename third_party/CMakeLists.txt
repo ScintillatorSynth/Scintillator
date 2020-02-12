@@ -70,6 +70,9 @@ include_directories(VulkanMemoryAllocator/src)
 include_directories(${Vulkan_INCLUDE_DIRS})
 add_library(VulkanMemoryAllocator STATIC "VulkanMemoryAllocatorBuild.cpp")
 target_include_directories(VulkanMemoryAllocator INTERFACE VulkanMemoryAllocator/src)
+if (APPLE)
+    target_include_directories(VulkanMemoryAllocator PRIVATE "${SCIN_EXT_INSTALL_DIR}/include")
+endif()
 
 #### googletest
 set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)

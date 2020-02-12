@@ -11,7 +11,7 @@ ScinServerOptions {
 	var <>height;
 	var <>keepOnTop;
 	var <>swiftshader;
-	var <>deviceUUID;
+	var <>deviceName;
 
 	// Can install a function to call if server exits with a non-zero error code.
 	var <>onServerError;
@@ -29,7 +29,7 @@ ScinServerOptions {
 				height: 600,
 				keepOnTop: true,
 				swiftshader: false,
-				deviceUUID: nil
+				deviceName: nil
 			)
 		);
 	}
@@ -72,8 +72,8 @@ ScinServerOptions {
 		if (swiftshader != defaultValues[\swiftshader], {
 			o = o + "--swiftshader=" ++ swiftshader;
 		});
-		if (deviceUUID != defaultValues[\deviceUUID], {
-			o = o + "--device_uuid=" ++ deviceUUID;
+		if (deviceName != defaultValues[\deviceName], {
+			o = o + "--device_name=" ++ deviceUUID;
 		});
 		^o;
 	}

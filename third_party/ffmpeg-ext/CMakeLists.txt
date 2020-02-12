@@ -11,6 +11,7 @@ if (NOT SCIN_BUILD_DIR)
 endif()
 
 message(STATUS "Scintillator build directory set to: ${SCIN_BUILD_DIR}")
+file(MAKE_DIRECTORY ${SCIN_BUILD_DIR})
 
 set(INSTALL_EXT_DIR "${PROJECT_BINARY_DIR}/install-ext" CACHE PATH "")
 file(MAKE_DIRECTORY "${INSTALL_EXT_DIR}")

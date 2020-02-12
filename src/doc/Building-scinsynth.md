@@ -40,7 +40,7 @@ The way we do it on travis-ci right now is to supply -DPYTHON_EXECUTABLE=`which 
 MacOS
 -----
 
-Vulkan SDK
+Need to build prerequisites, ffmpeg-dev, vulkan-dev, and swiftshader.
 
 ```
 brew install ninja doxygen automake fdk-aac git lame libass libtool libvorbis libvpx opus sdl shtool texi2html theora wget x264 x265 xvid nasm

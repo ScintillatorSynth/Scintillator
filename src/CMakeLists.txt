@@ -209,9 +209,6 @@ else()
     add_executable(scinsynth ${scintillator_synth_files})
 endif()
 
-
-find_library(SHADERC_LIBRARY shaderc_combined)
-
 if (NOT APPLE)
     find_path(AVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
     find_library(AVCODEC_LIBRARY avcodec)
@@ -219,6 +216,7 @@ if (NOT APPLE)
     find_library(AVFORMAT_LIBRARY avformat)
     find_path(AVUTIL_INCLUDE_DIR libavutil/avutil.h)
     find_library(AVUTIL_LIBRARY avutil)
+    find_library(SHADERC_LIBRARY shaderc_combined)
 else()
     find_library(AVCODEC_LIBRARY
         NAMES avcodec
@@ -232,6 +230,16 @@ else()
     )
     find_library(AVUTIL_LIBRARY
         NAMES avutil
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
+    find_library(Vulkan_LIBRARY
+        NAMES vulkan
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
+    find_library(SHADERC_LIBRARY
+        NAMES shaderc_combined
         PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
         NO_DEFAULT_PATH
     )
@@ -274,21 +282,22 @@ if (APPLE)
     install(TARGETS scinsynth
         BUNDLE DESTINATION "${PROJECT_SOURCE_DIR}/bin" COMPONENT Runtime
     )
-    install(FILES "/usr/local/lib/libVkLayer_khronos_validation.dylib"
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/libVkLayer_khronos_validation.dylib"
+        DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Frameworks"
+    )
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/libMoltenVK.dylib"
         DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Frameworks"
     )
     install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/macos/Resources/vulkan"
         DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Resources"
     )
     list(APPEND SCIN_MACOS_LIBS "${SCIN_EXT_INSTALL_DIR}/lib")
-    list(APPEND SCIN_MACOS_OMIT "libvulkan.1.dylib")
     install(CODE "
     include(BundleUtilities)
     fixup_bundle(
         \"${PROJECT_SOURCE_DIR}/bin/scinsynth.app\"
         \"\"
-        \"${SCIN_MACOS_LIBS}\"
-        IGNORE_ITEM \"${SCIN_MACOS_OMIT}\")"
+        \"${SCIN_MACOS_LIBS}\")"
     VERBATIM)
 
     set(CPACK_GENERATOR "DRAGNDROP")
