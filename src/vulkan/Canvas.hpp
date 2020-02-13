@@ -9,7 +9,7 @@
 namespace scin { namespace vk {
 
 class Device;
-class ImageSet;
+class Image;
 
 /*! Contains the data and state required to render to a set of Vulkan Images.
  *
@@ -22,10 +22,13 @@ public:
 
     /*! Makes a set of ImageViews, a Render Pass, and then a set of Framebuffers.
      *
-     * \param images A pointer to an Images class.
+     * \param images The set of Images to build the rest of the state from.
+     * \param width Width of canvas in pixels.
+     * \param height Height of canvas in pixels.
+     * \param format The format of the VkImages.
      * \return true on success, false on failure.
      */
-    bool create(std::shared_ptr<ImageSet> images);
+    bool create(const std::vector<VkImage>& images, int32_t width, int32_t height, VkFormat format);
 
     /*! Reclaims the Vukan resources associated with the Canvas.
      */
@@ -37,11 +40,9 @@ public:
     uint32_t height() const { return m_extent.height; }
     VkRenderPass renderPass() { return m_renderPass; }
     VkFramebuffer framebuffer(size_t index) { return m_framebuffers[index]; }
-    VkImage image(size_t index);
 
 private:
     std::shared_ptr<Device> m_device;
-    std::shared_ptr<ImageSet> m_images;
     VkExtent2D m_extent;
     size_t m_numberOfImages;
     std::vector<VkImageView> m_imageViews;

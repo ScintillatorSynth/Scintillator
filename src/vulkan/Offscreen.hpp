@@ -30,7 +30,7 @@ class CommandPool;
 class Device;
 class Framebuffer;
 class FrameTimer;
-class ImageSet;
+class HostImage;
 class RenderSync;
 class Swapchain;
 
@@ -139,7 +139,7 @@ private:
     std::thread m_renderThread;
     std::vector<std::shared_ptr<CommandBuffer>> m_commandBuffers;
     std::vector<std::vector<scin::av::Encoder::SendBuffer>> m_pendingEncodes;
-    std::shared_ptr<ImageSet> m_readbackImages;
+    std::vector<HostImage> m_readbackImages;
     bool m_readbackSupportsBlit;
     // The index of this vector is the frameIndex, so the index of the pipelined framebuffer. The value is -1 if no
     // swapchain blit was requested, or the index of the swapchain source image (so 0 or 1).

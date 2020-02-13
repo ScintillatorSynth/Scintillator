@@ -49,7 +49,7 @@ protected:
     AVOutputFormat* m_outputFormat;
     AVCodec* m_codec;
     AVCodecContext* m_codecContext;
-    AVFormatContext* m_outputContext;
+    AVFormatContext* m_formatContext;
 };
 
 } // namespace av

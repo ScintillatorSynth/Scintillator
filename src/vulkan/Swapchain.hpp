@@ -10,7 +10,7 @@ namespace scin { namespace vk {
 
 class Canvas;
 class Device;
-class ImageSet;
+class SwapchainImage;
 class Pipeline;
 class Window;
 
@@ -34,7 +34,7 @@ public:
     uint32_t numberOfImages() const { return m_numberOfImages; }
     VkSwapchainKHR get() { return m_swapchain; }
     std::shared_ptr<Canvas> canvas() { return m_canvas; }
-    std::shared_ptr<ImageSet> images() { return m_images; }
+    const std::vector<SwapchainImage>& images() const { return m_images; }
 
 private:
     std::shared_ptr<Device> m_device;
@@ -42,7 +42,7 @@ private:
     VkExtent2D m_extent;
     uint32_t m_numberOfImages;
     VkSwapchainKHR m_swapchain;
-    std::shared_ptr<ImageSet> m_images;
+    std::vector<SwapchainImage> m_images;
     std::shared_ptr<Canvas> m_canvas;
 };
 

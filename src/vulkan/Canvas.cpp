@@ -1,7 +1,7 @@
 #include "vulkan/Canvas.hpp"
 
 #include "vulkan/Device.hpp"
-#include "vulkan/ImageSet.hpp"
+#include "vulkan/Image.hpp"
 
 #include "spdlog/spdlog.h"
 
@@ -11,19 +11,24 @@ Canvas::Canvas(std::shared_ptr<Device> device): m_device(device), m_renderPass(V
 
 Canvas::~Canvas() { destroy(); }
 
-bool Canvas::create(std::shared_ptr<ImageSet> images) {
-    m_images = images;
-    m_extent = images->extent();
-    m_numberOfImages = images->count();
+bool Canvas::create(const std::vector<VkImage>& images, int32_t width, int32_t height, VkFormat format) {
+    m_numberOfImages = images.size();
+    if (m_numberOfImages == 0) {
+        spdlog::error("Canvas failed to build from empty set of images.");
+        return false;
+    }
+
+    m_extent.width = width;
+    m_extent.height = height;
 
     // Create vkImageViews, one per image.
     m_imageViews.resize(m_numberOfImages);
     for (auto i = 0; i < m_numberOfImages; ++i) {
         VkImageViewCreateInfo viewCreateInfo = {};
         viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        viewCreateInfo.image = images->get()[i];
+        viewCreateInfo.image = images[i];
         viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        viewCreateInfo.format = images->format();
+        viewCreateInfo.format = format;
         viewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
         viewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
         viewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -41,7 +46,7 @@ bool Canvas::create(std::shared_ptr<ImageSet> images) {
 
     // Next is the render pass.
     VkAttachmentDescription colorAttachment = {};
-    colorAttachment.format = images->format();
+    colorAttachment.format = format;
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
     colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -91,8 +96,8 @@ bool Canvas::create(std::shared_ptr<ImageSet> images) {
         framebufferInfo.renderPass = m_renderPass;
         framebufferInfo.attachmentCount = 1;
         framebufferInfo.pAttachments = attachments;
-        framebufferInfo.width = images->width();
-        framebufferInfo.height = images->height();
+        framebufferInfo.width = width;
+        framebufferInfo.height = height;
         framebufferInfo.layers = 1;
 
         if (vkCreateFramebuffer(m_device->get(), &framebufferInfo, nullptr, &m_framebuffers[i]) != VK_SUCCESS) {
@@ -120,8 +125,6 @@ void Canvas::destroy() {
     }
     m_imageViews.clear();
 }
-
-VkImage Canvas::image(size_t index) { return m_images->get()[index]; }
 
 } // namespace vk
 

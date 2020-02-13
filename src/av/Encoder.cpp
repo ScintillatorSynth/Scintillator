@@ -12,7 +12,7 @@ Encoder::Encoder(int width, int height, std::function<void(bool)> completion):
     m_completion(completion),
     m_outputFormat(nullptr),
     m_codec(nullptr),
-    m_outputContext(nullptr) {}
+    m_formatContext(nullptr) {}
 
 Encoder::~Encoder() {}
 
@@ -37,7 +37,7 @@ void Encoder::finishEncode(bool valid) {
         packet.create();
         ret = avcodec_receive_packet(m_codecContext, packet.get());
         while (ret == 0) {
-            if (av_write_frame(m_outputContext, packet.get()) < 0) {
+            if (av_write_frame(m_formatContext, packet.get()) < 0) {
                 spdlog::error("Encoder failed writing a packet during flush.");
                 valid = false;
                 break;
@@ -53,7 +53,7 @@ void Encoder::finishEncode(bool valid) {
 
     if (valid) {
         // Flush the output format.
-        ret = av_write_frame(m_outputContext, nullptr);
+        ret = av_write_frame(m_formatContext, nullptr);
         if (ret != 1) {
             spdlog::error("got return of {} on flusing output format.", ret);
             valid = false;
@@ -61,14 +61,14 @@ void Encoder::finishEncode(bool valid) {
     }
 
     if (valid) {
-        ret = av_write_trailer(m_outputContext);
+        ret = av_write_trailer(m_formatContext);
         if (ret != 0) {
             spdlog::error("Encoder failed to write output trailer.");
             valid = false;
         }
     }
 
-    avio_closep(&m_outputContext->pb);
+    avio_closep(&m_formatContext->pb);
     m_completion(valid);
 }
 

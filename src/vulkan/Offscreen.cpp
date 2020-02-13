@@ -10,7 +10,7 @@
 #include "vulkan/Device.hpp"
 #include "vulkan/Framebuffer.hpp"
 #include "vulkan/FrameTimer.hpp"
-#include "vulkan/ImageSet.hpp"
+#include "vulkan/Image.hpp"
 #include "vulkan/RenderSync.hpp"
 #include "vulkan/Swapchain.hpp"
 
@@ -29,7 +29,6 @@ Offscreen::Offscreen(std::shared_ptr<Device> device, int width, int height, int 
     m_renderSync(new RenderSync(device)),
     m_commandPool(new CommandPool(device)),
     m_bufferPool(new scin::av::BufferPool(width, height)),
-    m_readbackImages(new ImageSet(device)),
     m_render(false),
     m_swapBlitRequested(false),
     m_swapchainImageIndex(0),
@@ -63,9 +62,13 @@ bool Offscreen::create(size_t numberOfImages) {
 
     // Prepare for readback by allocating GPU memory for readback images, checking for efficient copy operations from
     // the framebuffer to those readback images, and building command buffers to do the actual readback.
-    if (!m_readbackImages->createHostCoherent(m_width, m_height, m_numberOfImages)) {
-        spdlog::error("Offscreen failed to create {} readback images.", m_numberOfImages);
-        return false;
+    for (auto i = 0; i < m_numberOfImages; ++i) {
+        HostImage image(m_device);
+        if (!image.create(m_width, m_height)) {
+            spdlog::error("Offscreen failed to create {} readback images.", m_numberOfImages);
+            return false;
+        }
+        m_readbackImages.push_back(image);
     }
 
     // Check if the physical device supports from and to the required formats.
@@ -76,7 +79,7 @@ bool Offscreen::create(size_t numberOfImages) {
         spdlog::warn("Offscreen swapchain surface doesn't support blit source, readback will be slow.");
         m_readbackSupportsBlit = false;
     }
-    vkGetPhysicalDeviceFormatProperties(m_device->physical(), m_readbackImages->format(), &format);
+    vkGetPhysicalDeviceFormatProperties(m_device->physical(), m_readbackImages[0].format(), &format);
     if (!(format.linearTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT)) {
         spdlog::warn("Offscreen readback image format doesn't support blit destination, readback will be slow.");
         m_readbackSupportsBlit = false;
@@ -94,7 +97,7 @@ bool Offscreen::create(size_t numberOfImages) {
     }
     if (m_readbackSupportsBlit) {
         for (auto i = 0; i < m_numberOfImages; ++i) {
-            if (!writeBlitCommands(m_readbackCommands, i, m_framebuffer->image(i), m_readbackImages->get()[i],
+            if (!writeBlitCommands(m_readbackCommands, i, m_framebuffer->image(i), m_readbackImages[i].get(),
                                    VK_IMAGE_LAYOUT_UNDEFINED)) {
                 spdlog::error("Offscreen failed to create readback command buffers.");
                 return false;
@@ -102,7 +105,7 @@ bool Offscreen::create(size_t numberOfImages) {
         }
     } else {
         for (auto i = 0; i < m_numberOfImages; ++i) {
-            if (!writeCopyCommands(m_readbackCommands, i, m_framebuffer->image(i), m_readbackImages->get()[i])) {
+            if (!writeCopyCommands(m_readbackCommands, i, m_framebuffer->image(i), m_readbackImages[i].get())) {
                 spdlog::error("Offscreen failed to create readback command buffers.");
                 return false;
             }
@@ -125,7 +128,7 @@ bool Offscreen::supportSwapchain(std::shared_ptr<Swapchain> swapchain, std::shar
         }
         // The jth command buffer will blit from the ith framebuffer image to the jth swapchain image.
         for (auto j = 0; j < swapchain->numberOfImages(); ++j) {
-            if (!writeBlitCommands(buffer, j, m_framebuffer->image(i), swapchain->images()->get()[j],
+            if (!writeBlitCommands(buffer, j, m_framebuffer->image(i), swapchain->images()[j].get(),
                                    VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)) {
                 spdlog::error("Offscreen failed writing swapchain source blit command buffers.");
                 return false;
@@ -202,7 +205,7 @@ void Offscreen::destroy() {
 
     m_commandBuffers.clear();
     m_pendingEncodes.clear();
-    m_readbackImages->destroy();
+    m_readbackImages.clear();
     m_encoders.clear();
     m_readbackCommands = nullptr;
 
@@ -343,7 +346,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
 void Offscreen::processPendingEncodes(size_t frameIndex) {
     if (m_pendingEncodes[frameIndex].size()) {
         std::shared_ptr<scin::av::Buffer> avBuffer = m_bufferPool->getBuffer();
-        m_readbackImages->readbackImage(frameIndex, avBuffer.get());
+        m_readbackImages[frameIndex].readbackImage(avBuffer.get());
         for (auto callback : m_pendingEncodes[frameIndex]) {
             callback(avBuffer);
         }

@@ -21,7 +21,6 @@ class Canvas;
 class CommandBuffer;
 class Device;
 class FrameTimer;
-class ImageSet;
 class Instance;
 class Offscreen;
 class RenderSync;
