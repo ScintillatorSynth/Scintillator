@@ -15,6 +15,7 @@
 #include "osc/commands/DefReceive.hpp"
 #include "osc/commands/DumpOSC.hpp"
 #include "osc/commands/Echo.hpp"
+#include "osc/commands/ImageBufferReadImage.hpp"
 #include "osc/commands/LogAppend.hpp"
 #include "osc/commands/LogLevel.hpp"
 #include "osc/commands/NodeFree.hpp"
@@ -95,6 +96,7 @@ bool Dispatcher::create(const std::string& bindPort, bool dumpOSC) {
     m_commands[commands::Command::kNRun].reset(new commands::NodeRun(this));
     m_commands[commands::Command::kNSet].reset(new commands::NodeSet(this));
     m_commands[commands::Command::kSNew].reset(new commands::ScinthNew(this));
+    m_commands[commands::Command::kIBReadImage].reset(new commands::ImageBufferReadImage(this));
     m_commands[commands::Command::kNRTScreenShot].reset(new commands::ScreenShot(this));
     m_commands[commands::Command::kNRTAdvanceFrame].reset(new commands::AdvanceFrame(this));
     m_commands[commands::Command::kEcho].reset(new commands::Echo(this));

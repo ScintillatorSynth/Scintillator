@@ -2,7 +2,7 @@
 
 #include "vulkan/Canvas.hpp"
 #include "vulkan/Device.hpp"
-#include "vulkan/ImageSet.hpp"
+#include "vulkan/Image.hpp"
 #include "vulkan/Pipeline.hpp"
 #include "vulkan/Window.hpp"
 
@@ -17,7 +17,6 @@ Swapchain::Swapchain(std::shared_ptr<Device> device):
     m_device(device),
     m_numberOfImages(0),
     m_swapchain(VK_NULL_HANDLE),
-    m_images(new ImageSet(device)),
     m_canvas(new Canvas(device)) {}
 
 Swapchain::~Swapchain() { destroy(); }
@@ -121,10 +120,15 @@ bool Swapchain::create(Window* window, bool directRendering) {
         return false;
     }
 
-    m_numberOfImages = m_images->getFromSwapchain(this, m_numberOfImages);
+    vkGetSwapchainImagesKHR(m_device->get(), m_swapchain, &m_numberOfImages, nullptr);
+    std::vector<VkImage> images(m_numberOfImages);
+    vkGetSwapchainImagesKHR(m_device->get(), m_swapchain, &m_numberOfImages, images.data());
+    for (auto image : images) {
+        m_images.emplace_back(SwapchainImage(m_device, image, m_surfaceFormat.format, m_extent));
+    }
 
     if (directRendering) {
-        if (!m_canvas->create(m_images)) {
+        if (!m_canvas->create(images, m_extent.width, m_extent.height, m_surfaceFormat.format)) {
             spdlog::error("Swapchain failed to create Canvas.");
             return false;
         }

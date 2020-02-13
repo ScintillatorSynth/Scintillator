@@ -103,10 +103,14 @@ set(scintillator_synth_files
     av/Buffer.hpp
     av/BufferPool.cpp
     av/BufferPool.hpp
+    av/Decoder.cpp
+    av/Decoder.hpp
     av/Encoder.cpp
     av/Encoder.hpp
     av/Frame.cpp
     av/Frame.hpp
+    av/ImageDecoder.cpp
+    av/ImageDecoder.hpp
     av/ImageEncoder.cpp
     av/ImageEncoder.hpp
     av/Packet.cpp
@@ -133,6 +137,8 @@ set(scintillator_synth_files
     osc/commands/DumpOSC.hpp
     osc/commands/Echo.cpp
     osc/commands/Echo.hpp
+    osc/commands/ImageBufferReadImage.cpp
+    osc/commands/ImageBufferReadImage.hpp
     osc/commands/LogAppend.cpp
     osc/commands/LogAppend.hpp
     osc/commands/LogLevel.cpp
@@ -178,8 +184,8 @@ set(scintillator_synth_files
     vulkan/Framebuffer.hpp
     vulkan/FrameTimer.cpp
     vulkan/FrameTimer.hpp
-    vulkan/ImageSet.cpp
-    vulkan/ImageSet.hpp
+    vulkan/Image.cpp
+    vulkan/Image.hpp
     vulkan/Instance.cpp
     vulkan/Instance.hpp
     vulkan/Offscreen.cpp

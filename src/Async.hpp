@@ -86,6 +86,17 @@ public:
      */
     void sleepFor(int seconds, std::function<void()> completion);
 
+    /*! Async read an image into a newly allocated image buffer.
+     *
+     * \param bufferID The ID of the newly created buffer. Will clobber any existing buffer with this ID.
+     * \param filePath A path to the image file to decode.
+     * \param width The requested buffer width, can be -1 to respect original image width.
+     * \param height The requested buffer height, can be -1 to respect original image height.
+     * \completion The function to call on completion of loading.
+     */
+    void readImageIntoNewBuffer(int bufferID, std::string filePath, int width, int height,
+                                std::function<void()> completion);
+
 private:
     void workerThreadMain(std::string threadName);
     void syncThreadMain();
@@ -97,6 +108,9 @@ private:
     void asyncScinthDefParseString(std::string yaml, std::function<void(int)> completion);
 
     void asyncSleepFor(int seconds, std::function<void()> completion);
+
+    void asyncReadImageIntoNewBuffer(int bufferID, std::string filePath, int width, int height,
+                                     std::function<void()> completion);
 
     std::shared_ptr<core::Archetypes> m_archetypes;
     std::shared_ptr<Compositor> m_compositor;

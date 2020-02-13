@@ -2,6 +2,7 @@
 
 #include "Compositor.hpp"
 #include "ScinthDef.hpp"
+#include "av/ImageDecoder.hpp"
 #include "core/Archetypes.hpp"
 
 #include "fmt/core.h"
@@ -90,6 +91,17 @@ void Async::sleepFor(int seconds, std::function<void()> completion) {
     {
         std::lock_guard<std::mutex> lock(m_jobQueueMutex);
         m_jobQueue.emplace_back([this, seconds, completion]() { asyncSleepFor(seconds, completion); });
+    }
+    m_jobQueueCondition.notify_one();
+}
+
+void Async::readImageIntoNewBuffer(int bufferID, std::string filePath, int width, int height,
+                                   std::function<void()> completion) {
+    {
+        std::lock_guard<std::mutex> lock(m_jobQueueMutex);
+        m_jobQueue.emplace_back([this, bufferID, filePath, width, height, completion]() {
+            asyncReadImageIntoNewBuffer(bufferID, filePath, width, height, completion);
+        });
     }
     m_jobQueueCondition.notify_one();
 }
@@ -280,6 +292,19 @@ void Async::asyncScinthDefParseString(std::string yaml, std::function<void(int)>
 void Async::asyncSleepFor(int seconds, std::function<void()> completion) {
     spdlog::info("worker thread sleeping for {} seconds", seconds);
     std::this_thread::sleep_for(std::chrono::seconds(seconds));
+    completion();
+}
+
+
+void Async::asyncReadImageIntoNewBuffer(int bufferID, std::string filePath, int width, int height,
+                                        std::function<void()> completion) {
+    av::ImageDecoder decoder;
+    if (!decoder.openFile(filePath)) {
+        completion();
+        return;
+    }
+    spdlog::info("Decoder got image at {} with dimensions {}x{}", filePath, decoder.width(), decoder.height());
+
     completion();
 }
 

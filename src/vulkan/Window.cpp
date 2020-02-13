@@ -6,7 +6,7 @@
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/FrameTimer.hpp"
-#include "vulkan/ImageSet.hpp"
+#include "vulkan/Image.hpp"
 #include "vulkan/Instance.hpp"
 #include "vulkan/Offscreen.hpp"
 #include "vulkan/RenderSync.hpp"

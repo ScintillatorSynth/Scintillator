@@ -213,6 +213,55 @@ Sets the background color for the provided group.
 
 TODO
 
+section::ImageBuffer Commands
+
+The server leaves designation of unique image buffer numbers to the client. Allocation of an image buffer with a number already associated with another image buffer will result in the prior image buffer being deallocated.
+
+subsection::/scin_ib_alloc
+
+Allocate memory on the graphics device to hold image data.
+
+table::
+## strong::int::   || buffer number
+## strong::int::   || width of image buffer in pixels
+## strong::int::   || height of image buffer in pixels
+## strong::int::   || number of color signals per pixel, supported values are 1-4 inclusive
+## strong::bytes:: || (optional) an OSC message to execute upon completion
+::
+
+Allocates zero-filled image buffer to number of pixels and signals.
+
+definitionlist::
+## Asynchronous. || Replies to sender with strong::/scin_done /scin_ib_alloc bufNum:: when complete.
+::
+
+
+subsection::/scin_ib_readImage
+
+Decodes an image, optionally resamples it to the provided size, allocates memory on the graphics device, and transfers the decoded image data to the image buffer.
+
+table::
+## strong::int:: || buffer number
+## strong::string:: || path to image file to decode
+## strong::int:: || width of image (can be -1 to respect width of source image)
+## strong::int:: || height of image (can be -1 to respect height of source image)
+## strong::bytes:: || (optional) an OSC message to execute upon completion
+::
+
+If both width and height are provided the source image will be resampled to that size, ignoring aspect ratio. If one of the width or height values is -1 then the image will be resampled to a size respecting the provided dimension and maintaining the aspect ratio of the other dimension. If both values are -1 then the image won't be resampled but will be loaded at original size. For example, for a source image that is 200 pixels wide and 100 pixels tall:
+
+table::
+## strong::width requested:: || strong::height requested:: || strong::buffer width:: || strong::buffer height:: || strong::notes::
+## 400 || 100 || 400 || 100 || Server will disregard aspect ratio of source image if both requested dimensions are nonnegative.
+## -1 || 50 || 100 || 50 || In order to maintain 2:1 aspect ratio server has computed a width of 50 px.
+## 400 || -1 || 400 || 200 || In order to maintain 2:1 aspect ratio server has computed a height of 400 px.
+## -1 || -1 || 200 || 100 || Server has allocated width and height of source image.
+::
+
+definitionlist::
+## Asynchronous. || Replies to sender with strong::/scin_done /scin_ib_readImage bufNum:: when complete.
+::
+
 section::Non Real Time Commands
 
 subsection::/scin_nrt_screenShot
