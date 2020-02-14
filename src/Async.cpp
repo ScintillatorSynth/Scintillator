@@ -4,6 +4,8 @@
 #include "ScinthDef.hpp"
 #include "av/ImageDecoder.hpp"
 #include "core/Archetypes.hpp"
+#include "vulkan/Image.hpp"
+#include "vulkan/Device.hpp"
 
 #include "fmt/core.h"
 #include "spdlog/spdlog.h"
@@ -12,9 +14,11 @@
 
 namespace scin {
 
-Async::Async(std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor):
+Async::Async(std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
+             std::shared_ptr<vk::Device> device):
     m_compositor(compositor),
     m_archetypes(archetypes),
+    m_device(device),
     m_quit(false),
     m_numberOfActiveWorkers(0) {}
 
@@ -303,8 +307,41 @@ void Async::asyncReadImageIntoNewBuffer(int bufferID, std::string filePath, int 
         completion();
         return;
     }
-    spdlog::info("Decoder got image at {} with dimensions {}x{}", filePath, decoder.width(), decoder.height());
+    spdlog::info("Async ImageDecoder opened image at {} with dimensions {}x{}", filePath, decoder.width(),
+                 decoder.height());
 
+    // Settle the extracted image dimensions. Assumes none of the four parameters are zero.
+    int textureWidth = width;
+    int textureHeight = height;
+    if (textureWidth == -1 && textureHeight == -1) {
+        textureWidth = decoder.width();
+        textureHeight = decoder.height();
+    } else if (textureWidth == -1) {
+        textureWidth = (textureHeight * decoder.width()) / decoder.height();
+    } else if (textureHeight == -1) {
+        textureHeight = (textureWidth * decoder.height()) / decoder.width();
+    }
+
+    std::shared_ptr<vk::HostImage> image(new vk::HostImage(m_device));
+    if (!image->create(textureWidth, textureHeight)) {
+        spdlog::error("Async failed to create HostImage with dimensions {}x{}", textureWidth, textureHeight);
+        completion();
+        return;
+    }
+
+    uint8_t* mappedBytes = static_cast<uint8_t*>(image->map());
+    if (!decoder.extractImageTo(mappedBytes, textureWidth, textureHeight)) {
+        spdlog::error("Async failed to extract image at {} to dimension {}x{}", filePath, textureWidth, textureHeight);
+        completion();
+        return;
+    }
+    image->unmap();
+
+    // Could return a <fence> right here, which then this thread could wait on until the queue submission? Or maybe a
+    // void future that we could then block on right here? Naw I don't want to jam up this thread dependent on the
+    // render loop. Does compositor keep a staging thread? That blocks on the fences?
+    // m_compositor->stageImage(bufferID, image);
+    // TODO: image has been *staged* but is not necessarily ready for render.
     completion();
 }
 

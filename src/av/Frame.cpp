@@ -6,16 +6,17 @@
 
 namespace scin { namespace av {
 
-Frame::Frame(std::shared_ptr<Buffer> buffer): m_buffer(buffer), m_frame(nullptr) {}
+Frame::Frame(): m_frame(nullptr) {}
 
 Frame::~Frame() { destroy(); }
 
-bool Frame::create() {
+bool Frame::createFromBuffer(std::shared_ptr<Buffer> buffer) {
     m_frame = av_frame_alloc();
     if (!m_frame) {
         spdlog::error("Frame failed to create AVFrame");
         return false;
     }
+    m_buffer = buffer;
     m_frame->data[0] = m_buffer->data();
     m_frame->linesize[0] = m_buffer->width() * 4;
     m_frame->extended_data = m_frame->data;
@@ -27,7 +28,17 @@ bool Frame::create() {
     return true;
 }
 
-void Frame::destroy() { av_frame_free(&m_frame); }
+bool Frame::createEmpty() {
+    m_frame = av_frame_alloc();
+    return m_frame != nullptr;
+}
+
+void Frame::destroy() {
+    if (m_frame != nullptr) {
+        av_frame_free(&m_frame);
+        m_frame = nullptr;
+    }
+}
 
 } // namespace av
 

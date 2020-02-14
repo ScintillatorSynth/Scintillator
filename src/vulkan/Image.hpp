@@ -7,13 +7,7 @@
 
 #include <memory>
 
-namespace scin {
-
-namespace av {
-class Buffer;
-}
-
-namespace vk {
+namespace scin { namespace vk {
 
 class Device;
 
@@ -95,12 +89,12 @@ public:
 
     bool create(uint32_t width, uint32_t height) override;
 
-    /*! Copy the image data into the supplied AV buffer.
-     *
-     * \param buffer The buffer to copy the data in to. It is assumed to be sufficient capacity to hold the image.
-     * \return True on success, false on error.
-     */
-    bool readbackImage(scin::av::Buffer* buffer);
+    // TODO: investigate performance implications of not keeping memory mapped.
+    void* map();
+    void unmap();
+
+protected:
+    void* m_mappedAddress;
 };
 
 

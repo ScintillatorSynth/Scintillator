@@ -85,8 +85,8 @@ bool ImageEncoder::queueEncode(double frameTime, size_t frameNumber, SendBuffer&
 
     callbackOut = SendBuffer([this](std::shared_ptr<Buffer> buffer) {
         spdlog::debug("ImageEncoder got callback to encode frame.");
-        Frame frame(buffer);
-        if (!frame.create()) {
+        Frame frame;
+        if (!frame.createFromBuffer(buffer)) {
             spdlog::error("ImageEncoder failed creating frame.");
             finishEncode(false);
             return;

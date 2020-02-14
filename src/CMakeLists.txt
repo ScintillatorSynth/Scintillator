@@ -211,19 +211,6 @@ set(scintillator_synth_files
 
 if (APPLE)
     add_executable(scinsynth MACOSX_BUNDLE ${scintillator_synth_files})
-else()
-    add_executable(scinsynth ${scintillator_synth_files})
-endif()
-
-if (NOT APPLE)
-    find_path(AVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
-    find_library(AVCODEC_LIBRARY avcodec)
-    find_path(AVFORMAT_INCLUDE_DIR libavformat/avformat.h)
-    find_library(AVFORMAT_LIBRARY avformat)
-    find_path(AVUTIL_INCLUDE_DIR libavutil/avutil.h)
-    find_library(AVUTIL_LIBRARY avutil)
-    find_library(SHADERC_LIBRARY shaderc_combined)
-else()
     find_library(AVCODEC_LIBRARY
         NAMES avcodec
         PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
@@ -249,15 +236,25 @@ else()
         PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
         NO_DEFAULT_PATH
     )
+else()
+    add_executable(scinsynth ${scintillator_synth_files})
+    find_path(AVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
+    find_library(AVCODEC_LIBRARY avcodec)
+    find_path(AVFORMAT_INCLUDE_DIR libavformat/avformat.h)
+    find_library(AVFORMAT_LIBRARY avformat)
+    find_path(AVUTIL_INCLUDE_DIR libavutil/avutil.h)
+    find_library(AVUTIL_LIBRARY avutil)
+    find_library(SHADERC_LIBRARY shaderc_combined)
 endif()
 
 target_link_libraries(scinsynth
     "${SCIN_EXT_INSTALL_DIR}/lib/liblo.a"
+    "${Vulkan_LIBRARY}"
     ${AVCODEC_LIBRARY}
     ${AVFORMAT_LIBRARY}
     ${AVUTIL_LIBRARY}
     ${SHADERC_LIBRARY}
-    "${Vulkan_LIBRARY}"
+    ${SWSCALE_LIBRARY}
     VulkanMemoryAllocator
     gflags
     glfw
@@ -271,6 +268,7 @@ target_include_directories(scinsynth PRIVATE
     ${AVFORMAT_INCLUDE_DIR}
     ${AVUTIL_INCLUDE_DIR}
     ${Vulkan_INCLUDE_DIRS}
+    ${SWSCALE_INCLUDE_DIR}
 )
 
 if (NOT APPLE)
