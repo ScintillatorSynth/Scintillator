@@ -1,6 +1,5 @@
 #include "vulkan/Image.hpp"
 
-#include "av/Buffer.hpp"
 #include "vulkan/Device.hpp"
 
 #include "spdlog/spdlog.h"
@@ -82,7 +81,7 @@ FramebufferImage::~FramebufferImage() {}
 
 bool FramebufferImage::create(uint32_t width, uint32_t height) { return createDeviceImage(width, height, true); }
 
-HostImage::HostImage(std::shared_ptr<Device> device): AllocatedImage(device) {}
+HostImage::HostImage(std::shared_ptr<Device> device): AllocatedImage(device), m_mappedAddress(nullptr) {}
 
 HostImage::~HostImage() {}
 
@@ -118,16 +117,20 @@ bool HostImage::create(uint32_t width, uint32_t height) {
     return true;
 }
 
-bool HostImage::readbackImage(scin::av::Buffer* buffer) {
-    void* mappedFrame = nullptr;
-    vmaMapMemory(m_device->allocator(), m_allocation, &mappedFrame);
-    if (!mappedFrame) {
-        spdlog::error("HostImage failed to map memory for readback.");
-        return false;
+void* HostImage::map() {
+    if (m_mappedAddress) {
+        return m_mappedAddress;
     }
-    std::memcpy(buffer->data(), mappedFrame, buffer->size());
+    vmaMapMemory(m_device->allocator(), m_allocation, static_cast<void**>(&m_mappedAddress));
+    return m_mappedAddress;
+}
+
+void HostImage::unmap() {
+    if (!m_mappedAddress) {
+        return;
+    }
     vmaUnmapMemory(m_device->allocator(), m_allocation);
-    return true;
+    m_mappedAddress = nullptr;
 }
 
 } // namespace vk

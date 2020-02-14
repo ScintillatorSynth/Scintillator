@@ -2,6 +2,7 @@
 
 #include "Compositor.hpp"
 
+#include "av/Buffer.hpp"
 #include "av/BufferPool.hpp"
 #include "av/Encoder.hpp"
 
@@ -346,7 +347,11 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
 void Offscreen::processPendingEncodes(size_t frameIndex) {
     if (m_pendingEncodes[frameIndex].size()) {
         std::shared_ptr<scin::av::Buffer> avBuffer = m_bufferPool->getBuffer();
-        m_readbackImages[frameIndex].readbackImage(avBuffer.get());
+        void* mappedBytes = m_readbackImages[frameIndex].map();
+        if (mappedBytes) {
+            std::memcpy(avBuffer->data(), mappedBytes, avBuffer->size());
+            m_readbackImages[frameIndex].unmap();
+        }
         for (auto callback : m_pendingEncodes[frameIndex]) {
             callback(avBuffer);
         }

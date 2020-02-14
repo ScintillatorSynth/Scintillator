@@ -13,10 +13,11 @@ class Buffer;
  */
 class Frame {
 public:
-    Frame(std::shared_ptr<Buffer> buffer);
+    Frame();
     ~Frame();
 
-    bool create();
+    bool createFromBuffer(std::shared_ptr<Buffer> buffer);
+    bool createEmpty();
     void destroy();
 
     AVFrame* get() { return m_frame; }

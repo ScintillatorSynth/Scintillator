@@ -200,7 +200,7 @@ int main(int argc, char* argv[]) {
     }
 
     std::shared_ptr<scin::core::Archetypes> archetypes(new scin::core::Archetypes());
-    std::shared_ptr<scin::Async> async(new scin::Async(archetypes, compositor));
+    std::shared_ptr<scin::Async> async(new scin::Async(archetypes, compositor, device));
     async->run(FLAGS_async_worker_threads);
 
     // Chain async calls to load VGens, then ScinthDefs.

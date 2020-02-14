@@ -22,13 +22,18 @@ namespace core {
 class Archetypes;
 }
 
+namespace vk {
+class Device;
+}
+
 class Compositor;
 
 /*! Maintains a thread pool and provides facilities to run all async functions on those threads.
  */
 class Async {
 public:
-    Async(std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor);
+    Async(std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
+          std::shared_ptr<vk::Device> device);
     ~Async();
 
     /*! Nonblocking. Starts the worker threads and the sync thread, then returns.
@@ -114,6 +119,7 @@ private:
 
     std::shared_ptr<core::Archetypes> m_archetypes;
     std::shared_ptr<Compositor> m_compositor;
+    std::shared_ptr<vk::Device> m_device;
     std::atomic<bool> m_quit;
     std::vector<std::thread> m_workerThreads;
     std::thread m_syncThread;
@@ -124,7 +130,6 @@ private:
     std::deque<std::function<void()>> m_jobQueue;
     std::condition_variable m_activeWorkersCondition;
     size_t m_numberOfActiveWorkers;
-
 
     // Protects m_syncCallbacks.
     std::mutex m_syncCallbackMutex;

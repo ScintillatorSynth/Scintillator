@@ -1,5 +1,8 @@
 #include "av/ImageDecoder.hpp"
 
+#include "av/Frame.hpp"
+#include "av/Packet.hpp"
+
 #include "spdlog/spdlog.h"
 
 namespace scin { namespace av {
@@ -45,6 +48,40 @@ bool ImageDecoder::openFile(const fs::path& filePath) {
     m_height = m_codecContext->height;
 
     return true;
+}
+
+bool ImageDecoder::extractImageTo(uint8_t* bytes, int width, int height) {
+    Packet packet;
+    if (av_read_frame(m_formatContext, packet.get()) < 0) {
+        spdlog::error("ImageDecoder unable to read packet.");
+        return false;
+    }
+
+    if (avcodec_send_packet(m_codecContext, packet.get()) < 0) {
+        spdlog::error("ImageDecoder unable to decode packet.");
+        return false;
+    }
+
+    Frame frame;
+    if (!frame.createEmpty()) {
+        spdlog::error("ImageDecoder failed to create Frame.");
+        return false;
+    }
+
+    if (avcodec_receive_frame(m_codecContext, frame.get()) < 0) {
+        spdlog::error("ImageDecoder failed to decode image.");
+        return false;
+    }
+
+    SwsContext* scaleContext = sws_getContext(m_width, m_height, m_codecContext->pix_fmt, width, height,
+                                              AV_PIX_FMT_RGBA, SWS_BICUBIC, nullptr, nullptr, nullptr);
+    uint8_t* outputPointers[] = { bytes };
+    int outputSizes[] = { width * height * 4 };
+    bool result =
+        (sws_scale(scaleContext, frame.get()->data, frame.get()->linesize, 0, m_height, outputPointers, outputSizes)
+         <= 0);
+    sws_freeContext(scaleContext);
+    return result;
 }
 
 } // namespace av

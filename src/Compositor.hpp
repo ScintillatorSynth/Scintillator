@@ -104,9 +104,10 @@ public:
 
     int numberOfRunningScinths();
 
-    /*! Relayed from the graphics device, convenince method.
+    /*! Relayed from the graphics device, convenience method.
      */
     bool getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudgetOut);
+
 
 private:
     typedef std::list<std::shared_ptr<Scinth>> ScinthList;
