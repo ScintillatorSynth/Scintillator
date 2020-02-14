@@ -141,6 +141,11 @@ bool Instance::create() {
         createInfo.ppEnabledLayerNames = nullptr;
     }
 
+    spdlog::info("Instance requesting {} Vulkan extensions:", extensions.size());
+    for (auto extension : extensions) {
+        spdlog::info("  {}", extension);
+    }
+
     createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
     createInfo.ppEnabledExtensionNames = extensions.data();
 

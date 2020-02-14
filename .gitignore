@@ -1,3 +1,5 @@
 bin
 build
 third_party/sclang-dev/build
+third_party/ffmpeg-dev/build
+third_party/vulkan-dev/build

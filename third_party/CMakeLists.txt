@@ -3,7 +3,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CXX_EXTENSIONS OFF)
 
 include(ExternalProject)
-set(SCIN_EXT_INSTALL_DIR "${PROJECT_BINARY_DIR}/install-ext" CACHE PATH "Scintallor Vulkan SDK ")
+set(SCIN_EXT_INSTALL_DIR "${PROJECT_BINARY_DIR}/install-ext" CACHE PATH "Scintallor External Dependencies")
 file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}")
 file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d")
 
@@ -70,6 +70,9 @@ include_directories(VulkanMemoryAllocator/src)
 include_directories(${Vulkan_INCLUDE_DIRS})
 add_library(VulkanMemoryAllocator STATIC "VulkanMemoryAllocatorBuild.cpp")
 target_include_directories(VulkanMemoryAllocator INTERFACE VulkanMemoryAllocator/src)
+if (APPLE)
+    target_include_directories(VulkanMemoryAllocator PRIVATE "${SCIN_EXT_INSTALL_DIR}/include")
+endif()
 
 #### googletest
 set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
