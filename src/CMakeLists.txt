@@ -282,6 +282,9 @@ if (APPLE)
     install(TARGETS scinsynth
         BUNDLE DESTINATION "${PROJECT_SOURCE_DIR}/bin" COMPONENT Runtime
     )
+    install(TARGETS ${Vulkan_Library} LIBRARY
+        DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/MacOS"
+    )
     install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/libVkLayer_khronos_validation.dylib"
         DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Frameworks"
     )
@@ -293,12 +296,20 @@ if (APPLE)
     )
     list(APPEND SCIN_MACOS_LIBS "${SCIN_EXT_INSTALL_DIR}/lib")
     install(CODE "
-    include(BundleUtilities)
-    fixup_bundle(
-        \"${PROJECT_SOURCE_DIR}/bin/scinsynth.app\"
-        \"\"
-        \"${SCIN_MACOS_LIBS}\")"
-    VERBATIM)
+        include(BundleUtilities)
+        fixup_bundle(
+            \"${PROJECT_SOURCE_DIR}/bin/scinsynth.app\"
+            \"\"
+            \"${SCIN_MACOS_LIBS}\")
+        "
+        VERBATIM
+    )
+
+    # TODO: The Vulkan loader cannot find libvulkan if it lives in Frameworks/, but I cannot find a reliable way to
+    # coerce CMake to put the library anywhere else. So this script resolves the link to the actual dylib in the
+    # Frameworks directory, and then creates a similar link to the same resolved library in the MacOS/ directory, which
+    # is where the loader will look for the vulkan library. Is there a less kludgy way to do this?
+    install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/tools/macOS-fixup-vulkan.py ${PROJECT_SOURCE_DIR}/bin/scinsynth.app)")
 
     set(CPACK_GENERATOR "DRAGNDROP")
     include(CPack)

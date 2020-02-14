@@ -73,7 +73,7 @@ ScinServerOptions {
 			o = o + "--swiftshader=" ++ swiftshader;
 		});
 		if (deviceName != defaultValues[\deviceName], {
-			o = o + "--device_name=" ++ deviceUUID;
+			o = o + "--device_name=" ++ deviceName;
 		});
 		^o;
 	}
