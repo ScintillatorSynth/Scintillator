@@ -124,7 +124,8 @@ bool Swapchain::create(Window* window, bool directRendering) {
     std::vector<VkImage> images(m_numberOfImages);
     vkGetSwapchainImagesKHR(m_device->get(), m_swapchain, &m_numberOfImages, images.data());
     for (auto image : images) {
-        m_images.emplace_back(SwapchainImage(m_device, image, m_surfaceFormat.format, m_extent));
+        m_images.emplace_back(
+            std::shared_ptr<SwapchainImage>(new SwapchainImage(m_device, image, m_surfaceFormat.format, m_extent)));
     }
 
     if (directRendering) {

@@ -64,8 +64,8 @@ bool Offscreen::create(size_t numberOfImages) {
     // Prepare for readback by allocating GPU memory for readback images, checking for efficient copy operations from
     // the framebuffer to those readback images, and building command buffers to do the actual readback.
     for (auto i = 0; i < m_numberOfImages; ++i) {
-        HostImage image(m_device);
-        if (!image.create(m_width, m_height)) {
+        std::shared_ptr<HostImage> image(new HostImage(m_device));
+        if (!image->create(m_width, m_height)) {
             spdlog::error("Offscreen failed to create {} readback images.", m_numberOfImages);
             return false;
         }
@@ -80,7 +80,7 @@ bool Offscreen::create(size_t numberOfImages) {
         spdlog::warn("Offscreen swapchain surface doesn't support blit source, readback will be slow.");
         m_readbackSupportsBlit = false;
     }
-    vkGetPhysicalDeviceFormatProperties(m_device->physical(), m_readbackImages[0].format(), &format);
+    vkGetPhysicalDeviceFormatProperties(m_device->physical(), m_readbackImages[0]->format(), &format);
     if (!(format.linearTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT)) {
         spdlog::warn("Offscreen readback image format doesn't support blit destination, readback will be slow.");
         m_readbackSupportsBlit = false;
@@ -98,7 +98,7 @@ bool Offscreen::create(size_t numberOfImages) {
     }
     if (m_readbackSupportsBlit) {
         for (auto i = 0; i < m_numberOfImages; ++i) {
-            if (!writeBlitCommands(m_readbackCommands, i, m_framebuffer->image(i), m_readbackImages[i].get(),
+            if (!writeBlitCommands(m_readbackCommands, i, m_framebuffer->image(i), m_readbackImages[i]->get(),
                                    VK_IMAGE_LAYOUT_UNDEFINED)) {
                 spdlog::error("Offscreen failed to create readback command buffers.");
                 return false;
@@ -106,7 +106,7 @@ bool Offscreen::create(size_t numberOfImages) {
         }
     } else {
         for (auto i = 0; i < m_numberOfImages; ++i) {
-            if (!writeCopyCommands(m_readbackCommands, i, m_framebuffer->image(i), m_readbackImages[i].get())) {
+            if (!writeCopyCommands(m_readbackCommands, i, m_framebuffer->image(i), m_readbackImages[i]->get())) {
                 spdlog::error("Offscreen failed to create readback command buffers.");
                 return false;
             }
@@ -129,7 +129,7 @@ bool Offscreen::supportSwapchain(std::shared_ptr<Swapchain> swapchain, std::shar
         }
         // The jth command buffer will blit from the ith framebuffer image to the jth swapchain image.
         for (auto j = 0; j < swapchain->numberOfImages(); ++j) {
-            if (!writeBlitCommands(buffer, j, m_framebuffer->image(i), swapchain->images()[j].get(),
+            if (!writeBlitCommands(buffer, j, m_framebuffer->image(i), swapchain->images()[j]->get(),
                                    VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)) {
                 spdlog::error("Offscreen failed writing swapchain source blit command buffers.");
                 return false;
@@ -347,10 +347,10 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
 void Offscreen::processPendingEncodes(size_t frameIndex) {
     if (m_pendingEncodes[frameIndex].size()) {
         std::shared_ptr<scin::av::Buffer> avBuffer = m_bufferPool->getBuffer();
-        void* mappedBytes = m_readbackImages[frameIndex].map();
+        void* mappedBytes = m_readbackImages[frameIndex]->map();
         if (mappedBytes) {
             std::memcpy(avBuffer->data(), mappedBytes, avBuffer->size());
-            m_readbackImages[frameIndex].unmap();
+            m_readbackImages[frameIndex]->unmap();
         }
         for (auto callback : m_pendingEncodes[frameIndex]) {
             callback(avBuffer);
