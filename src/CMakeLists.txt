@@ -203,26 +203,55 @@ set(scintillator_synth_files
     vulkan/Window.hpp
 )
 
-add_executable(scinsynth ${scintillator_synth_files})
+if (APPLE)
+    add_executable(scinsynth MACOSX_BUNDLE ${scintillator_synth_files})
+else()
+    add_executable(scinsynth ${scintillator_synth_files})
+endif()
 
-# Find the ffmpeg dependencies.
-find_path(AVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
-find_library(AVCODEC_LIBRARY avcodec)
-find_path(AVFORMAT_INCLUDE_DIR libavformat/avformat.h)
-find_library(AVFORMAT_LIBRARY avformat)
-find_path(AVUTIL_INCLUDE_DIR libavutil/avutil.h)
-find_library(AVUTIL_LIBRARY avutil)
-
-# Find shaderc
-find_library(SHADERC_LIBRARY shaderc_combined)
+if (NOT APPLE)
+    find_path(AVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
+    find_library(AVCODEC_LIBRARY avcodec)
+    find_path(AVFORMAT_INCLUDE_DIR libavformat/avformat.h)
+    find_library(AVFORMAT_LIBRARY avformat)
+    find_path(AVUTIL_INCLUDE_DIR libavutil/avutil.h)
+    find_library(AVUTIL_LIBRARY avutil)
+    find_library(SHADERC_LIBRARY shaderc_combined)
+else()
+    find_library(AVCODEC_LIBRARY
+        NAMES avcodec
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
+    find_library(AVFORMAT_LIBRARY
+        NAMES avformat
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
+    find_library(AVUTIL_LIBRARY
+        NAMES avutil
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
+    find_library(Vulkan_LIBRARY
+        NAMES vulkan
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
+    find_library(SHADERC_LIBRARY
+        NAMES shaderc_combined
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
+endif()
 
 target_link_libraries(scinsynth
     "${SCIN_EXT_INSTALL_DIR}/lib/liblo.a"
-    "${Vulkan_LIBRARY}"
     ${AVCODEC_LIBRARY}
     ${AVFORMAT_LIBRARY}
     ${AVUTIL_LIBRARY}
     ${SHADERC_LIBRARY}
+    "${Vulkan_LIBRARY}"
     VulkanMemoryAllocator
     gflags
     glfw
@@ -235,9 +264,10 @@ target_include_directories(scinsynth PRIVATE
     ${AVCODEC_INCLUDE_DIR}
     ${AVFORMAT_INCLUDE_DIR}
     ${AVUTIL_INCLUDE_DIR}
+    ${Vulkan_INCLUDE_DIRS}
 )
 
-if (UNIX AND NOT APPLE)
+if (NOT APPLE)
     target_link_libraries(scinsynth
         stdc++fs
     )
@@ -248,9 +278,46 @@ add_dependencies(scinsynth
 )
 
 file(MAKE_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
-install(TARGETS scinsynth
-    RUNTIME
-    DESTINATION "${PROJECT_SOURCE_DIR}/bin")
+if (APPLE)
+    install(TARGETS scinsynth
+        BUNDLE DESTINATION "${PROJECT_SOURCE_DIR}/bin" COMPONENT Runtime
+    )
+    install(TARGETS ${Vulkan_Library} LIBRARY
+        DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/MacOS"
+    )
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/libVkLayer_khronos_validation.dylib"
+        DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Frameworks"
+    )
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/libMoltenVK.dylib"
+        DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Frameworks"
+    )
+    install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/macos/Resources/vulkan"
+        DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Resources"
+    )
+    list(APPEND SCIN_MACOS_LIBS "${SCIN_EXT_INSTALL_DIR}/lib")
+    install(CODE "
+        include(BundleUtilities)
+        fixup_bundle(
+            \"${PROJECT_SOURCE_DIR}/bin/scinsynth.app\"
+            \"\"
+            \"${SCIN_MACOS_LIBS}\")
+        "
+        VERBATIM
+    )
+
+    # TODO: The Vulkan loader cannot find libvulkan if it lives in Frameworks/, but I cannot find a reliable way to
+    # coerce CMake to put the library anywhere else. So this script resolves the link to the actual dylib in the
+    # Frameworks directory, and then creates a similar link to the same resolved library in the MacOS/ directory, which
+    # is where the loader will look for the vulkan library. Is there a less kludgy way to do this?
+    install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/tools/macOS-fixup-vulkan.py ${PROJECT_SOURCE_DIR}/bin/scinsynth.app)")
+
+    set(CPACK_GENERATOR "DRAGNDROP")
+    include(CPack)
+else()
+    install(TARGETS scinsynth
+        RUNTIME
+        DESTINATION "${PROJECT_SOURCE_DIR}/bin")
+endif()
 
 #### Automatic Code Formatting and Linting
 if (NOT DEFINED CLANG_FORMAT)

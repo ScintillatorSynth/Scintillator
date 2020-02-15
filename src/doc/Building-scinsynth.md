@@ -40,11 +40,9 @@ The way we do it on travis-ci right now is to supply -DPYTHON_EXECUTABLE=`which 
 MacOS
 -----
 
-You will need the Vulkan SDK for macOS. The instructions
-[here](https://vulkan.lunarg.com/doc/sdk/1.1.130.0/mac/getting_started.html) detail how to install it. Running the
-install script makes for an easier configuration.
+Need to build prerequisites, ffmpeg-dev, vulkan-dev, and swiftshader.
 
 ```
-brew install ffmpeg doxygen
+brew install ninja doxygen automake fdk-aac git lame libass libtool libvorbis libvpx opus sdl shtool texi2html theora wget x264 x265 xvid nasm
 ```
 

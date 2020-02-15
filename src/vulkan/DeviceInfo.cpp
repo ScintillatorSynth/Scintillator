@@ -2,7 +2,6 @@
 
 #include "vulkan/Instance.hpp"
 
-#include "fmt/core.h"
 #include "spdlog/spdlog.h"
 
 #include <cstring>
@@ -26,9 +25,6 @@ DeviceInfo::DeviceInfo(std::shared_ptr<Instance> instance, VkPhysicalDevice devi
 
 bool DeviceInfo::build() {
     vkGetPhysicalDeviceProperties(m_physicalDevice, &m_properties);
-    for (auto i = 0; i < VK_UUID_SIZE; ++i) {
-        m_uuid += fmt::format("{:02x}", m_properties.pipelineCacheUUID[i]);
-    }
 
     // Look for a graphics queue family, and ask about present family support.
     uint32_t queueFamilyCount = 0;
@@ -73,7 +69,7 @@ bool DeviceInfo::build() {
         windowExtensions.erase(extension.extensionName);
     }
     m_supportsMemoryBudget = optionalExtensions.empty();
-    m_supportsWindow = windowExtensions.empty();
+    m_supportsWindow = windowExtensions.empty() && (m_presentFamilyIndex >= 0);
 
     return true;
 }
