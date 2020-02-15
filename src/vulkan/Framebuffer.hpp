@@ -32,7 +32,7 @@ public:
 private:
     std::shared_ptr<Device> m_device;
 
-    std::vector<FramebufferImage> m_images;
+    std::vector<std::shared_ptr<FramebufferImage>> m_images;
     std::shared_ptr<Canvas> m_canvas;
 };
 

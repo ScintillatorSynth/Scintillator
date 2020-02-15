@@ -12,12 +12,13 @@ namespace scin { namespace vk {
 class Device;
 
 /*! Abstract base class describing a Vulkan Image.
- *  TODO: maybe ImageSet can just be a vector of these?
  */
 class Image {
 public:
-    Image(std::shared_ptr<Device> device);
+    explicit Image(std::shared_ptr<Device> device);
     virtual ~Image();
+    Image(const Image&) = delete;
+    Image& operator=(const Image&) = delete;
 
     VkImage get() const { return m_image; }
     VkFormat format() const { return m_format; }
@@ -40,14 +41,18 @@ class SwapchainImage : public Image {
 public:
     SwapchainImage(std::shared_ptr<Device> device, VkImage image, VkFormat format, VkExtent2D extent);
     virtual ~SwapchainImage();
+    SwapchainImage(const SwapchainImage&) = delete;
+    SwapchainImage& operator=(const SwapchainImage&) = delete;
 };
 
 /*! Base class for images allocated by the process, meaning they will need to be reclaimed.
  */
 class AllocatedImage : public Image {
 public:
-    AllocatedImage(std::shared_ptr<Device> device);
+    explicit AllocatedImage(std::shared_ptr<Device> device);
     virtual ~AllocatedImage();
+    AllocatedImage(const AllocatedImage&) = delete;
+    AllocatedImage& operator=(const AllocatedImage&) = delete;
 
     virtual bool create(uint32_t width, uint32_t height) = 0;
     void destroy();
@@ -61,8 +66,10 @@ protected:
  */
 class DeviceImage : public AllocatedImage {
 public:
-    DeviceImage(std::shared_ptr<Device> device);
+    explicit DeviceImage(std::shared_ptr<Device> device);
     virtual ~DeviceImage();
+    DeviceImage(const DeviceImage&) = delete;
+    DeviceImage& operator=(const DeviceImage&) = delete;
 
     bool create(uint32_t width, uint32_t height) override;
 
@@ -74,8 +81,10 @@ protected:
  */
 class FramebufferImage : public DeviceImage {
 public:
-    FramebufferImage(std::shared_ptr<Device> device);
+    explicit FramebufferImage(std::shared_ptr<Device> device);
     virtual ~FramebufferImage();
+    FramebufferImage(const FramebufferImage&) = delete;
+    FramebufferImage& operator=(const FramebufferImage&) = delete;
 
     bool create(uint32_t width, uint32_t height) override;
 };
@@ -84,8 +93,10 @@ public:
  */
 class HostImage : public AllocatedImage {
 public:
-    HostImage(std::shared_ptr<Device> device);
+    explicit HostImage(std::shared_ptr<Device> device);
     virtual ~HostImage();
+    HostImage(const HostImage&) = delete;
+    HostImage& operator=(const HostImage&) = delete;
 
     bool create(uint32_t width, uint32_t height) override;
 
