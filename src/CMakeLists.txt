@@ -244,6 +244,8 @@ else()
     find_library(AVFORMAT_LIBRARY avformat)
     find_path(AVUTIL_INCLUDE_DIR libavutil/avutil.h)
     find_library(AVUTIL_LIBRARY avutil)
+    find_path(SWSCALE_INCLUDE_DIR libswscale/swscale.h)
+    find_library(SWSCALE_LIBRARY swscale)
     find_library(SHADERC_LIBRARY shaderc_combined)
 endif()
 
