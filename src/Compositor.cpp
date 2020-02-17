@@ -8,6 +8,7 @@
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
+#include "vulkan/Image.hpp"
 #include "vulkan/ShaderCompiler.hpp"
 
 #include "spdlog/spdlog.h"
@@ -225,6 +226,8 @@ int Compositor::numberOfRunningScinths() {
 bool Compositor::getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudgetOut) {
     return m_device->getGraphicsMemoryBudget(bytesUsedOut, bytesBudgetOut);
 }
+
+void Compositor::addImage(int imageID, std::shared_ptr<vk::HostImage> image) {}
 
 // Needs to be called only from the same thread that calls prepareFrame. Assumes that m_secondaryCommands is up-to-date.
 bool Compositor::rebuildCommandBuffer() {

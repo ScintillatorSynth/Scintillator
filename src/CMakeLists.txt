@@ -226,6 +226,11 @@ if (APPLE)
         PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
         NO_DEFAULT_PATH
     )
+    find_library(SWSCALE_LIBRARY
+        NAMES swscale
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
     find_library(Vulkan_LIBRARY
         NAMES vulkan
         PATHS "${SCIN_EXT_INSTALL_DIR}/lib"

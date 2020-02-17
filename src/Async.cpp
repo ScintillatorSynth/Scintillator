@@ -337,11 +337,7 @@ void Async::asyncReadImageIntoNewBuffer(int bufferID, std::string filePath, int 
     }
     image->unmap();
 
-    // Could return a <fence> right here, which then this thread could wait on until the queue submission? Or maybe a
-    // void future that we could then block on right here? Naw I don't want to jam up this thread dependent on the
-    // render loop. Does compositor keep a staging thread? That blocks on the fences?
-    // m_compositor->stageImage(bufferID, image);
-    // TODO: image has been *staged* but is not necessarily ready for render.
+    m_compositor->addImage(bufferID, image);
     completion();
 }
 

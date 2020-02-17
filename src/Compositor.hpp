@@ -18,6 +18,7 @@ class Canvas;
 class CommandBuffer;
 class CommandPool;
 class Device;
+class HostImage;
 class ShaderCompiler;
 }
 
@@ -108,6 +109,7 @@ public:
      */
     bool getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudgetOut);
 
+    void addImage(int imageID, std::shared_ptr<vk::HostImage> image);
 
 private:
     typedef std::list<std::shared_ptr<Scinth>> ScinthList;
