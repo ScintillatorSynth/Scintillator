@@ -194,6 +194,8 @@ set(scintillator_synth_files
     vulkan/Pipeline.hpp
     vulkan/RenderSync.cpp
     vulkan/RenderSync.hpp
+    vulkan/Sampler.cpp
+    vulkan/Sampler.hpp
     vulkan/Shader.cpp
     vulkan/Shader.hpp
     vulkan/ShaderCompiler.cpp

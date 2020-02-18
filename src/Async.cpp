@@ -16,8 +16,8 @@ namespace scin {
 
 Async::Async(std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
              std::shared_ptr<vk::Device> device):
-    m_compositor(compositor),
     m_archetypes(archetypes),
+    m_compositor(compositor),
     m_device(device),
     m_quit(false),
     m_numberOfActiveWorkers(0) {}

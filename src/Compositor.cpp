@@ -237,7 +237,7 @@ bool Compositor::rebuildCommandBuffer() {
         return false;
     }
 
-    VkClearColorValue clearColor = { m_clearColor.x, m_clearColor.y, m_clearColor.z, 1.0f };
+    VkClearColorValue clearColor = { { m_clearColor.x, m_clearColor.y, m_clearColor.z, 1.0f } };
     VkClearValue clearValue = {};
     clearValue.color = clearColor;
 

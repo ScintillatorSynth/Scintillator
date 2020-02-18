@@ -40,6 +40,7 @@ public:
     const char* typeName() const;
     bool supportsWindow() const { return m_supportsWindow; }
     bool supportsMemoryBudget() const { return m_supportsMemoryBudget; }
+    bool supportsSamplerAnisotropy() const { return m_features.samplerAnisotropy; }
     uint32_t deviceID() const { return m_properties.deviceID; }
     uint32_t vendorID() const { return m_properties.vendorID; }
 
@@ -47,6 +48,7 @@ private:
     std::shared_ptr<Instance> m_instance;
     VkPhysicalDevice m_physicalDevice;
     VkPhysicalDeviceProperties m_properties;
+    VkPhysicalDeviceFeatures m_features;
     int m_presentFamilyIndex;
     int m_graphicsFamilyIndex;
     int m_numberOfMemoryHeaps;
