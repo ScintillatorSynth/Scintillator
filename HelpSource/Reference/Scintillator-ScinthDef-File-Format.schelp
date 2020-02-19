@@ -51,6 +51,7 @@ table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
 ## code::name:: || string || An emphasis::optional:: string, provided for readability
 ## code::dimension:: || integer || The dimensionality of the input
+## code::valueType:: || string || One of code::float::, code::imageBuf::, or code::sampler::. As image buffers and samplers require special treatment by the synth they are explicitly indicated as inputs.
 ## code::type:: || string || An enumerated type, for possible values see below
 ::
 
@@ -74,10 +75,6 @@ table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
 ## code::index:: || int || The parameter index to use.
 ::
-::
-
-note::
-Intrinsics right now are being treated like normal VGens.
 ::
 
 subsection::VGen Output Dictionary Spec

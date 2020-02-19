@@ -151,8 +151,8 @@ void Logger::setConsoleLogLevel(int level) {
     // We set libav to log at least warnings, to get notified of errors and warnings and update our counts.
     int atLeastWarnings = std::min(level, 3);
     av_log_set_level(spdLevelToAVLevel(static_cast<spdlog::level::level_enum>(atLeastWarnings)));
-    spdlog::info("setting log level to {}", level);
     m_consoleSink->set_level(static_cast<spdlog::level::level_enum>(level));
+    spdlog::info("log level set to {}", level);
 }
 
 void Logger::getCounts(size_t& warningsOut, size_t& errorsOut) { m_errorSink->getCounts(warningsOut, errorsOut); }

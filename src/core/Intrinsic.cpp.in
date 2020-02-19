@@ -19,6 +19,7 @@ struct IntrinsicPair { const char* name; scin::core::Intrinsic intrinsic; };
 normPos,    scin::core::Intrinsic::kNormPos
 pi,         scin::core::Intrinsic::kPi
 time,       scin::core::Intrinsic::kTime
+texPos,     scin::core::Intrinsic::kTexPos
 %%
 
 } // namespace

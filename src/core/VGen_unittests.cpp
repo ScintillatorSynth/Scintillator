@@ -8,13 +8,14 @@ namespace scin { namespace core {
 
 TEST(VGenTest, InvalidInputCounts) {
     std::shared_ptr<const AbstractVGen> noInputs(
-        new AbstractVGen("noInput", {}, { "out" }, { {} }, { { 1 } }, "@out = @time * 0.5f;"));
+        new AbstractVGen("noInput", {}, {}, { "out" }, { {} }, { { 1 } }, "@out = @time * 0.5f;"));
     VGen someInputs(noInputs);
     someInputs.addConstantInput(1.0f);
     EXPECT_FALSE(someInputs.validate());
 
     std::shared_ptr<const AbstractVGen> twoInputs(
-        new AbstractVGen("twoInputs", { "in1", "in2" }, { "out" }, { { 1, 1 } }, { { 1 } }, "@out = @in1 + @in2;"));
+        new AbstractVGen("twoInputs", { "in1", "in2" }, { AbstractVGen::kFloat, AbstractVGen::kFloat }, { "out" },
+                         { { 1, 1 } }, { { 1 } }, "@out = @in1 + @in2;"));
     VGen incrementalInputs(twoInputs);
     EXPECT_FALSE(incrementalInputs.validate());
     incrementalInputs.addVGenInput(0, 0, 1);
@@ -25,11 +26,10 @@ TEST(VGenTest, InvalidInputCounts) {
     EXPECT_FALSE(incrementalInputs.validate());
 }
 
-TEST(VGenTest, InputDimensionsInvalid) {}
-
 TEST(VGenTest, InputValuesAndTypesRetained) {
     std::shared_ptr<const AbstractVGen> threeInputs(new AbstractVGen(
-        "threeInputs", { "a", "b", "c" }, { "out" }, { { 1, 1, 1 } }, { { 1 } }, "@out = @a + @b + @c;"));
+        "threeInputs", { "a", "b", "c" }, { AbstractVGen::kFloat, AbstractVGen::kFloat, AbstractVGen::kFloat },
+        { "out" }, { { 1, 1, 1 } }, { { 1 } }, "@out = @a + @b + @c;"));
     VGen allConstants(threeInputs);
     allConstants.addConstantInput(-1.0f);
     allConstants.addConstantInput(2.0f);

@@ -99,6 +99,10 @@ VGen : AbstractFunction {
 	outputDimensions {
 		^[[]];
 	}
+
+	inputValueType { |index|
+		^\float;
+	}
 }
 
 MultiOutVGen : VGen {

@@ -22,6 +22,11 @@ AbstractScinthDef::AbstractScinthDef(const std::string& name, const std::vector<
 AbstractScinthDef::~AbstractScinthDef() { spdlog::debug("AbstractScinthDef '{}' destructor", m_name); }
 
 bool AbstractScinthDef::build() {
+    // We can't allow VGen outputs to drive inputs to image or sampler selection, at least not for now, as images and
+    // samplers must be bound at pipeline creation time and can't be changed per-fragment. So some work to validate that
+    // isn't happening, on both C++ and sclang sides. That leaves constants and parameters. Constants can be grouped by
+    // value to identify non-varying images fixed for lifetime of ScinthDef. Parameters can be grouped by index or name.
+    // There is then two groups - fixed and changeable images and samplers.
     if (!buildNames()) {
         return false;
     }
@@ -94,10 +99,9 @@ bool AbstractScinthDef::buildNames() {
                 vgenInputs.push_back(nameForVGenOutput(vgenIndex, vgenOutput));
             } break;
 
-            case VGen::InputType::kInvalid: {
+            case VGen::InputType::kInvalid:
                 spdlog::error("AbstractScinthDesc {} VGen at index {} has unknown input type at index {}.", m_name, i,
                               j);
-            }
                 return false;
             }
         }
@@ -149,9 +153,9 @@ bool AbstractScinthDef::buildManifests() {
             m_uniformManifest.addElement("time", Manifest::ElementType::kFloat, Intrinsic::kTime);
             break;
 
-        default:
-            spdlog::error("invalid intrinsic while building manifest");
-            return false;
+        case kTexPos:
+            m_vertexManifest.addElement(m_prefix + "_texPos", Manifest::ElementType::kVec2, Intrinsic::kTexPos);
+            break;
         }
     }
 

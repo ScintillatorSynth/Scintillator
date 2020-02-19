@@ -340,9 +340,36 @@ int Archetypes::extractAbstractVGensFromNodes(const std::vector<YAML::Node>& nod
 
         // Check for inputs (optional) first, to get an input count to validate dimension data.
         std::vector<std::string> inputs;
+        std::vector<AbstractVGen::InputType> inputTypes;
         if (node["inputs"] && node["inputs"].IsSequence()) {
             for (auto input : node["inputs"]) {
-                inputs.push_back(input.as<std::string>());
+                if (input.IsScalar()) {
+                    inputs.push_back(input.as<std::string>());
+                    inputTypes.push_back(AbstractVGen::InputType::kFloat);
+                } else {
+                    if (input.IsMap()) {
+                        if (input["name"] && input["type"]) {
+                            inputs.push_back(input["name"].as<std::string>());
+                            std::string inputType = input["type"].as<std::string>();
+                            if (inputType == "float") {
+                                inputTypes.push_back(AbstractVGen::InputType::kFloat);
+                            } else if (inputType == "image") {
+                                inputTypes.push_back(AbstractVGen::InputType::kImage);
+                            } else if (inputType == "sampler") {
+                                inputTypes.push_back(AbstractVGen::InputType::kSampler);
+                            } else {
+                                spdlog::error("VGen {} got unknown input type {} on input list.", name, inputType);
+                                continue;
+                            }
+                        } else {
+                            spdlog::error("VGen {} has map yaml but missing key on input list.", name);
+                            continue;
+                        }
+                    } else {
+                        spdlog::error("VGen {} has unknown yaml type on input list.", name);
+                        continue;
+                    }
+                }
             }
         }
 
@@ -426,7 +453,7 @@ int Archetypes::extractAbstractVGensFromNodes(const std::vector<YAML::Node>& nod
         }
 
         std::shared_ptr<AbstractVGen> vgen(
-            new AbstractVGen(name, inputs, outputs, inputDimensions, outputDimensions, shader));
+            new AbstractVGen(name, inputs, inputTypes, outputs, inputDimensions, outputDimensions, shader));
         if (!vgen->prepareTemplate()) {
             spdlog::error("VGen {} failed template preparation.", name);
             continue;

@@ -5,10 +5,12 @@
 namespace scin { namespace core {
 
 AbstractVGen::AbstractVGen(const std::string& name, const std::vector<std::string>& inputs,
-                           const std::vector<std::string>& outputs, const std::vector<std::vector<int>> inputDimensions,
+                           const std::vector<InputType>& inputTypes, const std::vector<std::string>& outputs,
+                           const std::vector<std::vector<int>> inputDimensions,
                            const std::vector<std::vector<int>> outputDimensions, const std::string& shader):
     m_name(name),
     m_inputs(inputs),
+    m_inputTypes(inputTypes),
     m_outputs(outputs),
     m_inputDimensions(inputDimensions),
     m_outputDimensions(outputDimensions),

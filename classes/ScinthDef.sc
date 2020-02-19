@@ -100,7 +100,8 @@ ScinthDef {
 						yaml = yaml ++ secondDepth ++ "  outputIndex: 0\n";
 						yaml = yaml ++ secondDepth ++ "  dimension:" + vgen.inDims[inputIndex] ++ "\n";
 					}
-					{ thisMethod.notImplemented }
+					{ Error("unknown input").throw };
+					yaml = yaml ++ secondDepth ++ "  valueType:" + vgen.inputValueType(inputIndex) ++ "\n";
 				});
 			});
 			yaml = yaml ++ depthIndent ++ "  outputs:\n";
