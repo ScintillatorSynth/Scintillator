@@ -30,7 +30,16 @@ bool VGen::validate() const {
         return false;
     }
 
-    // TODO: check input and output dimensions
+    // Check that all VGen inputs have float input types.
+    for (auto i = 0; i < m_inputs.size(); ++i) {
+        if (m_inputs[i].type == InputType::kVGen
+            && m_abstractVGen->inputTypes()[i] != AbstractVGen::InputType::kFloat) {
+            spdlog::error("VGen {} input {} with nonfloat abstract type not supported.", m_abstractVGen->name(), i);
+            return false;
+        }
+    }
+
+    // TODO: check input and output dimensions.
 
     return true;
 }
@@ -89,7 +98,6 @@ bool VGen::getInputParameterIndex(int index, int& outIndex) const {
             return true;
         }
     }
-
     return false;
 }
 

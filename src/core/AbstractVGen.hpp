@@ -19,6 +19,7 @@ namespace scin { namespace core {
 class AbstractVGen {
 public:
     /*! The variety of input types that a VGen can accept.
+     * TODO: name conflict with VGen::InputType enum. Reconsider.
      */
     enum InputType { kFloat, kImage, kSampler };
 

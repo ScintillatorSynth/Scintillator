@@ -95,12 +95,15 @@ ScinthDef {
 						yaml = yaml ++ secondDepth ++ "  dimension: 1\n";
 					}
 					{ input.isVGen } {
+						if (vgen.inputValueType(inputIndex) != \float, {
+							Error.new("Non-float input types don't support VGens").throw;
+						});
 						yaml = yaml ++ secondDepth ++ "- type: vgen\n";
 						yaml = yaml ++ secondDepth ++ "  vgenIndex:" + input.scinthIndex.asString ++ "\n";
 						yaml = yaml ++ secondDepth ++ "  outputIndex: 0\n";
 						yaml = yaml ++ secondDepth ++ "  dimension:" + vgen.inDims[inputIndex] ++ "\n";
 					}
-					{ Error("unknown input").throw };
+					{ Error.new("unknown input").throw };
 					yaml = yaml ++ secondDepth ++ "  valueType:" + vgen.inputValueType(inputIndex) ++ "\n";
 				});
 			});

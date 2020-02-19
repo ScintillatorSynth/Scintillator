@@ -70,6 +70,7 @@ public:
     const std::string& parametersStructName() const { return m_parametersStructName; }
 
 private:
+    bool buildInputs();
     bool buildNames();
     bool buildManifests();
     bool buildVertexShader();
@@ -79,6 +80,11 @@ private:
     std::vector<Parameter> m_parameters;
     std::vector<VGen> m_instances;
     std::unique_ptr<Shape> m_shape;
+
+    std::unordered_set<int> m_fixedImageIDs;
+    std::unordered_set<int> m_fixedSamplerIDs;
+    std::unordered_set<int> m_imageParameterIndices;
+    std::unordered_set<int> m_samplerParameterIndices;
 
     std::string m_prefix;
     std::string m_vertexPositionElementName;
