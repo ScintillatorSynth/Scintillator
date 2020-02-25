@@ -10,6 +10,12 @@ VGen::VGen(std::shared_ptr<const AbstractVGen> abstractVGen): m_abstractVGen(abs
 
 VGen::~VGen() {}
 
+void VGen::setSamplerConfig(int imageIndex, InputType imageArgType, const AbstractSampler& sampler) {
+    m_imageIndex = imageIndex;
+    m_imageArgType = imageArgType;
+    m_abstractSampler = sampler;
+}
+
 void VGen::addConstantInput(float constantValue) { m_inputs.emplace_back(VGenInput(constantValue)); }
 void VGen::addConstantInput(glm::vec2 constantValue) { m_inputs.emplace_back(VGenInput(constantValue)); }
 void VGen::addConstantInput(glm::vec3 constantValue) { m_inputs.emplace_back(VGenInput(constantValue)); }
@@ -28,15 +34,6 @@ bool VGen::validate() const {
         spdlog::error("input size mismatch for VGen {}, expected {}, got {}", m_abstractVGen->name(),
                       m_abstractVGen->inputs().size(), m_inputs.size());
         return false;
-    }
-
-    // Check that all VGen inputs have float input types.
-    for (auto i = 0; i < m_inputs.size(); ++i) {
-        if (m_inputs[i].type == InputType::kVGen
-            && m_abstractVGen->inputTypes()[i] != AbstractVGen::InputType::kFloat) {
-            spdlog::error("VGen {} input {} with nonfloat abstract type not supported.", m_abstractVGen->name(), i);
-            return false;
-        }
     }
 
     // TODO: check input and output dimensions.

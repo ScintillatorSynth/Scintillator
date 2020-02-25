@@ -39,8 +39,21 @@ table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
 ## code::className:: || string || name of the VGen class, must match the name of a VGen configured on the server
 ## code::rate:: || string || currently either code::fragment:: or code::vertex::
+## code::sampler:: || dictionary || Only required for sampling VGens. Specifies sampler parameters.
 ## code::inputs:: || list || input YAML dictionaries in an ordered list. May be absent if VGen has no inputs.
 ## code::outputs:: || list || output YAML dictionaries in an ordered list
+::
+
+subsection::VGen Sampler Dictionary Spec
+
+Sampling VGens must include the sampler dictionary, which contains configuration data for the image sampler. For more details see the documentation on link::Classes/Sampler:: parameters.
+
+table::
+## strong::key:: || strong::YAML type:: || strong::notes::
+## code::image:: || integer || Depending on code::imageArgType::, either an image buffer number or the index of the parameter expected to contain the image buffer number.
+## code::imageArgType:: || string || Either code::constant::, in which case code::image:: must be a valid image buffer number, or code::parameter::, in which case code::image:: must be a valid parameter index.
+## code::addressMode:: || string || One of code::repeat::, code::mirroredRepeat::, code::clampToEdge::, or code::clampToBorder::.
+## code::clampBorderColor:: || string || Ignored unless code::addressMode:: is code::clampToBorder::, in which case it is one of code::transparentBlack::, code::black::, or code::white::.
 ::
 
 subsection::VGen Input Dictionary Spec
@@ -51,7 +64,6 @@ table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
 ## code::name:: || string || An emphasis::optional:: string, provided for readability
 ## code::dimension:: || integer || The dimensionality of the input
-## code::valueType:: || string || One of code::float::, code::imageBuf::, or code::sampler::. As image buffers and samplers require special treatment by the synth they are explicitly indicated as inputs.
 ## code::type:: || string || An enumerated type, for possible values see below
 ::
 

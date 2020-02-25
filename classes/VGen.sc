@@ -100,8 +100,8 @@ VGen : AbstractFunction {
 		^[[]];
 	}
 
-	inputValueType { |index|
-		^\float;
+	isSamplerVGen {
+		^false;
 	}
 }
 
@@ -156,6 +156,7 @@ VOutputProxy : VGen {
 	isValidVGenInput { ^false }
 	isVGen { ^false }
 	isControlVGen { ^false }
+	isSamplerVGen { ^false }
 }
 
 + AbstractFunction {

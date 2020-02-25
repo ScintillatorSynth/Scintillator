@@ -10,20 +10,11 @@ A VGen file may contain multiple VGen definitions. Each definition at top level 
 table::
 ## strong::key name:: || strong::type:: || strong::required or optional:: || strong::description::
 ## code::name:: || string || strong::required:: || The name of the VGen, must be unique. Used to identify this VGen in ScinthDef descriptions.
-## code::inputs:: || list || optional || A list identifying input names in the shader program. The ordering of inputs here must match the ordering of inputs on the ScinthDef, as those inputs can be supplied unnamed. The list items can either be single strings or dictionaries (see below).
+## code::sampler:: || boolean || optional || If present, specifies if this VGen is a sampling VGen that will take an image input. If not present, the value is assumed to be false.
+## code::inputs:: || list || optional || A list identifying input names in the shader program. The ordering of inputs here must match the ordering of inputs on the ScinthDef, as those inputs can be supplied unnamed.
 ## code::outputs:: || list || strong::required:: || A list of strings identifying names of output parameters. At least one element must exist in this list.
 ## code::dimensions:: || list || strong::required:: || A list of dictionaries of keys mapping dimension on inputs to dimension on outputs of the VGen (see below).
 ## code::shader:: || string || strong::required:: || The GLSL shader program, with inputs, intrinsics, and intermediates, as well as exactly one instance of the keyword "@out" prefixed with @ symbols.
-::
-
-subsection::inputs list
-
-The list of inputs entries can individually either be a single scalar string value, which is interpreted as the name of the input and with default type code::float::, or a dictionary with two required keys:
-
-table::
-## strong::key name:: || strong::type:: || strong::description::
-## code::name:: || string || The name of the input
-## code::type:: || string || One of code::float::, code::image::, or code::sampler::
 ::
 
 subsection::dimensions list
@@ -49,6 +40,7 @@ Some @names are reserved and will be automatically supplied to the VGen at compi
 table::
 ## strong::name:: || strong::dimensons:: || strong::brief description::
 ## code::@normPos:: || 2 || Position of vertex or fragment in normalized space.
+## code::@sampler:: || 1 || The curently configured and bound sampler and image. Only usable in sampling VGens.
 ## code::@time:: || 1 || The runtime of the Scinth instance in seconds.
 ## code::@texPos:: || 2 || Position of the fragment in texture coordinates space.
 ::
@@ -56,6 +48,10 @@ table::
 subsection::@normPos
 
 The emphasis::normalized:: position of the vertex or fragment. This is computed to allow for image coordinates with a 1:1 aspect ratio even though the output window or framebuffer might be rectangular. The @normPos is always a 2 dimensional value and sets up coordinate systems such that the image in smaller of width or height will run from -1.0 to 1.0 in normPos space, with the larger size running under -1.0 and over 1.0. So, for instance, if the image is a tall rectangle with height twice that of width, the normPos will run from -1.0 to 1.0 in width, and -2.0 to 2.0 in height.
+
+subsection::@sampler
+
+In sampling VGens, represents the currently bound Vulkan sampler object and image within the shader.
 
 subsection::@time
 

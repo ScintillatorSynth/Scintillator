@@ -1,15 +1,12 @@
 # Image and Video Buffer Input and Output
 ---
-name: IBufRd
+name: Sampler
+sampler: true
 inputs:
-    - name: image
-      type: image
     - pos
-    - name: sampler
-      type: sampler
 outputs: [ out ]
 dimensions:
-    - inputs: [ 1, 2, 1 ]
+    - inputs: [ 2 ]
       outputs: 4
 shader: "@out = texture(@sampler, @pos);"
 

@@ -5,7 +5,7 @@
 
 namespace scin { namespace core {
 
-enum Intrinsic : int { kNormPos, kPi, kTime, kTexPos, kNotFound };
+enum Intrinsic : int { kNormPos, kPi, kSampler, kTime, kTexPos, kNotFound };
 
 /*! Returns Intrinsic enum associated with name, or kNotFound if no Intrinsic found by that name.
  *

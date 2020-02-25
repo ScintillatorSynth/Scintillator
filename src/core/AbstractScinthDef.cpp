@@ -60,50 +60,23 @@ int AbstractScinthDef::indexForParameterName(const std::string& name) const {
 }
 
 bool AbstractScinthDef::buildInputs() {
-    // Group shaders and images with constant inputs using sets of IDs to de-duplicate their values, to compute the
-    // minimal constant resource dependencies of the ScinthDef.
+    // Group shader image IDs to de-duplicate their values, to compute the combined image dependencies of the ScinthDef.
     for (auto i = 0; i < m_instances.size(); ++i) {
-        for (auto j = 0; j < m_instances[i].numberOfInputs(); ++j) {
-            AbstractVGen::InputType abstractInputType = m_instances[i].abstractVGen()->inputTypes()[j];
-            // Early-out for float inputs, which we expect most of the inputs to be.
-            if (abstractInputType == AbstractVGen::InputType::kFloat) {
-                continue;
+        if (m_instances[i].abstractVGen()->isSampler()) {
+            if (m_instances[i].imageIndex() < 0) {
+                spdlog::error("AbstractScinthDef {} has VGen {} with bad image index.", m_name, i);
+                return false;
             }
-            VGen::InputType instanceInputType = m_instances[i].getInputType(j);
-            if (instanceInputType == VGen::InputType::kVGen) {
-                spdlog::error("AbstractScinthDef {} has unsupported non-float VGen input type.", m_name);
+            if (m_instances[i].imageArgType() == VGen::InputType::kConstant) {
+                m_fixedImageIDs.insert(m_instances[i].imageIndex());
+            } else if (m_instances[i].imageArgType() == VGen::InputType::kParameter) {
+                m_imageParameterIndices.insert(m_instances[i].imageIndex());
+            } else {
+                spdlog::error("AbstractScinthDef {} has unknown VGen {} with sampler image argument type.", m_name, i);
                 return false;
             }
 
-            // This narrows the possibilities in inputs to 4, abstract input types kImage and kSampler times instance
-            // input types kConstant and kParameter.
-            if (instanceInputType == VGen::InputType::kConstant) {
-                // TODO: awkward cast from source int to float and back.
-                float index = 0.0;
-                m_instances[i].getInputConstantValue(j, index);
-                if (abstractInputType == AbstractVGen::InputType::kImage) {
-                    m_fixedImageIDs.insert(static_cast<int>(index));
-                } else if (abstractInputType == AbstractVGen::InputType::kSampler) {
-                    m_fixedSamplerIDs.insert(static_cast<int>(index));
-                } else {
-                    spdlog::error("AbstractScinthDef {} has unknown abstract input type for constant.", m_name);
-                    return false;
-                }
-            } else if (instanceInputType == VGen::InputType::kParameter) {
-                int parameterIndex = -1;
-                m_instances[i].getInputParameterIndex(j, parameterIndex);
-                if (abstractInputType == AbstractVGen::InputType::kImage) {
-                    m_imageParameterIndices.insert(parameterIndex);
-                } else if (abstractInputType == AbstractVGen::InputType::kSampler) {
-                    m_samplerParameterIndices.insert(parameterIndex);
-                } else {
-                    spdlog::error("AbstractScinthDef {} has unknown abstract input type for parameter.", m_name);
-                    return false;
-                }
-            } else {
-                spdlog::error("AbstractScinthDef {} has unknown instance input type.", m_name);
-                return false;
-            }
+            m_samplerKeys.insert(m_instances[i].sampler().key());
         }
     }
 
@@ -342,6 +315,9 @@ bool AbstractScinthDef::buildFragmentShader() {
 
         m_fragmentShader += fmt::format("}} {}_ubo;\n", m_prefix);
     }
+
+    // Constant and parameterized Sampler inputs come next
+    // FIXME
 
     // We pack the parameters into a push constant structure.
     if (m_parameters.size()) {

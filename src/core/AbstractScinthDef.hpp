@@ -7,6 +7,7 @@
 
 #include <unordered_map>
 #include <unordered_set>
+#include <set>
 #include <string>
 #include <vector>
 #include <memory>
@@ -81,10 +82,9 @@ private:
     std::vector<VGen> m_instances;
     std::unique_ptr<Shape> m_shape;
 
-    std::unordered_set<int> m_fixedImageIDs;
-    std::unordered_set<int> m_fixedSamplerIDs;
-    std::unordered_set<int> m_imageParameterIndices;
-    std::unordered_set<int> m_samplerParameterIndices;
+    std::set<int> m_fixedImageIDs;
+    std::set<int> m_imageParameterIndices;
+    std::unordered_set<uint32_t> m_samplerKeys;
 
     std::string m_prefix;
     std::string m_vertexPositionElementName;

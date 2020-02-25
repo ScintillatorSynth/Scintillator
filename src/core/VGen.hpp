@@ -1,6 +1,8 @@
 #ifndef SRC_CORE_VGEN_HPP_
 #define SRC_CORE_VGEN_HPP_
 
+#include "core/AbstractSampler.hpp"
+
 #include <memory>
 #include <vector>
 
@@ -16,6 +18,13 @@ class VGen {
 public:
     VGen(std::shared_ptr<const AbstractVGen> abstractVGen);
     ~VGen();
+
+    enum InputType { kConstant, kVGen, kParameter, kInvalid };
+
+    /*! Sets the sampler configuration information for this VGen instance. This information will be ignored on
+     * non-sampling VGens.
+     */
+    void setSamplerConfig(int imageIndex, InputType imageArgType, const AbstractSampler& sampler);
 
     /*! Adds a single-dimensional constant-valued input.
      *
@@ -53,8 +62,6 @@ public:
      * \return true if valid, false if not.
      */
     bool validate() const;
-
-    enum InputType { kConstant, kVGen, kParameter, kInvalid };
 
     /*! Return the type of input associated with the provided index.
      *
@@ -98,6 +105,10 @@ public:
 
     std::shared_ptr<const AbstractVGen> abstractVGen() const { return m_abstractVGen; }
 
+    int imageIndex() const { return m_imageIndex; }
+    InputType imageArgType() const { return m_imageArgType; }
+    const AbstractSampler& sampler() const { return m_abstractSampler; }
+
 private:
     struct VGenInput {
         explicit VGenInput(float c): type(kConstant), dimension(1) { value.constant1 = c; }
@@ -123,6 +134,9 @@ private:
     };
 
     std::shared_ptr<const AbstractVGen> m_abstractVGen;
+    int m_imageIndex;
+    InputType m_imageArgType;
+    AbstractSampler m_abstractSampler;
     std::vector<VGenInput> m_inputs;
     std::vector<int> m_outputDimensions;
 };

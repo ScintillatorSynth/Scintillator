@@ -4,13 +4,12 @@
 
 namespace scin { namespace core {
 
-AbstractVGen::AbstractVGen(const std::string& name, const std::vector<std::string>& inputs,
-                           const std::vector<InputType>& inputTypes, const std::vector<std::string>& outputs,
-                           const std::vector<std::vector<int>> inputDimensions,
+AbstractVGen::AbstractVGen(const std::string& name, bool isSampler, const std::vector<std::string>& inputs,
+                           const std::vector<std::string>& outputs, const std::vector<std::vector<int>> inputDimensions,
                            const std::vector<std::vector<int>> outputDimensions, const std::string& shader):
     m_name(name),
+    m_isSampler(isSampler),
     m_inputs(inputs),
-    m_inputTypes(inputTypes),
     m_outputs(outputs),
     m_inputDimensions(inputDimensions),
     m_outputDimensions(outputDimensions),
@@ -46,7 +45,7 @@ bool AbstractVGen::prepareTemplate() {
     }
 
     // There should be at least one mention of an output parameter in the shader.
-    bool outFound = false;
+    bool outputFound = false;
 
     // Looking for a single @ symbol followed by word characters (A-Za-z0-9_-) until whitespace.
     std::regex regex("@{1}\\w+");
@@ -55,7 +54,7 @@ bool AbstractVGen::prepareTemplate() {
         auto param = parameterMap.find(i->str().substr(1));
         if (param != parameterMap.end()) {
             if (param->second.kind == Parameter::Kind::kOutput) {
-                outFound = true;
+                outputFound = true;
             }
             m_parameters.push_back({ *i, param->second });
         } else {
@@ -72,7 +71,7 @@ bool AbstractVGen::prepareTemplate() {
         }
     }
 
-    if (!outFound) {
+    if (!outputFound) {
         spdlog::error("VGen {}: some out parameter must appear at least once in shader '{}'", m_name, m_shader);
         return false;
     }

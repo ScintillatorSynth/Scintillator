@@ -18,16 +18,11 @@ namespace scin { namespace core {
  */
 class AbstractVGen {
 public:
-    /*! The variety of input types that a VGen can accept.
-     * TODO: name conflict with VGen::InputType enum. Reconsider.
-     */
-    enum InputType { kFloat, kImage, kSampler };
-
     /*! Construct an AbstractVGen with all required and optional data.
      *
      * \param name The name to use for this VGen, must be unique.
+     * \param isSampler If true indicates this is a sampling VGen
      * \param inputs A list of input names, can be empty.
-     * \param inputTypes The types of the inputs, must be same size as inputs
      * \param ouptuts A list of output names, must be at least one.
      * \param inputDimensions Each subarray describes the allowable dimensions of the input at that index, and so should
      *        have the same number of entries as the number of inputs to the VGen. There should be the same number of
@@ -38,9 +33,8 @@ public:
      *        with inputDimesion.
      * \param shader The template shader code.
      */
-    AbstractVGen(const std::string& name, const std::vector<std::string>& inputs,
-                 const std::vector<InputType>& inputTypes, const std::vector<std::string>& outputs,
-                 const std::vector<std::vector<int>> inputDimensions,
+    AbstractVGen(const std::string& name, bool isSampler, const std::vector<std::string>& inputs,
+                 const std::vector<std::string>& outputs, const std::vector<std::vector<int>> inputDimensions,
                  const std::vector<std::vector<int>> outputDimensions, const std::string& shader);
     ~AbstractVGen();
 
@@ -67,8 +61,8 @@ public:
                              const std::unordered_set<std::string>& alreadyDefined) const;
 
     const std::string& name() const { return m_name; }
+    bool isSampler() const { return m_isSampler; }
     const std::vector<std::string>& inputs() const { return m_inputs; }
-    const std::vector<InputType>& inputTypes() const { return m_inputTypes; }
     const std::unordered_set<Intrinsic>& intrinsics() const { return m_intrinsics; }
     const std::vector<std::string>& outputs() const { return m_outputs; }
     const std::vector<std::vector<int>>& inputDimensions() const { return m_inputDimensions; }
@@ -90,8 +84,8 @@ private:
     };
 
     std::string m_name;
+    bool m_isSampler;
     std::vector<std::string> m_inputs;
-    std::vector<InputType> m_inputTypes;
     std::vector<std::string> m_outputs;
     std::vector<std::vector<int>> m_inputDimensions;
     std::vector<std::vector<int>> m_outputDimensions;

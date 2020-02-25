@@ -19,6 +19,8 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp"
 
 add_library(scintillator_core STATIC
     "${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp"
+    core/AbstractSampler.cpp
+    core/AbstractSampler.hpp
     core/AbstractScinthDef.cpp
     core/AbstractScinthDef.hpp
     core/AbstractVGen.cpp
@@ -51,6 +53,7 @@ endif()
 
 #### Unit Testing for Core Files
 add_executable(run_unittests
+    core/AbstractSampler_unittests.cpp
     core/AbstractScinthDef_unittests.cpp
     core/AbstractVGen_unittests.cpp
     core/Archetypes_unittests.cpp
