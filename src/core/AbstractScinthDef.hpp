@@ -82,9 +82,8 @@ private:
     std::vector<VGen> m_instances;
     std::unique_ptr<Shape> m_shape;
 
-    std::set<int> m_fixedImageIDs;
-    std::set<int> m_imageParameterIndices;
-    std::unordered_set<uint32_t> m_samplerKeys;
+    std::set<std::pair<uint32_t, int>> m_fixedImages;
+    std::set<std::pair<uint32_t, int>> m_parameterizedImages;
 
     std::string m_prefix;
     std::string m_vertexPositionElementName;

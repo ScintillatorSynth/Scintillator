@@ -84,7 +84,11 @@ ScinthDef {
 				yaml = yaml ++ depthIndent ++ "  sampler:\n";
 				yaml = yaml ++ secondDepth ++ "  image:" + vgen.image ++ "\n";
 				yaml = yaml ++ secondDepth ++ "  imageArgType:" + vgen.imageArgType ++ "\n";
-				yaml = yaml ++ secondDepth ++ "  addressMode:" + vgen.addressMode ++ "\n";
+				yaml = yaml ++ secondDepth ++ "  minFilterMode:" + vgen.minFilterMode ++ "\n";
+				yaml = yaml ++ secondDepth ++ "  magFilterMode:" + vgen.magFilterMode ++ "\n";
+				yaml = yaml ++ secondDepth ++ "  enableAnisotropicFiltering:" + vgen.enableAnisotropicFiltering.asString + "\n";
+				yaml = yaml ++ secondDepth ++ "  addressModeU:" + vgen.addressModeU ++ "\n";
+				yaml = yaml ++ secondDepth ++ "  addressModeV:" + vgen.addressModeV ++ "\n";
 				yaml = yaml ++ secondDepth ++ "  clampBorderColor:" + vgen.clampBorderColor ++ "\n";
 			});
 			if (vgen.inputs.size > 0, {

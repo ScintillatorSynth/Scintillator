@@ -52,8 +52,12 @@ table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
 ## code::image:: || integer || Depending on code::imageArgType::, either an image buffer number or the index of the parameter expected to contain the image buffer number.
 ## code::imageArgType:: || string || Either code::constant::, in which case code::image:: must be a valid image buffer number, or code::parameter::, in which case code::image:: must be a valid parameter index.
-## code::addressMode:: || string || One of code::repeat::, code::mirroredRepeat::, code::clampToEdge::, or code::clampToBorder::.
-## code::clampBorderColor:: || string || Ignored unless code::addressMode:: is code::clampToBorder::, in which case it is one of code::transparentBlack::, code::black::, or code::white::.
+## code::minFilterMode:: || string || emphasis::Optional.:: Either code::linear:: or code::nearest::. Default is code::linear::.
+## code::magFilterMode:: || string || emphasis::Optional.:: Either code::linear:: or code::nearest::. Default is code::linear::.
+## code::enableAnisotropicFiltering:: || boolean || emphasis::Optional::. Default is code::true::.
+## code::addressModeU:: || string || emphasis::Optional.:: One of code::repeat::, code::mirroredRepeat::, code::clampToEdge::, or code::clampToBorder::. Default is code::clampToBorder::.
+## code::addressModeV:: || string || emphasis::Optional.:: One of code::repeat::, code::mirroredRepeat::, code::clampToEdge::, or code::clampToBorder::. Default is code::clampToBorder::.
+## code::clampBorderColor:: || string || emphasis::Optional.:: Ignored unless code::addressMode:: is code::clampToBorder::, in which case it is one of code::transparentBlack::, code::black::, or code::white::. Default is code::transparentBlack::.
 ::
 
 subsection::VGen Input Dictionary Spec

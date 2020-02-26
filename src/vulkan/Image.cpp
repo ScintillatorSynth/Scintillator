@@ -105,8 +105,8 @@ bool HostImage::create(uint32_t width, uint32_t height) {
 
     VmaAllocationCreateInfo allocInfo = {};
     allocInfo.usage = VMA_MEMORY_USAGE_GPU_TO_CPU;
-    allocInfo.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-    allocInfo.preferredFlags = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+    allocInfo.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    allocInfo.preferredFlags = VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
 
     if (vmaCreateImage(m_device->allocator(), &createInfo, &allocInfo, &m_image, &m_allocation, nullptr)
         != VK_SUCCESS) {

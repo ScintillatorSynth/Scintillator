@@ -1,12 +1,21 @@
 // Base class for any VGen that samples pixel values outside of its own local value.
 Sampler : VGen {
+	var <>image;
+	// one of \constant, \parameter.
+	var <>imageArgType;
+
+	// one of \linear, \nearest.
+	var <>minFilterMode = \linear;
+	var <>magFilterMode = \linear;
+
+	var <>enableAnisotropicFiltering = true;
+
 	// one of \repeat, \mirroredRepeat, \clampToEdge, or \clampToBorder
-	var <>addressMode = \clampToBorder;
+	var <>addressModeU = \clampToBorder;
+	var <>addressModeV = \clampToBorder;
+
 	// one of \transparentBlack, \black, \white, only used if addressMode is set to \clampToBorder.
 	var <>clampBorderColor = \transparentBlack;
-
-	var <>image;
-	var <>imageArgType;
 
 	*fg { |image, pos|
 		var sampler = this.multiNew(\fragment, pos);

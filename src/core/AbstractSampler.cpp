@@ -36,7 +36,6 @@ void AbstractSampler::enableAnisotropicFiltering(bool enable) {
 
 bool AbstractSampler::isAnisotropicFilteringEnabled() const { return (m_key & 0x00000100) == 0; }
 
-
 // Two bits each for U and V addressing, bits 12 and 13 for U, 16 and 17 for V.
 void AbstractSampler::setAddressModeU(AbstractSampler::AddressMode addressMode) {
     m_key = (m_key & 0xffff0fff) | addressMode;

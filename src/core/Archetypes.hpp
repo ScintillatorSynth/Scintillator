@@ -1,6 +1,9 @@
 #ifndef SRC_CORE_SCINTHDEF_PARSER_HPP_
 #define SRC_CORE_SCINTHDEF_PARSER_HPP_
 
+#include "core/AbstractSampler.hpp"
+#include "core/VGen.hpp"
+
 #include <memory>
 #include <mutex>
 #include <unordered_map>
@@ -100,6 +103,11 @@ private:
 
     std::mutex m_mutex;
     std::unordered_map<std::string, std::shared_ptr<const AbstractScinthDef>> m_scinthDefs;
+
+    std::unordered_map<std::string, VGen::InputType> m_vgenInputTypes;
+    std::unordered_map<std::string, AbstractSampler::FilterMode> m_samplerFilterModes;
+    std::unordered_map<std::string, AbstractSampler::AddressMode> m_samplerAddressModes;
+    std::unordered_map<std::string, AbstractSampler::ClampBorderColor> m_samplerBorderColors;
 };
 
 } // namespace core

@@ -60,7 +60,8 @@ int AbstractScinthDef::indexForParameterName(const std::string& name) const {
 }
 
 bool AbstractScinthDef::buildInputs() {
-    // Group shader image IDs to de-duplicate their values, to compute the combined image dependencies of the ScinthDef.
+    // Group shader keys and image IDs to de-duplicate their values, to compute the combined image dependencies of the
+    // ScinthDef.
     for (auto i = 0; i < m_instances.size(); ++i) {
         if (m_instances[i].abstractVGen()->isSampler()) {
             if (m_instances[i].imageIndex() < 0) {
@@ -68,18 +69,15 @@ bool AbstractScinthDef::buildInputs() {
                 return false;
             }
             if (m_instances[i].imageArgType() == VGen::InputType::kConstant) {
-                m_fixedImageIDs.insert(m_instances[i].imageIndex());
+                m_fixedImages.insert({ m_instances[i].sampler().key(), m_instances[i].imageIndex() });
             } else if (m_instances[i].imageArgType() == VGen::InputType::kParameter) {
-                m_imageParameterIndices.insert(m_instances[i].imageIndex());
+                m_parameterizedImages.insert({ m_instances[i].sampler().key(), m_instances[i].imageIndex() });
             } else {
                 spdlog::error("AbstractScinthDef {} has unknown VGen {} with sampler image argument type.", m_name, i);
                 return false;
             }
-
-            m_samplerKeys.insert(m_instances[i].sampler().key());
         }
     }
-
     return true;
 }
 
@@ -156,19 +154,26 @@ bool AbstractScinthDef::buildManifests() {
     // At minimum the vertex manifest must have the position data from the associated Shape.
     m_vertexManifest.addElement(m_vertexPositionElementName, m_shape->elementType());
 
-    // Other Intrinsics have manifest dependencies, process each in turn.
+    // Some intrinsics have manifest dependencies, process each in turn.
     for (Intrinsic intrinsic : m_intrinsics) {
         switch (intrinsic) {
+        case kNotFound:
+            spdlog::error("ScinthDef {} has unknown intrinsic.", m_name);
+            return false;
+
         case kNormPos:
             // Double-check that this a 2D shape, normpos only works for 2D vertices.
             if (m_shape->elementType() != Manifest::ElementType::kVec2) {
-                spdlog::error("normpos intrinsic only supported for 2D shapes in ScinthDef {}.", m_name);
+                spdlog::error("normPos intrinsic only supported for 2D shapes in ScinthDef {}.", m_name);
                 return false;
             }
             m_vertexManifest.addElement(m_prefix + "_normPos", Manifest::ElementType::kVec2, Intrinsic::kNormPos);
             break;
 
         case kPi:
+            break;
+
+        case kSampler:
             break;
 
         case kTime:
@@ -271,29 +276,30 @@ bool AbstractScinthDef::buildFragmentShader() {
             Intrinsic intrinsic = m_vertexManifest.intrinsicForElement(i);
             switch (intrinsic) {
             case kPi:
+            case kSampler:
                 break;
 
             case kNormPos:
+            case kTexPos:
             case kTime:
                 intrinsicNames.insert({ intrinsic, "in_" + m_vertexManifest.nameForElement(i) });
                 break;
 
             case kNotFound:
-                spdlog::warn("unknown fragment shader vertex input {}", m_vertexManifest.nameForElement(i));
-                break;
-            }
-            if (intrinsic == Intrinsic::kNotFound) {
-            } else {
-                intrinsicNames.insert({ intrinsic, "in_" + m_vertexManifest.nameForElement(i) });
+                spdlog::error("Unknown fragment shader vertex input {}", m_vertexManifest.nameForElement(i));
+                return false;
             }
         }
     }
 
     // If there's a uniform buffer build that next.
+    int binding = 0;
     if (m_uniformManifest.numberOfElements()) {
-        m_fragmentShader += "\n"
-                            "// --- fragment shader uniform buffer\n"
-                            "layout(binding = 0) uniform UBO {\n";
+        m_fragmentShader += fmt::format("\n"
+                                        "// --- fragment shader uniform buffer\n"
+                                        "layout(binding = {}) uniform UBO {\n",
+                                        binding);
+        ++binding;
         for (auto i = 0; i < m_uniformManifest.numberOfElements(); ++i) {
             switch (m_uniformManifest.intrinsicForElement(i)) {
             case kNormPos:
@@ -316,8 +322,27 @@ bool AbstractScinthDef::buildFragmentShader() {
         m_fragmentShader += fmt::format("}} {}_ubo;\n", m_prefix);
     }
 
-    // Constant and parameterized Sampler inputs come next
-    // FIXME
+    // Constant and parameterized Sampler inputs come next, using the combined sampler/image binding which may be faster
+    // on some Vulkan implementations.
+    if (m_fixedImages.size()) {
+        m_fragmentShader += "\n"
+                            "// --- fixed image sampler inputs\n";
+        for (auto pair : m_fixedImages) {
+            m_fragmentShader += fmt::format("layout(binding = {}) uniform sampler2D {}_sampler_{:08x}_fixed_{};\n",
+                                            binding, m_prefix, pair.first, pair.second);
+            ++binding;
+        }
+    }
+
+    if (m_parameterizedImages.size()) {
+        m_fragmentShader += "\n"
+                            "// --- parammeterized image sampler inputs\n";
+        for (auto pair : m_parameterizedImages) {
+            m_fragmentShader += fmt::format("layout(binding = {}) uniform sampler2D {}_sampler_{:08x}_param_{};\n",
+                                            binding, m_prefix, pair.first, pair.second);
+            ++binding;
+        }
+    }
 
     // We pack the parameters into a push constant structure.
     if (m_parameters.size()) {
@@ -340,6 +365,19 @@ bool AbstractScinthDef::buildFragmentShader() {
 
     std::unordered_set<std::string> alreadyDefined({ m_fragmentOutputName });
     for (auto i = 0; i < m_instances.size(); ++i) {
+        // Update instance-specific intrinsics.
+        // TODO: consider providing a separate map or an alternate way of providing global and local intrinsic names.
+        if (m_instances[i].abstractVGen()->isSampler()) {
+            if (m_instances[i].imageArgType() == VGen::InputType::kConstant) {
+                intrinsicNames[Intrinsic::kSampler] =
+                    fmt::format("{}_sampler_{:08x}_fixed_{}", m_prefix, m_instances[i].sampler().key(),
+                                m_instances[i].imageIndex());
+            } else {
+                intrinsicNames[Intrinsic::kSampler] =
+                    fmt::format("{}_sampler_{:08x}_param_{}", m_prefix, m_instances[i].sampler().key(),
+                                m_instances[i].imageIndex());
+            }
+        }
         m_fragmentShader += "\n    // --- " + m_instances[i].abstractVGen()->name() + "\n";
         m_fragmentShader += "    "
             + m_instances[i].abstractVGen()->parameterize(m_inputs[i], intrinsicNames, m_outputs[i],

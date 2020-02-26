@@ -113,16 +113,15 @@ bool ScinthDef::buildVertexData() {
                     vertex[1] = verts[1] * normPosScale.y;
                 } break;
 
-                case core::Intrinsic::kPi:
-                    spdlog::error("pi is not a valid vertex intrinsic for ScinthDef {}", m_abstractScinthDef->name());
-                    return false;
+                case core::Intrinsic::kTexPos:
+                    m_abstractScinthDef->shape()->storeTextureVertexAtIndex(i, vertex);
+                    break;
 
                 case core::Intrinsic::kTime:
-                    spdlog::error("time is not a valid vertex intrinsic for ScinthDef {}", m_abstractScinthDef->name());
-                    return false;
-
+                case core::Intrinsic::kSampler:
+                case core::Intrinsic::kPi:
                 case core::Intrinsic::kNotFound:
-                    spdlog::error("unknown intrinsic in vertex manifest for ScinthDef {}", m_abstractScinthDef->name());
+                    spdlog::error("Invalid vertex intrinsic for ScinthDef {}", m_abstractScinthDef->name());
                     return false;
                 }
             }
