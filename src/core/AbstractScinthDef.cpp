@@ -297,7 +297,7 @@ bool AbstractScinthDef::buildFragmentShader() {
     if (m_uniformManifest.numberOfElements()) {
         m_fragmentShader += fmt::format("\n"
                                         "// --- fragment shader uniform buffer\n"
-                                        "layout(binding = {}) uniform UBO {\n",
+                                        "layout(binding = {}) uniform UBO {{\n",
                                         binding);
         ++binding;
         for (auto i = 0; i < m_uniformManifest.numberOfElements(); ++i) {
