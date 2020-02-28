@@ -19,6 +19,7 @@ class CommandBuffer;
 class CommandPool;
 class Device;
 class HostImage;
+class SamplerFactory;
 class ShaderCompiler;
 }
 
@@ -130,6 +131,7 @@ private:
 
     std::unique_ptr<vk::ShaderCompiler> m_shaderCompiler;
     std::shared_ptr<vk::CommandPool> m_commandPool;
+    std::unique_ptr<vk::SamplerFactory> m_samplerFactory;
     std::atomic<bool> m_commandBufferDirty;
     std::atomic<int> m_nodeSerial;
 
@@ -149,6 +151,8 @@ private:
     // are always valid until we are rendering a new frame over the old commands.
     Commands m_secondaryCommands;
     std::vector<Commands> m_frameCommands;
+
+    // Staging? For both ImageBuffers and Vertex/Index data (Shapes).
 };
 
 } // namespace scin

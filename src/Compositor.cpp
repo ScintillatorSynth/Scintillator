@@ -2,6 +2,7 @@
 
 #include "Scinth.hpp"
 #include "ScinthDef.hpp"
+#include "core/AbstractSampler.hpp"
 #include "core/AbstractScinthDef.hpp"
 #include "core/VGen.hpp"
 #include "vulkan/Canvas.hpp"
@@ -9,6 +10,8 @@
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Image.hpp"
+#include "vulkan/SamplerFactory.hpp"
+#include "vulkan/Sampler.hpp"
 #include "vulkan/ShaderCompiler.hpp"
 
 #include "spdlog/spdlog.h"
@@ -21,6 +24,7 @@ Compositor::Compositor(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::C
     m_clearColor(0.0f, 0.0f, 0.0f),
     m_shaderCompiler(new scin::vk::ShaderCompiler()),
     m_commandPool(new scin::vk::CommandPool(device)),
+    m_samplerFactory(new scin::vk::SamplerFactory(device)),
     m_commandBufferDirty(true),
     m_nodeSerial(-2) {
     m_frameCommands.resize(m_canvas->numberOfImages());
@@ -88,11 +92,7 @@ bool Compositor::cue(const std::string& scinthDefName, int nodeID) {
         nodeID = m_nodeSerial.fetch_sub(1);
     }
     std::shared_ptr<Scinth> scinth(new Scinth(m_device, nodeID, scinthDef));
-    // TODO:
-    // * deprecate ScinthDef::cue
-    // * expose members of ScinthDef to Scinth,
-    // * make Scinth::buildBuffers into private method rebuildBuffers()
-    // * have ScintH::create call it.
+
     if (!scinth->create()) {
         spdlog::error("failed to build Scinth {} from ScinthDef {}.", nodeID, scinthDefName);
         return false;

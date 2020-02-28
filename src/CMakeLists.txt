@@ -183,10 +183,10 @@ set(scintillator_synth_files
     vulkan/DeviceChooser.hpp
     vulkan/DeviceInfo.cpp
     vulkan/DeviceInfo.hpp
-    vulkan/Framebuffer.cpp
-    vulkan/Framebuffer.hpp
     vulkan/FrameTimer.cpp
     vulkan/FrameTimer.hpp
+    vulkan/Framebuffer.cpp
+    vulkan/Framebuffer.hpp
     vulkan/Image.cpp
     vulkan/Image.hpp
     vulkan/Instance.cpp
@@ -199,6 +199,8 @@ set(scintillator_synth_files
     vulkan/RenderSync.hpp
     vulkan/Sampler.cpp
     vulkan/Sampler.hpp
+    vulkan/SamplerFactory.cpp
+    vulkan/SamplerFactory.hpp
     vulkan/Shader.cpp
     vulkan/Shader.hpp
     vulkan/ShaderCompiler.cpp

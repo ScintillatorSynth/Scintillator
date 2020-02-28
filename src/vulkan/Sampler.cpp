@@ -1,54 +1,82 @@
 #include "vulkan/Sampler.hpp"
 
+#include "core/AbstractSampler.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Image.hpp"
 
 #include "spdlog/spdlog.h"
 
+namespace {
+
+VkFilter filterForAbstract(scin::core::AbstractSampler::FilterMode filterMode) {
+    switch (filterMode) {
+    case scin::core::AbstractSampler::FilterMode::kLinear:
+        return VK_FILTER_LINEAR;
+
+    case scin::core::AbstractSampler::FilterMode::kNearest:
+        return VK_FILTER_NEAREST;
+    }
+}
+
+VkSamplerAddressMode addressModeForAbstract(scin::core::AbstractSampler::AddressMode addressMode) {
+    switch (addressMode) {
+    case scin::core::AbstractSampler::AddressMode::kClampToBorder:
+        return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+
+    case scin::core::AbstractSampler::AddressMode::kClampToEdge:
+        return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+
+    case scin::core::AbstractSampler::AddressMode::kRepeat:
+        return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+
+    case scin::core::AbstractSampler::AddressMode::kMirroredRepeat:
+        return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+    }
+}
+
+VkBorderColor borderColorForAbstract(scin::core::AbstractSampler::ClampBorderColor borderColor) {
+    switch (borderColor) {
+    case scin::core::AbstractSampler::ClampBorderColor::kTransparentBlack:
+        return VK_BORDER_COLOR_INT_TRANSPARENT_BLACK;
+
+    case scin::core::AbstractSampler::ClampBorderColor::kBlack:
+        return VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+
+    case scin::core::AbstractSampler::ClampBorderColor::kWhite:
+        return VK_BORDER_COLOR_INT_OPAQUE_WHITE;
+    }
+}
+
+} // namespace
+
 namespace scin { namespace vk {
 
-Sampler::Sampler(std::shared_ptr<Device> device, std::shared_ptr<HostImage> image):
+Sampler::Sampler(std::shared_ptr<Device> device, const core::AbstractSampler& abstractSampler):
     m_device(device),
-    m_image(image),
-    m_imageView(VK_NULL_HANDLE),
+    m_abstractSampler(abstractSampler),
     m_sampler(VK_NULL_HANDLE) {}
 
 Sampler::~Sampler() { destroy(); }
 
-// TODO: just make this the sampler, and the server makes these separately, giving them IDs. So RenderImage.fg or
-// something identifies both a sampler and a texture.
-
 bool Sampler::create() {
-    VkImageViewCreateInfo viewInfo = {};
-    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    viewInfo.image = m_image->get();
-    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    viewInfo.format = m_image->format();
-    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    viewInfo.subresourceRange.baseMipLevel = 0;
-    viewInfo.subresourceRange.levelCount = 1;
-    viewInfo.subresourceRange.baseArrayLayer = 0;
-    viewInfo.subresourceRange.layerCount = 1;
-    if (vkCreateImageView(m_device->get(), &viewInfo, nullptr, &m_imageView) != VK_SUCCESS) {
-        spdlog::error("Sampler failed to create ImageView.");
-        return false;
-    }
-
     VkSamplerCreateInfo samplerInfo = {};
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    samplerInfo.magFilter = VK_FILTER_LINEAR;
-    samplerInfo.minFilter = VK_FILTER_LINEAR;
-    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    if (m_device->supportsSamplerAnisotropy()) {
+    samplerInfo.minFilter = filterForAbstract(m_abstractSampler.minFilterMode());
+    samplerInfo.magFilter = filterForAbstract(m_abstractSampler.magFilterMode());
+
+    samplerInfo.addressModeU = addressModeForAbstract(m_abstractSampler.addressModeU());
+    samplerInfo.addressModeV = addressModeForAbstract(m_abstractSampler.addressModeV());
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+
+    if (m_device->supportsSamplerAnisotropy() && m_abstractSampler.isAnisotropicFilteringEnabled()) {
         samplerInfo.anisotropyEnable = VK_TRUE;
         samplerInfo.maxAnisotropy = 16;
     } else {
         samplerInfo.anisotropyEnable = VK_FALSE;
         samplerInfo.maxAnisotropy = 1;
     }
-    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+
+    samplerInfo.borderColor = borderColorForAbstract(m_abstractSampler.clampBorderColor());
     samplerInfo.unnormalizedCoordinates = VK_FALSE;
     samplerInfo.compareEnable = VK_FALSE;
     samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
@@ -68,10 +96,6 @@ void Sampler::destroy() {
     if (m_sampler != VK_NULL_HANDLE) {
         vkDestroySampler(m_device->get(), m_sampler, nullptr);
         m_sampler = VK_NULL_HANDLE;
-    }
-    if (m_imageView != VK_NULL_HANDLE) {
-        vkDestroyImageView(m_device->get(), m_imageView, nullptr);
-        m_imageView = VK_NULL_HANDLE;
     }
 }
 
