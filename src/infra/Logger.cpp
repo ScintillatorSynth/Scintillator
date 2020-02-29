@@ -1,4 +1,4 @@
-#include "comp/Logger.hpp"
+#include "infra/Logger.hpp"
 
 #include "av/AVIncludes.hpp"
 
@@ -122,7 +122,7 @@ static void avLogCallback(void* ptr, int level, const char* fmt, va_list vaList)
 
 } // namespace
 
-namespace scin { namespace comp {
+namespace scin { namespace infra {
 
 Logger::Logger() {}
 
@@ -157,6 +157,6 @@ void Logger::setConsoleLogLevel(int level) {
 
 void Logger::getCounts(size_t& warningsOut, size_t& errorsOut) { m_errorSink->getCounts(warningsOut, errorsOut); }
 
-} // namespace comp
+} // namespace infra
 
 } // namespace scin

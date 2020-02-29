@@ -1,11 +1,11 @@
 #include "osc/Dispatcher.hpp"
 
-#include "Version.hpp"
 #include "av/ImageEncoder.hpp"
 #include "base/Archetypes.hpp"
 #include "comp/Async.hpp"
 #include "comp/Compositor.hpp"
-#include "comp/Logger.hpp"
+#include "infra/Logger.hpp"
+#include "infra/Version.hpp"
 #include "osc/Address.hpp"
 #include "osc/BlobMessage.hpp"
 #include "osc/commands/AdvanceFrame.hpp"
@@ -39,7 +39,7 @@
 
 namespace scin { namespace osc {
 
-Dispatcher::Dispatcher(std::shared_ptr<comp::Logger> logger, std::shared_ptr<comp::Async> async,
+Dispatcher::Dispatcher(std::shared_ptr<infra::Logger> logger, std::shared_ptr<comp::Async> async,
                        std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<comp::Compositor> compositor,
                        std::shared_ptr<vk::Offscreen> offscreen, std::shared_ptr<const vk::FrameTimer> frameTimer,
                        std::function<void()> quitHandler):

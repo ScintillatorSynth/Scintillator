@@ -77,8 +77,7 @@ endif()
 
 #### Scintillator Binary
 
-
-configure_file(Version.hpp.in "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp")
+configure_file(infra/Version.hpp.in "${CMAKE_CURRENT_BINARY_DIR}/infra/Version.hpp")
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/osc/commands")
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp"
     COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/osc/commands/Command.cpp.in"
@@ -87,7 +86,7 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp"
 )
 
 set(scintillator_synth_files
-    "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp"
+    "${CMAKE_CURRENT_BINARY_DIR}/infra/Version.hpp"
     "${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp"
     scinsynth.cpp
 
@@ -113,12 +112,13 @@ set(scintillator_synth_files
     comp/Async.hpp
     comp/Compositor.cpp
     comp/Compositor.hpp
-    comp/Logger.cpp
-    comp/Logger.hpp
     comp/Scinth.cpp
     comp/Scinth.hpp
     comp/ScinthDef.cpp
     comp/ScinthDef.hpp
+
+    infra/Logger.cpp
+    infra/Logger.hpp
 
     osc/Address.cpp
     osc/Address.hpp

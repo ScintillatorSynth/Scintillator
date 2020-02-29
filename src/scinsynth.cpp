@@ -1,10 +1,10 @@
-#include "Version.hpp"
 #include "av/AVIncludes.hpp"
 #include "base/Archetypes.hpp"
 #include "base/FileSystem.hpp"
 #include "comp/Async.hpp" // TODO: audit includes
 #include "comp/Compositor.hpp"
-#include "comp/Logger.hpp"
+#include "infra/Logger.hpp"
+#include "infra/Version.hpp"
 #include "osc/Dispatcher.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/CommandPool.hpp"
@@ -66,7 +66,7 @@ DEFINE_bool(swiftshader, false,
 
 int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
-    std::shared_ptr<scin::comp::Logger> logger(new scin::comp::Logger());
+    std::shared_ptr<scin::infra::Logger> logger(new scin::infra::Logger());
     logger->initLogging(FLAGS_log_level);
 
     // Check for early exit conditions.

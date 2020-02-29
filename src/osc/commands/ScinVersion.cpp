@@ -1,6 +1,6 @@
 #include "osc/commands/ScinVersion.hpp"
 
-#include "Version.hpp"
+#include "infra/Version.hpp"
 #include "osc/Dispatcher.hpp"
 
 namespace scin { namespace osc { namespace commands {
