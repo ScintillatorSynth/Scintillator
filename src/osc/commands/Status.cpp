@@ -4,7 +4,7 @@
 #include "comp/Compositor.hpp"
 #include "infra/Logger.hpp"
 #include "osc/Dispatcher.hpp"
-#include "vulkan/FrameTimer.hpp"
+#include "comp/FrameTimer.hpp"
 
 namespace scin { namespace osc { namespace commands {
 

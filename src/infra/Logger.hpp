@@ -11,9 +11,7 @@ namespace spdlog { namespace sinks {
 class ErrorSink;
 }}
 
-namespace scin {
-
-namespace infra {
+namespace scin { namespace infra {
 
 class Logger {
 public:

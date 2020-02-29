@@ -1,15 +1,19 @@
-#ifndef SRC_VULKAN_CANVAS_HPP_
-#define SRC_VULKAN_CANVAS_HPP_
+#ifndef SRC_COMP_CANVAS_HPP_
+#define SRC_COMP_CANVAS_HPP_
 
 #include "vulkan/Vulkan.hpp"
 
 #include <memory>
 #include <vector>
 
-namespace scin { namespace vk {
+namespace scin {
 
+namespace vk {
 class Device;
 class Image;
+}
+
+namespace comp {
 
 /*! Contains the data and state required to render to a set of Vulkan Images.
  *
@@ -17,7 +21,7 @@ class Image;
  */
 class Canvas {
 public:
-    Canvas(std::shared_ptr<Device> device);
+    Canvas(std::shared_ptr<vk::Device> device);
     ~Canvas();
 
     /*! Makes a set of ImageViews, a Render Pass, and then a set of Framebuffers.
@@ -42,7 +46,7 @@ public:
     VkFramebuffer framebuffer(size_t index) { return m_framebuffers[index]; }
 
 private:
-    std::shared_ptr<Device> m_device;
+    std::shared_ptr<vk::Device> m_device;
     VkExtent2D m_extent;
     size_t m_numberOfImages;
     std::vector<VkImageView> m_imageViews;
@@ -50,8 +54,8 @@ private:
     std::vector<VkFramebuffer> m_framebuffers;
 };
 
-} // namespace vk
+} // namespace comp
 
 } // namespace scin
 
-#endif // SRC_VULKAN_CANVAS_HPP_
+#endif // SRC_COMP_CANVAS_HPP_

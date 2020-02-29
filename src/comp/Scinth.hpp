@@ -7,11 +7,9 @@ namespace scin {
 
 namespace vk {
 class Buffer;
-class Canvas;
 class CommandBuffer;
 class CommandPool;
 class Device;
-class Pipeline;
 class Uniform;
 class UniformLayout;
 }
@@ -20,7 +18,7 @@ namespace comp {
 
 class ScinthDef;
 
-/*! Represents a running, controllable instance of a ScinthDef within the context of a vk::Canvas.
+/*! Represents a running, controllable instance of a ScinthDef.
  */
 class Scinth {
 public:

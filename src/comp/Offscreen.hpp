@@ -1,5 +1,5 @@
-#ifndef SRC_VULKAN_OFFSCREEN_HPP_
-#define SRC_VULKAN_OFFSCREEN_HPP_
+#ifndef SRC_COMP_OFFSCREEN_HPP_
+#define SRC_COMP_OFFSCREEN_HPP_
 
 #include "av/Encoder.hpp"
 
@@ -16,23 +16,23 @@
 
 namespace scin {
 
-namespace comp {
-class Compositor;
-}
-
 namespace av {
 class BufferPool;
 }
 
 namespace vk {
-
-class Canvas;
 class CommandBuffer;
 class CommandPool;
 class Device;
 class Framebuffer;
-class FrameTimer;
 class HostImage;
+}
+
+namespace comp {
+
+class Canvas;
+class Compositor;
+class FrameTimer;
 class RenderSync;
 class Swapchain;
 
@@ -40,7 +40,7 @@ class Swapchain;
  */
 class Offscreen {
 public:
-    Offscreen(std::shared_ptr<Device> device, int width, int height, int frameRate);
+    Offscreen(std::shared_ptr<vk::Device> device, int width, int height, int frameRate);
     ~Offscreen();
 
     /*! Offscreen will pipeline rendering to numberOfImages frames. Also starts the render thread, in a  paused state.
@@ -64,11 +64,11 @@ public:
 
     /*! Start a thread to render at the provided framerate.
      */
-    void runThreaded(std::shared_ptr<comp::Compositor> compositor);
+    void runThreaded(std::shared_ptr<Compositor> compositor);
 
     /*! Render at the provided framerate on this thread.
      */
-    void run(std::shared_ptr<comp::Compositor> compositor);
+    void run(std::shared_ptr<Compositor> compositor);
 
     /*! Adds a video or image encoder to the list of encoders to call with readback images from subsequent frames.
      */
@@ -111,15 +111,15 @@ public:
     std::shared_ptr<const FrameTimer> frameTimer() { return m_frameTimer; }
 
 private:
-    void threadMain(std::shared_ptr<comp::Compositor> compositor);
+    void threadMain(std::shared_ptr<Compositor> compositor);
     void processPendingEncodes(size_t frameIndex);
-    bool writeCopyCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, VkImage sourceImage,
+    bool writeCopyCommands(std::shared_ptr<vk::CommandBuffer> commandBuffer, size_t bufferIndex, VkImage sourceImage,
                            VkImage destinationImage);
-    bool writeBlitCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, VkImage sourceImage,
+    bool writeBlitCommands(std::shared_ptr<vk::CommandBuffer> commandBuffer, size_t bufferIndex, VkImage sourceImage,
                            VkImage destinationImage, VkImageLayout destinationLayout);
     bool blitAndPresent(size_t frameIndex, uint32_t swapImageIndex);
 
-    std::shared_ptr<Device> m_device;
+    std::shared_ptr<vk::Device> m_device;
     std::atomic<bool> m_quit;
 
     size_t m_numberOfImages;
@@ -127,21 +127,21 @@ private:
     int m_height;
 
     std::shared_ptr<FrameTimer> m_frameTimer;
-    std::shared_ptr<Framebuffer> m_framebuffer;
+    std::shared_ptr<vk::Framebuffer> m_framebuffer;
     std::unique_ptr<RenderSync> m_renderSync;
-    std::shared_ptr<CommandPool> m_commandPool;
+    std::shared_ptr<vk::CommandPool> m_commandPool;
     std::unique_ptr<scin::av::BufferPool> m_bufferPool;
 
     // Swapchain render support.
     std::shared_ptr<RenderSync> m_swapRenderSync;
     std::shared_ptr<Swapchain> m_swapchain;
-    std::vector<std::shared_ptr<CommandBuffer>> m_swapBlitCommands;
+    std::vector<std::shared_ptr<vk::CommandBuffer>> m_swapBlitCommands;
 
     // threadMain-only access
     std::thread m_renderThread;
-    std::vector<std::shared_ptr<CommandBuffer>> m_commandBuffers;
+    std::vector<std::shared_ptr<vk::CommandBuffer>> m_commandBuffers;
     std::vector<std::vector<scin::av::Encoder::SendBuffer>> m_pendingEncodes;
-    std::vector<std::shared_ptr<HostImage>> m_readbackImages;
+    std::vector<std::shared_ptr<vk::HostImage>> m_readbackImages;
     bool m_readbackSupportsBlit;
     // The index of this vector is the frameIndex, so the index of the pipelined framebuffer. The value is -1 if no
     // swapchain blit was requested, or the index of the swapchain source image (so 0 or 1).
@@ -149,7 +149,7 @@ private:
 
     std::mutex m_encodersMutex;
     std::list<std::shared_ptr<scin::av::Encoder>> m_encoders;
-    std::shared_ptr<CommandBuffer> m_readbackCommands;
+    std::shared_ptr<vk::CommandBuffer> m_readbackCommands;
 
     // Not mutex-protected read-only indicator if the frame rate is zero.
     bool m_snapShotMode;
@@ -169,4 +169,4 @@ private:
 
 } // namespace scin
 
-#endif // SRC_VULKAN_OFFSCREEN_HPP_
+#endif // SRC_COMP_OFFSCREEN_HPP_

@@ -1,32 +1,32 @@
-#include "vulkan/Offscreen.hpp"
+#include "comp/Offscreen.hpp"
 
 #include "av/Buffer.hpp"
 #include "av/BufferPool.hpp"
 #include "av/Encoder.hpp"
 #include "comp/Compositor.hpp"
+#include "comp/FrameTimer.hpp"
+#include "comp/RenderSync.hpp"
+#include "comp/Swapchain.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Framebuffer.hpp"
-#include "vulkan/FrameTimer.hpp"
 #include "vulkan/Image.hpp"
-#include "vulkan/RenderSync.hpp"
-#include "vulkan/Swapchain.hpp"
 
 #include "spdlog/spdlog.h"
 
-namespace scin { namespace vk {
+namespace scin { namespace comp {
 
-Offscreen::Offscreen(std::shared_ptr<Device> device, int width, int height, int frameRate):
+Offscreen::Offscreen(std::shared_ptr<vk::Device> device, int width, int height, int frameRate):
     m_device(device),
     m_quit(false),
     m_numberOfImages(0),
     m_width(width),
     m_height(height),
     m_frameTimer(new FrameTimer(frameRate)),
-    m_framebuffer(new Framebuffer(device)),
+    m_framebuffer(new vk::Framebuffer(device)),
     m_renderSync(new RenderSync(device)),
-    m_commandPool(new CommandPool(device)),
+    m_commandPool(new vk::CommandPool(device)),
     m_bufferPool(new scin::av::BufferPool(width, height)),
     m_render(false),
     m_swapBlitRequested(false),
@@ -62,7 +62,7 @@ bool Offscreen::create(size_t numberOfImages) {
     // Prepare for readback by allocating GPU memory for readback images, checking for efficient copy operations from
     // the framebuffer to those readback images, and building command buffers to do the actual readback.
     for (auto i = 0; i < m_numberOfImages; ++i) {
-        std::shared_ptr<HostImage> image(new HostImage(m_device));
+        std::shared_ptr<vk::HostImage> image(new vk::HostImage(m_device));
         if (!image->create(m_width, m_height)) {
             spdlog::error("Offscreen failed to create {} readback images.", m_numberOfImages);
             return false;
@@ -89,7 +89,7 @@ bool Offscreen::create(size_t numberOfImages) {
         spdlog::error("Offscreen failed to create command pool.");
         return false;
     }
-    m_readbackCommands.reset(new CommandBuffer(m_device, m_commandPool));
+    m_readbackCommands.reset(new vk::CommandBuffer(m_device, m_commandPool));
     if (!m_readbackCommands->create(m_numberOfImages, true)) {
         spdlog::error("Offscreen failed to create command buffers.");
         return false;
@@ -120,7 +120,7 @@ bool Offscreen::supportSwapchain(std::shared_ptr<Swapchain> swapchain, std::shar
 
     // Build the transfer from framebuffer to swapchain images command buffers.
     for (auto i = 0; i < m_numberOfImages; ++i) {
-        std::shared_ptr<CommandBuffer> buffer(new CommandBuffer(m_device, m_commandPool));
+        std::shared_ptr<vk::CommandBuffer> buffer(new vk::CommandBuffer(m_device, m_commandPool));
         if (!buffer->create(swapchain->numberOfImages(), true)) {
             spdlog::error("Offscreen failed creating swapchain source blit command buffers.");
             return false;
@@ -140,13 +140,13 @@ bool Offscreen::supportSwapchain(std::shared_ptr<Swapchain> swapchain, std::shar
     return true;
 }
 
-void Offscreen::runThreaded(std::shared_ptr<comp::Compositor> compositor) {
+void Offscreen::runThreaded(std::shared_ptr<Compositor> compositor) {
     m_render = true;
     m_renderThread = std::thread(&Offscreen::threadMain, this, compositor);
     m_renderCondition.notify_one();
 }
 
-void Offscreen::run(std::shared_ptr<comp::Compositor> compositor) {
+void Offscreen::run(std::shared_ptr<Compositor> compositor) {
     m_render = true;
     m_renderCondition.notify_one();
     threadMain(compositor);
@@ -216,7 +216,7 @@ void Offscreen::destroy() {
 
 std::shared_ptr<Canvas> Offscreen::canvas() { return m_framebuffer->canvas(); }
 
-void Offscreen::threadMain(std::shared_ptr<comp::Compositor> compositor) {
+void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
     spdlog::info("Offscreen render thread starting up.");
 
     double time = 0.0;
@@ -357,8 +357,8 @@ void Offscreen::processPendingEncodes(size_t frameIndex) {
     }
 }
 
-bool Offscreen::writeCopyCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, VkImage sourceImage,
-                                  VkImage destinationImage) {
+bool Offscreen::writeCopyCommands(std::shared_ptr<vk::CommandBuffer> commandBuffer, size_t bufferIndex,
+                                  VkImage sourceImage, VkImage destinationImage) {
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -413,8 +413,8 @@ bool Offscreen::writeCopyCommands(std::shared_ptr<CommandBuffer> commandBuffer, 
     return true;
 }
 
-bool Offscreen::writeBlitCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, VkImage sourceImage,
-                                  VkImage destinationImage, VkImageLayout destinationLayout) {
+bool Offscreen::writeBlitCommands(std::shared_ptr<vk::CommandBuffer> commandBuffer, size_t bufferIndex,
+                                  VkImage sourceImage, VkImage destinationImage, VkImageLayout destinationLayout) {
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -515,6 +515,6 @@ bool Offscreen::blitAndPresent(size_t frameIndex, uint32_t swapImageIndex) {
     return true;
 }
 
-} // namespace vk
+} // namespace comp
 
 } // namespace scin

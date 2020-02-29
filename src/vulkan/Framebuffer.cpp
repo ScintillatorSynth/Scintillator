@@ -1,6 +1,6 @@
 #include "vulkan/Framebuffer.hpp"
 
-#include "vulkan/Canvas.hpp"
+#include "comp/Canvas.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Image.hpp"
 
@@ -8,7 +8,7 @@
 
 namespace scin { namespace vk {
 
-Framebuffer::Framebuffer(std::shared_ptr<Device> device): m_device(device), m_canvas(new Canvas(device)) {}
+Framebuffer::Framebuffer(std::shared_ptr<Device> device): m_device(device), m_canvas(new comp::Canvas(device)) {}
 
 Framebuffer::~Framebuffer() { destroy(); }
 

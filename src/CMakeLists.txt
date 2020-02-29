@@ -110,12 +110,30 @@ set(scintillator_synth_files
 
     comp/Async.cpp
     comp/Async.hpp
+    comp/Canvas.cpp
+    comp/Canvas.hpp
     comp/Compositor.cpp
     comp/Compositor.hpp
+    comp/FrameTimer.cpp
+    comp/FrameTimer.hpp
+    comp/Offscreen.cpp
+    comp/Offscreen.hpp
+    comp/Pipeline.cpp
+    comp/Pipeline.hpp
+    comp/RenderSync.cpp
+    comp/RenderSync.hpp
+    comp/SamplerFactory.cpp
+    comp/SamplerFactory.hpp
     comp/Scinth.cpp
     comp/Scinth.hpp
     comp/ScinthDef.cpp
     comp/ScinthDef.hpp
+    comp/ShaderCompiler.cpp
+    comp/ShaderCompiler.hpp
+    comp/Swapchain.cpp
+    comp/Swapchain.hpp
+    comp/Window.cpp
+    comp/Window.hpp
 
     infra/Logger.cpp
     infra/Logger.hpp
@@ -172,8 +190,6 @@ set(scintillator_synth_files
 
     vulkan/Buffer.cpp
     vulkan/Buffer.hpp
-    vulkan/Canvas.cpp
-    vulkan/Canvas.hpp
     vulkan/CommandBuffer.cpp
     vulkan/CommandBuffer.hpp
     vulkan/CommandPool.cpp
@@ -184,37 +200,21 @@ set(scintillator_synth_files
     vulkan/DeviceChooser.hpp
     vulkan/DeviceInfo.cpp
     vulkan/DeviceInfo.hpp
-    vulkan/FrameTimer.cpp
-    vulkan/FrameTimer.hpp
     vulkan/Framebuffer.cpp
     vulkan/Framebuffer.hpp
     vulkan/Image.cpp
     vulkan/Image.hpp
     vulkan/Instance.cpp
     vulkan/Instance.hpp
-    vulkan/Offscreen.cpp
-    vulkan/Offscreen.hpp
-    vulkan/Pipeline.cpp
-    vulkan/Pipeline.hpp
-    vulkan/RenderSync.cpp
-    vulkan/RenderSync.hpp
     vulkan/Sampler.cpp
     vulkan/Sampler.hpp
-    vulkan/SamplerFactory.cpp
-    vulkan/SamplerFactory.hpp
     vulkan/Shader.cpp
     vulkan/Shader.hpp
-    vulkan/ShaderCompiler.cpp
-    vulkan/ShaderCompiler.hpp
-    vulkan/Swapchain.cpp
-    vulkan/Swapchain.hpp
     vulkan/Uniform.cpp
     vulkan/Uniform.hpp
     vulkan/UniformLayout.cpp
     vulkan/UniformLayout.hpp
     vulkan/Vulkan.hpp
-    vulkan/Window.cpp
-    vulkan/Window.hpp
 )
 
 if (APPLE)

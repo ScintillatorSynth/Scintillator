@@ -3,19 +3,17 @@
 #include "base/AbstractScinthDef.hpp"
 #include "base/Shape.hpp"
 #include "base/VGen.hpp"
+#include "comp/Canvas.hpp"
+#include "comp/Pipeline.hpp"
 #include "comp/ScinthDef.hpp"
 #include "vulkan/Buffer.hpp"
-#include "vulkan/Canvas.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
-#include "vulkan/Pipeline.hpp"
 #include "vulkan/Uniform.hpp"
 
 #include "spdlog/spdlog.h"
 
-namespace scin {
-
-namespace comp {
+namespace scin { namespace comp {
 
 Scinth::Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef):
     m_device(device),

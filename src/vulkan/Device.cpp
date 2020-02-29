@@ -2,7 +2,6 @@
 
 #include "vulkan/DeviceInfo.hpp"
 #include "vulkan/Instance.hpp"
-#include "vulkan/Window.hpp"
 
 #include "spdlog/spdlog.h"
 

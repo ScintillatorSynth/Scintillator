@@ -1,25 +1,25 @@
-#include "vulkan/Window.hpp"
+#include "comp/Window.hpp"
 
+#include "comp/Canvas.hpp"
 #include "comp/Compositor.hpp"
-#include "vulkan/Canvas.hpp"
+#include "comp/FrameTimer.hpp"
+#include "comp/Offscreen.hpp"
+#include "comp/RenderSync.hpp"
+#include "comp/Swapchain.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
-#include "vulkan/FrameTimer.hpp"
 #include "vulkan/Image.hpp"
 #include "vulkan/Instance.hpp"
-#include "vulkan/Offscreen.hpp"
-#include "vulkan/RenderSync.hpp"
-#include "vulkan/Swapchain.hpp"
 
 #include "spdlog/spdlog.h"
 
 #include <chrono>
 #include <limits>
 
-namespace scin { namespace vk {
+namespace scin { namespace comp {
 
-Window::Window(std::shared_ptr<Instance> instance, std::shared_ptr<Device> device, int width, int height,
+Window::Window(std::shared_ptr<vk::Instance> instance, std::shared_ptr<vk::Device> device, int width, int height,
                bool keepOnTop, int frameRate):
     m_instance(instance),
     m_device(device),
@@ -174,7 +174,7 @@ void Window::runDirectRendering(std::shared_ptr<comp::Compositor> compositor) {
     spdlog::info("Window exiting direct rendering loop.");
 }
 
-void Window::runFixedFrameRate(std::shared_ptr<comp::Compositor> compositor) {
+void Window::runFixedFrameRate(std::shared_ptr<Compositor> compositor) {
     spdlog::info("Window starting offscreen rendering loop.");
     m_offscreen->runThreaded(compositor);
 
@@ -197,6 +197,6 @@ void Window::runFixedFrameRate(std::shared_ptr<comp::Compositor> compositor) {
     spdlog::info("Window exiting offscreen rendering loop.");
 }
 
-} // namespace vk
+} // namespace comp
 
 } // namespace scin

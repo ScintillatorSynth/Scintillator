@@ -6,9 +6,15 @@
 #include <memory>
 #include <vector>
 
-namespace scin { namespace vk {
+namespace scin {
 
+namespace comp {
+// TODO: another serious code smell from Framebuffer.
 class Canvas;
+}
+
+namespace vk {
+
 class Device;
 class FramebufferImage;
 
@@ -27,13 +33,13 @@ public:
 
     VkFormat format();
     VkImage image(size_t index);
-    std::shared_ptr<Canvas> canvas() { return m_canvas; }
+    std::shared_ptr<comp::Canvas> canvas() { return m_canvas; }
 
 private:
     std::shared_ptr<Device> m_device;
 
     std::vector<std::shared_ptr<FramebufferImage>> m_images;
-    std::shared_ptr<Canvas> m_canvas;
+    std::shared_ptr<comp::Canvas> m_canvas;
 };
 
 } // namespace vk

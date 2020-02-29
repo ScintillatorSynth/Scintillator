@@ -44,7 +44,7 @@ void CommandBuffer::destroy() {
 }
 
 void CommandBuffer::associateResources(std::shared_ptr<Buffer> vertexBuffer, std::shared_ptr<Buffer> indexBuffer,
-                                       std::shared_ptr<Uniform> uniform, std::shared_ptr<Pipeline> pipeline) {
+                                       std::shared_ptr<Uniform> uniform, std::shared_ptr<comp::Pipeline> pipeline) {
     m_vertexBuffer = vertexBuffer;
     m_indexBuffer = indexBuffer;
     m_uniform = uniform;

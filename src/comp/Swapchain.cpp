@@ -1,19 +1,18 @@
-#include "vulkan/Swapchain.hpp"
+#include "comp/Swapchain.hpp"
 
-#include "vulkan/Canvas.hpp"
+#include "comp/Canvas.hpp"
+#include "comp/Window.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Image.hpp"
-#include "vulkan/Pipeline.hpp"
-#include "vulkan/Window.hpp"
 
 #include "spdlog/spdlog.h"
 
 #include <limits>
 #include <vector>
 
-namespace scin { namespace vk {
+namespace scin { namespace comp {
 
-Swapchain::Swapchain(std::shared_ptr<Device> device):
+Swapchain::Swapchain(std::shared_ptr<vk::Device> device):
     m_device(device),
     m_numberOfImages(0),
     m_swapchain(VK_NULL_HANDLE),
@@ -124,8 +123,8 @@ bool Swapchain::create(Window* window, bool directRendering) {
     std::vector<VkImage> images(m_numberOfImages);
     vkGetSwapchainImagesKHR(m_device->get(), m_swapchain, &m_numberOfImages, images.data());
     for (auto image : images) {
-        m_images.emplace_back(
-            std::shared_ptr<SwapchainImage>(new SwapchainImage(m_device, image, m_surfaceFormat.format, m_extent)));
+        m_images.emplace_back(std::shared_ptr<vk::SwapchainImage>(
+            new vk::SwapchainImage(m_device, image, m_surfaceFormat.format, m_extent)));
     }
 
     if (directRendering) {
@@ -147,6 +146,6 @@ void Swapchain::destroy() {
     }
 }
 
-} // namespace vk
+} // namespace comp
 
 } // namespace scin

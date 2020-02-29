@@ -1,5 +1,5 @@
-#ifndef SRC_VULKAN_PIPELINE_HPP_
-#define SRC_VULKAN_PIPELINE_HPP_
+#ifndef SRC_COMP_PIPELINE_HPP_
+#define SRC_COMP_PIPELINE_HPP_
 
 #include "base/Manifest.hpp"
 #include "vulkan/Vulkan.hpp"
@@ -14,34 +14,37 @@ class Shape;
 }
 
 namespace vk {
-
-class Canvas;
 class Device;
 class Shader;
 class UniformLayout;
+}
+
+namespace comp {
+
+class Canvas;
 
 class Pipeline {
 public:
-    Pipeline(std::shared_ptr<Device> device);
+    Pipeline(std::shared_ptr<vk::Device> device);
     ~Pipeline();
 
     bool create(const base::Manifest& vertexManifest, const base::Shape* shape, Canvas* canvas,
-                std::shared_ptr<Shader> vertexShader, std::shared_ptr<Shader> fragmentShader,
-                std::shared_ptr<UniformLayout> uniformLayout, size_t pushConstantBlockSize);
+                std::shared_ptr<vk::Shader> vertexShader, std::shared_ptr<vk::Shader> fragmentShader,
+                std::shared_ptr<vk::UniformLayout> uniformLayout, size_t pushConstantBlockSize);
     void destroy();
 
     VkPipeline get() { return m_pipeline; }
     VkPipelineLayout layout() { return m_pipelineLayout; }
 
 private:
-    std::shared_ptr<Device> m_device;
+    std::shared_ptr<vk::Device> m_device;
 
     VkPipelineLayout m_pipelineLayout;
     VkPipeline m_pipeline;
 
-    std::shared_ptr<Shader> m_vertexShader;
-    std::shared_ptr<Shader> m_fragmentShader;
-    std::shared_ptr<UniformLayout> m_uniformLayout;
+    std::shared_ptr<vk::Shader> m_vertexShader;
+    std::shared_ptr<vk::Shader> m_fragmentShader;
+    std::shared_ptr<vk::UniformLayout> m_uniformLayout;
 };
 
 } // namespace vk

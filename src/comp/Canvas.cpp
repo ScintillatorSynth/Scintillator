@@ -1,13 +1,13 @@
-#include "vulkan/Canvas.hpp"
+#include "comp/Canvas.hpp"
 
 #include "vulkan/Device.hpp"
 #include "vulkan/Image.hpp"
 
 #include "spdlog/spdlog.h"
 
-namespace scin { namespace vk {
+namespace scin { namespace comp {
 
-Canvas::Canvas(std::shared_ptr<Device> device): m_device(device), m_renderPass(VK_NULL_HANDLE) {}
+Canvas::Canvas(std::shared_ptr<vk::Device> device): m_device(device), m_renderPass(VK_NULL_HANDLE) {}
 
 Canvas::~Canvas() { destroy(); }
 

@@ -1,5 +1,5 @@
-#ifndef SRC_VULKAN_SAMPLER_FACTORY_HPP_
-#define SRC_VULKAN_SAMPLER_FACTORY_HPP_
+#ifndef SRC_COMP_SAMPLER_FACTORY_HPP_
+#define SRC_COMP_SAMPLER_FACTORY_HPP_
 
 #include <memory>
 #include <mutex>
@@ -12,28 +12,30 @@ class AbstractSampler;
 }
 
 namespace vk {
-
 class Device;
 class Sampler;
+}
+
+namespace comp {
 
 /*! Keeps a centralized repository of all allocated Sampler objects, and reclaims them when they are no longer needed.
  * Vulkan limits the number of allocated samplers
  */
 class SamplerFactory {
 public:
-    SamplerFactory(std::shared_ptr<Device> device);
+    SamplerFactory(std::shared_ptr<vk::Device> device);
     ~SamplerFactory();
 
-    std::shared_ptr<Sampler> getSampler(const base::AbstractSampler& abstractSampler);
-    void releaseSampler(std::shared_ptr<Sampler> sampler);
+    std::shared_ptr<vk::Sampler> getSampler(const base::AbstractSampler& abstractSampler);
+    void releaseSampler(std::shared_ptr<vk::Sampler> sampler);
 
 private:
-    std::shared_ptr<Device> m_device;
+    std::shared_ptr<vk::Device> m_device;
     std::mutex m_mapMutex;
-    std::unordered_map<uint32_t, std::pair<size_t, std::shared_ptr<Sampler>>> m_samplerMap;
+    std::unordered_map<uint32_t, std::pair<size_t, std::shared_ptr<vk::Sampler>>> m_samplerMap;
 };
 
-} // namespace vk
+} // namespace comp
 } // namespace scin
 
 #endif // SRC_VULKAN_SAMPLER_FACTORY_HPP_

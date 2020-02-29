@@ -4,6 +4,8 @@
 #include "base/Archetypes.hpp"
 #include "comp/Async.hpp"
 #include "comp/Compositor.hpp"
+#include "comp/FrameTimer.hpp"
+#include "comp/Offscreen.hpp"
 #include "infra/Logger.hpp"
 #include "infra/Version.hpp"
 #include "osc/Address.hpp"
@@ -29,8 +31,6 @@
 #include "osc/commands/SleepFor.hpp"
 #include "osc/commands/Status.hpp"
 #include "osc/commands/Sync.hpp"
-#include "vulkan/FrameTimer.hpp"
-#include "vulkan/Offscreen.hpp"
 
 #include "fmt/core.h"
 #include "spdlog/spdlog.h"
@@ -41,7 +41,7 @@ namespace scin { namespace osc {
 
 Dispatcher::Dispatcher(std::shared_ptr<infra::Logger> logger, std::shared_ptr<comp::Async> async,
                        std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<comp::Compositor> compositor,
-                       std::shared_ptr<vk::Offscreen> offscreen, std::shared_ptr<const vk::FrameTimer> frameTimer,
+                       std::shared_ptr<comp::Offscreen> offscreen, std::shared_ptr<const comp::FrameTimer> frameTimer,
                        std::function<void()> quitHandler):
     m_logger(logger),
     m_async(async),

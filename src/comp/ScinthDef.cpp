@@ -4,12 +4,12 @@
 #include "base/Intrinsic.hpp"
 #include "base/Shape.hpp"
 #include "base/VGen.hpp"
+#include "comp/Canvas.hpp"
+#include "comp/Pipeline.hpp"
 #include "comp/Scinth.hpp"
+#include "comp/ShaderCompiler.hpp"
 #include "vulkan/Buffer.hpp"
-#include "vulkan/Canvas.hpp"
 #include "vulkan/CommandPool.hpp"
-#include "vulkan/Pipeline.hpp"
-#include "vulkan/ShaderCompiler.hpp"
 #include "vulkan/UniformLayout.hpp"
 
 #include "glm/glm.hpp"
@@ -17,11 +17,9 @@
 
 #include <array>
 
-namespace scin {
+namespace scin { namespace comp {
 
-namespace comp {
-
-ScinthDef::ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Canvas> canvas,
+ScinthDef::ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<Canvas> canvas,
                      std::shared_ptr<vk::CommandPool> commandPool,
                      std::shared_ptr<const base::AbstractScinthDef> abstractScinthDef):
     m_device(device),
@@ -31,7 +29,7 @@ ScinthDef::ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Can
 
 ScinthDef::~ScinthDef() { spdlog::debug("ScinthDef {} destructor", m_abstractScinthDef->name()); }
 
-bool ScinthDef::build(vk::ShaderCompiler* compiler) {
+bool ScinthDef::build(ShaderCompiler* compiler) {
     // Build the vertex data. Because Intrinsics can add data payloads to the vertex data, each ScinthDef shares a
     // vertex buffer and index buffer across all Scinth instances, allowing for the potential unique combination
     // between Shape data and payloads.
@@ -63,7 +61,7 @@ bool ScinthDef::build(vk::ShaderCompiler* compiler) {
         }
     }
 
-    m_pipeline.reset(new vk::Pipeline(m_device));
+    m_pipeline.reset(new Pipeline(m_device));
     if (!m_pipeline->create(m_abstractScinthDef->vertexManifest(), m_abstractScinthDef->shape(), m_canvas.get(),
                             m_vertexShader, m_fragmentShader, m_uniformLayout,
                             m_abstractScinthDef->parameters().size() * sizeof(float))) {

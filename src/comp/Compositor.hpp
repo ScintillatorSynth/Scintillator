@@ -14,14 +14,11 @@
 namespace scin {
 
 namespace vk {
-class Canvas;
 class CommandBuffer;
 class CommandPool;
 class Device;
 class DeviceImage;
 class HostImage;
-class SamplerFactory;
-class ShaderCompiler;
 }
 
 namespace base {
@@ -30,8 +27,11 @@ class AbstractScinthDef;
 
 namespace comp {
 
+class Canvas;
+class SamplerFactory;
 class Scinth;
 class ScinthDef;
+class ShaderCompiler;
 
 /*! A Compositor keeps the ScinthDef instance dictionary as well as all running Scinths. It can render to a supplied
  * supplied Canvas, which is typically owned by either a Window/SwapChain combination or an Offscreen render pass. The
@@ -39,7 +39,7 @@ class ScinthDef;
  */
 class Compositor {
 public:
-    Compositor(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Canvas> canvas);
+    Compositor(std::shared_ptr<vk::Device> device, std::shared_ptr<Canvas> canvas);
     ~Compositor();
 
     bool create();
@@ -133,12 +133,12 @@ private:
     void freeScinthLockAcquired(ScinthMap::iterator it);
 
     std::shared_ptr<vk::Device> m_device;
-    std::shared_ptr<vk::Canvas> m_canvas;
+    std::shared_ptr<Canvas> m_canvas;
     glm::vec3 m_clearColor;
 
-    std::unique_ptr<vk::ShaderCompiler> m_shaderCompiler;
+    std::unique_ptr<ShaderCompiler> m_shaderCompiler;
     std::shared_ptr<vk::CommandPool> m_commandPool;
-    std::unique_ptr<vk::SamplerFactory> m_samplerFactory;
+    std::unique_ptr<SamplerFactory> m_samplerFactory;
     std::atomic<bool> m_commandBufferDirty;
     std::atomic<int> m_nodeSerial;
 

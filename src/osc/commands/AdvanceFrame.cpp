@@ -2,7 +2,7 @@
 
 #include "osc/Address.hpp"
 #include "osc/Dispatcher.hpp"
-#include "vulkan/Offscreen.hpp"
+#include "comp/Offscreen.hpp"
 
 #include "spdlog/spdlog.h"
 

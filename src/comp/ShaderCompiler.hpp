@@ -1,17 +1,21 @@
-#ifndef SRC_VULKAN_SHADER_COMPILER_HPP_
-#define SRC_VULKAN_SHADER_COMPILER_HPP_
-
-#include "shaderc/shaderc.h"
+#ifndef SRC_COMP_SHADER_COMPILER_HPP_
+#define SRC_COMP_SHADER_COMPILER_HPP_
 
 #include "vulkan/Shader.hpp"
+
+#include "shaderc/shaderc.h"
 
 #include <memory>
 #include <string>
 
-namespace scin { namespace vk {
+namespace scin {
 
+namespace vk {
 class Device;
 class Shader;
+}
+
+namespace comp {
 
 /*! Provides a wrapper around the libshaderc compiler.
  *
@@ -48,15 +52,15 @@ public:
      * \param kind The kind of shader to compile this as, e.g. Shader::kVertex or Shader::kFragment.
      * \return A pointer to the compiled Shader, or nullptr on error.
      */
-    std::unique_ptr<Shader> compile(std::shared_ptr<Device> device, const std::string& source, const std::string& name,
-                                    const std::string& entryPoint, Shader::Kind kind);
+    std::unique_ptr<vk::Shader> compile(std::shared_ptr<vk::Device> device, const std::string& source,
+                                        const std::string& name, const std::string& entryPoint, vk::Shader::Kind kind);
 
 private:
     shaderc_compiler_t m_compiler;
 };
 
-} // namespace vk
+} // namespace comp
 
 } // namespace scin
 
-#endif // SRC_VULKAN_SHADER_COMPILER_HPP_
+#endif // SRC_COMP_SHADER_COMPILER_HPP_

@@ -1,5 +1,5 @@
-#ifndef SRC_VULKAN_WINDOW_HPP_
-#define SRC_VULKAN_WINDOW_HPP_
+#ifndef SRC_COMP_WINDOW_HPP_
+#define SRC_COMP_WINDOW_HPP_
 
 #include "vulkan/Vulkan.hpp"
 
@@ -9,21 +9,21 @@
 
 namespace scin {
 
-namespace comp {
-class Compositor;
-}
-
 namespace av {
 class Encoder;
 }
 
 namespace vk {
-
-class Canvas;
 class CommandBuffer;
 class Device;
-class FrameTimer;
 class Instance;
+}
+
+namespace comp {
+
+class Canvas;
+class Compositor;
+class FrameTimer;
 class Offscreen;
 class RenderSync;
 class Swapchain;
@@ -33,8 +33,8 @@ class Swapchain;
  */
 class Window {
 public:
-    Window(std::shared_ptr<Instance> instance, std::shared_ptr<Device> device, int width, int height, bool keepOnTop,
-           int frameRate);
+    Window(std::shared_ptr<vk::Instance> instance, std::shared_ptr<vk::Device> device, int width, int height,
+           bool keepOnTop, int frameRate);
     ~Window();
 
     bool create();
@@ -43,7 +43,7 @@ public:
      *
      * \param compositor The root compositor to use for rendering.
      */
-    void run(std::shared_ptr<comp::Compositor> compositor);
+    void run(std::shared_ptr<Compositor> compositor);
 
     void destroy();
 
@@ -66,11 +66,11 @@ public:
     std::shared_ptr<const FrameTimer> frameTimer();
 
 private:
-    void runDirectRendering(std::shared_ptr<comp::Compositor> compositor);
-    void runFixedFrameRate(std::shared_ptr<comp::Compositor> compositor);
+    void runDirectRendering(std::shared_ptr<Compositor> compositor);
+    void runFixedFrameRate(std::shared_ptr<Compositor> compositor);
 
-    std::shared_ptr<Instance> m_instance;
-    std::shared_ptr<Device> m_device;
+    std::shared_ptr<vk::Instance> m_instance;
+    std::shared_ptr<vk::Device> m_device;
     int m_width;
     int m_height;
     bool m_keepOnTop;
@@ -85,7 +85,7 @@ private:
     // We keep the shared pointers to the command buffers until the frame is being re-rendered. This allows
     // the Compositor to change command buffers arbitrarily, and they won't get reclaimed by the system until
     // they are known finished rendering.
-    std::shared_ptr<CommandBuffer> m_commandBuffers;
+    std::shared_ptr<vk::CommandBuffer> m_commandBuffers;
     std::atomic<bool> m_stop;
 
     // If in non realtime mode, we render to an offscreen framebuffer and blit the latest available image to the
@@ -93,8 +93,8 @@ private:
     std::shared_ptr<Offscreen> m_offscreen;
 };
 
-} // namespace vk
+} // namespace comp
 
 } // namespace scin
 
-#endif // SRC_VULKAN_WINDOW_HPP_
+#endif // SRC_COMP_WINDOW_HPP_

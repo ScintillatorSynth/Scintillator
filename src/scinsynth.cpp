@@ -3,6 +3,10 @@
 #include "base/FileSystem.hpp"
 #include "comp/Async.hpp" // TODO: audit includes
 #include "comp/Compositor.hpp"
+#include "comp/FrameTimer.hpp"
+#include "comp/Offscreen.hpp"
+#include "comp/Pipeline.hpp"
+#include "comp/Window.hpp"
 #include "infra/Logger.hpp"
 #include "infra/Version.hpp"
 #include "osc/Dispatcher.hpp"
@@ -10,16 +14,10 @@
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/DeviceChooser.hpp"
-#include "vulkan/FrameTimer.hpp"
 #include "vulkan/Instance.hpp"
-#include "vulkan/Offscreen.hpp"
-#include "vulkan/Pipeline.hpp"
 #include "vulkan/Shader.hpp"
-#include "vulkan/ShaderCompiler.hpp"
-#include "vulkan/Swapchain.hpp"
 #include "vulkan/Uniform.hpp"
 #include "vulkan/Vulkan.hpp"
-#include "vulkan/Window.hpp"
 
 #include "fmt/core.h"
 #include "gflags/gflags.h"
@@ -172,13 +170,13 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    std::shared_ptr<scin::vk::Window> window;
-    std::shared_ptr<scin::vk::Canvas> canvas;
-    std::shared_ptr<scin::vk::Offscreen> offscreen;
-    std::shared_ptr<const scin::vk::FrameTimer> frameTimer;
+    std::shared_ptr<scin::comp::Window> window;
+    std::shared_ptr<scin::comp::Canvas> canvas;
+    std::shared_ptr<scin::comp::Offscreen> offscreen;
+    std::shared_ptr<const scin::comp::FrameTimer> frameTimer;
     if (FLAGS_create_window) {
         window.reset(
-            new scin::vk::Window(instance, device, FLAGS_width, FLAGS_height, FLAGS_keep_on_top, FLAGS_frame_rate));
+            new scin::comp::Window(instance, device, FLAGS_width, FLAGS_height, FLAGS_keep_on_top, FLAGS_frame_rate));
         if (!window->create()) {
             spdlog::error("Failed to create window.");
             return EXIT_FAILURE;
@@ -187,7 +185,7 @@ int main(int argc, char* argv[]) {
         offscreen = window->offscreen();
         frameTimer = window->frameTimer();
     } else {
-        offscreen.reset(new scin::vk::Offscreen(device, FLAGS_width, FLAGS_height, FLAGS_frame_rate));
+        offscreen.reset(new scin::comp::Offscreen(device, FLAGS_width, FLAGS_height, FLAGS_frame_rate));
         if (!offscreen->create(3)) {
             spdlog::error("Failed to create offscreen renderer.");
             return EXIT_FAILURE;

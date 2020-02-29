@@ -6,12 +6,18 @@
 #include <memory>
 #include <vector>
 
-namespace scin { namespace vk {
+namespace scin {
+
+namespace comp {
+// TODO: this dependency back to comp namespace is a serious code smell.
+class Pipeline;
+}
+
+namespace vk {
 
 class Buffer;
 class CommandPool;
 class Device;
-class Pipeline;
 class Uniform;
 
 /*! Simple wrapper class around an array of Vulkan CommandBuffer objects.
@@ -40,7 +46,7 @@ public:
      * \param pipeline The pipeline bound by this CommandBuffer.
      */
     void associateResources(std::shared_ptr<Buffer> vertexBuffer, std::shared_ptr<Buffer> indexBuffer,
-                            std::shared_ptr<Uniform> uniform, std::shared_ptr<Pipeline> pipeline);
+                            std::shared_ptr<Uniform> uniform, std::shared_ptr<comp::Pipeline> pipeline);
 
     VkCommandBuffer buffer(size_t i) { return m_commandBuffers[i]; }
     size_t count() const { return m_commandBuffers.size(); }
@@ -52,7 +58,7 @@ private:
     std::shared_ptr<Buffer> m_vertexBuffer;
     std::shared_ptr<Buffer> m_indexBuffer;
     std::shared_ptr<Uniform> m_uniform;
-    std::shared_ptr<Pipeline> m_pipeline;
+    std::shared_ptr<comp::Pipeline> m_pipeline;
 };
 
 } // namespace vk

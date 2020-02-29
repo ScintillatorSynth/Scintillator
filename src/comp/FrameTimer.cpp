@@ -1,8 +1,8 @@
-#include "vulkan/FrameTimer.hpp"
+#include "comp/FrameTimer.hpp"
 
 #include "spdlog/spdlog.h"
 
-namespace scin { namespace vk {
+namespace scin { namespace comp {
 
 const size_t kFramePeriodWindowSize = 60;
 
@@ -80,6 +80,6 @@ void FrameTimer::updateStats(double meanPeriod) {
     m_lateFrames = 0;
 }
 
-} // namespace vk
+} // namespace comp
 
 } // namespace scin

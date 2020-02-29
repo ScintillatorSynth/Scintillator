@@ -1,14 +1,19 @@
-#ifndef SRC_VULKAN_RENDER_SYNC_HPP_
-#define SRC_VULKAN_RENDER_SYNC_HPP_
+#ifndef SRC_COMP_RENDER_SYNC_HPP_
+#define SRC_COMP_RENDER_SYNC_HPP_
 
 #include "vulkan/Vulkan.hpp"
 
 #include <memory>
 #include <vector>
 
-namespace scin { namespace vk {
+namespace scin {
 
+namespace vk {
 class Device;
+}
+
+namespace comp {
+
 class Swapchain;
 
 /*! Maintains a set of synchronization primities used for tracking state of rendering to one or more active images.
@@ -16,7 +21,7 @@ class Swapchain;
  */
 class RenderSync {
 public:
-    RenderSync(std::shared_ptr<Device> device);
+    RenderSync(std::shared_ptr<vk::Device> device);
     ~RenderSync();
 
     /*! Create a set of synchronization primitives suitable for coordinating rendering across a maximum number of
@@ -44,15 +49,15 @@ public:
     VkFence frameRendering(size_t index) { return m_frameRendering[index]; }
 
 private:
-    std::shared_ptr<Device> m_device;
+    std::shared_ptr<vk::Device> m_device;
 
     std::vector<VkSemaphore> m_imageAvailable;
     std::vector<VkSemaphore> m_renderFinished;
     std::vector<VkFence> m_frameRendering;
 };
 
-} // namespace vk
+} // namespace comp
 
 } // namespace scin
 
-#endif // SRC_VULKAN_RENDER_SYNC_HPP_
+#endif // SRC_COMP_RENDER_SYNC_HPP_

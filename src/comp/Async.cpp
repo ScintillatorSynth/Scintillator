@@ -12,9 +12,7 @@
 
 #include <chrono>
 
-namespace scin {
-
-namespace comp {
+namespace scin { namespace comp {
 
 Async::Async(std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
              std::shared_ptr<vk::Device> device):

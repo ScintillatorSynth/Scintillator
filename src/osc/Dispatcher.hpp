@@ -19,15 +19,12 @@ class Archetypes;
 namespace comp {
 class Async;
 class Compositor;
+class FrameTimer;
+class Offscreen;
 }
 
 namespace infra {
 class Logger;
-}
-
-namespace vk {
-class FrameTimer;
-class Offscreen;
 }
 
 namespace osc {
@@ -52,7 +49,7 @@ public:
      */
     Dispatcher(std::shared_ptr<infra::Logger> logger, std::shared_ptr<comp::Async> async,
                std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<comp::Compositor> compositor,
-               std::shared_ptr<vk::Offscreen> offscreen, std::shared_ptr<const vk::FrameTimer> frameTimer,
+               std::shared_ptr<comp::Offscreen> offscreen, std::shared_ptr<const comp::FrameTimer> frameTimer,
                std::function<void()> quitHandler);
     ~Dispatcher();
 
@@ -114,8 +111,8 @@ public:
     std::shared_ptr<comp::Async> async() { return m_async; }
     std::shared_ptr<base::Archetypes> archetypes() { return m_archetypes; }
     std::shared_ptr<comp::Compositor> compositor() { return m_compositor; }
-    std::shared_ptr<vk::Offscreen> offscreen() { return m_offscreen; }
-    std::shared_ptr<const vk::FrameTimer> frameTimer() { return m_frameTimer; }
+    std::shared_ptr<comp::Offscreen> offscreen() { return m_offscreen; }
+    std::shared_ptr<const comp::FrameTimer> frameTimer() { return m_frameTimer; }
     void callQuitHandler(std::shared_ptr<Address> quitOrigin);
     void setDumpOSC(bool enable) { m_dumpOSC = enable; }
     void processMessageFrom(lo_address address, std::shared_ptr<BlobMessage> onCompletion);
@@ -130,8 +127,8 @@ private:
     std::shared_ptr<comp::Async> m_async;
     std::shared_ptr<base::Archetypes> m_archetypes;
     std::shared_ptr<comp::Compositor> m_compositor;
-    std::shared_ptr<vk::Offscreen> m_offscreen;
-    std::shared_ptr<const vk::FrameTimer> m_frameTimer;
+    std::shared_ptr<comp::Offscreen> m_offscreen;
+    std::shared_ptr<const comp::FrameTimer> m_frameTimer;
     std::function<void()> m_quitHandler;
     std::array<std::unique_ptr<commands::Command>, commands::Command::Number::kCommandCount> m_commands;
 

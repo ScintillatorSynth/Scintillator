@@ -1,25 +1,25 @@
-#include "vulkan/SamplerFactory.hpp"
+#include "comp/SamplerFactory.hpp"
 
 #include "base/AbstractSampler.hpp"
 #include "vulkan/Sampler.hpp"
 
 #include "spdlog/spdlog.h"
 
-namespace scin { namespace vk {
+namespace scin { namespace comp {
 
-SamplerFactory::SamplerFactory(std::shared_ptr<Device> device): m_device(device) {}
+SamplerFactory::SamplerFactory(std::shared_ptr<vk::Device> device): m_device(device) {}
 
 SamplerFactory::~SamplerFactory() {}
 
-std::shared_ptr<Sampler> SamplerFactory::getSampler(const base::AbstractSampler& abstractSampler) {
+std::shared_ptr<vk::Sampler> SamplerFactory::getSampler(const base::AbstractSampler& abstractSampler) {
     std::lock_guard<std::mutex> lock(m_mapMutex);
-    std::shared_ptr<Sampler> sampler;
+    std::shared_ptr<vk::Sampler> sampler;
     auto it = m_samplerMap.find(abstractSampler.key());
     if (it != m_samplerMap.end()) {
         ++(it->second.first);
         sampler = it->second.second;
     } else {
-        std::shared_ptr<Sampler> newSampler(new Sampler(m_device, abstractSampler));
+        std::shared_ptr<vk::Sampler> newSampler(new vk::Sampler(m_device, abstractSampler));
         // Sampler creation while holding mutex means we might block other threads for longer but also avoids
         // creation of duplicate samplers during race.
         if (!sampler->create()) {
@@ -33,7 +33,7 @@ std::shared_ptr<Sampler> SamplerFactory::getSampler(const base::AbstractSampler&
     return sampler;
 }
 
-void SamplerFactory::releaseSampler(std::shared_ptr<Sampler> sampler) {
+void SamplerFactory::releaseSampler(std::shared_ptr<vk::Sampler> sampler) {
     std::lock_guard<std::mutex> lock(m_mapMutex);
     auto it = m_samplerMap.find(sampler->abstractSampler().key());
     if (it == m_samplerMap.end()) {
@@ -47,6 +47,6 @@ void SamplerFactory::releaseSampler(std::shared_ptr<Sampler> sampler) {
     }
 }
 
-} // namespace vk
+} // namespace comp
 
 } // namespace scin

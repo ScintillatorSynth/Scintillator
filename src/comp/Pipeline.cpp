@@ -1,16 +1,16 @@
-#include "vulkan/Pipeline.hpp"
+#include "comp/Pipeline.hpp"
 
 #include "base/Shape.hpp"
-#include "vulkan/Canvas.hpp"
+#include "comp/Canvas.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Shader.hpp"
 #include "vulkan/UniformLayout.hpp"
 
 #include "spdlog/spdlog.h"
 
-namespace scin { namespace vk {
+namespace scin { namespace comp {
 
-Pipeline::Pipeline(std::shared_ptr<Device> device):
+Pipeline::Pipeline(std::shared_ptr<vk::Device> device):
     m_device(device),
     m_pipelineLayout(VK_NULL_HANDLE),
     m_pipeline(VK_NULL_HANDLE) {}
@@ -18,8 +18,8 @@ Pipeline::Pipeline(std::shared_ptr<Device> device):
 Pipeline::~Pipeline() { destroy(); }
 
 bool Pipeline::create(const base::Manifest& vertexManifest, const base::Shape* shape, Canvas* canvas,
-                      std::shared_ptr<Shader> vertexShader, std::shared_ptr<Shader> fragmentShader,
-                      std::shared_ptr<UniformLayout> uniformLayout, size_t pushConstantBlockSize) {
+                      std::shared_ptr<vk::Shader> vertexShader, std::shared_ptr<vk::Shader> fragmentShader,
+                      std::shared_ptr<vk::UniformLayout> uniformLayout, size_t pushConstantBlockSize) {
     // Keep references to these graphics objects so they won't be destroyed until after this Pipeline is destroyed.
     m_vertexShader = vertexShader;
     m_fragmentShader = fragmentShader;

@@ -1,11 +1,11 @@
-#ifndef SRC_VULKAN_FRAME_TIMER_HPP_
-#define SRC_VULKAN_FRAME_TIMER_HPP_
+#ifndef SRC_COMP_FRAME_TIMER_HPP_
+#define SRC_COMP_FRAME_TIMER_HPP_
 
 #include <chrono>
 #include <deque>
 #include <mutex>
 
-namespace scin { namespace vk {
+namespace scin { namespace comp {
 
 /*! Used to track average throughput and latency of frame rendering.
  */
@@ -52,8 +52,8 @@ private:
     size_t m_totalLateFrames;
 };
 
-} // namespace vk
+} // namespace comp
 
 } // namespace scin
 
-#endif // SRC_VULKAN_FRAME_TIMER_HPP_
+#endif // SRC_COMP_FRAME_TIMER_HPP_

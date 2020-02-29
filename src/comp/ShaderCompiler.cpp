@@ -1,10 +1,10 @@
-#include "vulkan/ShaderCompiler.hpp"
+#include "comp/ShaderCompiler.hpp"
 
 #include "vulkan/Device.hpp"
 
 #include "spdlog/spdlog.h"
 
-namespace scin { namespace vk {
+namespace scin { namespace comp {
 
 ShaderCompiler::ShaderCompiler(): m_compiler(nullptr) {}
 
@@ -24,41 +24,41 @@ void ShaderCompiler::releaseCompiler() {
     }
 }
 
-std::unique_ptr<Shader> ShaderCompiler::compile(std::shared_ptr<Device> device, const std::string& source,
-                                                const std::string& name, const std::string& entryPoint,
-                                                Shader::Kind kind) {
+std::unique_ptr<vk::Shader> ShaderCompiler::compile(std::shared_ptr<vk::Device> device, const std::string& source,
+                                                    const std::string& name, const std::string& entryPoint,
+                                                    vk::Shader::Kind kind) {
     if (!compilerLoaded()) {
         if (!loadCompiler()) {
-            return std::unique_ptr<Shader>();
+            return std::unique_ptr<vk::Shader>();
         }
     }
 
     shaderc_shader_kind shaderKind;
     switch (kind) {
-    case Shader::kVertex:
+    case vk::Shader::kVertex:
         shaderKind = shaderc_vertex_shader;
         break;
 
-    case Shader::kFragment:
+    case vk::Shader::kFragment:
         shaderKind = shaderc_fragment_shader;
         break;
     }
 
     shaderc_compile_options_t options = shaderc_compile_options_initialize();
     if (!options) {
-        return std::unique_ptr<Shader>();
+        return std::unique_ptr<vk::Shader>();
     }
 
     shaderc_compile_options_set_target_env(options, shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_0);
     shaderc_compilation_result_t result = shaderc_compile_into_spv(m_compiler, source.data(), source.size(), shaderKind,
                                                                    name.data(), entryPoint.data(), options);
 
-    std::unique_ptr<Shader> shader(nullptr);
+    std::unique_ptr<vk::Shader> shader;
     shaderc_compilation_status status = shaderc_result_get_compilation_status(result);
     if (status == shaderc_compilation_status_success) {
         const char* spv_bytes = shaderc_result_get_bytes(result);
         size_t byte_size = shaderc_result_get_length(result);
-        shader.reset(new Shader(kind, device, entryPoint));
+        shader.reset(new vk::Shader(kind, device, entryPoint));
         if (!shader->create(spv_bytes, byte_size)) {
             spdlog::error("error creating shader from compiled source {}.", name);
             shader.reset(nullptr);
@@ -79,6 +79,6 @@ std::unique_ptr<Shader> ShaderCompiler::compile(std::shared_ptr<Device> device, 
     return shader;
 }
 
-} // namespace vk
+} // namespace comp
 
 } // namespace scin

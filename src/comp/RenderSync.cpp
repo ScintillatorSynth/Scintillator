@@ -1,13 +1,13 @@
-#include "vulkan/RenderSync.hpp"
+#include "comp/RenderSync.hpp"
 
+#include "comp/Swapchain.hpp"
 #include "vulkan/Device.hpp"
-#include "vulkan/Swapchain.hpp"
 
 #include "spdlog/spdlog.h"
 
-namespace scin { namespace vk {
+namespace scin { namespace comp {
 
-RenderSync::RenderSync(std::shared_ptr<Device> device): m_device(device) {}
+RenderSync::RenderSync(std::shared_ptr<vk::Device> device): m_device(device) {}
 
 RenderSync::~RenderSync() { destroy(); }
 
@@ -73,6 +73,6 @@ uint32_t RenderSync::acquireNextImage(size_t index, Swapchain* swapchain) {
 
 void RenderSync::resetFrame(size_t index) { vkResetFences(m_device->get(), 1, &m_frameRendering[index]); }
 
-} // namespace vk
+} // namespace comp
 
 } // namespace scin

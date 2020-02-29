@@ -1,30 +1,30 @@
-#include "Compositor.hpp"
+#include "comp/Compositor.hpp"
 
-#include "Scinth.hpp"
-#include "ScinthDef.hpp"
 #include "base/AbstractSampler.hpp"
 #include "base/AbstractScinthDef.hpp"
 #include "base/VGen.hpp"
-#include "vulkan/Canvas.hpp"
+#include "comp/Canvas.hpp"
+#include "comp/SamplerFactory.hpp"
+#include "comp/Scinth.hpp"
+#include "comp/ScinthDef.hpp"
+#include "comp/ShaderCompiler.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Image.hpp"
-#include "vulkan/SamplerFactory.hpp"
 #include "vulkan/Sampler.hpp"
-#include "vulkan/ShaderCompiler.hpp"
 
 #include "spdlog/spdlog.h"
 
 namespace scin { namespace comp {
 
-Compositor::Compositor(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Canvas> canvas):
+Compositor::Compositor(std::shared_ptr<vk::Device> device, std::shared_ptr<Canvas> canvas):
     m_device(device),
     m_canvas(canvas),
     m_clearColor(0.0f, 0.0f, 0.0f),
-    m_shaderCompiler(new scin::vk::ShaderCompiler()),
-    m_commandPool(new scin::vk::CommandPool(device)),
-    m_samplerFactory(new scin::vk::SamplerFactory(device)),
+    m_shaderCompiler(new ShaderCompiler()),
+    m_commandPool(new vk::CommandPool(device)),
+    m_samplerFactory(new SamplerFactory(device)),
     m_commandBufferDirty(true),
     m_nodeSerial(-2),
     m_stagingRequested(false) {
