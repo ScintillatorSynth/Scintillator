@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 /*! Represents a set of configuration parameters for a Vulkan 2D image sampler. Packs the configuration into a single
  * unsigned int value to allow coalescing of Samplers across Vulkan, as they are a resource available in limited
@@ -47,7 +47,7 @@ private:
     uint32_t m_key;
 };
 
-} // namespace core
+} // namespace base
 
 } // namespace scin
 

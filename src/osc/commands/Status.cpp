@@ -2,7 +2,7 @@
 
 #include "Compositor.hpp"
 #include "Logger.hpp"
-#include "core/Archetypes.hpp"
+#include "base/Archetypes.hpp"
 #include "osc/Dispatcher.hpp"
 #include "vulkan/FrameTimer.hpp"
 

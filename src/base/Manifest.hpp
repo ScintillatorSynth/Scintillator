@@ -1,13 +1,13 @@
 #ifndef SRC_CORE_MANIFEST_HPP_
 #define SRC_CORE_MANIFEST_HPP_
 
-#include "core/Intrinsic.hpp"
+#include "base/Intrinsic.hpp"
 
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 /*! Describes a configurable buffer layout that aligns members consistent with Vulkan standards.
  *
@@ -78,7 +78,7 @@ private:
     std::vector<std::string> m_names;
 };
 
-} // namespace core
+} // namespace base
 
 } // namespace scin
 

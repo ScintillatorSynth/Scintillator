@@ -1,10 +1,10 @@
-#include "core/Parameter.hpp"
+#include "base/Parameter.hpp"
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 Parameter::Parameter(std::string name, float defaultValue): m_name(name), m_defaultValue(defaultValue) {}
 
 Parameter::~Parameter() {}
 
-} // namespace core
+} // namespace base
 } // namespace scin

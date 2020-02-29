@@ -1,10 +1,10 @@
-#include "core/VGen.hpp"
+#include "base/VGen.hpp"
 
-#include "core/AbstractVGen.hpp"
+#include "base/AbstractVGen.hpp"
 
 #include "spdlog/spdlog.h"
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 VGen::VGen(std::shared_ptr<const AbstractVGen> abstractVGen): m_abstractVGen(abstractVGen) {}
 
@@ -109,6 +109,6 @@ bool VGen::getInputVGenIndex(int index, int& outIndex, int& outOutput) const {
     return false;
 }
 
-} // namespace core
+} // namespace base
 
 } // namespace scin

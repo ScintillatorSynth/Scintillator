@@ -1,8 +1,8 @@
-#include "core/AbstractVGen.hpp"
+#include "base/AbstractVGen.hpp"
 
 #include "spdlog/spdlog.h"
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 AbstractVGen::AbstractVGen(const std::string& name, bool isSampler, const std::vector<std::string>& inputs,
                            const std::vector<std::string>& outputs, const std::vector<std::vector<int>> inputDimensions,
@@ -157,6 +157,6 @@ std::string AbstractVGen::parameterize(const std::vector<std::string>& inputs,
     return shader;
 }
 
-} // namespace core
+} // namespace base
 
 } // namespace scin

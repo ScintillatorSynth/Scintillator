@@ -1,16 +1,16 @@
-#include "core/Archetypes.hpp"
+#include "base/Archetypes.hpp"
 
-#include "core/AbstractSampler.hpp"
-#include "core/AbstractScinthDef.hpp"
-#include "core/AbstractVGen.hpp"
-#include "core/Parameter.hpp"
-#include "core/VGen.hpp"
+#include "base/AbstractSampler.hpp"
+#include "base/AbstractScinthDef.hpp"
+#include "base/AbstractVGen.hpp"
+#include "base/Parameter.hpp"
+#include "base/VGen.hpp"
 
 #include "spdlog/spdlog.h"
 #include "yaml-cpp/exceptions.h"
 #include "yaml-cpp/yaml.h"
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 Archetypes::Archetypes() {
     m_vgenInputTypes.insert({ "constant", VGen::InputType::kConstant });
@@ -564,6 +564,6 @@ int Archetypes::extractAbstractVGensFromNodes(const std::vector<YAML::Node>& nod
     return numberOfValidElements;
 }
 
-} // namespace core
+} // namespace base
 
 } // namespace scin

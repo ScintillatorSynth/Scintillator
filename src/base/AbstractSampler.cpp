@@ -1,6 +1,6 @@
-#include "core/AbstractSampler.hpp"
+#include "base/AbstractSampler.hpp"
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 AbstractSampler::AbstractSampler(): m_key(0) {}
 
@@ -62,6 +62,6 @@ AbstractSampler::ClampBorderColor AbstractSampler::clampBorderColor() const {
     return static_cast<ClampBorderColor>(m_key & 0x00f00000);
 }
 
-} // namespace core
+} // namespace base
 
 } // amespace scin

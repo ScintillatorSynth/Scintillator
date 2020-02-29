@@ -1,7 +1,7 @@
 %{
-// Generated file, please edit original file at src/core/Intrinsic.cpp.in
+// Generated file, please edit original file at src/base/Intrinsic.cpp.in
 // TODO: lint generated file, copy diff back to this one.
-#include "core/Intrinsic.hpp"
+#include "base/Intrinsic.hpp"
 
 #include <cstring>
 
@@ -14,20 +14,20 @@ namespace {
 %}
 %language=C++
 %struct-type
-struct IntrinsicPair { const char* name; scin::core::Intrinsic intrinsic; };
+struct IntrinsicPair { const char* name; scin::base::Intrinsic intrinsic; };
 %%
-normPos,    scin::core::Intrinsic::kNormPos
-pi,         scin::core::Intrinsic::kPi
-sampler,    scin::core::Intrinsic::kSampler
-time,       scin::core::Intrinsic::kTime
-texPos,     scin::core::Intrinsic::kTexPos
+normPos,    scin::base::Intrinsic::kNormPos
+pi,         scin::base::Intrinsic::kPi
+sampler,    scin::base::Intrinsic::kSampler
+time,       scin::base::Intrinsic::kTime
+texPos,     scin::base::Intrinsic::kTexPos
 %%
 
 } // namespace
 
 #pragma clang diagnostic pop
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 Intrinsic getIntrinsicNamed(const std::string& name) {
     const IntrinsicPair* pair = Perfect_Hash::in_word_set(name.data(), name.size());
@@ -37,6 +37,6 @@ Intrinsic getIntrinsicNamed(const std::string& name) {
     return pair->intrinsic;
 }
 
-} // namespace core
+} // namespace base
 
 } // namespace scin

@@ -1,9 +1,9 @@
 #ifndef SRC_CORE_SHAPE_HPP_
 #define SRC_CORE_SHAPE_HPP_
 
-#include "core/Manifest.hpp"
+#include "base/Manifest.hpp"
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 /*! Abstract base class representing a geometric shape used as the starting point for rendering.
  */
@@ -57,7 +57,7 @@ public:
     const uint16_t* getIndices() const override;
 };
 
-} // namespace core
+} // namespace base
 
 } // namespace scin
 

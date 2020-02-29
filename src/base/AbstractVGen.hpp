@@ -1,7 +1,7 @@
 #ifndef SRC_CORE_ABSTRACT_VGEN_HPP_
 #define SRC_CORE_ABSTRACT_VGEN_HPP_
 
-#include "core/Intrinsic.hpp"
+#include "base/Intrinsic.hpp"
 
 #include <regex>
 #include <string>
@@ -9,7 +9,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 /*! Represents a template for a parameterizable shader program suitable for composition in a VGen graph.
  *
@@ -96,7 +96,7 @@ private:
     std::vector<std::pair<const std::smatch, Parameter>> m_parameters;
 };
 
-} // namespace core
+} // namespace base
 
 } // namespace scin
 

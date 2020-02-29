@@ -1,8 +1,8 @@
-#include "core/AbstractScinthDef.hpp"
+#include "base/AbstractScinthDef.hpp"
 
-#include "core/AbstractVGen.hpp"
-#include "core/Shape.hpp"
-#include "core/VGen.hpp"
+#include "base/AbstractVGen.hpp"
+#include "base/Shape.hpp"
+#include "base/VGen.hpp"
 
 #include "fmt/core.h"
 #include "glm/glm.hpp"
@@ -10,7 +10,7 @@
 
 #include <random>
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 AbstractScinthDef::AbstractScinthDef(const std::string& name, const std::vector<Parameter>& parameters,
                                      const std::vector<VGen>& instances):
@@ -391,6 +391,6 @@ bool AbstractScinthDef::buildFragmentShader() {
     return true;
 }
 
-} // namespace core
+} // namespace base
 
 } // namespace scin

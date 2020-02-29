@@ -1,7 +1,7 @@
 #ifndef SRC_VULKAN_PIPELINE_HPP_
 #define SRC_VULKAN_PIPELINE_HPP_
 
-#include "core/Manifest.hpp"
+#include "base/Manifest.hpp"
 #include "vulkan/Vulkan.hpp"
 
 #include <memory>
@@ -9,7 +9,7 @@
 
 namespace scin {
 
-namespace core {
+namespace base {
 class Shape;
 }
 
@@ -25,7 +25,7 @@ public:
     Pipeline(std::shared_ptr<Device> device);
     ~Pipeline();
 
-    bool create(const core::Manifest& vertexManifest, const core::Shape* shape, Canvas* canvas,
+    bool create(const base::Manifest& vertexManifest, const base::Shape* shape, Canvas* canvas,
                 std::shared_ptr<Shader> vertexShader, std::shared_ptr<Shader> fragmentShader,
                 std::shared_ptr<UniformLayout> uniformLayout, size_t pushConstantBlockSize);
     void destroy();

@@ -3,7 +3,7 @@
 #include "Compositor.hpp"
 #include "ScinthDef.hpp"
 #include "av/ImageDecoder.hpp"
-#include "core/Archetypes.hpp"
+#include "base/Archetypes.hpp"
 #include "vulkan/Image.hpp"
 #include "vulkan/Device.hpp"
 
@@ -14,7 +14,7 @@
 
 namespace scin {
 
-Async::Async(std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
+Async::Async(std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
              std::shared_ptr<vk::Device> device):
     m_archetypes(archetypes),
     m_compositor(compositor),
@@ -254,7 +254,7 @@ void Async::asyncScinthDefLoadDirectory(fs::path path, std::function<void(int)> 
         auto p = entry.path();
         if (fs::is_regular_file(p) && p.extension() == ".yaml") {
             spdlog::debug("Parsing ScinthDef yaml file {}.", p.string());
-            std::vector<std::shared_ptr<const core::AbstractScinthDef>> scinthDefs =
+            std::vector<std::shared_ptr<const base::AbstractScinthDef>> scinthDefs =
                 m_archetypes->loadFromFile(p.string());
             for (auto scinthDef : scinthDefs) {
                 if (m_compositor->buildScinthDef(scinthDef)) {
@@ -274,7 +274,7 @@ void Async::asyncScinthDefLoadFile(fs::path path, std::function<void(int)> compl
         return;
     }
     spdlog::debug("Loading ScinthDefs from file {}.", path.string());
-    std::vector<std::shared_ptr<const core::AbstractScinthDef>> scinthDefs = m_archetypes->loadFromFile(path.string());
+    std::vector<std::shared_ptr<const base::AbstractScinthDef>> scinthDefs = m_archetypes->loadFromFile(path.string());
     auto parseCount = 0;
     for (auto scinthDef : scinthDefs) {
         if (m_compositor->buildScinthDef(scinthDef)) {
@@ -286,7 +286,7 @@ void Async::asyncScinthDefLoadFile(fs::path path, std::function<void(int)> compl
 }
 
 void Async::asyncScinthDefParseString(std::string yaml, std::function<void(int)> completion) {
-    std::vector<std::shared_ptr<const core::AbstractScinthDef>> scinthDefs = m_archetypes->parseFromString(yaml);
+    std::vector<std::shared_ptr<const base::AbstractScinthDef>> scinthDefs = m_archetypes->parseFromString(yaml);
     for (auto scinthDef : scinthDefs) {
         m_compositor->buildScinthDef(scinthDef);
     }

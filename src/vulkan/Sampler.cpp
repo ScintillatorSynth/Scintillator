@@ -1,6 +1,6 @@
 #include "vulkan/Sampler.hpp"
 
-#include "core/AbstractSampler.hpp"
+#include "base/AbstractSampler.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Image.hpp"
 
@@ -8,41 +8,41 @@
 
 namespace {
 
-VkFilter filterForAbstract(scin::core::AbstractSampler::FilterMode filterMode) {
+VkFilter filterForAbstract(scin::base::AbstractSampler::FilterMode filterMode) {
     switch (filterMode) {
-    case scin::core::AbstractSampler::FilterMode::kLinear:
+    case scin::base::AbstractSampler::FilterMode::kLinear:
         return VK_FILTER_LINEAR;
 
-    case scin::core::AbstractSampler::FilterMode::kNearest:
+    case scin::base::AbstractSampler::FilterMode::kNearest:
         return VK_FILTER_NEAREST;
     }
 }
 
-VkSamplerAddressMode addressModeForAbstract(scin::core::AbstractSampler::AddressMode addressMode) {
+VkSamplerAddressMode addressModeForAbstract(scin::base::AbstractSampler::AddressMode addressMode) {
     switch (addressMode) {
-    case scin::core::AbstractSampler::AddressMode::kClampToBorder:
+    case scin::base::AbstractSampler::AddressMode::kClampToBorder:
         return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
 
-    case scin::core::AbstractSampler::AddressMode::kClampToEdge:
+    case scin::base::AbstractSampler::AddressMode::kClampToEdge:
         return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 
-    case scin::core::AbstractSampler::AddressMode::kRepeat:
+    case scin::base::AbstractSampler::AddressMode::kRepeat:
         return VK_SAMPLER_ADDRESS_MODE_REPEAT;
 
-    case scin::core::AbstractSampler::AddressMode::kMirroredRepeat:
+    case scin::base::AbstractSampler::AddressMode::kMirroredRepeat:
         return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
     }
 }
 
-VkBorderColor borderColorForAbstract(scin::core::AbstractSampler::ClampBorderColor borderColor) {
+VkBorderColor borderColorForAbstract(scin::base::AbstractSampler::ClampBorderColor borderColor) {
     switch (borderColor) {
-    case scin::core::AbstractSampler::ClampBorderColor::kTransparentBlack:
+    case scin::base::AbstractSampler::ClampBorderColor::kTransparentBlack:
         return VK_BORDER_COLOR_INT_TRANSPARENT_BLACK;
 
-    case scin::core::AbstractSampler::ClampBorderColor::kBlack:
+    case scin::base::AbstractSampler::ClampBorderColor::kBlack:
         return VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 
-    case scin::core::AbstractSampler::ClampBorderColor::kWhite:
+    case scin::base::AbstractSampler::ClampBorderColor::kWhite:
         return VK_BORDER_COLOR_INT_OPAQUE_WHITE;
     }
 }
@@ -51,7 +51,7 @@ VkBorderColor borderColorForAbstract(scin::core::AbstractSampler::ClampBorderCol
 
 namespace scin { namespace vk {
 
-Sampler::Sampler(std::shared_ptr<Device> device, const core::AbstractSampler& abstractSampler):
+Sampler::Sampler(std::shared_ptr<Device> device, const base::AbstractSampler& abstractSampler):
     m_device(device),
     m_abstractSampler(abstractSampler),
     m_sampler(VK_NULL_HANDLE) {}

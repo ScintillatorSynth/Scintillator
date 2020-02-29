@@ -2,9 +2,9 @@
 
 #include "Scinth.hpp"
 #include "ScinthDef.hpp"
-#include "core/AbstractSampler.hpp"
-#include "core/AbstractScinthDef.hpp"
-#include "core/VGen.hpp"
+#include "base/AbstractSampler.hpp"
+#include "base/AbstractScinthDef.hpp"
+#include "base/VGen.hpp"
 #include "vulkan/Canvas.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
@@ -48,7 +48,7 @@ bool Compositor::create() {
     return true;
 }
 
-bool Compositor::buildScinthDef(std::shared_ptr<const core::AbstractScinthDef> abstractScinthDef) {
+bool Compositor::buildScinthDef(std::shared_ptr<const base::AbstractScinthDef> abstractScinthDef) {
     std::shared_ptr<ScinthDef> scinthDef(new ScinthDef(m_device, m_canvas, m_commandPool, abstractScinthDef));
     if (!scinthDef->build(m_shaderCompiler.get())) {
         return false;

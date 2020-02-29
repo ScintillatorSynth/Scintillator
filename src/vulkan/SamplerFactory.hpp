@@ -7,7 +7,7 @@
 
 namespace scin {
 
-namespace core {
+namespace base {
 class AbstractSampler;
 }
 
@@ -24,7 +24,7 @@ public:
     SamplerFactory(std::shared_ptr<Device> device);
     ~SamplerFactory();
 
-    std::shared_ptr<Sampler> getSampler(const core::AbstractSampler& abstractSampler);
+    std::shared_ptr<Sampler> getSampler(const base::AbstractSampler& abstractSampler);
     void releaseSampler(std::shared_ptr<Sampler> sampler);
 
 private:

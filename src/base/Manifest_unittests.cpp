@@ -1,13 +1,13 @@
 #include "gtest/gtest.h"
 
-#include "core/Manifest.hpp"
+#include "base/Manifest.hpp"
 
 #include "glm/glm.hpp"
 
 #include <string>
 #include <unordered_set>
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 TEST(ManifestTest, EmptyManifest) {
     Manifest unpacked;
@@ -90,6 +90,6 @@ TEST(ManifestTest, HeterogeneousTypes) {
     EXPECT_EQ(Intrinsic::kTime, oneOfEach.intrinsicForElement(3));
 }
 
-} // namespace core
+} // namespace base
 
 } // namespace scin

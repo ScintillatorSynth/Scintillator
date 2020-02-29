@@ -1,6 +1,6 @@
 #include "vulkan/Pipeline.hpp"
 
-#include "core/Shape.hpp"
+#include "base/Shape.hpp"
 #include "vulkan/Canvas.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Shader.hpp"
@@ -17,7 +17,7 @@ Pipeline::Pipeline(std::shared_ptr<Device> device):
 
 Pipeline::~Pipeline() { destroy(); }
 
-bool Pipeline::create(const core::Manifest& vertexManifest, const core::Shape* shape, Canvas* canvas,
+bool Pipeline::create(const base::Manifest& vertexManifest, const base::Shape* shape, Canvas* canvas,
                       std::shared_ptr<Shader> vertexShader, std::shared_ptr<Shader> fragmentShader,
                       std::shared_ptr<UniformLayout> uniformLayout, size_t pushConstantBlockSize) {
     // Keep references to these graphics objects so they won't be destroyed until after this Pipeline is destroyed.
@@ -36,19 +36,19 @@ bool Pipeline::create(const core::Manifest& vertexManifest, const core::Shape* s
         vertexAttributes[i].location = i;
         VkFormat format;
         switch (vertexManifest.typeForElement(i)) {
-        case core::Manifest::ElementType::kFloat:
+        case base::Manifest::ElementType::kFloat:
             format = VK_FORMAT_R32_SFLOAT;
             break;
 
-        case core::Manifest::ElementType::kVec2:
+        case base::Manifest::ElementType::kVec2:
             format = VK_FORMAT_R32G32_SFLOAT;
             break;
 
-        case core::Manifest::ElementType::kVec3:
+        case base::Manifest::ElementType::kVec3:
             format = VK_FORMAT_R32G32B32_SFLOAT;
             break;
 
-        case core::Manifest::ElementType::kVec4:
+        case base::Manifest::ElementType::kVec4:
             format = VK_FORMAT_R32G32B32A32_SFLOAT;
             break;
         }
@@ -67,7 +67,7 @@ bool Pipeline::create(const core::Manifest& vertexManifest, const core::Shape* s
     VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     switch (shape->topology()) {
-    case core::Shape::Topology::kTriangleStrip:
+    case base::Shape::Topology::kTriangleStrip:
         inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
     }
     inputAssembly.primitiveRestartEnable = VK_FALSE;

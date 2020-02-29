@@ -9,56 +9,56 @@ include_directories(
 )
 
 #### "Core" files (without external dependencies)
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/core")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/base")
 
-add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp"
-    COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/core/Intrinsic.cpp.in"
-    MAIN_DEPENDENCY core/Intrinsic.cpp.in
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/core"
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/base/Intrinsic.cpp"
+    COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/base/Intrinsic.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/base/Intrinsic.cpp.in"
+    MAIN_DEPENDENCY base/Intrinsic.cpp.in
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/base"
 )
 
-add_library(scintillator_core STATIC
-    "${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp"
-    core/AbstractSampler.cpp
-    core/AbstractSampler.hpp
-    core/AbstractScinthDef.cpp
-    core/AbstractScinthDef.hpp
-    core/AbstractVGen.cpp
-    core/AbstractVGen.hpp
-    core/Archetypes.cpp
-    core/Archetypes.hpp
-    core/FileSystem.hpp
-    core/Intrinsic.hpp
-    core/Manifest.cpp
-    core/Manifest.hpp
-    core/Parameter.cpp
-    core/Parameter.hpp
-    core/Shape.cpp
-    core/Shape.hpp
-    core/VGen.cpp
-    core/VGen.hpp
+add_library(scintillator_base STATIC
+    "${CMAKE_CURRENT_BINARY_DIR}/base/Intrinsic.cpp"
+    base/AbstractSampler.cpp
+    base/AbstractSampler.hpp
+    base/AbstractScinthDef.cpp
+    base/AbstractScinthDef.hpp
+    base/AbstractVGen.cpp
+    base/AbstractVGen.hpp
+    base/Archetypes.cpp
+    base/Archetypes.hpp
+    base/FileSystem.hpp
+    base/Intrinsic.hpp
+    base/Manifest.cpp
+    base/Manifest.hpp
+    base/Parameter.cpp
+    base/Parameter.hpp
+    base/Shape.cpp
+    base/Shape.hpp
+    base/VGen.cpp
+    base/VGen.hpp
 )
 
-target_link_libraries(scintillator_core
+target_link_libraries(scintillator_base
     fmt
     glm
     spdlog
     yaml-cpp
 )
 if (UNIX AND NOT APPLE)
-    target_link_libraries(scintillator_core
+    target_link_libraries(scintillator_base
         stdc++fs
     )
 endif()
 
 #### Unit Testing for Core Files
 add_executable(run_unittests
-    core/AbstractSampler_unittests.cpp
-    core/AbstractScinthDef_unittests.cpp
-    core/AbstractVGen_unittests.cpp
-    core/Archetypes_unittests.cpp
-    core/Manifest_unittests.cpp
-    core/VGen_unittests.cpp
+    base/AbstractSampler_unittests.cpp
+    base/AbstractScinthDef_unittests.cpp
+    base/AbstractVGen_unittests.cpp
+    base/Archetypes_unittests.cpp
+    base/Manifest_unittests.cpp
+    base/VGen_unittests.cpp
 
     run_unittests.cpp
 )
@@ -67,7 +67,7 @@ target_link_libraries(run_unittests
     gflags
     glm
     gtest
-    scintillator_core
+    scintillator_base
 )
 if (UNIX AND NOT APPLE)
     target_link_libraries(run_unittests
@@ -273,7 +273,7 @@ target_link_libraries(scinsynth
     gflags
     glfw
     glm
-    scintillator_core
+    scintillator_base
     spdlog
 )
 

@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 /*! Simple storage class representing a named numeric value changeable during a Scinth runtime.
  */
@@ -20,7 +20,7 @@ private:
     float m_defaultValue;
 };
 
-} // namespace core
+} // namespace base
 } // namespace scin
 
 #endif // SRC_CORE_PARAMETER_HPP_

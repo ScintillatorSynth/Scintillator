@@ -5,7 +5,7 @@
 
 namespace scin {
 
-namespace core {
+namespace base {
 class AbstractScinthDef;
 }
 
@@ -28,7 +28,7 @@ class ScinthDef {
 public:
     ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Canvas> canvas,
               std::shared_ptr<vk::CommandPool> commandPool,
-              std::shared_ptr<const core::AbstractScinthDef> abstractScinthDef);
+              std::shared_ptr<const base::AbstractScinthDef> abstractScinthDef);
     ~ScinthDef();
 
     /*! Given the AbstractScinthDef, build the Vulkan objects that can be re-used across all running Scinth instances
@@ -41,7 +41,7 @@ public:
 
     std::shared_ptr<vk::Canvas> canvas() const { return m_canvas; }
     std::shared_ptr<vk::CommandPool> commandPool() const { return m_commandPool; }
-    std::shared_ptr<const core::AbstractScinthDef> abstract() const { return m_abstractScinthDef; }
+    std::shared_ptr<const base::AbstractScinthDef> abstract() const { return m_abstractScinthDef; }
     std::shared_ptr<vk::HostBuffer> vertexBuffer() const { return m_vertexBuffer; }
     std::shared_ptr<vk::HostBuffer> indexBuffer() const { return m_indexBuffer; }
     std::shared_ptr<vk::UniformLayout> uniformLayout() const { return m_uniformLayout; }
@@ -53,7 +53,7 @@ private:
     std::shared_ptr<vk::Device> m_device;
     std::shared_ptr<vk::Canvas> m_canvas;
     std::shared_ptr<vk::CommandPool> m_commandPool;
-    std::shared_ptr<const core::AbstractScinthDef> m_abstractScinthDef;
+    std::shared_ptr<const base::AbstractScinthDef> m_abstractScinthDef;
     std::shared_ptr<vk::HostBuffer> m_vertexBuffer;
     std::shared_ptr<vk::HostBuffer> m_indexBuffer;
     std::shared_ptr<vk::Shader> m_vertexShader;

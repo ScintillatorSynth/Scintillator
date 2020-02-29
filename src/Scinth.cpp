@@ -1,9 +1,9 @@
 #include "Scinth.hpp"
 
 #include "ScinthDef.hpp"
-#include "core/AbstractScinthDef.hpp"
-#include "core/Shape.hpp"
-#include "core/VGen.hpp"
+#include "base/AbstractScinthDef.hpp"
+#include "base/Shape.hpp"
+#include "base/VGen.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/Canvas.hpp"
 #include "vulkan/CommandBuffer.hpp"
@@ -64,15 +64,15 @@ bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
         float* uniform = uniformData.get();
         for (auto i = 0; i < m_scinthDef->abstract()->uniformManifest().numberOfElements(); ++i) {
             switch (m_scinthDef->abstract()->uniformManifest().intrinsicForElement(i)) {
-            case core::Intrinsic::kTime:
+            case base::Intrinsic::kTime:
                 *uniform = static_cast<float>(frameTime - m_startTime);
                 break;
 
-            case core::Intrinsic::kNormPos:
-            case core::Intrinsic::kNotFound:
-            case core::Intrinsic::kPi:
-            case core::Intrinsic::kSampler:
-            case core::Intrinsic::kTexPos:
+            case base::Intrinsic::kNormPos:
+            case base::Intrinsic::kNotFound:
+            case base::Intrinsic::kPi:
+            case base::Intrinsic::kSampler:
+            case base::Intrinsic::kTexPos:
                 spdlog::error("Unknown or invalid uniform Intrinsic in Scinth {}", m_nodeID);
                 return false;
             }

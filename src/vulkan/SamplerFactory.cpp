@@ -1,6 +1,6 @@
 #include "vulkan/SamplerFactory.hpp"
 
-#include "core/AbstractSampler.hpp"
+#include "base/AbstractSampler.hpp"
 #include "vulkan/Sampler.hpp"
 
 #include "spdlog/spdlog.h"
@@ -11,7 +11,7 @@ SamplerFactory::SamplerFactory(std::shared_ptr<Device> device): m_device(device)
 
 SamplerFactory::~SamplerFactory() {}
 
-std::shared_ptr<Sampler> SamplerFactory::getSampler(const core::AbstractSampler& abstractSampler) {
+std::shared_ptr<Sampler> SamplerFactory::getSampler(const base::AbstractSampler& abstractSampler) {
     std::lock_guard<std::mutex> lock(m_mapMutex);
     std::shared_ptr<Sampler> sampler;
     auto it = m_samplerMap.find(abstractSampler.key());

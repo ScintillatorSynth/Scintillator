@@ -3,8 +3,8 @@
 #include "Logger.hpp"
 #include "Version.hpp"
 #include "av/AVIncludes.hpp"
-#include "core/Archetypes.hpp"
-#include "core/FileSystem.hpp"
+#include "base/Archetypes.hpp"
+#include "base/FileSystem.hpp"
 #include "osc/Dispatcher.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/CommandPool.hpp"
@@ -202,7 +202,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    std::shared_ptr<scin::core::Archetypes> archetypes(new scin::core::Archetypes());
+    std::shared_ptr<scin::base::Archetypes> archetypes(new scin::base::Archetypes());
     std::shared_ptr<scin::Async> async(new scin::Async(archetypes, compositor, device));
     async->run(FLAGS_async_worker_threads);
 

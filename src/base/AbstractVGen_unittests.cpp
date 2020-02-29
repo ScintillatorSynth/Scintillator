@@ -1,12 +1,12 @@
 #include "gtest/gtest.h"
 
-#include "core/AbstractVGen.hpp"
-#include "core/Intrinsic.hpp"
+#include "base/AbstractVGen.hpp"
+#include "base/Intrinsic.hpp"
 
 #include <string>
 #include <vector>
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 TEST(AbstractVGenTest, DuplicateParameterNames) {
     AbstractVGen dupIn("dupIn", false, { "in1", "in1" }, { "out" }, { { 1, 1 } }, { { 1 } }, "@out = @in1 + @in1;");
@@ -84,6 +84,6 @@ TEST(AbstractVGenTest, ParameterizeValid) {
                                        { "gl_FragColor" }));
 }
 
-} // namespace core
+} // namespace base
 
 } // namespace scin

@@ -1,4 +1,4 @@
-#include "core/Shape.hpp"
+#include "base/Shape.hpp"
 
 #include "glm/glm.hpp"
 
@@ -10,7 +10,7 @@ const std::vector<glm::vec2> quadTexVertices = { { 0.0f, 1.0f }, { 0.0f, 0.0f },
 const std::vector<uint16_t> quadIndices = { 0, 1, 2, 3 };
 }
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 Shape::Shape() {}
 Shape::~Shape() {}
@@ -40,6 +40,6 @@ size_t Quad::storeTextureVertexAtIndex(uint32_t index, float* store) const {
 
 const uint16_t* Quad::getIndices() const { return quadIndices.data(); }
 
-} // namespace core
+} // namespace base
 
 } // namespace scin

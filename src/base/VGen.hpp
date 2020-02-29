@@ -1,14 +1,14 @@
 #ifndef SRC_CORE_VGEN_HPP_
 #define SRC_CORE_VGEN_HPP_
 
-#include "core/AbstractSampler.hpp"
+#include "base/AbstractSampler.hpp"
 
 #include <memory>
 #include <vector>
 
 #include "glm/glm.hpp"
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 class AbstractVGen;
 
@@ -141,7 +141,7 @@ private:
     std::vector<int> m_outputDimensions;
 };
 
-} // namespace core
+} // namespace base
 
 } // namespace scin
 

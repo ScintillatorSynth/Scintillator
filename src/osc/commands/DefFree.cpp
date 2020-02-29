@@ -1,7 +1,7 @@
 #include "osc/commands/DefFree.hpp"
 
 #include "Compositor.hpp"
-#include "core/Archetypes.hpp"
+#include "base/Archetypes.hpp"
 #include "osc/Dispatcher.hpp"
 
 #include "spdlog/spdlog.h"

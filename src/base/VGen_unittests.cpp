@@ -1,10 +1,10 @@
 #include "gtest/gtest.h"
 
-#include "core/AbstractVGen.hpp"
-#include "core/Intrinsic.hpp"
-#include "core/VGen.hpp"
+#include "base/AbstractVGen.hpp"
+#include "base/Intrinsic.hpp"
+#include "base/VGen.hpp"
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 TEST(VGenTest, InvalidInputCounts) {
     std::shared_ptr<const AbstractVGen> noInputs(
@@ -126,6 +126,6 @@ TEST(VGenTest, InputValuesAndTypesRetained) {
     EXPECT_TRUE(pickAndMix.validate());
 }
 
-} // namespace core
+} // namespace base
 
 } // namespace scin

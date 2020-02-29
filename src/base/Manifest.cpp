@@ -1,9 +1,9 @@
-#include "core/Manifest.hpp"
+#include "base/Manifest.hpp"
 
 #include "glm/glm.hpp"
 #include "spdlog/spdlog.h"
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 Manifest::Manifest(): m_size(0) {}
 
@@ -127,6 +127,6 @@ void Manifest::packElement(const std::string& name, uint32_t size) {
     m_size += size;
 }
 
-} // namespace core
+} // namespace base
 
 } // namespace scin

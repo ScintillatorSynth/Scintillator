@@ -1,17 +1,17 @@
 #include "gtest/gtest.h"
 
-#include "core/AbstractScinthDef.hpp"
-#include "core/AbstractVGen.hpp"
-#include "core/FileSystem.hpp"
-#include "core/Intrinsic.hpp"
-#include "core/Archetypes.hpp"
-#include "core/VGen.hpp"
+#include "base/AbstractScinthDef.hpp"
+#include "base/AbstractVGen.hpp"
+#include "base/FileSystem.hpp"
+#include "base/Intrinsic.hpp"
+#include "base/Archetypes.hpp"
+#include "base/VGen.hpp"
 
 #include <fstream>
 
 namespace {
 
-void populateAbstractVGens(std::shared_ptr<scin::core::Archetypes> parser) {
+void populateAbstractVGens(std::shared_ptr<scin::base::Archetypes> parser) {
     parser->parseAbstractVGensFromString("---\n"
                                          "name: NoInput\n"
                                          "outputs: [ out ]\n"
@@ -58,7 +58,7 @@ void clobberFileWithString(const fs::path& filePath, const std::string& contents
 
 }
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 TEST(ArchetypesTest, InvalidAbstractVGenYamlStrings) {
     Archetypes parser;
@@ -337,6 +337,6 @@ TEST(ArchetypesTest, ValidYAMLStrings) {
     EXPECT_EQ(3.0f, inputValue);
 }
 
-} // namespace core
+} // namespace base
 
 } // namespace scin

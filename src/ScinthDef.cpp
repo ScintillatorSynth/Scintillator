@@ -1,10 +1,10 @@
 #include "ScinthDef.hpp"
 
 #include "Scinth.hpp"
-#include "core/AbstractScinthDef.hpp"
-#include "core/Intrinsic.hpp"
-#include "core/Shape.hpp"
-#include "core/VGen.hpp"
+#include "base/AbstractScinthDef.hpp"
+#include "base/Intrinsic.hpp"
+#include "base/Shape.hpp"
+#include "base/VGen.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/Canvas.hpp"
 #include "vulkan/CommandPool.hpp"
@@ -21,7 +21,7 @@ namespace scin {
 
 ScinthDef::ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Canvas> canvas,
                      std::shared_ptr<vk::CommandPool> commandPool,
-                     std::shared_ptr<const core::AbstractScinthDef> abstractScinthDef):
+                     std::shared_ptr<const base::AbstractScinthDef> abstractScinthDef):
     m_device(device),
     m_canvas(canvas),
     m_commandPool(commandPool),
@@ -75,8 +75,8 @@ bool ScinthDef::build(vk::ShaderCompiler* compiler) {
 bool ScinthDef::buildVertexData() {
     // The kNormPos intrinsic applies a scale to the input vertices, but only makes sense for 2D verts.
     glm::vec2 normPosScale;
-    if (m_abstractScinthDef->intrinsics().count(core::Intrinsic::kNormPos)) {
-        if (m_abstractScinthDef->shape()->elementType() != core::Manifest::ElementType::kVec2) {
+    if (m_abstractScinthDef->intrinsics().count(base::Intrinsic::kNormPos)) {
+        if (m_abstractScinthDef->shape()->elementType() != base::Manifest::ElementType::kVec2) {
             spdlog::error("normpos intrinsic only supported for 2D vertices in ScinthDef {}.",
                           m_abstractScinthDef->name());
             return false;
@@ -104,7 +104,7 @@ bool ScinthDef::buildVertexData() {
                 m_abstractScinthDef->shape()->storeVertexAtIndex(i, vertex);
             } else {
                 switch (m_abstractScinthDef->vertexManifest().intrinsicForElement(j)) {
-                case core::Intrinsic::kNormPos: {
+                case base::Intrinsic::kNormPos: {
                     // TODO: would it be faster/easier to just provide normPosScale in UBO and do this on
                     // the vertex shader?
                     std::array<float, 2> verts;
@@ -113,14 +113,14 @@ bool ScinthDef::buildVertexData() {
                     vertex[1] = verts[1] * normPosScale.y;
                 } break;
 
-                case core::Intrinsic::kTexPos:
+                case base::Intrinsic::kTexPos:
                     m_abstractScinthDef->shape()->storeTextureVertexAtIndex(i, vertex);
                     break;
 
-                case core::Intrinsic::kTime:
-                case core::Intrinsic::kSampler:
-                case core::Intrinsic::kPi:
-                case core::Intrinsic::kNotFound:
+                case base::Intrinsic::kTime:
+                case base::Intrinsic::kSampler:
+                case base::Intrinsic::kPi:
+                case base::Intrinsic::kNotFound:
                     spdlog::error("Invalid vertex intrinsic for ScinthDef {}", m_abstractScinthDef->name());
                     return false;
                 }

@@ -1,8 +1,8 @@
 #ifndef SRC_CORE_SCINTHDEF_PARSER_HPP_
 #define SRC_CORE_SCINTHDEF_PARSER_HPP_
 
-#include "core/AbstractSampler.hpp"
-#include "core/VGen.hpp"
+#include "base/AbstractSampler.hpp"
+#include "base/VGen.hpp"
 
 #include <memory>
 #include <mutex>
@@ -13,7 +13,7 @@ namespace YAML {
 class Node;
 }
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 class AbstractScinthDef;
 class AbstractVGen;
@@ -110,7 +110,7 @@ private:
     std::unordered_map<std::string, AbstractSampler::ClampBorderColor> m_samplerBorderColors;
 };
 
-} // namespace core
+} // namespace base
 
 } // namespace scin
 

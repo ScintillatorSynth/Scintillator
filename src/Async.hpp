@@ -1,7 +1,7 @@
 #ifndef SRC_ASYNC_HPP_
 #define SRC_ASYNC_HPP_
 
-#include "core/FileSystem.hpp"
+#include "base/FileSystem.hpp"
 
 #include <atomic>
 #include <condition_variable>
@@ -18,7 +18,7 @@ namespace av {
 class CodecChooser;
 }
 
-namespace core {
+namespace base {
 class Archetypes;
 }
 
@@ -32,7 +32,7 @@ class Compositor;
  */
 class Async {
 public:
-    Async(std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
+    Async(std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
           std::shared_ptr<vk::Device> device);
     ~Async();
 
@@ -117,7 +117,7 @@ private:
     void asyncReadImageIntoNewBuffer(int bufferID, std::string filePath, int width, int height,
                                      std::function<void()> completion);
 
-    std::shared_ptr<core::Archetypes> m_archetypes;
+    std::shared_ptr<base::Archetypes> m_archetypes;
     std::shared_ptr<Compositor> m_compositor;
     std::shared_ptr<vk::Device> m_device;
     std::atomic<bool> m_quit;

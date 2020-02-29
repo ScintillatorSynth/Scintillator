@@ -1,9 +1,9 @@
 #ifndef SRC_CORE_ABSTRACT_SCINTHDEF_HPP_
 #define SRC_CORE_ABSTRACT_SCINTHDEF_HPP_
 
-#include "core/Intrinsic.hpp"
-#include "core/Manifest.hpp"
-#include "core/Parameter.hpp"
+#include "base/Intrinsic.hpp"
+#include "base/Manifest.hpp"
+#include "base/Parameter.hpp"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -12,7 +12,7 @@
 #include <vector>
 #include <memory>
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 class Shape;
 class VGen;
@@ -100,7 +100,7 @@ private:
     Manifest m_uniformManifest;
 };
 
-} // namespace core
+} // namespace base
 
 } // namespace scin
 

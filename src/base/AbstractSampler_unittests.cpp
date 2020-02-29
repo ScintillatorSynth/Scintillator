@@ -1,8 +1,8 @@
 #include "gtest/gtest.h"
 
-#include "core/AbstractSampler.hpp"
+#include "base/AbstractSampler.hpp"
 
-namespace scin { namespace core {
+namespace scin { namespace base {
 
 TEST(AbstractSamplerTest, FilterMode) {
     AbstractSampler a, b;
@@ -131,6 +131,6 @@ TEST(AbstractSamplerTest, ClampBorderColor) {
     EXPECT_EQ(a.addressModeV(), b.addressModeV());
 }
 
-} // namespace core
+} // namespace base
 
 } // namespace scin

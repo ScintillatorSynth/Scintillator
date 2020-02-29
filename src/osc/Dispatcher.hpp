@@ -16,7 +16,7 @@ class Async;
 class Compositor;
 class Logger;
 
-namespace core {
+namespace base {
 class Archetypes;
 }
 
@@ -46,7 +46,7 @@ public:
      *        terminate the scinsynth program.
      */
     Dispatcher(std::shared_ptr<Logger> logger, std::shared_ptr<Async> async,
-               std::shared_ptr<core::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
+               std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
                std::shared_ptr<vk::Offscreen> offscreen, std::shared_ptr<const vk::FrameTimer> frameTimer,
                std::function<void()> quitHandler);
     ~Dispatcher();
@@ -107,7 +107,7 @@ public:
     // Accessor methods primarily used by Command subclasses to talk to rest of scintillator subsystems.
     std::shared_ptr<Logger> logger() { return m_logger; }
     std::shared_ptr<Async> async() { return m_async; }
-    std::shared_ptr<core::Archetypes> archetypes() { return m_archetypes; }
+    std::shared_ptr<base::Archetypes> archetypes() { return m_archetypes; }
     std::shared_ptr<Compositor> compositor() { return m_compositor; }
     std::shared_ptr<vk::Offscreen> offscreen() { return m_offscreen; }
     std::shared_ptr<const vk::FrameTimer> frameTimer() { return m_frameTimer; }
@@ -123,7 +123,7 @@ private:
 
     std::shared_ptr<Logger> m_logger;
     std::shared_ptr<Async> m_async;
-    std::shared_ptr<core::Archetypes> m_archetypes;
+    std::shared_ptr<base::Archetypes> m_archetypes;
     std::shared_ptr<Compositor> m_compositor;
     std::shared_ptr<vk::Offscreen> m_offscreen;
     std::shared_ptr<const vk::FrameTimer> m_frameTimer;

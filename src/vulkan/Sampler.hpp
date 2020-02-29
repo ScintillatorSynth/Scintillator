@@ -1,7 +1,7 @@
 #ifndef SRC_VULKAN_SAMPLER_HPP_
 #define SRC_VULKAN_SAMPLER_HPP_
 
-#include "core/AbstractSampler.hpp"
+#include "base/AbstractSampler.hpp"
 
 #include "vulkan/Vulkan.hpp"
 
@@ -16,17 +16,17 @@ class HostImage;
  */
 class Sampler {
 public:
-    Sampler(std::shared_ptr<Device> device, const core::AbstractSampler& abstractSampler);
+    Sampler(std::shared_ptr<Device> device, const base::AbstractSampler& abstractSampler);
     ~Sampler();
 
     bool create();
     void destroy();
 
-    const core::AbstractSampler& abstractSampler() const { return m_abstractSampler; }
+    const base::AbstractSampler& abstractSampler() const { return m_abstractSampler; }
 
 private:
     std::shared_ptr<Device> m_device;
-    core::AbstractSampler m_abstractSampler;
+    base::AbstractSampler m_abstractSampler;
 
     VkSampler m_sampler;
 };
