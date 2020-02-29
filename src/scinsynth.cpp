@@ -1,10 +1,10 @@
-#include "Async.hpp" // TODO: audit includes
-#include "Compositor.hpp"
-#include "Logger.hpp"
 #include "Version.hpp"
 #include "av/AVIncludes.hpp"
 #include "base/Archetypes.hpp"
 #include "base/FileSystem.hpp"
+#include "comp/Async.hpp" // TODO: audit includes
+#include "comp/Compositor.hpp"
+#include "comp/Logger.hpp"
 #include "osc/Dispatcher.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/CommandPool.hpp"
@@ -66,7 +66,7 @@ DEFINE_bool(swiftshader, false,
 
 int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
-    std::shared_ptr<scin::Logger> logger(new scin::Logger());
+    std::shared_ptr<scin::comp::Logger> logger(new scin::comp::Logger());
     logger->initLogging(FLAGS_log_level);
 
     // Check for early exit conditions.
@@ -196,14 +196,14 @@ int main(int argc, char* argv[]) {
         frameTimer = offscreen->frameTimer();
     }
 
-    std::shared_ptr<scin::Compositor> compositor(new scin::Compositor(device, canvas));
+    std::shared_ptr<scin::comp::Compositor> compositor(new scin::comp::Compositor(device, canvas));
     if (!compositor->create()) {
         spdlog::error("unable to create Compositor.");
         return EXIT_FAILURE;
     }
 
     std::shared_ptr<scin::base::Archetypes> archetypes(new scin::base::Archetypes());
-    std::shared_ptr<scin::Async> async(new scin::Async(archetypes, compositor, device));
+    std::shared_ptr<scin::comp::Async> async(new scin::comp::Async(archetypes, compositor, device));
     async->run(FLAGS_async_worker_threads);
 
     // Chain async calls to load VGens, then ScinthDefs.

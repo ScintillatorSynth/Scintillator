@@ -12,12 +12,14 @@
 
 namespace scin {
 
+namespace base {
+class Archetypes;
+}
+
+namespace comp {
 class Async;
 class Compositor;
 class Logger;
-
-namespace base {
-class Archetypes;
 }
 
 namespace vk {
@@ -45,8 +47,8 @@ public:
      * \param quitHandler Function to call if we receive an OSC /scin_quit command. When called, it should safely
      *        terminate the scinsynth program.
      */
-    Dispatcher(std::shared_ptr<Logger> logger, std::shared_ptr<Async> async,
-               std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
+    Dispatcher(std::shared_ptr<comp::Logger> logger, std::shared_ptr<comp::Async> async,
+               std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<comp::Compositor> compositor,
                std::shared_ptr<vk::Offscreen> offscreen, std::shared_ptr<const vk::FrameTimer> frameTimer,
                std::function<void()> quitHandler);
     ~Dispatcher();
@@ -105,10 +107,10 @@ public:
     }
 
     // Accessor methods primarily used by Command subclasses to talk to rest of scintillator subsystems.
-    std::shared_ptr<Logger> logger() { return m_logger; }
-    std::shared_ptr<Async> async() { return m_async; }
+    std::shared_ptr<comp::Logger> logger() { return m_logger; }
+    std::shared_ptr<comp::Async> async() { return m_async; }
     std::shared_ptr<base::Archetypes> archetypes() { return m_archetypes; }
-    std::shared_ptr<Compositor> compositor() { return m_compositor; }
+    std::shared_ptr<comp::Compositor> compositor() { return m_compositor; }
     std::shared_ptr<vk::Offscreen> offscreen() { return m_offscreen; }
     std::shared_ptr<const vk::FrameTimer> frameTimer() { return m_frameTimer; }
     void callQuitHandler(std::shared_ptr<Address> quitOrigin);
@@ -121,10 +123,10 @@ private:
                         void* userData);
     void dispatch(const char* path, int argc, lo_arg** argv, const char* types, lo_address address);
 
-    std::shared_ptr<Logger> m_logger;
-    std::shared_ptr<Async> m_async;
+    std::shared_ptr<comp::Logger> m_logger;
+    std::shared_ptr<comp::Async> m_async;
     std::shared_ptr<base::Archetypes> m_archetypes;
-    std::shared_ptr<Compositor> m_compositor;
+    std::shared_ptr<comp::Compositor> m_compositor;
     std::shared_ptr<vk::Offscreen> m_offscreen;
     std::shared_ptr<const vk::FrameTimer> m_frameTimer;
     std::function<void()> m_quitHandler;

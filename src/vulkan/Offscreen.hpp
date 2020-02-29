@@ -16,7 +16,9 @@
 
 namespace scin {
 
+namespace comp {
 class Compositor;
+}
 
 namespace av {
 class BufferPool;
@@ -62,11 +64,11 @@ public:
 
     /*! Start a thread to render at the provided framerate.
      */
-    void runThreaded(std::shared_ptr<Compositor> compositor);
+    void runThreaded(std::shared_ptr<comp::Compositor> compositor);
 
     /*! Render at the provided framerate on this thread.
      */
-    void run(std::shared_ptr<Compositor> compositor);
+    void run(std::shared_ptr<comp::Compositor> compositor);
 
     /*! Adds a video or image encoder to the list of encoders to call with readback images from subsequent frames.
      */
@@ -109,7 +111,7 @@ public:
     std::shared_ptr<const FrameTimer> frameTimer() { return m_frameTimer; }
 
 private:
-    void threadMain(std::shared_ptr<Compositor> compositor);
+    void threadMain(std::shared_ptr<comp::Compositor> compositor);
     void processPendingEncodes(size_t frameIndex);
     bool writeCopyCommands(std::shared_ptr<CommandBuffer> commandBuffer, size_t bufferIndex, VkImage sourceImage,
                            VkImage destinationImage);

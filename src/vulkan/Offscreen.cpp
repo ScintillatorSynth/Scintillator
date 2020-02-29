@@ -1,11 +1,9 @@
 #include "vulkan/Offscreen.hpp"
 
-#include "Compositor.hpp"
-
 #include "av/Buffer.hpp"
 #include "av/BufferPool.hpp"
 #include "av/Encoder.hpp"
-
+#include "comp/Compositor.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
@@ -142,13 +140,13 @@ bool Offscreen::supportSwapchain(std::shared_ptr<Swapchain> swapchain, std::shar
     return true;
 }
 
-void Offscreen::runThreaded(std::shared_ptr<Compositor> compositor) {
+void Offscreen::runThreaded(std::shared_ptr<comp::Compositor> compositor) {
     m_render = true;
     m_renderThread = std::thread(&Offscreen::threadMain, this, compositor);
     m_renderCondition.notify_one();
 }
 
-void Offscreen::run(std::shared_ptr<Compositor> compositor) {
+void Offscreen::run(std::shared_ptr<comp::Compositor> compositor) {
     m_render = true;
     m_renderCondition.notify_one();
     threadMain(compositor);
@@ -218,7 +216,7 @@ void Offscreen::destroy() {
 
 std::shared_ptr<Canvas> Offscreen::canvas() { return m_framebuffer->canvas(); }
 
-void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
+void Offscreen::threadMain(std::shared_ptr<comp::Compositor> compositor) {
     spdlog::info("Offscreen render thread starting up.");
 
     double time = 0.0;

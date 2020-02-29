@@ -1,6 +1,6 @@
 #include "osc/commands/Sync.hpp"
 
-#include "Async.hpp"
+#include "comp/Async.hpp"
 #include "osc/Address.hpp"
 #include "osc/Dispatcher.hpp"
 

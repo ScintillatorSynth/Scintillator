@@ -9,7 +9,9 @@
 
 namespace scin {
 
+namespace comp {
 class Compositor;
+}
 
 namespace av {
 class Encoder;
@@ -41,7 +43,7 @@ public:
      *
      * \param compositor The root compositor to use for rendering.
      */
-    void run(std::shared_ptr<Compositor> compositor);
+    void run(std::shared_ptr<comp::Compositor> compositor);
 
     void destroy();
 
@@ -64,8 +66,8 @@ public:
     std::shared_ptr<const FrameTimer> frameTimer();
 
 private:
-    void runDirectRendering(std::shared_ptr<Compositor> compositor);
-    void runFixedFrameRate(std::shared_ptr<Compositor> compositor);
+    void runDirectRendering(std::shared_ptr<comp::Compositor> compositor);
+    void runFixedFrameRate(std::shared_ptr<comp::Compositor> compositor);
 
     std::shared_ptr<Instance> m_instance;
     std::shared_ptr<Device> m_device;

@@ -1,6 +1,6 @@
 #include "vulkan/Window.hpp"
 
-#include "Compositor.hpp"
+#include "comp/Compositor.hpp"
 #include "vulkan/Canvas.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
@@ -75,7 +75,7 @@ bool Window::create() {
     return true;
 }
 
-void Window::run(std::shared_ptr<Compositor> compositor) {
+void Window::run(std::shared_ptr<comp::Compositor> compositor) {
     if (m_directRendering) {
         runDirectRendering(compositor);
     } else {
@@ -110,7 +110,7 @@ std::shared_ptr<const FrameTimer> Window::frameTimer() {
     return m_offscreen->frameTimer();
 }
 
-void Window::runDirectRendering(std::shared_ptr<Compositor> compositor) {
+void Window::runDirectRendering(std::shared_ptr<comp::Compositor> compositor) {
     spdlog::info("Window starting direct rendering loop.");
     m_frameTimer->start();
 
@@ -174,7 +174,7 @@ void Window::runDirectRendering(std::shared_ptr<Compositor> compositor) {
     spdlog::info("Window exiting direct rendering loop.");
 }
 
-void Window::runFixedFrameRate(std::shared_ptr<Compositor> compositor) {
+void Window::runFixedFrameRate(std::shared_ptr<comp::Compositor> compositor) {
     spdlog::info("Window starting offscreen rendering loop.");
     m_offscreen->runThreaded(compositor);
 

@@ -1,5 +1,5 @@
-#ifndef SRC_SCINTHDEF_HPP_
-#define SRC_SCINTHDEF_HPP_
+#ifndef SRC_COMP_SCINTHDEF_HPP_
+#define SRC_COMP_SCINTHDEF_HPP_
 
 #include <memory>
 
@@ -19,6 +19,8 @@ class Shader;
 class ShaderCompiler;
 class UniformLayout;
 }
+
+namespace comp {
 
 class Scinth;
 
@@ -62,6 +64,8 @@ private:
     std::shared_ptr<vk::Pipeline> m_pipeline;
 };
 
+} // namespace comp
+
 } // namespace scin
 
-#endif // SRC_SCINTHDEF_HPP_
+#endif // SRC_COMP_SCINTHDEF_HPP_

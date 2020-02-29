@@ -1,11 +1,9 @@
-#ifndef SRC_SCINTH_HPP_
-#define SRC_SCINTH_HPP_
+#ifndef SRC_COMP_SCINTH_HPP_
+#define SRC_COMP_SCINTH_HPP_
 
 #include <memory>
 
 namespace scin {
-
-class ScinthDef;
 
 namespace vk {
 class Buffer;
@@ -17,6 +15,10 @@ class Pipeline;
 class Uniform;
 class UniformLayout;
 }
+
+namespace comp {
+
+class ScinthDef;
 
 /*! Represents a running, controllable instance of a ScinthDef within the context of a vk::Canvas.
  */
@@ -85,6 +87,8 @@ private:
     bool m_commandBuffersDirty;
 };
 
+} // namespace comp
+
 } // namespace scin
 
-#endif // SRC_SCINTH_HPP_
+#endif // SRC_COMP_SCINTH_HPP_

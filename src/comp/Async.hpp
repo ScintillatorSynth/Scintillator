@@ -1,5 +1,5 @@
-#ifndef SRC_ASYNC_HPP_
-#define SRC_ASYNC_HPP_
+#ifndef SRC_COMP_ASYNC_HPP_
+#define SRC_COMP_ASYNC_HPP_
 
 #include "base/FileSystem.hpp"
 
@@ -25,6 +25,8 @@ class Archetypes;
 namespace vk {
 class Device;
 }
+
+namespace comp {
 
 class Compositor;
 
@@ -137,6 +139,8 @@ private:
     std::deque<std::function<void()>> m_syncCallbacks;
 };
 
+} // namespace comp
+
 } // namespace scin
 
-#endif // SRC_ASYNC_HPP_
+#endif // SRC_COMP_ASYNC_HPP_

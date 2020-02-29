@@ -1,5 +1,5 @@
-#ifndef SRC_LOG_LEVELS_HPP_
-#define SRC_LOG_LEVELS_HPP_
+#ifndef SRC_COMP_LOGGER_HPP_
+#define SRC_COMP_LOGGER_HPP_
 
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/base_sink.h"
@@ -12,6 +12,8 @@ class ErrorSink;
 }}
 
 namespace scin {
+
+namespace comp {
 
 class Logger {
 public:
@@ -31,6 +33,8 @@ private:
     std::shared_ptr<spdlog::logger> m_logger;
 };
 
+} // namespace comp
+
 } // namespace scin
 
-#endif // SRC_LOG_LEVELS_HPP_
+#endif // SRC_COMP_LOGGGER_HPP_

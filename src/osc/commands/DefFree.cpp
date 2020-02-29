@@ -1,6 +1,6 @@
 #include "osc/commands/DefFree.hpp"
 
-#include "Compositor.hpp"
+#include "comp/Compositor.hpp"
 #include "base/Archetypes.hpp"
 #include "osc/Dispatcher.hpp"
 

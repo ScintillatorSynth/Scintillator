@@ -1,11 +1,11 @@
-#include "Async.hpp"
+#include "comp/Async.hpp"
 
-#include "Compositor.hpp"
-#include "ScinthDef.hpp"
 #include "av/ImageDecoder.hpp"
 #include "base/Archetypes.hpp"
-#include "vulkan/Image.hpp"
+#include "comp/Compositor.hpp"
+#include "comp/ScinthDef.hpp"
 #include "vulkan/Device.hpp"
+#include "vulkan/Image.hpp"
 
 #include "fmt/core.h"
 #include "spdlog/spdlog.h"
@@ -13,6 +13,8 @@
 #include <chrono>
 
 namespace scin {
+
+namespace comp {
 
 Async::Async(std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
              std::shared_ptr<vk::Device> device):
@@ -340,5 +342,7 @@ void Async::asyncReadImageIntoNewBuffer(int bufferID, std::string filePath, int 
     m_compositor->stageImage(bufferID, image);
     completion();
 }
+
+} // namespace comp
 
 } // namespace scin

@@ -89,16 +89,6 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp"
 set(scintillator_synth_files
     "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp"
     "${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp"
-    Async.cpp
-    Async.hpp
-    Compositor.cpp
-    Compositor.hpp
-    Logger.cpp
-    Logger.hpp
-    Scinth.cpp
-    Scinth.hpp
-    ScinthDef.cpp
-    ScinthDef.hpp
     scinsynth.cpp
 
     av/AVIncludes.hpp
@@ -118,6 +108,17 @@ set(scintillator_synth_files
     av/ImageEncoder.hpp
     av/Packet.cpp
     av/Packet.hpp
+
+    comp/Async.cpp
+    comp/Async.hpp
+    comp/Compositor.cpp
+    comp/Compositor.hpp
+    comp/Logger.cpp
+    comp/Logger.hpp
+    comp/Scinth.cpp
+    comp/Scinth.hpp
+    comp/ScinthDef.cpp
+    comp/ScinthDef.hpp
 
     osc/Address.cpp
     osc/Address.hpp

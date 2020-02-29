@@ -1,5 +1,5 @@
-#ifndef SRC_COMPOSITOR_HPP_
-#define SRC_COMPOSITOR_HPP_
+#ifndef SRC_COMP_COMPOSITOR_HPP_
+#define SRC_COMP_COMPOSITOR_HPP_
 
 #include "glm/glm.hpp"
 
@@ -27,6 +27,8 @@ class ShaderCompiler;
 namespace base {
 class AbstractScinthDef;
 }
+
+namespace comp {
 
 class Scinth;
 class ScinthDef;
@@ -165,6 +167,8 @@ private:
     std::unordered_map<int, std::shared_ptr<vk::DeviceImage>> m_images;
 };
 
+} // namespace comp
+
 } // namespace scin
 
-#endif // SRC_COMPOSITOR_HPP_
+#endif // SRC_COMP_COMPOSITOR_HPP_

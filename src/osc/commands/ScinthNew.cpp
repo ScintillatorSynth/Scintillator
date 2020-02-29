@@ -1,6 +1,6 @@
 #include "osc/commands/ScinthNew.hpp"
 
-#include "Compositor.hpp"
+#include "comp/Compositor.hpp"
 #include "osc/Dispatcher.hpp"
 
 #include "spdlog/spdlog.h"

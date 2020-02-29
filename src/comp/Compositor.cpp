@@ -16,7 +16,7 @@
 
 #include "spdlog/spdlog.h"
 
-namespace scin {
+namespace scin { namespace comp {
 
 Compositor::Compositor(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Canvas> canvas):
     m_device(device),
@@ -297,5 +297,7 @@ void Compositor::freeScinthLockAcquired(ScinthMap::iterator it) {
     m_scinths.erase(it->second);
     m_scinthMap.erase(it);
 }
+
+} // namespace comp
 
 } // namespace scin

@@ -1,8 +1,8 @@
 #include "osc/commands/Status.hpp"
 
-#include "Compositor.hpp"
-#include "Logger.hpp"
 #include "base/Archetypes.hpp"
+#include "comp/Compositor.hpp"
+#include "comp/Logger.hpp"
 #include "osc/Dispatcher.hpp"
 #include "vulkan/FrameTimer.hpp"
 

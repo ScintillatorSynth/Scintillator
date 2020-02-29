@@ -1,9 +1,9 @@
-#include "Scinth.hpp"
+#include "comp/Scinth.hpp"
 
-#include "ScinthDef.hpp"
 #include "base/AbstractScinthDef.hpp"
 #include "base/Shape.hpp"
 #include "base/VGen.hpp"
+#include "comp/ScinthDef.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/Canvas.hpp"
 #include "vulkan/CommandBuffer.hpp"
@@ -14,6 +14,8 @@
 #include "spdlog/spdlog.h"
 
 namespace scin {
+
+namespace comp {
 
 Scinth::Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef):
     m_device(device),
@@ -159,5 +161,7 @@ bool Scinth::rebuildBuffers() {
     m_commandBuffersDirty = false;
     return true;
 }
+
+} // namespace comp
 
 } // namespace scin

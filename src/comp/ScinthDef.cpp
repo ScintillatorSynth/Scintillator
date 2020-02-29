@@ -1,10 +1,10 @@
-#include "ScinthDef.hpp"
+#include "comp/ScinthDef.hpp"
 
-#include "Scinth.hpp"
 #include "base/AbstractScinthDef.hpp"
 #include "base/Intrinsic.hpp"
 #include "base/Shape.hpp"
 #include "base/VGen.hpp"
+#include "comp/Scinth.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/Canvas.hpp"
 #include "vulkan/CommandPool.hpp"
@@ -18,6 +18,8 @@
 #include <array>
 
 namespace scin {
+
+namespace comp {
 
 ScinthDef::ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::Canvas> canvas,
                      std::shared_ptr<vk::CommandPool> commandPool,
@@ -154,5 +156,7 @@ bool ScinthDef::buildVertexData() {
     // TODO: investigate if device-only copies of these buffers are faster?
     return true;
 }
+
+} // namespace comp
 
 } // namespace scin
