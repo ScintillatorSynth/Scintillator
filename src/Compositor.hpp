@@ -18,6 +18,7 @@ class Canvas;
 class CommandBuffer;
 class CommandPool;
 class Device;
+class DeviceImage;
 class HostImage;
 class SamplerFactory;
 class ShaderCompiler;
@@ -110,7 +111,11 @@ public:
      */
     bool getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudgetOut);
 
-    void addImage(int imageID, std::shared_ptr<vk::HostImage> image);
+    /*! Prepare to copy the provided decoded image to a suitable GPU-local buffer.
+     *
+     * \param imageID The integer image identifier for this
+     */
+    void stageImage(int imageID, std::shared_ptr<vk::HostImage> image);
 
 private:
     typedef std::list<std::shared_ptr<Scinth>> ScinthList;
@@ -145,6 +150,11 @@ private:
     // A map from Scinth instance names to elements in the running instance list.
     ScinthMap m_scinthMap;
 
+    // Staging? For both ImageBuffers and Vertex/Index data (Shapes).
+    std::atomic<bool> m_stagingRequested;
+    std::mutex m_stagingMutex;
+    std::unordered_map<int, std::shared_ptr<vk::HostImage>> m_stagingImages;
+
     // Following should only be accessed from the same thread that calls prepareFrame.
     std::shared_ptr<vk::CommandBuffer> m_primaryCommands;
     // We keep the subcommand buffers referenced each frame, and make a copy of them at each image index, so that they
@@ -152,7 +162,7 @@ private:
     Commands m_secondaryCommands;
     std::vector<Commands> m_frameCommands;
 
-    // Staging? For both ImageBuffers and Vertex/Index data (Shapes).
+    std::unordered_map<int, std::shared_ptr<vk::DeviceImage>> m_images;
 };
 
 } // namespace scin

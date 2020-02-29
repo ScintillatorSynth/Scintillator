@@ -64,20 +64,16 @@ bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
         float* uniform = uniformData.get();
         for (auto i = 0; i < m_scinthDef->abstract()->uniformManifest().numberOfElements(); ++i) {
             switch (m_scinthDef->abstract()->uniformManifest().intrinsicForElement(i)) {
-            case core::Intrinsic::kNormPos:
-                spdlog::error("normPos is not a valid intrinsic for a Uniform in Scinth {}", m_nodeID);
-                return false;
-
-            case core::Intrinsic::kPi:
-                spdlog::error("pi not a valid Uniform intrinsic in Scinth {}", m_nodeID);
-                return false;
-
             case core::Intrinsic::kTime:
                 *uniform = static_cast<float>(frameTime - m_startTime);
                 break;
 
+            case core::Intrinsic::kNormPos:
             case core::Intrinsic::kNotFound:
-                spdlog::error("unknown uniform Intrinsic in Scinth {}", m_nodeID);
+            case core::Intrinsic::kPi:
+            case core::Intrinsic::kSampler:
+            case core::Intrinsic::kTexPos:
+                spdlog::error("Unknown or invalid uniform Intrinsic in Scinth {}", m_nodeID);
                 return false;
             }
 

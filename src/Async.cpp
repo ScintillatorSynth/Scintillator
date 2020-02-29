@@ -337,7 +337,7 @@ void Async::asyncReadImageIntoNewBuffer(int bufferID, std::string filePath, int 
     }
     image->unmap();
 
-    m_compositor->addImage(bufferID, image);
+    m_compositor->stageImage(bufferID, image);
     completion();
 }
 

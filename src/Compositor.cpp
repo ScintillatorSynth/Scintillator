@@ -26,7 +26,8 @@ Compositor::Compositor(std::shared_ptr<vk::Device> device, std::shared_ptr<vk::C
     m_commandPool(new scin::vk::CommandPool(device)),
     m_samplerFactory(new scin::vk::SamplerFactory(device)),
     m_commandBufferDirty(true),
-    m_nodeSerial(-2) {
+    m_nodeSerial(-2),
+    m_stagingRequested(false) {
     m_frameCommands.resize(m_canvas->numberOfImages());
 }
 
@@ -227,7 +228,11 @@ bool Compositor::getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudg
     return m_device->getGraphicsMemoryBudget(bytesUsedOut, bytesBudgetOut);
 }
 
-void Compositor::addImage(int imageID, std::shared_ptr<vk::HostImage> image) {}
+void Compositor::stageImage(int imageID, std::shared_ptr<vk::HostImage> image) {
+    std::lock_guard<std::mutex> lock(m_stagingMutex);
+    m_stagingImages[imageID] = image;
+    m_stagingRequested = true;
+}
 
 // Needs to be called only from the same thread that calls prepareFrame. Assumes that m_secondaryCommands is up-to-date.
 bool Compositor::rebuildCommandBuffer() {
