@@ -130,6 +130,8 @@ set(scintillator_synth_files
     comp/ScinthDef.hpp
     comp/ShaderCompiler.cpp
     comp/ShaderCompiler.hpp
+    comp/StageManager.cpp
+    comp/StageManager.hpp
     comp/Swapchain.cpp
     comp/Swapchain.hpp
     comp/Window.cpp
