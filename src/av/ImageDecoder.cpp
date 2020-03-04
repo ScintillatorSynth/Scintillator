@@ -12,8 +12,8 @@ ImageDecoder::ImageDecoder() {}
 ImageDecoder::~ImageDecoder() {}
 
 bool ImageDecoder::openFile(const fs::path& filePath) {
-    // Open file and read media header.
-    if (avformat_open_input(&m_formatContext, filePath.string().data(), nullptr, nullptr) != 0) {
+    AVInputFormat* inputFormat = av_find_input_format("image2");
+    if (avformat_open_input(&m_formatContext, filePath.string().data(), inputFormat, nullptr) != 0) {
         spdlog::error("ImageDecoder failed to open file {}", filePath.string());
         return false;
     }
@@ -52,6 +52,10 @@ bool ImageDecoder::openFile(const fs::path& filePath) {
 
 bool ImageDecoder::extractImageTo(uint8_t* bytes, int width, int height) {
     Packet packet;
+    if (!packet.create()) {
+        spdlog::error("ImageDecoder unable to create packet.");
+        return false;
+    }
     if (av_read_frame(m_formatContext, packet.get()) < 0) {
         spdlog::error("ImageDecoder unable to read packet.");
         return false;
@@ -76,12 +80,11 @@ bool ImageDecoder::extractImageTo(uint8_t* bytes, int width, int height) {
     SwsContext* scaleContext = sws_getContext(m_width, m_height, m_codecContext->pix_fmt, width, height,
                                               AV_PIX_FMT_RGBA, SWS_BICUBIC, nullptr, nullptr, nullptr);
     uint8_t* outputPointers[] = { bytes };
-    int outputSizes[] = { width * height * 4 };
-    bool result =
-        (sws_scale(scaleContext, frame.get()->data, frame.get()->linesize, 0, m_height, outputPointers, outputSizes)
-         <= 0);
+    int outputSizes[] = { width * 4 };
+    int result =
+        sws_scale(scaleContext, frame.get()->data, frame.get()->linesize, 0, m_height, outputPointers, outputSizes);
     sws_freeContext(scaleContext);
-    return result;
+    return result > 0;
 }
 
 } // namespace av

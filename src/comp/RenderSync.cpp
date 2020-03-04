@@ -5,6 +5,8 @@
 
 #include "spdlog/spdlog.h"
 
+#include <limits>
+
 namespace scin { namespace comp {
 
 RenderSync::RenderSync(std::shared_ptr<vk::Device> device): m_device(device) {}

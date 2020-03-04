@@ -345,11 +345,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
 void Offscreen::processPendingEncodes(size_t frameIndex) {
     if (m_pendingEncodes[frameIndex].size()) {
         std::shared_ptr<scin::av::Buffer> avBuffer = m_bufferPool->getBuffer();
-        void* mappedBytes = m_readbackImages[frameIndex]->map();
-        if (mappedBytes) {
-            std::memcpy(avBuffer->data(), mappedBytes, avBuffer->size());
-            m_readbackImages[frameIndex]->unmap();
-        }
+        std::memcpy(avBuffer->data(), m_readbackImages[frameIndex]->mappedAddress(), avBuffer->size());
         for (auto callback : m_pendingEncodes[frameIndex]) {
             callback(avBuffer);
         }

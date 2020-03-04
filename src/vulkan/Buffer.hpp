@@ -15,8 +15,8 @@ class Device;
  */
 class Buffer {
 public:
-    enum Kind { kIndex, kUniform, kVertex };
-    Buffer(Kind kind, size_t size, std::shared_ptr<Device> device);
+    enum Kind { kIndex, kUniform, kVertex, kStaging };
+    Buffer(std::shared_ptr<Device> device, Kind kind, size_t size);
     virtual ~Buffer();
 
     virtual bool create() = 0;
@@ -28,38 +28,39 @@ public:
 protected:
     bool createVulkanBuffer(bool hostAccessRequired);
 
-    Kind m_kind;
     std::shared_ptr<Device> m_device;
+    Kind m_kind;
     size_t m_size;
     VkBuffer m_buffer;
     VmaAllocation m_allocation;
+    VmaAllocationInfo m_info;
 };
 
 
-/*! A Vulkan buffer accessible only from the GPU. GPU memory not accessible by the host may be more plentiful, faster,
- *  both, or neither, depending on system architecture. But it is not very likely to be more scarce or slower.
+/*! A Vulkan buffer accessible only from the GPU. GPU memory not accessible by the host may be faster depending on
+ * system architecture. But it is not likely to be slower.
  */
 class DeviceBuffer : public Buffer {
-    DeviceBuffer(Buffer::Kind kind, size_t size, std::shared_ptr<Device> device);
+    DeviceBuffer(std::shared_ptr<Device> device, Buffer::Kind kind, size_t size);
     virtual ~DeviceBuffer();
 
     bool create() override;
 };
 
-/*! A Vulkan buffer accessible by the CPU (host).
+/*! A Vulkan buffer accessible by the CPU (host). If a kStaging buffer it will be marked as CPU-only, otherwise it is
+ * assumed it will be read by both CPU and GPU (for a uniform buffer, for example).
  */
 class HostBuffer : public Buffer {
 public:
-    HostBuffer(Buffer::Kind kind, size_t size, std::shared_ptr<Device> device);
+    HostBuffer(std::shared_ptr<Device> device, Buffer::Kind kind, size_t size);
     virtual ~HostBuffer();
 
     bool create() override;
 
-    /*! Maps the buffer into CPU memory, copies source to it, then unmaps the buffer.
-     *
-     * \param source A pointer to at least size() bytes of data to transfer.
-     */
-    void copyToGPU(const void* source);
+    void* mappedAddress() { return m_mappedAddress; }
+
+protected:
+    void* m_mappedAddress;
 };
 
 } // namespace vk

@@ -39,7 +39,8 @@ public:
         kSNew = 9,
 
         // ImageBuffer Commands
-        kIBReadImage = 29,
+        kIBAllocRead = 29,
+        kIBQuery = 47,
 
         // Non Real Time Commands
         kNRTScreenShot = 67,

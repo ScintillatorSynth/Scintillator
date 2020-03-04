@@ -57,33 +57,16 @@ private:
 } // namespace spdlog
 
 namespace {
-// Converts an AVLogLevel enum to a spdlog level enum.
+// Converts an AVLogLevel enum to a spdlog level enum. FFmpeg does not seem to keep these numeric values consistent
+// across releases, so we only roughly bucket stuff between errors and worse, warnings, and "everything else" as info.
 spdlog::level::level_enum avLevelToSpdLevel(int level) {
-    switch (level) {
-    case AV_LOG_QUIET:
-        return spdlog::level::level_enum::off;
-
-    case AV_LOG_PANIC:
-    case AV_LOG_FATAL:
-        return spdlog::level::level_enum::critical;
-
-    case AV_LOG_ERROR:
+    if (level <= AV_LOG_ERROR) {
         return spdlog::level::level_enum::err;
-
-    case AV_LOG_WARNING:
+    } else if (level <= AV_LOG_WARNING) {
         return spdlog::level::level_enum::warn;
-
-    case AV_LOG_INFO:
+    } else {
         return spdlog::level::level_enum::info;
-
-    case AV_LOG_VERBOSE:
-        return spdlog::level::level_enum::debug;
-
-    case AV_LOG_DEBUG:
-        return spdlog::level::level_enum::trace;
     }
-
-    return spdlog::level::level_enum::off;
 }
 
 int spdLevelToAVLevel(spdlog::level::level_enum level) {
@@ -117,6 +100,7 @@ static void avLogCallback(void* ptr, int level, const char* fmt, va_list vaList)
     static int printPrefix = 1;
     std::array<char, 1024> buffer;
     av_log_format_line(ptr, level, fmt, vaList, buffer.data(), sizeof(buffer), &printPrefix);
+    // TODO: supress newline?
     spdlog::log(avLevelToSpdLevel(level), "libav: {}", buffer.data());
 }
 

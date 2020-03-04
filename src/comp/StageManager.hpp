@@ -3,16 +3,23 @@
 
 #include "vulkan/Vulkan.hpp"
 
+#include <atomic>
+#include <condition_variable>
+#include <deque>
+#include <functional>
 #include <memory>
+#include <mutex>
+#include <thread>
 #include <vector>
 
 namespace scin {
 
 namespace vk {
 class CommandBuffer;
+class CommandPool;
 class Device;
 class DeviceImage;
-class HostImage;
+class HostBuffer;
 }
 
 namespace comp {
@@ -31,17 +38,38 @@ public:
     StageManager(std::shared_ptr<vk::Device> device);
     ~StageManager();
 
-    bool create(size_t inFlightFrames);
+    bool create();
+    void destroy();
 
-    void stageImage(std::shared_ptr<vk::HostImage> hostImage, std::shared_ptr<vk::DeviceImage> deviceImage,
+    /*! Typically not called on the main render thread, adds the necessary commands to a command buffer to copy the
+     * host-accessible image bytes into optimal tiling and layout for read-only sampling.
+     */
+    bool stageImage(std::shared_ptr<vk::HostBuffer> hostBuffer, std::shared_ptr<vk::DeviceImage> deviceImage,
                     std::function<void()> completion);
 
-    std::shared_ptr<vk::CommandBuffer> getTransferCommands(size_t index);
+    /*! If sharing the graphics queue, this function is called every frame requesting a single CommandBuffer intended
+     * for submission with the frame's draw commands from the Compositor. The provided fence is for the callback
+     * thread to wait, although it typically won't be signaled until all command buffers in the submit have been
+     * completed, which may include a frame of rendering.
+     */
+    std::shared_ptr<vk::CommandBuffer> getTransferCommands(VkFence renderFence);
 
 private:
-    std::shared_ptr<vk::Device> m_device;
+    void callbackThreadMain();
 
-    std::vector<VkSemaphore> m_transferComplete;
+    std::shared_ptr<vk::Device> m_device;
+    std::shared_ptr<vk::CommandPool> m_commandPool;
+
+    std::atomic<bool> m_hasCommands;
+    std::mutex m_commandMutex;
+    std::shared_ptr<vk::CommandBuffer> m_transferCommands;
+    std::vector<std::function<void()>> m_callbacks;
+
+    std::mutex m_waitPairsMutex;
+    std::condition_variable m_waitActiveCondition;
+    std::deque<std::pair<VkFence, std::vector<std::function<void()>>>> m_waitPairs;
+    std::thread m_callbackThread;
+    std::atomic<bool> m_quit;
 };
 
 } // namespace comp

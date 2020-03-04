@@ -1,4 +1,4 @@
-#include "osc/commands/ImageBufferReadImage.hpp"
+#include "osc/commands/ImageBufferAllocRead.hpp"
 
 #include "comp/Async.hpp"
 #include "osc/Address.hpp"
@@ -11,13 +11,13 @@
 
 namespace scin { namespace osc { namespace commands {
 
-ImageBufferReadImage::ImageBufferReadImage(osc::Dispatcher* dispatcher): Command(dispatcher) {}
+ImageBufferAllocRead::ImageBufferAllocRead(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
-ImageBufferReadImage::~ImageBufferReadImage() {}
+ImageBufferAllocRead::~ImageBufferAllocRead() {}
 
-void ImageBufferReadImage::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
+void ImageBufferAllocRead::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
     if (argc < 4 || std::strncmp("isii", types, 4) != 0) {
-        spdlog::error("OSC ImageBufferReadImage missing/incorrect arguments.");
+        spdlog::error("OSC ImageBufferAllocRead missing/incorrect arguments.");
         return;
     }
 
@@ -29,7 +29,7 @@ void ImageBufferReadImage::processMessage(int argc, lo_arg** argv, const char* t
     if (argc > 4 && types[4] == LO_BLOB) {
         onCompletion.reset(new BlobMessage());
         if (!onCompletion->extract(reinterpret_cast<lo_blob>(argv[4]))) {
-            spdlog::error("OSC ImageBufferReadImage failed to extract blob message argument.");
+            spdlog::error("OSC ImageBufferAllocRead failed to extract blob message argument.");
             m_dispatcher->respond(address, "/scin_done", "/scin_ib_readImage", bufferID);
             return;
         }

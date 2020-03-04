@@ -5,6 +5,7 @@
 #include "comp/FrameTimer.hpp"
 #include "comp/Offscreen.hpp"
 #include "comp/RenderSync.hpp"
+#include "comp/StageManager.hpp"
 #include "comp/Swapchain.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
@@ -30,6 +31,8 @@ Window::Window(std::shared_ptr<vk::Instance> instance, std::shared_ptr<vk::Devic
     m_directRendering(frameRate < 0),
     m_window(nullptr),
     m_surface(VK_NULL_HANDLE),
+    m_swapchain(new Swapchain(device)),
+    m_renderSync(new RenderSync(device)),
     m_frameTimer(new FrameTimer(frameRate)),
     m_stop(false) {}
 
@@ -47,13 +50,11 @@ bool Window::create() {
         return false;
     }
 
-    m_swapchain.reset(new Swapchain(m_device));
     if (!m_swapchain->create(this, m_directRendering)) {
         spdlog::error("Window failed to create swapchain.");
         return false;
     }
 
-    m_renderSync.reset(new RenderSync(m_device));
     if (!m_renderSync->create(1, true)) {
         spdlog::error("Window failed to create rendering synchronization primitives.");
         return false;
@@ -126,6 +127,7 @@ void Window::runDirectRendering(std::shared_ptr<comp::Compositor> compositor) {
 
         m_frameTimer->markFrame();
 
+        m_stagingBuffer = compositor->stageManager()->getTransferCommands(m_renderSync->frameRendering(0));
         m_commandBuffers = compositor->prepareFrame(imageIndex, m_frameTimer->elapsedTime());
 
         VkSemaphore imageAvailable[] = { m_renderSync->imageAvailable(0) };
@@ -136,12 +138,15 @@ void Window::runDirectRendering(std::shared_ptr<comp::Compositor> compositor) {
         submitInfo.waitSemaphoreCount = 1;
         submitInfo.pWaitSemaphores = imageAvailable;
         submitInfo.pWaitDstStageMask = waitStages;
-        VkCommandBuffer commandBuffer;
-        if (m_commandBuffers) {
-            submitInfo.commandBufferCount = 1;
-            commandBuffer = m_commandBuffers->buffer(imageIndex);
-            submitInfo.pCommandBuffers = &commandBuffer;
+        std::vector<VkCommandBuffer> commandBuffers;
+        if (m_stagingBuffer) {
+            commandBuffers.push_back(m_stagingBuffer->buffer(0));
         }
+        if (m_commandBuffers) {
+            commandBuffers.push_back(m_commandBuffers->buffer(imageIndex));
+        }
+        submitInfo.commandBufferCount = commandBuffers.size();
+        submitInfo.pCommandBuffers = commandBuffers.data();
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = renderFinished;
 

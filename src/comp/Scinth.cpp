@@ -59,6 +59,7 @@ bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
 
     // Update the Uniform buffer at imageIndex, if needed.
     if (m_uniform) {
+        // TODO: why not just build directly in the buffer? Why build in a temp and then copy?
         std::unique_ptr<float[]> uniformData(
             new float[m_scinthDef->abstract()->uniformManifest().sizeInBytes() / sizeof(float)]);
         float* uniform = uniformData.get();
@@ -80,7 +81,8 @@ bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
             uniform += (m_scinthDef->abstract()->uniformManifest().strideForElement(i) / sizeof(float));
         }
 
-        m_uniform->buffer(imageIndex)->copyToGPU(uniformData.get());
+        std::memcpy(m_uniform->buffer(imageIndex)->mappedAddress(), uniformData.get(),
+                    m_uniform->buffer(imageIndex)->size());
     }
 
     if (m_commandBuffersDirty) {

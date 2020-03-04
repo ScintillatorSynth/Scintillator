@@ -14,7 +14,7 @@ Uniform::~Uniform() { destroy(); }
 
 bool Uniform::createBuffers(UniformLayout* layout, size_t size, size_t numberOfImages) {
     for (auto i = 0; i < numberOfImages; ++i) {
-        std::shared_ptr<HostBuffer> buffer(new HostBuffer(Buffer::Kind::kUniform, size, m_device));
+        std::shared_ptr<HostBuffer> buffer(new HostBuffer(m_device, Buffer::Kind::kUniform, size));
         if (!buffer->create()) {
             spdlog::error("error creating uniform buffer");
             return false;

@@ -132,25 +132,25 @@ bool ScinthDef::buildVertexData() {
     }
 
     // Vertex data now populated in host memory, copy to a host-accessible buffer.
-    m_vertexBuffer.reset(new vk::HostBuffer(vk::Buffer::Kind::kVertex, numberOfFloats * sizeof(float), m_device));
+    m_vertexBuffer.reset(new vk::HostBuffer(m_device, vk::Buffer::Kind::kVertex, numberOfFloats * sizeof(float)));
     if (!m_vertexBuffer->create()) {
         spdlog::error("error creating vertex buffer for ScinthDef {}", m_abstractScinthDef->name());
         return false;
     }
     spdlog::info("copying {} bytes of vertex data to GPU for ScinthDef {}", m_vertexBuffer->size(),
                  m_abstractScinthDef->name());
-    m_vertexBuffer->copyToGPU(vertexData.get());
+    std::memcpy(m_vertexBuffer->mappedAddress(), vertexData.get(), m_vertexBuffer->size());
 
     // Lastly, copy the index buffer as well.
-    m_indexBuffer.reset(new vk::HostBuffer(
-        vk::Buffer::Kind::kIndex, m_abstractScinthDef->shape()->numberOfIndices() * sizeof(uint16_t), m_device));
+    m_indexBuffer.reset(new vk::HostBuffer(m_device, vk::Buffer::Kind::kIndex,
+                                           m_abstractScinthDef->shape()->numberOfIndices() * sizeof(uint16_t)));
     if (!m_indexBuffer->create()) {
         spdlog::error("error creating index buffer for ScinthDef {}", m_abstractScinthDef->name());
         return false;
     }
     spdlog::info("copying {} bytes of index data to GPU for ScinthDef {}", m_indexBuffer->size(),
                  m_abstractScinthDef->name());
-    m_indexBuffer->copyToGPU(m_abstractScinthDef->shape()->getIndices());
+    std::memcpy(m_indexBuffer->mappedAddress(), m_abstractScinthDef->shape()->getIndices(), m_indexBuffer->size());
     // TODO: investigate if device-only copies of these buffers are faster?
     return true;
 }

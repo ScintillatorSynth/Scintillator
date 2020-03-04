@@ -57,7 +57,9 @@ bool DeviceImage::createDeviceImage(uint32_t width, uint32_t height, bool isFram
     createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     createInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-    createInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+    // TODO: the slow accretion of different usage bits is not a good sign, and prevents Vulkan from optimizing
+    // these images. Repair.
+    createInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
     if (isFramebuffer) {
         createInfo.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -66,7 +68,7 @@ bool DeviceImage::createDeviceImage(uint32_t width, uint32_t height, bool isFram
     VmaAllocationCreateInfo allocInfo = {};
     allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-    if (vmaCreateImage(m_device->allocator(), &createInfo, &allocInfo, &m_image, &m_allocation, nullptr)
+    if (vmaCreateImage(m_device->allocator(), &createInfo, &allocInfo, &m_image, &m_allocation, &m_info)
         != VK_SUCCESS) {
         spdlog::error("DeviceImage failed to create image.");
         return false;
@@ -81,7 +83,7 @@ FramebufferImage::~FramebufferImage() {}
 
 bool FramebufferImage::create(uint32_t width, uint32_t height) { return createDeviceImage(width, height, true); }
 
-HostImage::HostImage(std::shared_ptr<Device> device): AllocatedImage(device), m_mappedAddress(nullptr) {}
+HostImage::HostImage(std::shared_ptr<Device> device): AllocatedImage(device) {}
 
 HostImage::~HostImage() {}
 
@@ -104,33 +106,18 @@ bool HostImage::create(uint32_t width, uint32_t height) {
     createInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
     VmaAllocationCreateInfo allocInfo = {};
-    allocInfo.usage = VMA_MEMORY_USAGE_GPU_TO_CPU;
+    allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
     allocInfo.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
     allocInfo.preferredFlags = VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+    allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-    if (vmaCreateImage(m_device->allocator(), &createInfo, &allocInfo, &m_image, &m_allocation, nullptr)
+    if (vmaCreateImage(m_device->allocator(), &createInfo, &allocInfo, &m_image, &m_allocation, &m_info)
         != VK_SUCCESS) {
         spdlog::error("HostImage failed to create image.");
         return false;
     }
 
     return true;
-}
-
-void* HostImage::map() {
-    if (m_mappedAddress) {
-        return m_mappedAddress;
-    }
-    vmaMapMemory(m_device->allocator(), m_allocation, static_cast<void**>(&m_mappedAddress));
-    return m_mappedAddress;
-}
-
-void HostImage::unmap() {
-    if (!m_mappedAddress) {
-        return;
-    }
-    vmaUnmapMemory(m_device->allocator(), m_allocation);
-    m_mappedAddress = nullptr;
 }
 
 } // namespace vk

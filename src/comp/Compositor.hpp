@@ -4,6 +4,7 @@
 #include "glm/glm.hpp"
 
 #include <atomic>
+#include <functional>
 #include <list>
 #include <memory>
 #include <mutex>
@@ -18,7 +19,7 @@ class CommandBuffer;
 class CommandPool;
 class Device;
 class DeviceImage;
-class HostImage;
+class HostBuffer;
 }
 
 namespace base {
@@ -32,6 +33,7 @@ class SamplerFactory;
 class Scinth;
 class ScinthDef;
 class ShaderCompiler;
+class StageManager;
 
 /*! A Compositor keeps the ScinthDef instance dictionary as well as all running Scinths. It can render to a supplied
  * supplied Canvas, which is typically owned by either a Window/SwapChain combination or an Offscreen render pass. The
@@ -116,8 +118,25 @@ public:
     /*! Prepare to copy the provided decoded image to a suitable GPU-local buffer.
      *
      * \param imageID The integer image identifier for this
+     * \param width The width of the image in pixels.
+     * \param height The height of the image in pixels.
+     * \param imageBuffer The bytes of the image in RGBA format.
+     * \param completion A function to call once the image has been staged.
      */
-    void stageImage(int imageID, std::shared_ptr<vk::HostImage> image);
+    void stageImage(int imageID, int width, int height, std::shared_ptr<vk::HostBuffer> imageBuffer,
+                    std::function<void()> completion);
+
+    /*! Returns basic information about a compositor image associated with imageID, if it exists.
+     *
+     * \param imageID The image ID to query
+     * \param sizeOut Will store the size in bytes of the image buffer
+     * \param widthOut Will store the width of the image buffer in pixels
+     * \param heightOut Will store the height of the image buffer in pixels
+     * \return True if the image was found and the output values have been written, false otherwise.
+     */
+    bool queryImage(int imageID, int& sizeOut, int& widthOut, int& heightOut);
+
+    std::shared_ptr<StageManager> stageManager() { return m_stageManager; }
 
 private:
     typedef std::list<std::shared_ptr<Scinth>> ScinthList;
@@ -138,6 +157,7 @@ private:
 
     std::unique_ptr<ShaderCompiler> m_shaderCompiler;
     std::shared_ptr<vk::CommandPool> m_commandPool;
+    std::shared_ptr<StageManager> m_stageManager;
     std::unique_ptr<SamplerFactory> m_samplerFactory;
     std::atomic<bool> m_commandBufferDirty;
     std::atomic<int> m_nodeSerial;
@@ -152,11 +172,6 @@ private:
     // A map from Scinth instance names to elements in the running instance list.
     ScinthMap m_scinthMap;
 
-    // Staging? For both ImageBuffers and Vertex/Index data (Shapes).
-    std::atomic<bool> m_stagingRequested;
-    std::mutex m_stagingMutex;
-    std::unordered_map<int, std::shared_ptr<vk::HostImage>> m_stagingImages;
-
     // Following should only be accessed from the same thread that calls prepareFrame.
     std::shared_ptr<vk::CommandBuffer> m_primaryCommands;
     // We keep the subcommand buffers referenced each frame, and make a copy of them at each image index, so that they
@@ -164,6 +179,7 @@ private:
     Commands m_secondaryCommands;
     std::vector<Commands> m_frameCommands;
 
+    std::mutex m_imageMutex;
     std::unordered_map<int, std::shared_ptr<vk::DeviceImage>> m_images;
 };
 

@@ -4,6 +4,7 @@
 #include "base/Archetypes.hpp"
 #include "comp/Compositor.hpp"
 #include "comp/ScinthDef.hpp"
+#include "vulkan/Buffer.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Image.hpp"
 
@@ -148,8 +149,8 @@ void Async::workerThreadMain(std::string threadName) {
             }
         }
 
-        // Exiting the while loop means this thread is about to go dormant, ping the active workers condition check if
-        // we were the last ones to go idle.
+        // Exiting the work loop means this thread is about to go dormant, ping the active workers condition check if we
+        // were the last ones to go idle.
         m_activeWorkersCondition.notify_one();
     }
 
@@ -322,23 +323,21 @@ void Async::asyncReadImageIntoNewBuffer(int bufferID, std::string filePath, int 
         textureHeight = (textureWidth * decoder.height()) / decoder.width();
     }
 
-    std::shared_ptr<vk::HostImage> image(new vk::HostImage(m_device));
-    if (!image->create(textureWidth, textureHeight)) {
-        spdlog::error("Async failed to create HostImage with dimensions {}x{}", textureWidth, textureHeight);
+    std::shared_ptr<vk::HostBuffer> imageBuffer(
+        new vk::HostBuffer(m_device, vk::Buffer::Kind::kStaging, textureWidth * textureHeight * 4));
+    if (!imageBuffer->create()) {
+        spdlog::error("Async failed to create image buffer with dimensions {}x{}", textureWidth, textureHeight);
         completion();
         return;
     }
 
-    uint8_t* mappedBytes = static_cast<uint8_t*>(image->map());
-    if (!decoder.extractImageTo(mappedBytes, textureWidth, textureHeight)) {
+    if (!decoder.extractImageTo(static_cast<uint8_t*>(imageBuffer->mappedAddress()), textureWidth, textureHeight)) {
         spdlog::error("Async failed to extract image at {} to dimension {}x{}", filePath, textureWidth, textureHeight);
         completion();
         return;
     }
-    image->unmap();
 
-    m_compositor->stageImage(bufferID, image);
-    completion();
+    m_compositor->stageImage(bufferID, textureWidth, textureHeight, imageBuffer, completion);
 }
 
 } // namespace comp

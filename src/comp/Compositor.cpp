@@ -8,6 +8,7 @@
 #include "comp/Scinth.hpp"
 #include "comp/ScinthDef.hpp"
 #include "comp/ShaderCompiler.hpp"
+#include "comp/StageManager.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
@@ -24,10 +25,10 @@ Compositor::Compositor(std::shared_ptr<vk::Device> device, std::shared_ptr<Canva
     m_clearColor(0.0f, 0.0f, 0.0f),
     m_shaderCompiler(new ShaderCompiler()),
     m_commandPool(new vk::CommandPool(device)),
+    m_stageManager(new StageManager(device)),
     m_samplerFactory(new SamplerFactory(device)),
     m_commandBufferDirty(true),
-    m_nodeSerial(-2),
-    m_stagingRequested(false) {
+    m_nodeSerial(-2) {
     m_frameCommands.resize(m_canvas->numberOfImages());
 }
 
@@ -35,12 +36,17 @@ Compositor::~Compositor() {}
 
 bool Compositor::create() {
     if (!m_shaderCompiler->loadCompiler()) {
-        spdlog::error("unable to load shader compiler.");
+        spdlog::error("Compositor unable to load shader compiler.");
         return false;
     }
 
     if (!m_commandPool->create()) {
-        spdlog::error("error creating command pool.");
+        spdlog::error("Compositor failed creating command pool.");
+        return false;
+    }
+
+    if (!m_stageManager->create()) {
+        spdlog::error("Compositor failed to create stage manager.");
         return false;
     }
 
@@ -228,10 +234,37 @@ bool Compositor::getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudg
     return m_device->getGraphicsMemoryBudget(bytesUsedOut, bytesBudgetOut);
 }
 
-void Compositor::stageImage(int imageID, std::shared_ptr<vk::HostImage> image) {
-    std::lock_guard<std::mutex> lock(m_stagingMutex);
-    m_stagingImages[imageID] = image;
-    m_stagingRequested = true;
+void Compositor::stageImage(int imageID, int width, int height, std::shared_ptr<vk::HostBuffer> imageBuffer,
+                            std::function<void()> completion) {
+    std::shared_ptr<vk::DeviceImage> targetImage(new vk::DeviceImage(m_device));
+    if (!targetImage->create(width, height)) {
+        spdlog::error("Compositor failed to create staging target image {}.", imageID);
+        completion();
+        return;
+    }
+
+    if (!m_stageManager->stageImage(imageBuffer, targetImage, [this, imageID, targetImage, completion] {
+            {
+                std::lock_guard<std::mutex> lock(m_imageMutex);
+                m_images[imageID] = targetImage;
+            }
+            completion();
+        })) {
+        spdlog::error("Compositor encountered error while staging image {}.", imageID);
+        completion();
+    }
+}
+
+bool Compositor::queryImage(int imageID, int& sizeOut, int& widthOut, int& heightOut) {
+    std::lock_guard<std::mutex> lock(m_imageMutex);
+    auto it = m_images.find(imageID);
+    if (it == m_images.end()) {
+        return false;
+    }
+    sizeOut = it->second->size();
+    widthOut = it->second->width();
+    heightOut = it->second->height();
+    return true;
 }
 
 // Needs to be called only from the same thread that calls prepareFrame. Assumes that m_secondaryCommands is up-to-date.

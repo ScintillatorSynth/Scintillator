@@ -57,8 +57,11 @@ public:
     virtual bool create(uint32_t width, uint32_t height) = 0;
     void destroy();
 
+    int size() const { return m_info.size; }
+
 protected:
     VmaAllocation m_allocation;
+    VmaAllocationInfo m_info;
 };
 
 /*! Represents image memory that is only accessible by the GPU device. Can be faster for GPU access than host-coherent
@@ -100,12 +103,9 @@ public:
 
     bool create(uint32_t width, uint32_t height) override;
 
-    // TODO: investigate performance implications of not keeping memory mapped.
-    void* map();
-    void unmap();
+    void* mappedAddress() { return m_info.pMappedData; }
 
 protected:
-    void* m_mappedAddress;
 };
 
 

@@ -85,6 +85,7 @@ private:
     // We keep the shared pointers to the command buffers until the frame is being re-rendered. This allows
     // the Compositor to change command buffers arbitrarily, and they won't get reclaimed by the system until
     // they are known finished rendering.
+    std::shared_ptr<vk::CommandBuffer> m_stagingBuffer;
     std::shared_ptr<vk::CommandBuffer> m_commandBuffers;
     std::atomic<bool> m_stop;
 

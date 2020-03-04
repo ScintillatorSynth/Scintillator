@@ -217,26 +217,7 @@ section::ImageBuffer Commands
 
 The server leaves designation of unique image buffer numbers to the client. Allocation of an image buffer with a number already associated with another image buffer will result in the prior image buffer being deallocated.
 
-subsection::/scin_ib_alloc
-
-Allocate memory on the graphics device to hold image data.
-
-table::
-## strong::int::   || buffer number
-## strong::int::   || width of image buffer in pixels
-## strong::int::   || height of image buffer in pixels
-## strong::int::   || number of color signals per pixel, supported values are 1-4 inclusive
-## strong::bytes:: || (optional) an OSC message to execute upon completion
-::
-
-Allocates zero-filled image buffer to number of pixels and signals.
-
-definitionlist::
-## Asynchronous. || Replies to sender with strong::/scin_done /scin_ib_alloc bufNum:: when complete.
-::
-
-
-subsection::/scin_ib_readImage
+subsection::/scin_ib_allocRead
 
 Decodes an image, optionally resamples it to the provided size, allocates memory on the graphics device, and transfers the decoded image data to the image buffer.
 
@@ -260,6 +241,24 @@ table::
 
 definitionlist::
 ## Asynchronous. || Replies to sender with strong::/scin_done /scin_ib_readImage bufNum:: when complete.
+::
+
+subsection::/scin_ib_query
+
+Get ImageBuffer info.
+
+table::
+## N * strong::int:: || Image buffer number(s)
+::
+
+Responds to the sender with a strong::/scin_ib_info:: message. The arguments to strong::/scin_ib_info:: are as follows:
+
+table::
+## N * || table::
+## strong::int:: || Image bufer number
+## strong::int:: || Image size in bytes, 0 if invalid
+## strong::int:: || Image width, -1 if invalid
+## strong::int:: || Image height, -1 if invalid
 ::
 
 section::Non Real Time Commands

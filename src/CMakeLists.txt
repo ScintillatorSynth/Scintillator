@@ -161,8 +161,10 @@ set(scintillator_synth_files
     osc/commands/DumpOSC.hpp
     osc/commands/Echo.cpp
     osc/commands/Echo.hpp
-    osc/commands/ImageBufferReadImage.cpp
-    osc/commands/ImageBufferReadImage.hpp
+    osc/commands/ImageBufferAllocRead.cpp
+    osc/commands/ImageBufferAllocRead.hpp
+    osc/commands/ImageBufferQuery.cpp
+    osc/commands/ImageBufferQuery.hpp
     osc/commands/LogAppend.cpp
     osc/commands/LogAppend.hpp
     osc/commands/LogLevel.cpp
