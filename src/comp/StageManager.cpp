@@ -15,14 +15,27 @@ namespace scin { namespace comp {
 StageManager::StageManager(std::shared_ptr<vk::Device> device):
     m_device(device),
     m_commandPool(new vk::CommandPool(device)),
+    m_hasCommands(false),
     m_quit(false) {}
 
 StageManager::~StageManager() { destroy(); }
 
-bool StageManager::create() {
+bool StageManager::create(size_t numberOfImages) {
     if (!m_commandPool->create()) {
         spdlog::error("StageManager failed to create command pool.");
         return false;
+    }
+
+    for (auto i = 0; i < numberOfImages; ++i) {
+        VkFenceCreateInfo fenceInfo = {};
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+        VkFence fence = VK_NULL_HANDLE;
+        if (vkCreateFence(m_device->get(), &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
+            spdlog::error("StageManager failed to create fence.");
+            return false;
+        }
+        m_fences.emplace_back(fence);
     }
 
     m_callbackThread = std::thread(&StageManager::callbackThreadMain, this);
@@ -32,20 +45,26 @@ bool StageManager::create() {
 void StageManager::destroy() {
     if (!m_quit) {
         m_quit = true;
-        m_waitActiveCondition.notify_all();
+        m_waitCondition.notify_all();
         m_callbackThread.join();
     }
 
-    m_transferCommands.reset();
     m_commandPool = nullptr;
+    m_pendingWait = Wait();
+    m_waits.clear();
+
+    for (auto fence : m_fences) {
+        vkDestroyFence(m_device->get(), fence, nullptr);
+    }
+    m_fences.clear();
 }
 
 bool StageManager::stageImage(std::shared_ptr<vk::HostBuffer> hostBuffer, std::shared_ptr<vk::DeviceImage> deviceImage,
                               std::function<void()> completion) {
     std::lock_guard<std::mutex> lock(m_commandMutex);
-    if (!m_transferCommands) {
-        m_transferCommands.reset(new vk::CommandBuffer(m_device, m_commandPool));
-        if (!m_transferCommands->create(1, true)) {
+    if (!m_hasCommands) {
+        m_pendingWait.commands.reset(new vk::CommandBuffer(m_device, m_commandPool));
+        if (!m_pendingWait.commands->create(1, true)) {
             spdlog::error("StageManager failed to create command buffer for transfer.");
             return false;
         }
@@ -54,7 +73,7 @@ bool StageManager::stageImage(std::shared_ptr<vk::HostBuffer> hostBuffer, std::s
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         beginInfo.pInheritanceInfo = nullptr;
 
-        if (vkBeginCommandBuffer(m_transferCommands->buffer(0), &beginInfo) != VK_SUCCESS) {
+        if (vkBeginCommandBuffer(m_pendingWait.commands->buffer(0), &beginInfo) != VK_SUCCESS) {
             spdlog::error("StageManager failed to begin command buffer.");
             return false;
         }
@@ -75,7 +94,7 @@ bool StageManager::stageImage(std::shared_ptr<vk::HostBuffer> hostBuffer, std::s
     transferBarrier.subresourceRange.layerCount = 1;
     transferBarrier.srcAccessMask = 0;
     transferBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    vkCmdPipelineBarrier(m_transferCommands->buffer(0), VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+    vkCmdPipelineBarrier(m_pendingWait.commands->buffer(0), VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
                          VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &transferBarrier);
 
     VkBufferImageCopy copyRegion = {};
@@ -88,7 +107,7 @@ bool StageManager::stageImage(std::shared_ptr<vk::HostBuffer> hostBuffer, std::s
     copyRegion.imageSubresource.layerCount = 1;
     copyRegion.imageOffset = { 0, 0, 0 };
     copyRegion.imageExtent = { deviceImage->width(), deviceImage->height(), 1 };
-    vkCmdCopyBufferToImage(m_transferCommands->buffer(0), hostBuffer->buffer(), deviceImage->get(),
+    vkCmdCopyBufferToImage(m_pendingWait.commands->buffer(0), hostBuffer->buffer(), deviceImage->get(),
                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
 
     VkImageMemoryBarrier samplerBarrier = {};
@@ -105,80 +124,88 @@ bool StageManager::stageImage(std::shared_ptr<vk::HostBuffer> hostBuffer, std::s
     samplerBarrier.subresourceRange.layerCount = 1;
     samplerBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     samplerBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    vkCmdPipelineBarrier(m_transferCommands->buffer(0), VK_PIPELINE_STAGE_TRANSFER_BIT,
+    vkCmdPipelineBarrier(m_pendingWait.commands->buffer(0), VK_PIPELINE_STAGE_TRANSFER_BIT,
                          VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &samplerBarrier);
 
-    m_callbacks.push_back(completion);
+    m_pendingWait.callbacks.push_back(completion);
+    m_pendingWait.hostBuffers.push_back(hostBuffer);
+    m_pendingWait.deviceImages.push_back(deviceImage);
     return true;
 }
 
-std::shared_ptr<vk::CommandBuffer> StageManager::getTransferCommands(VkFence renderFence) {
-    std::shared_ptr<vk::CommandBuffer> commands;
+bool StageManager::submitTransferCommands(VkQueue queue) {
     if (!m_hasCommands) {
-        return commands;
+        return true;
     }
 
-    std::vector<std::function<void()>> callbacks;
+    Wait wait;
     {
         std::lock_guard<std::mutex> lock(m_commandMutex);
-        commands = m_transferCommands;
-        if (commands) {
-            vkEndCommandBuffer(commands->buffer(0));
-        }
-        m_transferCommands = nullptr;
+        wait = m_pendingWait;
+        m_pendingWait = Wait();
         m_hasCommands = false;
-        callbacks.assign(m_callbacks.begin(), m_callbacks.end());
-        m_callbacks.clear();
+        vkEndCommandBuffer(wait.commands->buffer(0));
+        m_pendingWait.fenceIndex = (wait.fenceIndex + 1) % m_fences.size();
     }
 
-    // If we ended up with callbacks to process on this command buffer enqueue them and kick off the waiting thread.
-    if (callbacks.size()) {
-        {
-            std::lock_guard<std::mutex> lock(m_waitPairsMutex);
-            m_waitPairs.emplace_back(std::make_pair(renderFence, callbacks));
-        }
-        m_waitActiveCondition.notify_one();
+    vkResetFences(m_device->get(), 1, &m_fences[wait.fenceIndex]);
+
+    VkSubmitInfo submitInfo = {};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.waitSemaphoreCount = 0;
+    submitInfo.commandBufferCount = 1;
+    VkCommandBuffer commandBuffers[] = { wait.commands->buffer(0) };
+    submitInfo.pCommandBuffers = commandBuffers;
+
+    if (vkQueueSubmit(m_device->graphicsQueue(), 1, &submitInfo, m_fences[wait.fenceIndex]) != VK_SUCCESS) {
+        spdlog::error("StageManager failed to submit transfer command buffer to graphics queue.");
+        return false;
     }
 
-    return commands;
+    {
+        std::lock_guard<std::mutex> lock(m_waitMutex);
+        m_waits.emplace_back(wait);
+    }
+    m_waitCondition.notify_one();
+
+    return true;
 }
 
 void StageManager::callbackThreadMain() {
     while (!m_quit) {
-        VkFence fence = VK_NULL_HANDLE;
-        std::vector<std::function<void()>> callbacks;
-
+        Wait wait;
+        bool hasWait = false;
         {
-            std::unique_lock<std::mutex> lock(m_waitPairsMutex);
-            m_waitActiveCondition.wait(lock, [this] { return m_quit || m_waitPairs.size(); });
+            std::unique_lock<std::mutex> lock(m_waitMutex);
+            m_waitCondition.wait(lock, [this] { return m_quit || m_waits.size(); });
             if (m_quit) {
                 spdlog::info("StageManager work thread got quit wakeup, exiting.");
                 break;
             }
 
-            if (m_waitPairs.size()) {
-                fence = m_waitPairs.front().first;
-                callbacks = m_waitPairs.front().second;
-                m_waitPairs.pop_front();
+            if (m_waits.size()) {
+                wait = m_waits.front();
+                hasWait = true;
             }
         }
 
-        while (!m_quit && fence != VK_NULL_HANDLE) {
-            vkWaitForFences(m_device->get(), 1, &fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+        while (!m_quit && hasWait) {
+            vkWaitForFences(m_device->get(), 1, &m_fences[wait.fenceIndex], VK_TRUE,
+                            std::numeric_limits<uint64_t>::max());
             if (m_quit) {
                 break;
             }
-            for (auto callback : callbacks) {
+            for (auto callback : wait.callbacks) {
                 callback();
             }
+
             {
-                std::lock_guard<std::mutex> lock(m_waitPairsMutex);
-                if (m_waitPairs.size()) {
-                    fence = m_waitPairs.front().first;
-                    callbacks = m_waitPairs.front().second;
-                    m_waitPairs.pop_front();
+                std::lock_guard<std::mutex> lock(m_waitMutex);
+                if (m_waits.size()) {
+                    wait = m_waits.front();
+                    m_waits.pop_front();
                 } else {
-                    fence = VK_NULL_HANDLE;
+                    hasWait = false;
                 }
             }
         }

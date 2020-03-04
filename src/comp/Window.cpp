@@ -127,7 +127,6 @@ void Window::runDirectRendering(std::shared_ptr<comp::Compositor> compositor) {
 
         m_frameTimer->markFrame();
 
-        m_stagingBuffer = compositor->stageManager()->getTransferCommands(m_renderSync->frameRendering(0));
         m_commandBuffers = compositor->prepareFrame(imageIndex, m_frameTimer->elapsedTime());
 
         VkSemaphore imageAvailable[] = { m_renderSync->imageAvailable(0) };
@@ -138,15 +137,9 @@ void Window::runDirectRendering(std::shared_ptr<comp::Compositor> compositor) {
         submitInfo.waitSemaphoreCount = 1;
         submitInfo.pWaitSemaphores = imageAvailable;
         submitInfo.pWaitDstStageMask = waitStages;
-        std::vector<VkCommandBuffer> commandBuffers;
-        if (m_stagingBuffer) {
-            commandBuffers.push_back(m_stagingBuffer->buffer(0));
-        }
-        if (m_commandBuffers) {
-            commandBuffers.push_back(m_commandBuffers->buffer(imageIndex));
-        }
-        submitInfo.commandBufferCount = commandBuffers.size();
-        submitInfo.pCommandBuffers = commandBuffers.data();
+        submitInfo.commandBufferCount = 1;
+        VkCommandBuffer commandBuffers[] = { m_commandBuffers->buffer(imageIndex) };
+        submitInfo.pCommandBuffers = commandBuffers;
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = renderFinished;
 
@@ -173,6 +166,9 @@ void Window::runDirectRendering(std::shared_ptr<comp::Compositor> compositor) {
         // Queue the frame to be presented as soon as the renderFinished semaphore is signaled by the end of the
         // command buffer execution.
         vkQueuePresentKHR(m_device->presentQueue(), &presentInfo);
+
+        // Submit any pending transfer operations.
+        compositor->stageManager()->submitTransferCommands(m_device->graphicsQueue());
     }
 
     vkDeviceWaitIdle(m_device->get());

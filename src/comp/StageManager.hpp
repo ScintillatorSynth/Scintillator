@@ -38,7 +38,7 @@ public:
     StageManager(std::shared_ptr<vk::Device> device);
     ~StageManager();
 
-    bool create();
+    bool create(size_t numberOfImages);
     void destroy();
 
     /*! Typically not called on the main render thread, adds the necessary commands to a command buffer to copy the
@@ -47,27 +47,37 @@ public:
     bool stageImage(std::shared_ptr<vk::HostBuffer> hostBuffer, std::shared_ptr<vk::DeviceImage> deviceImage,
                     std::function<void()> completion);
 
-    /*! If sharing the graphics queue, this function is called every frame requesting a single CommandBuffer intended
-     * for submission with the frame's draw commands from the Compositor. The provided fence is for the callback
-     * thread to wait, although it typically won't be signaled until all command buffers in the submit have been
-     * completed, which may include a frame of rendering.
+
+    /*! Since VkFence objects can only be waited on by one thread, we submit the transfer commands separately from the
+     * compositor commands. This function must be called on the main submission thread.
      */
-    std::shared_ptr<vk::CommandBuffer> getTransferCommands(VkFence renderFence);
+    bool submitTransferCommands(VkQueue queue);
 
 private:
     void callbackThreadMain();
 
     std::shared_ptr<vk::Device> m_device;
     std::shared_ptr<vk::CommandPool> m_commandPool;
+    std::vector<VkFence> m_fences;
+    int m_fenceIndex;
+
+    struct Wait {
+        Wait(): fenceIndex(0) {}
+        ~Wait() = default;
+        int fenceIndex;
+        std::shared_ptr<vk::CommandBuffer> commands;
+        std::vector<std::shared_ptr<vk::HostBuffer>> hostBuffers;
+        std::vector<std::shared_ptr<vk::DeviceImage>> deviceImages;
+        std::vector<std::function<void()>> callbacks;
+    };
 
     std::atomic<bool> m_hasCommands;
     std::mutex m_commandMutex;
-    std::shared_ptr<vk::CommandBuffer> m_transferCommands;
-    std::vector<std::function<void()>> m_callbacks;
+    Wait m_pendingWait;
 
-    std::mutex m_waitPairsMutex;
-    std::condition_variable m_waitActiveCondition;
-    std::deque<std::pair<VkFence, std::vector<std::function<void()>>>> m_waitPairs;
+    std::mutex m_waitMutex;
+    std::condition_variable m_waitCondition;
+    std::deque<Wait> m_waits;
     std::thread m_callbackThread;
     std::atomic<bool> m_quit;
 };

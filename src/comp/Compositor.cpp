@@ -45,7 +45,7 @@ bool Compositor::create() {
         return false;
     }
 
-    if (!m_stageManager->create()) {
+    if (!m_stageManager->create(m_canvas->numberOfImages())) {
         spdlog::error("Compositor failed to create stage manager.");
         return false;
     }
@@ -218,6 +218,7 @@ void Compositor::destroy() {
     m_commandPool = nullptr;
 
     m_stageManager->destroy();
+    m_images.clear();
 
     // Now delete all of the ScinthDefs, which hold shared graphics resources.
     {
