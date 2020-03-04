@@ -17,7 +17,7 @@ StageManager::StageManager(std::shared_ptr<vk::Device> device):
     m_commandPool(new vk::CommandPool(device)),
     m_quit(false) {}
 
-StageManager::~StageManager() {}
+StageManager::~StageManager() { destroy(); }
 
 bool StageManager::create() {
     if (!m_commandPool->create()) {
@@ -33,7 +33,11 @@ void StageManager::destroy() {
     if (!m_quit) {
         m_quit = true;
         m_waitActiveCondition.notify_all();
+        m_callbackThread.join();
     }
+
+    m_transferCommands.reset();
+    m_commandPool = nullptr;
 }
 
 bool StageManager::stageImage(std::shared_ptr<vk::HostBuffer> hostBuffer, std::shared_ptr<vk::DeviceImage> deviceImage,
@@ -148,6 +152,7 @@ void StageManager::callbackThreadMain() {
             std::unique_lock<std::mutex> lock(m_waitPairsMutex);
             m_waitActiveCondition.wait(lock, [this] { return m_quit || m_waitPairs.size(); });
             if (m_quit) {
+                spdlog::info("StageManager work thread got quit wakeup, exiting.");
                 break;
             }
 
@@ -178,6 +183,8 @@ void StageManager::callbackThreadMain() {
             }
         }
     }
+
+    spdlog::info("StageManager work thread terminated.");
 }
 
 } // namespace comp

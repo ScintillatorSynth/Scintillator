@@ -217,6 +217,8 @@ void Compositor::destroy() {
     // until our own destructor.
     m_commandPool = nullptr;
 
+    m_stageManager->destroy();
+
     // Now delete all of the ScinthDefs, which hold shared graphics resources.
     {
         std::lock_guard<std::mutex> lock(m_scinthDefMutex);
