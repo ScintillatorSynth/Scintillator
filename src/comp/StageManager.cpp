@@ -185,6 +185,7 @@ void StageManager::callbackThreadMain() {
 
             if (m_waits.size()) {
                 wait = m_waits.front();
+                m_waits.pop_front();
                 hasWait = true;
             }
         }

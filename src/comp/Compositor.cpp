@@ -251,6 +251,7 @@ void Compositor::stageImage(int imageID, int width, int height, std::shared_ptr<
                 std::lock_guard<std::mutex> lock(m_imageMutex);
                 m_images[imageID] = targetImage;
             }
+            spdlog::info("Compositor finished staging image id {}", imageID);
             completion();
         })) {
         spdlog::error("Compositor encountered error while staging image {}.", imageID);
