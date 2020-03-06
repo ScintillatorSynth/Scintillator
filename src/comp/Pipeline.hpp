@@ -16,7 +16,6 @@ class Shape;
 namespace vk {
 class Device;
 class Shader;
-class UniformLayout;
 }
 
 namespace comp {
@@ -30,7 +29,7 @@ public:
 
     bool create(const base::Manifest& vertexManifest, const base::Shape* shape, Canvas* canvas,
                 std::shared_ptr<vk::Shader> vertexShader, std::shared_ptr<vk::Shader> fragmentShader,
-                std::shared_ptr<vk::UniformLayout> uniformLayout, size_t pushConstantBlockSize);
+                VkDescriptorSetLayout descriptorSetLayout, size_t pushConstantBlockSize);
     void destroy();
 
     VkPipeline get() { return m_pipeline; }
@@ -44,7 +43,6 @@ private:
 
     std::shared_ptr<vk::Shader> m_vertexShader;
     std::shared_ptr<vk::Shader> m_fragmentShader;
-    std::shared_ptr<vk::UniformLayout> m_uniformLayout;
 };
 
 } // namespace vk

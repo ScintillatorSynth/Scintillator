@@ -10,6 +10,7 @@
 #include "comp/ShaderCompiler.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/CommandPool.hpp"
+#include "vulkan/Device.hpp"
 #include "vulkan/UniformLayout.hpp"
 
 #include "glm/glm.hpp"
@@ -25,47 +26,49 @@ ScinthDef::ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<Canvas>
     m_device(device),
     m_canvas(canvas),
     m_commandPool(commandPool),
-    m_abstractScinthDef(abstractScinthDef) {}
+    m_abstract(abstractScinthDef),
+    m_descriptorSetLayout(VK_NULL_HANDLE) {}
 
-ScinthDef::~ScinthDef() { spdlog::debug("ScinthDef {} destructor", m_abstractScinthDef->name()); }
+ScinthDef::~ScinthDef() {
+    if (m_descriptorSetLayout != VK_NULL_HANDLE) {
+        vkDestroyDescriptorSetLayout(m_device->get(), m_descriptorSetLayout, nullptr);
+    }
+}
 
 bool ScinthDef::build(ShaderCompiler* compiler) {
     // Build the vertex data. Because Intrinsics can add data payloads to the vertex data, each ScinthDef shares a
     // vertex buffer and index buffer across all Scinth instances, allowing for the potential unique combination
     // between Shape data and payloads.
     if (!buildVertexData()) {
-        spdlog::error("error building vertex data for ScinthDef {}.", m_abstractScinthDef->name());
+        spdlog::error("error building vertex data for ScinthDef {}.", m_abstract->name());
         return false;
     }
 
-    m_vertexShader = compiler->compile(m_device, m_abstractScinthDef->vertexShader(),
-                                       m_abstractScinthDef->prefix() + "_vertexShader", "main", vk::Shader::kVertex);
+    m_vertexShader = compiler->compile(m_device, m_abstract->vertexShader(),
+                                       m_abstract->prefix() + "_vertexShader", "main", vk::Shader::kVertex);
     if (!m_vertexShader) {
-        spdlog::error("error compiling vertex shader for ScinthDef {}.", m_abstractScinthDef->name());
+        spdlog::error("error compiling vertex shader for ScinthDef {}.", m_abstract->name());
         return false;
     }
 
     m_fragmentShader =
-        compiler->compile(m_device, m_abstractScinthDef->fragmentShader(),
-                          m_abstractScinthDef->prefix() + "_fragmentShader", "main", vk::Shader::kFragment);
+        compiler->compile(m_device, m_abstract->fragmentShader(),
+                          m_abstract->prefix() + "_fragmentShader", "main", vk::Shader::kFragment);
     if (!m_fragmentShader) {
-        spdlog::error("error compiling fragment shader for ScinthDef {}", m_abstractScinthDef->name());
+        spdlog::error("error compiling fragment shader for ScinthDef {}", m_abstract->name());
         return false;
     }
 
-    if (m_abstractScinthDef->uniformManifest().sizeInBytes()) {
-        m_uniformLayout.reset(new vk::UniformLayout(m_device));
-        if (!m_uniformLayout->create()) {
-            spdlog::error("failed creating uniform layout for ScinthDef {}", m_abstractScinthDef->name());
-            return false;
-        }
+    if (!buildDescriptorLayout()) {
+        spdlog::error("ScinthDef failed to build descriptor layout for {}", m_abstract->name());
+        return false;
     }
 
     m_pipeline.reset(new Pipeline(m_device));
-    if (!m_pipeline->create(m_abstractScinthDef->vertexManifest(), m_abstractScinthDef->shape(), m_canvas.get(),
-                            m_vertexShader, m_fragmentShader, m_uniformLayout,
-                            m_abstractScinthDef->parameters().size() * sizeof(float))) {
-        spdlog::error("error creating pipeline for ScinthDef {}", m_abstractScinthDef->name());
+    if (!m_pipeline->create(m_abstract->vertexManifest(), m_abstract->shape(), m_canvas.get(),
+                            m_vertexShader, m_fragmentShader, m_descriptorSetLayout,
+                            m_abstract->parameters().size() * sizeof(float))) {
+        spdlog::error("error creating pipeline for ScinthDef {}", m_abstract->name());
         return false;
     }
 
@@ -75,10 +78,10 @@ bool ScinthDef::build(ShaderCompiler* compiler) {
 bool ScinthDef::buildVertexData() {
     // The kNormPos intrinsic applies a scale to the input vertices, but only makes sense for 2D verts.
     glm::vec2 normPosScale;
-    if (m_abstractScinthDef->intrinsics().count(base::Intrinsic::kNormPos)) {
-        if (m_abstractScinthDef->shape()->elementType() != base::Manifest::ElementType::kVec2) {
+    if (m_abstract->intrinsics().count(base::Intrinsic::kNormPos)) {
+        if (m_abstract->shape()->elementType() != base::Manifest::ElementType::kVec2) {
             spdlog::error("normpos intrinsic only supported for 2D vertices in ScinthDef {}.",
-                          m_abstractScinthDef->name());
+                          m_abstract->name());
             return false;
         }
         if (m_canvas->width() > m_canvas->height()) {
@@ -91,67 +94,101 @@ bool ScinthDef::buildVertexData() {
     }
 
     // Build the vertex data based on the manifest and the shape.
-    size_t numberOfFloats = m_abstractScinthDef->shape()->numberOfVertices()
-        * (m_abstractScinthDef->vertexManifest().sizeInBytes() / sizeof(float));
+    size_t numberOfFloats = m_abstract->shape()->numberOfVertices()
+        * (m_abstract->vertexManifest().sizeInBytes() / sizeof(float));
     // TODO: memalign or std::align?
     std::unique_ptr<float[]> vertexData(new float[numberOfFloats]);
     float* vertex = vertexData.get();
-    for (auto i = 0; i < m_abstractScinthDef->shape()->numberOfVertices(); ++i) {
-        for (auto j = 0; j < m_abstractScinthDef->vertexManifest().numberOfElements(); ++j) {
+    for (auto i = 0; i < m_abstract->shape()->numberOfVertices(); ++i) {
+        for (auto j = 0; j < m_abstract->vertexManifest().numberOfElements(); ++j) {
             // If this is the Shape position vertex data get from the Shape, otherwise build from Intrinsics.
-            if (m_abstractScinthDef->vertexManifest().nameForElement(j)
-                == m_abstractScinthDef->vertexPositionElementName()) {
-                m_abstractScinthDef->shape()->storeVertexAtIndex(i, vertex);
+            if (m_abstract->vertexManifest().nameForElement(j)
+                == m_abstract->vertexPositionElementName()) {
+                m_abstract->shape()->storeVertexAtIndex(i, vertex);
             } else {
-                switch (m_abstractScinthDef->vertexManifest().intrinsicForElement(j)) {
+                switch (m_abstract->vertexManifest().intrinsicForElement(j)) {
                 case base::Intrinsic::kNormPos: {
                     // TODO: would it be faster/easier to just provide normPosScale in UBO and do this on
                     // the vertex shader?
                     std::array<float, 2> verts;
-                    m_abstractScinthDef->shape()->storeVertexAtIndex(i, verts.data());
+                    m_abstract->shape()->storeVertexAtIndex(i, verts.data());
                     vertex[0] = verts[0] * normPosScale.x;
                     vertex[1] = verts[1] * normPosScale.y;
                 } break;
 
                 case base::Intrinsic::kTexPos:
-                    m_abstractScinthDef->shape()->storeTextureVertexAtIndex(i, vertex);
+                    m_abstract->shape()->storeTextureVertexAtIndex(i, vertex);
                     break;
 
                 case base::Intrinsic::kTime:
                 case base::Intrinsic::kSampler:
                 case base::Intrinsic::kPi:
                 case base::Intrinsic::kNotFound:
-                    spdlog::error("Invalid vertex intrinsic for ScinthDef {}", m_abstractScinthDef->name());
+                    spdlog::error("Invalid vertex intrinsic for ScinthDef {}", m_abstract->name());
                     return false;
                 }
             }
 
             // Advance vertex pointer to next element.
-            vertex += (m_abstractScinthDef->vertexManifest().strideForElement(j) / sizeof(float));
+            vertex += (m_abstract->vertexManifest().strideForElement(j) / sizeof(float));
         }
     }
 
     // Vertex data now populated in host memory, copy to a host-accessible buffer.
     m_vertexBuffer.reset(new vk::HostBuffer(m_device, vk::Buffer::Kind::kVertex, numberOfFloats * sizeof(float)));
     if (!m_vertexBuffer->create()) {
-        spdlog::error("error creating vertex buffer for ScinthDef {}", m_abstractScinthDef->name());
+        spdlog::error("error creating vertex buffer for ScinthDef {}", m_abstract->name());
         return false;
     }
     spdlog::info("copying {} bytes of vertex data to GPU for ScinthDef {}", m_vertexBuffer->size(),
-                 m_abstractScinthDef->name());
+                 m_abstract->name());
     std::memcpy(m_vertexBuffer->mappedAddress(), vertexData.get(), m_vertexBuffer->size());
 
     // Lastly, copy the index buffer as well.
     m_indexBuffer.reset(new vk::HostBuffer(m_device, vk::Buffer::Kind::kIndex,
-                                           m_abstractScinthDef->shape()->numberOfIndices() * sizeof(uint16_t)));
+                                           m_abstract->shape()->numberOfIndices() * sizeof(uint16_t)));
     if (!m_indexBuffer->create()) {
-        spdlog::error("error creating index buffer for ScinthDef {}", m_abstractScinthDef->name());
+        spdlog::error("error creating index buffer for ScinthDef {}", m_abstract->name());
         return false;
     }
     spdlog::info("copying {} bytes of index data to GPU for ScinthDef {}", m_indexBuffer->size(),
-                 m_abstractScinthDef->name());
-    std::memcpy(m_indexBuffer->mappedAddress(), m_abstractScinthDef->shape()->getIndices(), m_indexBuffer->size());
+                 m_abstract->name());
+    std::memcpy(m_indexBuffer->mappedAddress(), m_abstract->shape()->getIndices(), m_indexBuffer->size());
     // TODO: investigate if device-only copies of these buffers are faster?
+    return true;
+}
+
+bool ScinthDef::buildDescriptorLayout() {
+    std::vector<VkDescriptorSetLayoutBinding> bindings;
+    if (m_abstract->uniformManifest().sizeInBytes()) {
+        VkDescriptorSetLayoutBinding uniformBinding = {};
+        uniformBinding.binding = bindings.size();
+        uniformBinding.descriptorCount = 1;
+        uniformBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uniformBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        bindings.emplace_back(uniformBinding);
+    }
+
+    auto totalCombinedSamplers = m_abstract->fixedImages().size() + m_abstract->parameterizedImages().size();
+    for (auto i = 0; i < totalCombinedSamplers; ++i) {
+        VkDescriptorSetLayoutBinding imageBinding = {};
+        imageBinding.binding = bindings.size();
+        imageBinding.descriptorCount = 1;
+        imageBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        imageBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        bindings.emplace_back(imageBinding);
+    }
+
+    if (bindings.size()) {
+        VkDescriptorSetLayoutCreateInfo layoutInfo = {};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = bindings.size();
+        layoutInfo.pBindings = bindings.data();
+        if (vkCreateDescriptorSetLayout(m_device->get(), &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS) {
+            return false;
+        }
+    }
+
     return true;
 }
 

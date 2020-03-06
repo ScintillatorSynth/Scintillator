@@ -11,7 +11,8 @@ development.
 # Vulkan Programming
 
   * [The Vulkan Tutorial](https://vulkan-tutorial.com) - much of the original Vulkan setup code was typed in following
-  this tutorial.
+  this tutorial. Alexander Overvoorde seems to be the author of this site.
   * [Sascha Willems](https://www.saschawillems.de/) maintains numerous worked examples of various applications of Vulkan
-  from which I have cribbed from heavily. Also the [Vulkan Hardware Database](https://vulkan.gpuinfo.org/) is a great
-  source of information about the diversity of hardware out there supporting Vulkan.
+  on [GitHub](https://github.com/SaschaWillems/Vulkan) from which I have cribbed from heavily. Also the
+  [Vulkan Hardware Database](https://vulkan.gpuinfo.org/) is a great source of information about the diversity of
+  hardware out there supporting Vulkan.

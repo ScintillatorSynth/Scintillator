@@ -26,13 +26,10 @@ public:
 
     /*! Makes a set of ImageViews, a Render Pass, and then a set of Framebuffers.
      *
-     * \param images The set of Images to build the rest of the state from.
-     * \param width Width of canvas in pixels.
-     * \param height Height of canvas in pixels.
-     * \param format The format of the VkImages.
+     * \param images The set of target render images.
      * \return true on success, false on failure.
      */
-    bool create(const std::vector<VkImage>& images, int32_t width, int32_t height, VkFormat format);
+    bool create(const std::vector<std::shared_ptr<vk::Image>>& images);
 
     /*! Reclaims the Vukan resources associated with the Canvas.
      */
@@ -49,7 +46,6 @@ private:
     std::shared_ptr<vk::Device> m_device;
     VkExtent2D m_extent;
     size_t m_numberOfImages;
-    std::vector<VkImageView> m_imageViews;
     VkRenderPass m_renderPass;
     std::vector<VkFramebuffer> m_framebuffers;
 };

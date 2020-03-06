@@ -9,7 +9,6 @@
 #include "vulkan/Buffer.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
-#include "vulkan/Uniform.hpp"
 
 #include "spdlog/spdlog.h"
 
@@ -28,14 +27,10 @@ Scinth::~Scinth() { spdlog::debug("Scinth {} destructor", m_nodeID); }
 
 bool Scinth::create() {
     m_running = true;
-    if (m_scinthDef->uniformLayout()) {
-        m_uniform.reset(new vk::Uniform(m_device));
-        if (!m_uniform->createBuffers(m_scinthDef->uniformLayout().get(),
-                                      m_scinthDef->abstract()->uniformManifest().sizeInBytes(),
-                                      m_scinthDef->canvas()->numberOfImages())) {
-            spdlog::error("failed creating uniform buffers for Scinth {}", m_nodeID);
-            return false;
-        }
+
+    if (!buildDescriptors()) {
+        spdlog::error("Scinth {} failed to build descriptors.", m_nodeID);
+        return false;
     }
 
     m_numberOfParameters = m_scinthDef->abstract()->parameters().size();
@@ -105,6 +100,14 @@ void Scinth::setParameterByName(const std::string& name, float value) {
 void Scinth::setParameterByIndex(int index, float value) {
     m_parameterValues[index] = value;
     m_commandBuffersDirty = true;
+}
+
+bool Scinth::buildDescriptors() {
+    if (m_scinthDef->layout() == VK_NULL_HANDLE) {
+        return false;
+    }
+
+    return true;
 }
 
 bool Scinth::rebuildBuffers() {

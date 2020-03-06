@@ -120,6 +120,18 @@ both on the AbstractVGen side as well as the ScinthDef file format. Let's list h
  * border color enum (p0)
  * unnormalized/normalized coordinates (p0)
 
+
+Descriptor Pools, Sets, SetLayouts
+----------------------------------
+
+Each Scinth keeps its own Descriptor Pool, because ScinthDef does not know at creation time how many Scinths will be
+allocated, and thus how many descriptor sets to create.
+
+The Set Layout can live with the ScinthDef, however. Action is to deprecate the UniformLayout class and move the logic
+directly into ScinthDef, or possibly to update it to support the number of different images and samplers coming in.
+
+DECISION: deprecate UniformLayout and Uniform, fold their work into ScinthDef and Scinth prespectively.
+
 Dependencies of Vulkan Objects
 ------------------------------
 Everything depends on Device, so all of these structures are device-specific.

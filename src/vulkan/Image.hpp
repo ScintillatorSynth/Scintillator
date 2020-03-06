@@ -20,11 +20,19 @@ public:
     Image(const Image&) = delete;
     Image& operator=(const Image&) = delete;
 
+    /*! Create a VkImageView associated with this image, if required. The view will be accessible via the view()
+     * function.
+     *
+     * \return true on success, false on failure.
+     */
+    bool createView();
+
     VkImage get() const { return m_image; }
     VkFormat format() const { return m_format; }
     VkExtent2D extent() const { return m_extent; }
     uint32_t width() const { return m_extent.width; }
     uint32_t height() const { return m_extent.height; }
+    VkImageView view() const { return m_imageView; }
 
 protected:
     Image(std::shared_ptr<Device> device, VkImage image, VkFormat format, VkExtent2D extent);
@@ -33,6 +41,7 @@ protected:
     VkImage m_image;
     VkFormat m_format;
     VkExtent2D m_extent;
+    VkImageView m_imageView;
 };
 
 /*! Non-owning wrapper around a Swapchain Image.

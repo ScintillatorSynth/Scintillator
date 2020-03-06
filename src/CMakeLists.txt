@@ -214,10 +214,6 @@ set(scintillator_synth_files
     vulkan/Sampler.hpp
     vulkan/Shader.cpp
     vulkan/Shader.hpp
-    vulkan/Uniform.cpp
-    vulkan/Uniform.hpp
-    vulkan/UniformLayout.cpp
-    vulkan/UniformLayout.hpp
     vulkan/Vulkan.hpp
 )
 

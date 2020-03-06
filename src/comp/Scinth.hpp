@@ -10,8 +10,6 @@ class Buffer;
 class CommandBuffer;
 class CommandPool;
 class Device;
-class Uniform;
-class UniformLayout;
 }
 
 namespace comp {
@@ -67,6 +65,7 @@ public:
     bool running() const { return m_running; }
 
 private:
+    bool buildDescriptors();
     bool rebuildBuffers();
 
     std::shared_ptr<vk::Device> m_device;
@@ -77,7 +76,6 @@ private:
     // Keep a reference to the ScinthDef, so that it does not get deleted until all referring Scinths have also been
     // deleted.
     std::shared_ptr<ScinthDef> m_scinthDef;
-    std::shared_ptr<vk::Uniform> m_uniform;
     std::shared_ptr<vk::CommandBuffer> m_commands;
     bool m_running;
     std::unique_ptr<float[]> m_parameterValues;

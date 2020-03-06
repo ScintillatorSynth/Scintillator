@@ -4,7 +4,6 @@
 #include "comp/Canvas.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Shader.hpp"
-#include "vulkan/UniformLayout.hpp"
 
 #include "spdlog/spdlog.h"
 
@@ -19,11 +18,10 @@ Pipeline::~Pipeline() { destroy(); }
 
 bool Pipeline::create(const base::Manifest& vertexManifest, const base::Shape* shape, Canvas* canvas,
                       std::shared_ptr<vk::Shader> vertexShader, std::shared_ptr<vk::Shader> fragmentShader,
-                      std::shared_ptr<vk::UniformLayout> uniformLayout, size_t pushConstantBlockSize) {
+                      VkDescriptorSetLayout descriptorSetLayout, size_t pushConstantBlockSize) {
     // Keep references to these graphics objects so they won't be destroyed until after this Pipeline is destroyed.
     m_vertexShader = vertexShader;
     m_fragmentShader = fragmentShader;
-    m_uniformLayout = uniformLayout;
 
     VkVertexInputBindingDescription vertexBindingDescription = {};
     vertexBindingDescription.binding = 0;
@@ -142,9 +140,10 @@ bool Pipeline::create(const base::Manifest& vertexManifest, const base::Shape* s
     // Pipeline Layout
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    if (uniformLayout) {
+    VkDescriptorSetLayout setLayouts[] = { descriptorSetLayout };
+    if (descriptorSetLayout != VK_NULL_HANDLE) {
         pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = uniformLayout->getPointer();
+        pipelineLayoutInfo.pSetLayouts = setLayouts;
     } else {
         pipelineLayoutInfo.setLayoutCount = 0;
         pipelineLayoutInfo.pSetLayouts = nullptr;

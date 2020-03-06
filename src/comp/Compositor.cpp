@@ -218,10 +218,6 @@ void Compositor::destroy() {
     m_commandPool = nullptr;
 
     m_stageManager->destroy();
-    for (auto it : m_imageViews) {
-        vkDestroyImageView(m_device->get(), it.second, nullptr);
-    }
-    m_imageViews.clear();
     m_images.clear();
 
     // Now delete all of the ScinthDefs, which hold shared graphics resources.
@@ -251,19 +247,7 @@ void Compositor::stageImage(int imageID, int width, int height, std::shared_ptr<
     }
 
     if (!m_stageManager->stageImage(imageBuffer, targetImage, [this, imageID, targetImage, completion] {
-            VkImageViewCreateInfo viewInfo = {};
-            viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            viewInfo.image = targetImage->get();
-            viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            viewInfo.format = targetImage->format();
-            viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            viewInfo.subresourceRange.baseMipLevel = 0;
-            viewInfo.subresourceRange.levelCount = 1;
-            viewInfo.subresourceRange.baseArrayLayer = 0;
-            viewInfo.subresourceRange.layerCount = 1;
-
-            VkImageView imageView;
-            if (vkCreateImageView(m_device->get(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
+            if (!targetImage->createView()) {
                 spdlog::error("Compositor failed to create ImageView for image {}", imageID);
                 completion();
                 return;
@@ -272,7 +256,6 @@ void Compositor::stageImage(int imageID, int width, int height, std::shared_ptr<
             {
                 std::lock_guard<std::mutex> lock(m_imageMutex);
                 m_images[imageID] = targetImage;
-                m_imageViews[imageID] = imageView;
             }
             spdlog::info("Compositor finished staging image id {}", imageID);
             completion();

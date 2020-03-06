@@ -1,6 +1,8 @@
 #ifndef SRC_COMP_SCINTHDEF_HPP_
 #define SRC_COMP_SCINTHDEF_HPP_
 
+#include "vulkan/Vulkan.hpp"
+
 #include <memory>
 
 namespace scin {
@@ -14,7 +16,6 @@ class CommandPool;
 class Device;
 class HostBuffer;
 class Shader;
-class UniformLayout;
 }
 
 namespace comp {
@@ -43,24 +44,24 @@ public:
 
     std::shared_ptr<Canvas> canvas() const { return m_canvas; }
     std::shared_ptr<vk::CommandPool> commandPool() const { return m_commandPool; }
-    std::shared_ptr<const base::AbstractScinthDef> abstract() const { return m_abstractScinthDef; }
+    std::shared_ptr<const base::AbstractScinthDef> abstract() const { return m_abstract; }
     std::shared_ptr<vk::HostBuffer> vertexBuffer() const { return m_vertexBuffer; }
     std::shared_ptr<vk::HostBuffer> indexBuffer() const { return m_indexBuffer; }
-    std::shared_ptr<vk::UniformLayout> uniformLayout() const { return m_uniformLayout; }
     std::shared_ptr<Pipeline> pipeline() const { return m_pipeline; }
 
 private:
     bool buildVertexData();
+    bool buildDescriptorLayout();
 
     std::shared_ptr<vk::Device> m_device;
     std::shared_ptr<Canvas> m_canvas;
     std::shared_ptr<vk::CommandPool> m_commandPool;
-    std::shared_ptr<const base::AbstractScinthDef> m_abstractScinthDef;
+    std::shared_ptr<const base::AbstractScinthDef> m_abstract;
     std::shared_ptr<vk::HostBuffer> m_vertexBuffer;
     std::shared_ptr<vk::HostBuffer> m_indexBuffer;
     std::shared_ptr<vk::Shader> m_vertexShader;
     std::shared_ptr<vk::Shader> m_fragmentShader;
-    std::shared_ptr<vk::UniformLayout> m_uniformLayout;
+    VkDescriptorSetLayout m_descriptorSetLayout;
     std::shared_ptr<Pipeline> m_pipeline;
 };
 

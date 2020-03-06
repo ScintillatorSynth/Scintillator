@@ -61,14 +61,18 @@ public:
     const std::vector<Parameter>& parameters() const { return m_parameters; }
     const std::vector<VGen>& instances() const { return m_instances; }
     const Shape* shape() const { return m_shape.get(); }
-    const std::unordered_set<Intrinsic> intrinsics() const { return m_intrinsics; }
+    // First element in pair is sampler key, second element is the imageID.
+    const std::set<std::pair<uint32_t, int>>& fixedImages() const { return m_fixedImages; }
+    // First element in pair is sampler key, second is parameter index.
+    const std::set<std::pair<uint32_t, int>>& parameterizedImages() const { return m_parameterizedImages; }
     const std::string& prefix() const { return m_prefix; }
+    const std::string& vertexPositionElementName() const { return m_vertexPositionElementName; }
+    const std::string& parametersStructName() const { return m_parametersStructName; }
+    const std::unordered_set<Intrinsic> intrinsics() const { return m_intrinsics; }
     const std::string& vertexShader() const { return m_vertexShader; }
     const std::string& fragmentShader() const { return m_fragmentShader; }
     const Manifest& vertexManifest() const { return m_vertexManifest; }
     const Manifest& uniformManifest() const { return m_uniformManifest; }
-    const std::string& vertexPositionElementName() const { return m_vertexPositionElementName; }
-    const std::string& parametersStructName() const { return m_parametersStructName; }
 
 private:
     bool buildInputs();

@@ -1,8 +1,6 @@
 #ifndef SRC_COMP_COMPOSITOR_HPP_
 #define SRC_COMP_COMPOSITOR_HPP_
 
-#include "vulkan/Vulkan.hpp"
-
 #include "glm/glm.hpp"
 
 #include <atomic>
@@ -183,7 +181,6 @@ private:
 
     std::mutex m_imageMutex;
     std::unordered_map<int, std::shared_ptr<vk::DeviceImage>> m_images;
-    std::unordered_map<int, VkImageView> m_imageViews;
 };
 
 } // namespace comp
