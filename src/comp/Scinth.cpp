@@ -124,6 +124,16 @@ bool Scinth::allocateDescriptors() {
         uniformPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         uniformPoolSize.descriptorCount = numberOfImages;
         poolSizes.emplace_back(uniformPoolSize);
+
+        for (auto i = 0; i < numberOfImages; ++i) {
+            std::shared_ptr<vk::HostBuffer> uniformBuffer(
+                new vk::HostBuffer(m_device, vk::Buffer::Kind::kUniform, uniformSize));
+            if (!uniformBuffer->create()) {
+                spdlog::error("Scinth {} failed to create uniform buffer of size {}", m_nodeID, uniformSize);
+                return false;
+            }
+            m_uniformBuffers.emplace_back(uniformBuffer);
+        }
     }
 
     auto totalSamplers =

@@ -1,6 +1,7 @@
 #ifndef SRC_COMP_IMAGE_MAP_HPP_
 #define SRC_COMP_IMAGE_MAP_HPP_
 
+#include <memory>
 #include <mutex>
 #include <unordered_map>
 
