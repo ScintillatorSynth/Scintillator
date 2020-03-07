@@ -4,31 +4,44 @@
 #include "base/Shape.hpp"
 #include "base/VGen.hpp"
 #include "comp/Canvas.hpp"
+#include "comp/ImageMap.hpp"
 #include "comp/Pipeline.hpp"
+#include "comp/SamplerFactory.hpp"
 #include "comp/ScinthDef.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
+#include "vulkan/Device.hpp"
+#include "vulkan/Image.hpp"
+#include "vulkan/Sampler.hpp"
 
 #include "spdlog/spdlog.h"
 
 namespace scin { namespace comp {
 
-Scinth::Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef):
+Scinth::Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef,
+               std::shared_ptr<ImageMap> imageMap):
     m_device(device),
     m_nodeID(nodeID),
     m_cueued(true),
     m_scinthDef(scinthDef),
+    m_imageMap(imageMap),
+    m_descriptorPool(VK_NULL_HANDLE),
     m_running(false),
     m_numberOfParameters(0),
     m_commandBuffersDirty(true) {}
 
-Scinth::~Scinth() { spdlog::debug("Scinth {} destructor", m_nodeID); }
+Scinth::~Scinth() {
+    if (m_descriptorPool != VK_NULL_HANDLE) {
+        vkDestroyDescriptorPool(m_device->get(), m_descriptorPool, nullptr);
+        m_descriptorPool = VK_NULL_HANDLE;
+    }
+}
 
 bool Scinth::create() {
     m_running = true;
 
-    if (!buildDescriptors()) {
+    if (!allocateDescriptors()) {
         spdlog::error("Scinth {} failed to build descriptors.", m_nodeID);
         return false;
     }
@@ -41,9 +54,9 @@ bool Scinth::create() {
         }
     }
 
+    updateDescriptors();
     return rebuildBuffers();
 }
-
 
 bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
     // If this is our first call to prepareFrame we treat this frameTime as our startTime.
@@ -53,11 +66,8 @@ bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
     }
 
     // Update the Uniform buffer at imageIndex, if needed.
-    if (m_uniform) {
-        // TODO: why not just build directly in the buffer? Why build in a temp and then copy?
-        std::unique_ptr<float[]> uniformData(
-            new float[m_scinthDef->abstract()->uniformManifest().sizeInBytes() / sizeof(float)]);
-        float* uniform = uniformData.get();
+    if (m_uniformBuffers.size()) {
+        float* uniform = static_cast<float*>(m_uniformBuffers[imageIndex]->mappedAddress());
         for (auto i = 0; i < m_scinthDef->abstract()->uniformManifest().numberOfElements(); ++i) {
             switch (m_scinthDef->abstract()->uniformManifest().intrinsicForElement(i)) {
             case base::Intrinsic::kTime:
@@ -75,9 +85,6 @@ bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
 
             uniform += (m_scinthDef->abstract()->uniformManifest().strideForElement(i) / sizeof(float));
         }
-
-        std::memcpy(m_uniform->buffer(imageIndex)->mappedAddress(), uniformData.get(),
-                    m_uniform->buffer(imageIndex)->size());
     }
 
     if (m_commandBuffersDirty) {
@@ -102,12 +109,119 @@ void Scinth::setParameterByIndex(int index, float value) {
     m_commandBuffersDirty = true;
 }
 
-bool Scinth::buildDescriptors() {
+bool Scinth::allocateDescriptors() {
+    // No layout means no image or uniform arguments, nothing to do, return.
     if (m_scinthDef->layout() == VK_NULL_HANDLE) {
+        return true;
+    }
+
+    auto numberOfImages = m_scinthDef->canvas()->numberOfImages();
+    std::vector<VkDescriptorPoolSize> poolSizes;
+
+    auto uniformSize = m_scinthDef->abstract()->uniformManifest().sizeInBytes();
+    if (uniformSize) {
+        VkDescriptorPoolSize uniformPoolSize = {};
+        uniformPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uniformPoolSize.descriptorCount = numberOfImages;
+        poolSizes.emplace_back(uniformPoolSize);
+    }
+
+    auto totalSamplers =
+        m_scinthDef->abstract()->fixedImages().size() + m_scinthDef->abstract()->parameterizedImages().size();
+    if (totalSamplers) {
+        VkDescriptorPoolSize samplerPoolSize = {};
+        samplerPoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerPoolSize.descriptorCount = numberOfImages * totalSamplers;
+        poolSizes.emplace_back(samplerPoolSize);
+    }
+
+    VkDescriptorPoolCreateInfo poolInfo = {};
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = poolSizes.size();
+    poolInfo.pPoolSizes = poolSizes.data();
+    poolInfo.maxSets = numberOfImages;
+    if (vkCreateDescriptorPool(m_device->get(), &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS) {
+        spdlog::error("Scinth {} failed to create Vulkan descriptor pool.", m_nodeID);
         return false;
     }
 
+    std::vector<VkDescriptorSetLayout> layouts(numberOfImages, m_scinthDef->layout());
+    VkDescriptorSetAllocateInfo allocInfo = {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorPool = m_descriptorPool;
+    allocInfo.descriptorSetCount = numberOfImages;
+    allocInfo.pSetLayouts = layouts.data();
+    m_descriptorSets.resize(numberOfImages);
+    if (vkAllocateDescriptorSets(m_device->get(), &allocInfo, m_descriptorSets.data()) != VK_SUCCESS) {
+        spdlog::error("Scinth {} failed to allocate Vulkan descriptor sets.", m_nodeID);
+        return false;
+    }
+
+    // Write the constant parts of the descriptor sets only once, those are the uniforms and fixed images.
+    for (auto i = 0; i < numberOfImages; ++i) {
+        std::vector<VkWriteDescriptorSet> descriptorWrites;
+        VkDescriptorBufferInfo bufferInfo = {};
+        int32_t binding = 0;
+        if (uniformSize) {
+            bufferInfo.buffer = m_uniformBuffers[i]->buffer();
+            bufferInfo.offset = 0;
+            bufferInfo.range = m_uniformBuffers[i]->size();
+
+            VkWriteDescriptorSet bufferWrite = {};
+            bufferWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            bufferWrite.dstSet = m_descriptorSets[i];
+            bufferWrite.dstBinding = binding;
+            bufferWrite.dstArrayElement = 0;
+            bufferWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            bufferWrite.descriptorCount = 1;
+            bufferWrite.pBufferInfo = &bufferInfo;
+            bufferWrite.pImageInfo = nullptr;
+            bufferWrite.pTexelBufferView = nullptr;
+            descriptorWrites.emplace_back(bufferWrite);
+
+            ++binding;
+        }
+
+        std::vector<VkDescriptorImageInfo> imageInfos;
+        auto samplerIndex = 0;
+        for (const auto pair : m_scinthDef->abstract()->fixedImages()) {
+            std::shared_ptr<vk::DeviceImage> image = m_imageMap->getImage(pair.second);
+            if (!image) {
+                spdlog::error("Scinth {} failed to find image ID {}.", m_nodeID, pair.second);
+                return false;
+            }
+
+            VkDescriptorImageInfo imageInfo = {};
+            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfo.imageView = image->view();
+            imageInfo.sampler = m_scinthDef->fixedSamplers()[samplerIndex]->get();
+            imageInfos.emplace_back(imageInfo);
+
+            ++samplerIndex;
+            m_fixedImages.emplace_back(image);
+
+            VkWriteDescriptorSet imageWrite = {};
+            imageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            imageWrite.dstSet = m_descriptorSets[i];
+            imageWrite.dstBinding = binding;
+            imageWrite.dstArrayElement = 0;
+            imageWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            imageWrite.descriptorCount = 1;
+            imageWrite.pImageInfo = imageInfos.data() + (imageInfos.size() - 1);
+            descriptorWrites.emplace_back(imageWrite);
+
+            ++binding;
+        }
+
+        vkUpdateDescriptorSets(m_device->get(), descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+    }
+
     return true;
+}
+
+void Scinth::updateDescriptors() {
+    for (const auto pair : m_scinthDef->abstract()->parameterizedImages()) {
+    }
 }
 
 bool Scinth::rebuildBuffers() {
@@ -117,8 +231,7 @@ bool Scinth::rebuildBuffers() {
         return false;
     }
 
-    m_commands->associateResources(m_scinthDef->vertexBuffer(), m_scinthDef->indexBuffer(), m_uniform,
-                                   m_scinthDef->pipeline());
+    m_commands->associateResources(m_scinthDef->vertexBuffer(), m_scinthDef->indexBuffer(), m_scinthDef->pipeline());
 
     for (auto i = 0; i < m_scinthDef->canvas()->numberOfImages(); ++i) {
         VkCommandBufferBeginInfo beginInfo = {};
@@ -148,9 +261,9 @@ bool Scinth::rebuildBuffers() {
         vkCmdBindVertexBuffers(m_commands->buffer(i), 0, 1, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(m_commands->buffer(i), m_scinthDef->indexBuffer()->buffer(), 0, VK_INDEX_TYPE_UINT16);
 
-        if (m_uniform) {
+        if (m_descriptorSets.size()) {
             vkCmdBindDescriptorSets(m_commands->buffer(i), VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                    m_scinthDef->pipeline()->layout(), 0, 1, m_uniform->set(i), 0, nullptr);
+                                    m_scinthDef->pipeline()->layout(), 0, 1, &m_descriptorSets[i], 0, nullptr);
         }
 
         vkCmdDrawIndexed(m_commands->buffer(i), m_scinthDef->abstract()->shape()->numberOfIndices(), 1, 0, 0, 0);

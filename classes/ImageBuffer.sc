@@ -32,4 +32,8 @@ ImageBuffer {
 		height = height ? -1;
 		server.sendMsg('/scin_ib_allocRead', bufnum, path, width, height, completion);
 	}
+
+	asVGenInput {
+		^this.bufnum;
+	}
 }

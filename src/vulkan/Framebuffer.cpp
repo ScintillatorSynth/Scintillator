@@ -13,18 +13,16 @@ Framebuffer::Framebuffer(std::shared_ptr<Device> device): m_device(device), m_ca
 Framebuffer::~Framebuffer() { destroy(); }
 
 bool Framebuffer::create(int width, int height, size_t numberOfImages) {
-    std::vector<VkImage> vulkanImages;
     for (auto i = 0; i < numberOfImages; ++i) {
         std::shared_ptr<FramebufferImage> image(new FramebufferImage(m_device));
         if (!image->create(width, height)) {
             spdlog::error("framebuffer failed to create images.");
             return false;
         }
-        vulkanImages.emplace_back(image->get());
         m_images.emplace_back(image);
     }
 
-    if (!m_canvas->create(vulkanImages, width, height, m_images[0]->format())) {
+    if (!m_canvas->create(m_images)) {
         spdlog::error("framebuffer failed to create canvas.");
         return false;
     }

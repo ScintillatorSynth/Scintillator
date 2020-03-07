@@ -4,6 +4,7 @@
 #include "base/AbstractScinthDef.hpp"
 #include "base/VGen.hpp"
 #include "comp/Canvas.hpp"
+#include "comp/ImageMap.hpp"
 #include "comp/SamplerFactory.hpp"
 #include "comp/Scinth.hpp"
 #include "comp/ScinthDef.hpp"
@@ -27,6 +28,7 @@ Compositor::Compositor(std::shared_ptr<vk::Device> device, std::shared_ptr<Canva
     m_commandPool(new vk::CommandPool(device)),
     m_stageManager(new StageManager(device)),
     m_samplerFactory(new SamplerFactory(device)),
+    m_imageMap(new ImageMap()),
     m_commandBufferDirty(true),
     m_nodeSerial(-2) {
     m_frameCommands.resize(m_canvas->numberOfImages());
@@ -55,7 +57,8 @@ bool Compositor::create() {
 }
 
 bool Compositor::buildScinthDef(std::shared_ptr<const base::AbstractScinthDef> abstractScinthDef) {
-    std::shared_ptr<ScinthDef> scinthDef(new ScinthDef(m_device, m_canvas, m_commandPool, abstractScinthDef));
+    std::shared_ptr<ScinthDef> scinthDef(
+        new ScinthDef(m_device, m_canvas, m_commandPool, m_samplerFactory, abstractScinthDef));
     if (!scinthDef->build(m_shaderCompiler.get())) {
         return false;
     }
@@ -98,7 +101,7 @@ bool Compositor::cue(const std::string& scinthDefName, int nodeID) {
     if (nodeID < 0) {
         nodeID = m_nodeSerial.fetch_sub(1);
     }
-    std::shared_ptr<Scinth> scinth(new Scinth(m_device, nodeID, scinthDef));
+    std::shared_ptr<Scinth> scinth(new Scinth(m_device, nodeID, scinthDef, m_imageMap));
 
     if (!scinth->create()) {
         spdlog::error("failed to build Scinth {} from ScinthDef {}.", nodeID, scinthDefName);
@@ -218,7 +221,7 @@ void Compositor::destroy() {
     m_commandPool = nullptr;
 
     m_stageManager->destroy();
-    m_images.clear();
+    m_imageMap = nullptr;
 
     // Now delete all of the ScinthDefs, which hold shared graphics resources.
     {
@@ -252,11 +255,7 @@ void Compositor::stageImage(int imageID, int width, int height, std::shared_ptr<
                 completion();
                 return;
             }
-
-            {
-                std::lock_guard<std::mutex> lock(m_imageMutex);
-                m_images[imageID] = targetImage;
-            }
+            m_imageMap->addImage(imageID, targetImage);
             spdlog::info("Compositor finished staging image id {}", imageID);
             completion();
         })) {
@@ -266,14 +265,13 @@ void Compositor::stageImage(int imageID, int width, int height, std::shared_ptr<
 }
 
 bool Compositor::queryImage(int imageID, int& sizeOut, int& widthOut, int& heightOut) {
-    std::lock_guard<std::mutex> lock(m_imageMutex);
-    auto it = m_images.find(imageID);
-    if (it == m_images.end()) {
+    std::shared_ptr<vk::DeviceImage> image = m_imageMap->getImage(imageID);
+    if (!image) {
         return false;
     }
-    sizeOut = it->second->size();
-    widthOut = it->second->width();
-    heightOut = it->second->height();
+    sizeOut = image->size();
+    widthOut = image->width();
+    heightOut = image->height();
     return true;
 }
 

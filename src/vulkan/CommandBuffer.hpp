@@ -18,7 +18,6 @@ namespace vk {
 class Buffer;
 class CommandPool;
 class Device;
-class Uniform;
 
 /*! Simple wrapper class around an array of Vulkan CommandBuffer objects.
  */
@@ -46,7 +45,7 @@ public:
      * \param pipeline The pipeline bound by this CommandBuffer.
      */
     void associateResources(std::shared_ptr<Buffer> vertexBuffer, std::shared_ptr<Buffer> indexBuffer,
-                            std::shared_ptr<Uniform> uniform, std::shared_ptr<comp::Pipeline> pipeline);
+                            std::shared_ptr<comp::Pipeline> pipeline);
 
     VkCommandBuffer buffer(size_t i) { return m_commandBuffers[i]; }
     size_t count() const { return m_commandBuffers.size(); }
@@ -57,7 +56,6 @@ private:
     std::vector<VkCommandBuffer> m_commandBuffers;
     std::shared_ptr<Buffer> m_vertexBuffer;
     std::shared_ptr<Buffer> m_indexBuffer;
-    std::shared_ptr<Uniform> m_uniform;
     std::shared_ptr<comp::Pipeline> m_pipeline;
 };
 

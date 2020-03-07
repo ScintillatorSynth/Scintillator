@@ -23,6 +23,7 @@ public:
     void destroy();
 
     const base::AbstractSampler& abstractSampler() const { return m_abstractSampler; }
+    VkSampler get() const { return m_sampler; }
 
 private:
     std::shared_ptr<Device> m_device;

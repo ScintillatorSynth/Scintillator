@@ -10,7 +10,6 @@ Image::Image(std::shared_ptr<Device> device): m_device(device), m_image(VK_NULL_
 
 Image::~Image() {
     if (m_imageView != VK_NULL_HANDLE) {
-
     }
 }
 

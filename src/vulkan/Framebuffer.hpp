@@ -16,7 +16,7 @@ class Canvas;
 namespace vk {
 
 class Device;
-class FramebufferImage;
+class Image;
 
 /*! A container for an offscreen render target that can also be sampled as a texture and blitted from.
  *
@@ -38,7 +38,7 @@ public:
 private:
     std::shared_ptr<Device> m_device;
 
-    std::vector<std::shared_ptr<FramebufferImage>> m_images;
+    std::vector<std::shared_ptr<Image>> m_images;
     std::shared_ptr<comp::Canvas> m_canvas;
 };
 

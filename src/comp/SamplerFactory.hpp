@@ -27,6 +27,7 @@ public:
     ~SamplerFactory();
 
     std::shared_ptr<vk::Sampler> getSampler(const base::AbstractSampler& abstractSampler);
+    std::shared_ptr<vk::Sampler> getSampler(uint32_t samplerKey);
     void releaseSampler(std::shared_ptr<vk::Sampler> sampler);
 
 private:

@@ -22,7 +22,7 @@ std::shared_ptr<vk::Sampler> SamplerFactory::getSampler(const base::AbstractSamp
         std::shared_ptr<vk::Sampler> newSampler(new vk::Sampler(m_device, abstractSampler));
         // Sampler creation while holding mutex means we might block other threads for longer but also avoids
         // creation of duplicate samplers during race.
-        if (!sampler->create()) {
+        if (!newSampler->create()) {
             spdlog::error("SamplerFactory failed to create Sampler with key {:08x}, {} existing samplers.",
                           m_samplerMap.size(), abstractSampler.key());
             return sampler;
@@ -31,6 +31,10 @@ std::shared_ptr<vk::Sampler> SamplerFactory::getSampler(const base::AbstractSamp
         sampler = newSampler;
     }
     return sampler;
+}
+
+std::shared_ptr<vk::Sampler> SamplerFactory::getSampler(uint32_t samplerKey) {
+    return getSampler(base::AbstractSampler(samplerKey));
 }
 
 void SamplerFactory::releaseSampler(std::shared_ptr<vk::Sampler> sampler) {

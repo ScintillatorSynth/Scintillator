@@ -59,7 +59,6 @@ private:
     std::shared_ptr<vk::Device> m_device;
     std::shared_ptr<vk::CommandPool> m_commandPool;
     std::vector<VkFence> m_fences;
-    int m_fenceIndex;
 
     struct Wait {
         Wait(): fenceIndex(0) {}

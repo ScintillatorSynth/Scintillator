@@ -19,6 +19,7 @@ Sampler : VGen {
 
 	*fg { |image, pos|
 		var sampler = this.multiNew(\fragment, pos);
+		image = image.asVGenInput;
 		case
 		{ image.isNumber } {
 			sampler.image = image;

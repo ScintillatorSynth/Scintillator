@@ -128,7 +128,7 @@ bool Swapchain::create(Window* window, bool directRendering) {
     }
 
     if (directRendering) {
-        if (!m_canvas->create(images, m_extent.width, m_extent.height, m_surfaceFormat.format)) {
+        if (!m_canvas->create(m_images)) {
             spdlog::error("Swapchain failed to create Canvas.");
             return false;
         }

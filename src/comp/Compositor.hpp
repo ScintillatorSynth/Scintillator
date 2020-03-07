@@ -29,6 +29,7 @@ class AbstractScinthDef;
 namespace comp {
 
 class Canvas;
+class ImageMap;
 class SamplerFactory;
 class Scinth;
 class ScinthDef;
@@ -158,7 +159,8 @@ private:
     std::unique_ptr<ShaderCompiler> m_shaderCompiler;
     std::shared_ptr<vk::CommandPool> m_commandPool;
     std::shared_ptr<StageManager> m_stageManager;
-    std::unique_ptr<SamplerFactory> m_samplerFactory;
+    std::shared_ptr<SamplerFactory> m_samplerFactory;
+    std::shared_ptr<ImageMap> m_imageMap;
     std::atomic<bool> m_commandBufferDirty;
     std::atomic<int> m_nodeSerial;
 
@@ -178,9 +180,6 @@ private:
     // are always valid until we are rendering a new frame over the old commands.
     Commands m_secondaryCommands;
     std::vector<Commands> m_frameCommands;
-
-    std::mutex m_imageMutex;
-    std::unordered_map<int, std::shared_ptr<vk::DeviceImage>> m_images;
 };
 
 } // namespace comp

@@ -1,29 +1,36 @@
 #ifndef SRC_COMP_SCINTH_HPP_
 #define SRC_COMP_SCINTH_HPP_
 
+#include "vulkan/Vulkan.hpp"
+
 #include <memory>
+#include <vector>
 
 namespace scin {
 
 namespace vk {
-class Buffer;
 class CommandBuffer;
 class CommandPool;
 class Device;
+class DeviceImage;
+class HostBuffer;
 }
 
 namespace comp {
 
+class ImageMap;
 class ScinthDef;
 
 /*! Represents a running, controllable instance of a ScinthDef.
  */
 class Scinth {
 public:
-    Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef);
+    Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef,
+           std::shared_ptr<ImageMap> imageMap);
     ~Scinth();
 
-    /*! Do any one-time setup on this Scinth, including creating the Uniform Buffer.
+    /*! Do any one-time setup on this Scinth, including creating a uniform buffer, samplers, and descriptor sets as
+     * needed.
      *
      * \return true if successful, false if not.
      */
@@ -65,7 +72,8 @@ public:
     bool running() const { return m_running; }
 
 private:
-    bool buildDescriptors();
+    bool allocateDescriptors();
+    void updateDescriptors();
     bool rebuildBuffers();
 
     std::shared_ptr<vk::Device> m_device;
@@ -76,6 +84,11 @@ private:
     // Keep a reference to the ScinthDef, so that it does not get deleted until all referring Scinths have also been
     // deleted.
     std::shared_ptr<ScinthDef> m_scinthDef;
+    std::shared_ptr<ImageMap> m_imageMap;
+    VkDescriptorPool m_descriptorPool;
+    std::vector<VkDescriptorSet> m_descriptorSets;
+    std::vector<std::shared_ptr<vk::DeviceImage>> m_fixedImages;
+    std::vector<std::shared_ptr<vk::HostBuffer>> m_uniformBuffers;
     std::shared_ptr<vk::CommandBuffer> m_commands;
     bool m_running;
     std::unique_ptr<float[]> m_parameterValues;
