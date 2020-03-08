@@ -54,7 +54,6 @@ bool Scinth::create() {
         }
     }
 
-    updateDescriptors();
     return rebuildBuffers();
 }
 
@@ -88,6 +87,9 @@ bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
     }
 
     if (m_commandBuffersDirty) {
+        if (!updateDescriptors()) {
+            return false;
+        }
         return rebuildBuffers();
     }
 
@@ -167,7 +169,6 @@ bool Scinth::allocateDescriptors() {
         return false;
     }
 
-    // Write the constant parts of the descriptor sets only once, those are the uniforms and fixed images.
     for (auto i = 0; i < numberOfImages; ++i) {
         std::vector<VkWriteDescriptorSet> descriptorWrites;
         VkDescriptorBufferInfo bufferInfo = {};
@@ -197,7 +198,7 @@ bool Scinth::allocateDescriptors() {
         for (const auto pair : m_scinthDef->abstract()->fixedImages()) {
             std::shared_ptr<vk::DeviceImage> image = m_imageMap->getImage(pair.second);
             if (!image) {
-                spdlog::error("Scinth {} failed to find image ID {}.", m_nodeID, pair.second);
+                spdlog::error("Scinth {} failed to find constant image ID {}.", m_nodeID, pair.second);
                 return false;
             }
 
@@ -223,15 +224,108 @@ bool Scinth::allocateDescriptors() {
             ++binding;
         }
 
+        samplerIndex = 0;
+        for (const auto pair : m_scinthDef->abstract()->parameterizedImages()) {
+            // Look up default value of parameter using parameter index, provided as second value in the pair.
+            int parameterIndex = pair.second;
+            int imageID = static_cast<int>(m_scinthDef->abstract()->parameters()[parameterIndex].defaultValue());
+            std::shared_ptr<vk::DeviceImage> image = m_imageMap->getImage(imageID);
+            std::shared_ptr<vk::Sampler> sampler = m_scinthDef->parameterizedSamplers()[samplerIndex];
+            // We record these decisions on the first run through, for comparison against later parameter updates.
+            if (i == 0) {
+                m_parameterizedImages.emplace_back(image);
+                m_parameterizedImageIDs.emplace_back(std::make_pair(parameterIndex, imageID));
+            }
+
+            // Missing images for parameterized images are acceptable, we use the empty image and sampler.
+            if (!image) {
+                image = m_imageMap->getEmptyImage();
+                sampler = m_scinthDef->emptySampler();
+            }
+
+            VkDescriptorImageInfo imageInfo = {};
+            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfo.imageView = image->view();
+            imageInfo.sampler = sampler->get();
+            imageInfos.emplace_back(imageInfo);
+
+            ++samplerIndex;
+
+            VkWriteDescriptorSet imageWrite = {};
+            imageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            imageWrite.dstSet = m_descriptorSets[i];
+            imageWrite.dstBinding = binding;
+            imageWrite.dstArrayElement = 0;
+            imageWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            imageWrite.descriptorCount = 1;
+            imageWrite.pImageInfo = imageInfos.data() + (imageInfos.size() - 1);
+            descriptorWrites.emplace_back(imageWrite);
+
+            ++binding;
+        }
+
         vkUpdateDescriptorSets(m_device->get(), descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
     }
 
     return true;
 }
 
-void Scinth::updateDescriptors() {
-    for (const auto pair : m_scinthDef->abstract()->parameterizedImages()) {
+bool Scinth::updateDescriptors() {
+    // This pair is sampler index, new image and we build it by running through parameter values and current bound ids.
+    std::vector<std::pair<int, std::shared_ptr<vk::DeviceImage>>> newBindings;
+    for (auto i = 0; i < m_parameterizedImageIDs.size(); ++i) {
+        int parameterIndex = m_parameterizedImageIDs[i].first;
+        int imageID = static_cast<int>(m_parameterValues[parameterIndex]);
+        if (imageID != m_parameterizedImageIDs[i].second) {
+            std::shared_ptr<vk::DeviceImage> image = m_imageMap->getImage(imageID);
+            // Note image can be null, we'll use the empty image in the actual update.
+            m_parameterizedImageIDs[i] = std::make_pair(parameterIndex, imageID);
+            m_parametrizedImages[i] = image;
+            newBindings.emplace_back(std::make_pair(i, image));
+        }
     }
+
+    // Early out for no binding updates needed.
+    if (!newBindings.size()) {
+        return true;
+    }
+
+    // Compute index where parameterized images binding starts.
+    int32_t bindingStart = m_scinthDef->abstract()->uniformManifest().sizeInBytes() ? 1 : 0;
+    bindingStart += m_scinthDef->abstract()->fixedImages().size();
+
+    for (auto i = 0; i < m_scinthDef->canvas()->numberOfImages(); ++i) {
+        std::vector<VkWriteDescriptorSet> descriptorWrites;
+        std::vector<VkDescriptorImageInfo> imageInfos;
+        for (auto pair : newBindings) {
+            std::shared_ptr<vk::Sampler> sampler = m_scinthDef->parameterizedSamplers()[pair.first];
+            std::shared_ptr<vk::DeviceImage> image = pair.second;
+            if (!image) {
+                sampler = m_scinthDef->emptySampler();
+                image = m_imageMap->getEmptyImage();
+            }
+
+            VkDescriptorImageInfo imageInfo = {};
+            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfo.imageView = image->view();
+            imageInfo.sampler = sampler->get();
+            imageInfos.emplace_back(imageInfo);
+
+            VkWriteDescriptorSet imageWrite = {};
+            imageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            imageWrite.dstSet = m_descriptorSets[i];
+            imageWrite.dstBinding = bindingStart + pair.first;
+            imageWrite.dstArrayElement = 0;
+            imageWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            imageWrite.descriptorCount = 1;
+            imageWrite.pImageInfo = imageInfos.data() + (imageInfos.size() - 1);
+            descriptorWrites.emplace_back(imageWrite);
+        }
+
+        vkUpdateDescriptorSets(m_device->get(), descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+    }
+
+    return true;
 }
 
 bool Scinth::rebuildBuffers() {

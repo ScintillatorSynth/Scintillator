@@ -73,7 +73,7 @@ public:
 
 private:
     bool allocateDescriptors();
-    void updateDescriptors();
+    bool updateDescriptors();
     bool rebuildBuffers();
 
     std::shared_ptr<vk::Device> m_device;
@@ -88,7 +88,10 @@ private:
     VkDescriptorPool m_descriptorPool;
     std::vector<VkDescriptorSet> m_descriptorSets;
     std::vector<std::shared_ptr<vk::DeviceImage>> m_fixedImages;
+    std::vector<std::shared_ptr<vk::DeviceImage>> m_parameterizedImages;
     std::vector<std::shared_ptr<vk::HostBuffer>> m_uniformBuffers;
+    // The parameter index and the currently bound image Ids for parameterized images.
+    std::vector<std::pair<int, int>> m_parameterizedImageIDs;
     std::shared_ptr<vk::CommandBuffer> m_commands;
     bool m_running;
     std::unique_ptr<float[]> m_parameterValues;

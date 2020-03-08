@@ -16,7 +16,6 @@
 #include "vulkan/DeviceChooser.hpp"
 #include "vulkan/Instance.hpp"
 #include "vulkan/Shader.hpp"
-#include "vulkan/Uniform.hpp"
 #include "vulkan/Vulkan.hpp"
 
 #include "fmt/core.h"

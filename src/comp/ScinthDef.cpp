@@ -41,6 +41,9 @@ ScinthDef::~ScinthDef() {
     for (auto sampler : m_parameterizedSamplers) {
         m_samplerFactory->releaseSampler(sampler);
     }
+    if (m_emptySampler) {
+        m_samplerFactory->releaseSampler(m_emptySampler);
+    }
 }
 
 bool ScinthDef::build(ShaderCompiler* compiler) {
@@ -213,6 +216,12 @@ bool ScinthDef::buildSamplers() {
         }
 
         m_parameterizedSamplers.emplace_back(sampler);
+    }
+
+    // If there are parameterized images we will want to create the empty sampler, to ensure that empty images render
+    // correctly as transparent black.
+    if (m_parameterizedSamplers.size()) {
+        m_emptySampler = m_samplerFactory->getSampler(0);
     }
 
     return true;

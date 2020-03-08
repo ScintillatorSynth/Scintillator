@@ -53,6 +53,7 @@ public:
     VkDescriptorSetLayout layout() const { return m_descriptorSetLayout; }
     const std::vector<std::shared_ptr<vk::Sampler>>& fixedSamplers() const { return m_fixedSamplers; }
     const std::vector<std::shared_ptr<vk::Sampler>>& parameterizedSamplers() const { return m_parameterizedSamplers; }
+    std::shared_ptr<vk::Sampler> emptySampler() const { return m_emptySampler; }
     std::shared_ptr<Pipeline> pipeline() const { return m_pipeline; }
 
 private:
@@ -72,6 +73,7 @@ private:
     VkDescriptorSetLayout m_descriptorSetLayout;
     std::vector<std::shared_ptr<vk::Sampler>> m_fixedSamplers;
     std::vector<std::shared_ptr<vk::Sampler>> m_parameterizedSamplers;
+    std::shared_ptr<vk::Sampler> m_emptySampler;
     std::shared_ptr<Pipeline> m_pipeline;
 };
 

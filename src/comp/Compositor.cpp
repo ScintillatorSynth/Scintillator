@@ -10,6 +10,7 @@
 #include "comp/ScinthDef.hpp"
 #include "comp/ShaderCompiler.hpp"
 #include "comp/StageManager.hpp"
+#include "vulkan/Buffer.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
@@ -49,6 +50,33 @@ bool Compositor::create() {
 
     if (!m_stageManager->create(m_canvas->numberOfImages())) {
         spdlog::error("Compositor failed to create stage manager.");
+        return false;
+    }
+
+
+    // Create the empty image and stage.
+    std::shared_ptr<vk::HostBuffer> emptyImageBuffer(new vk::HostBuffer(m_device, vk::Buffer::Kind::kStaging, 4));
+    if (!emptyImageBuffer->create()) {
+        spdlog::error("Compositor failed to create empty staging image.");
+        return false;
+    }
+    std::memset(emptyImageBuffer->mappedAddress(), 0, 4);
+
+    std::shared_ptr<vk::DeviceImage> emptyImage(new vk::DeviceImage(m_device));
+    if (!emptyImage->create(1, 1)) {
+        spdlog::error("Compositor failed to create empty device image.");
+        return false;
+    }
+
+    if (!m_stageManager->stageImage(emptyImageBuffer, emptyImage, [this, emptyImage] {
+            if (!emptyImage->createView()) {
+                spdlog::error("Compositor failed to create ImageView for empty image");
+                return;
+            }
+            m_imageMap->setEmptyImage(emptyImage);
+            spdlog::info("Compositor finished staging the empty image");
+        })) {
+        spdlog::error("Compositor failed to stage the empty image.");
         return false;
     }
 
