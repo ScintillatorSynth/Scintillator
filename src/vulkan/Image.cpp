@@ -10,6 +10,7 @@ Image::Image(std::shared_ptr<Device> device): m_device(device), m_image(VK_NULL_
 
 Image::~Image() {
     if (m_imageView != VK_NULL_HANDLE) {
+        vkDestroyImageView(m_device->get(), m_imageView, nullptr);
     }
 }
 
@@ -21,6 +22,11 @@ Image::Image(std::shared_ptr<Device> device, VkImage image, VkFormat format, VkE
     m_imageView(VK_NULL_HANDLE) {}
 
 bool Image::createView() {
+    if (m_imageView != VK_NULL_HANDLE) {
+        spdlog::warn("Image got duplicate calls to createView.");
+        return true;
+    }
+
     VkImageViewCreateInfo viewCreateInfo = {};
     viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     viewCreateInfo.image = m_image;
@@ -39,6 +45,7 @@ bool Image::createView() {
         spdlog::error("Image failed to create image view.");
         return false;
     }
+
     return true;
 }
 
@@ -54,6 +61,11 @@ AllocatedImage::AllocatedImage(std::shared_ptr<Device> device):
 AllocatedImage::~AllocatedImage() { destroy(); }
 
 void AllocatedImage::destroy() {
+    if (m_imageView != VK_NULL_HANDLE) {
+        vkDestroyImageView(m_device->get(), m_imageView, nullptr);
+        m_imageView = VK_NULL_HANDLE;
+    }
+
     if (m_allocation != VK_NULL_HANDLE) {
         vmaDestroyImage(m_device->allocator(), m_image, m_allocation);
         m_image = VK_NULL_HANDLE;

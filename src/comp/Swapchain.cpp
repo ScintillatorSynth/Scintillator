@@ -139,6 +139,7 @@ bool Swapchain::create(Window* window, bool directRendering) {
 
 void Swapchain::destroy() {
     m_canvas->destroy();
+    m_images.clear();
 
     if (m_swapchain != VK_NULL_HANDLE) {
         vkDestroySwapchainKHR(m_device->get(), m_swapchain, nullptr);
