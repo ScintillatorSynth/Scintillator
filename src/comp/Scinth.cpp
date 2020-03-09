@@ -280,7 +280,7 @@ bool Scinth::updateDescriptors() {
             std::shared_ptr<vk::DeviceImage> image = m_imageMap->getImage(imageID);
             // Note image can be null, we'll use the empty image in the actual update.
             m_parameterizedImageIDs[i] = std::make_pair(parameterIndex, imageID);
-            m_parametrizedImages[i] = image;
+            m_parameterizedImages[i] = image;
             newBindings.emplace_back(std::make_pair(i, image));
         }
     }
