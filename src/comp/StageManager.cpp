@@ -15,6 +15,7 @@ namespace scin { namespace comp {
 StageManager::StageManager(std::shared_ptr<vk::Device> device):
     m_device(device),
     m_commandPool(new vk::CommandPool(device)),
+    m_stagingRequested([] {}),
     m_hasCommands(false),
     m_quit(false) {}
 
@@ -59,77 +60,83 @@ void StageManager::destroy() {
     m_fences.clear();
 }
 
+void StageManager::setStagingRequested(std::function<void()> requestFunction) { m_stagingRequested = requestFunction; }
+
 bool StageManager::stageImage(std::shared_ptr<vk::HostBuffer> hostBuffer, std::shared_ptr<vk::DeviceImage> deviceImage,
                               std::function<void()> completion) {
-    std::lock_guard<std::mutex> lock(m_commandMutex);
-    if (!m_hasCommands) {
-        m_pendingWait.commands.reset(new vk::CommandBuffer(m_device, m_commandPool));
-        if (!m_pendingWait.commands->create(1, true)) {
-            spdlog::error("StageManager failed to create command buffer for transfer.");
-            return false;
-        }
-        VkCommandBufferBeginInfo beginInfo = {};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        beginInfo.pInheritanceInfo = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(m_commandMutex);
+        if (!m_hasCommands) {
+            m_pendingWait.commands.reset(new vk::CommandBuffer(m_device, m_commandPool));
+            if (!m_pendingWait.commands->create(1, true)) {
+                spdlog::error("StageManager failed to create command buffer for transfer.");
+                return false;
+            }
+            VkCommandBufferBeginInfo beginInfo = {};
+            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+            beginInfo.pInheritanceInfo = nullptr;
 
-        if (vkBeginCommandBuffer(m_pendingWait.commands->buffer(0), &beginInfo) != VK_SUCCESS) {
-            spdlog::error("StageManager failed to begin command buffer.");
-            return false;
+            if (vkBeginCommandBuffer(m_pendingWait.commands->buffer(0), &beginInfo) != VK_SUCCESS) {
+                spdlog::error("StageManager failed to begin command buffer.");
+                return false;
+            }
+            m_hasCommands = true;
         }
-        m_hasCommands = true;
+
+        VkImageMemoryBarrier transferBarrier = {};
+        transferBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        transferBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        transferBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        transferBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        transferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        transferBarrier.image = deviceImage->get();
+        transferBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        transferBarrier.subresourceRange.baseMipLevel = 0;
+        transferBarrier.subresourceRange.levelCount = 1;
+        transferBarrier.subresourceRange.baseArrayLayer = 0;
+        transferBarrier.subresourceRange.layerCount = 1;
+        transferBarrier.srcAccessMask = 0;
+        transferBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        vkCmdPipelineBarrier(m_pendingWait.commands->buffer(0), VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &transferBarrier);
+
+        VkBufferImageCopy copyRegion = {};
+        copyRegion.bufferOffset = 0;
+        copyRegion.bufferRowLength = 0;
+        copyRegion.bufferImageHeight = 0;
+        copyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        copyRegion.imageSubresource.mipLevel = 0;
+        copyRegion.imageSubresource.baseArrayLayer = 0;
+        copyRegion.imageSubresource.layerCount = 1;
+        copyRegion.imageOffset = { 0, 0, 0 };
+        copyRegion.imageExtent = { deviceImage->width(), deviceImage->height(), 1 };
+        vkCmdCopyBufferToImage(m_pendingWait.commands->buffer(0), hostBuffer->buffer(), deviceImage->get(),
+                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
+
+        VkImageMemoryBarrier samplerBarrier = {};
+        samplerBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        samplerBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        samplerBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        samplerBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        samplerBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        samplerBarrier.image = deviceImage->get();
+        samplerBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        samplerBarrier.subresourceRange.baseMipLevel = 0;
+        samplerBarrier.subresourceRange.levelCount = 1;
+        samplerBarrier.subresourceRange.baseArrayLayer = 0;
+        samplerBarrier.subresourceRange.layerCount = 1;
+        samplerBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        samplerBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        vkCmdPipelineBarrier(m_pendingWait.commands->buffer(0), VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &samplerBarrier);
+
+        m_pendingWait.callbacks.push_back(completion);
+        m_pendingWait.hostBuffers.push_back(hostBuffer);
+        m_pendingWait.deviceImages.push_back(deviceImage);
     }
 
-    VkImageMemoryBarrier transferBarrier = {};
-    transferBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    transferBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    transferBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    transferBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    transferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    transferBarrier.image = deviceImage->get();
-    transferBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    transferBarrier.subresourceRange.baseMipLevel = 0;
-    transferBarrier.subresourceRange.levelCount = 1;
-    transferBarrier.subresourceRange.baseArrayLayer = 0;
-    transferBarrier.subresourceRange.layerCount = 1;
-    transferBarrier.srcAccessMask = 0;
-    transferBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    vkCmdPipelineBarrier(m_pendingWait.commands->buffer(0), VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                         VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &transferBarrier);
-
-    VkBufferImageCopy copyRegion = {};
-    copyRegion.bufferOffset = 0;
-    copyRegion.bufferRowLength = 0;
-    copyRegion.bufferImageHeight = 0;
-    copyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    copyRegion.imageSubresource.mipLevel = 0;
-    copyRegion.imageSubresource.baseArrayLayer = 0;
-    copyRegion.imageSubresource.layerCount = 1;
-    copyRegion.imageOffset = { 0, 0, 0 };
-    copyRegion.imageExtent = { deviceImage->width(), deviceImage->height(), 1 };
-    vkCmdCopyBufferToImage(m_pendingWait.commands->buffer(0), hostBuffer->buffer(), deviceImage->get(),
-                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
-
-    VkImageMemoryBarrier samplerBarrier = {};
-    samplerBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    samplerBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    samplerBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    samplerBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    samplerBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    samplerBarrier.image = deviceImage->get();
-    samplerBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    samplerBarrier.subresourceRange.baseMipLevel = 0;
-    samplerBarrier.subresourceRange.levelCount = 1;
-    samplerBarrier.subresourceRange.baseArrayLayer = 0;
-    samplerBarrier.subresourceRange.layerCount = 1;
-    samplerBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    samplerBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    vkCmdPipelineBarrier(m_pendingWait.commands->buffer(0), VK_PIPELINE_STAGE_TRANSFER_BIT,
-                         VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &samplerBarrier);
-
-    m_pendingWait.callbacks.push_back(completion);
-    m_pendingWait.hostBuffers.push_back(hostBuffer);
-    m_pendingWait.deviceImages.push_back(deviceImage);
+    m_stagingRequested();
     return true;
 }
 

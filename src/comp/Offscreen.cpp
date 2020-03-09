@@ -6,6 +6,7 @@
 #include "comp/Compositor.hpp"
 #include "comp/FrameTimer.hpp"
 #include "comp/RenderSync.hpp"
+#include "comp/StageManager.hpp"
 #include "comp/Swapchain.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
@@ -30,6 +31,7 @@ Offscreen::Offscreen(std::shared_ptr<vk::Device> device, int width, int height, 
     m_bufferPool(new scin::av::BufferPool(width, height)),
     m_render(false),
     m_swapBlitRequested(false),
+    m_stagingRequested(false),
     m_swapchainImageIndex(0),
     m_frameRate(frameRate),
     m_deltaTime(0) {
@@ -219,6 +221,14 @@ std::shared_ptr<Canvas> Offscreen::canvas() { return m_framebuffer->canvas(); }
 void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
     spdlog::info("Offscreen render thread starting up.");
 
+    compositor->stageManager()->setStagingRequested([this] {
+        {
+            std::lock_guard<std::mutex> lock(m_renderMutex);
+            m_stagingRequested = true;
+        }
+        m_renderCondition.notify_one();
+    });
+
     double time = 0.0;
     size_t frameNumber = 0;
     size_t frameIndex = 0;
@@ -235,20 +245,27 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
         double deltaTime = 0.0;
         bool flush = false;
         bool render = false;
+        bool stage = false;
         bool swapBlit = false;
         uint32_t swapImageIndex = 0;
         std::function<void(size_t)> flushCallback;
 
         {
             std::unique_lock<std::mutex> lock(m_renderMutex);
-            m_renderCondition.wait(lock, [this] { return m_quit || m_swapBlitRequested || m_render; });
+            m_renderCondition.wait(lock,
+                                   [this] { return m_quit || m_swapBlitRequested || m_stagingRequested || m_render; });
             if (m_quit) {
                 break;
             }
 
             render = m_render;
+            stage = m_stagingRequested;
             swapBlit = m_swapBlitRequested;
             deltaTime = m_deltaTime;
+
+            if (stage) {
+                m_stagingRequested = false;
+            }
 
             if (swapBlit) {
                 render = false;
@@ -265,6 +282,9 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
             }
         }
 
+        if (stage) {
+            compositor->stageManager()->submitTransferCommands(m_device->graphicsQueue());
+        }
         if (swapBlit) {
             blitAndPresent(frameIndex, swapImageIndex);
             continue;

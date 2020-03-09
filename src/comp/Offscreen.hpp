@@ -159,6 +159,7 @@ private:
     std::condition_variable m_renderCondition;
     bool m_render;
     bool m_swapBlitRequested;
+    bool m_stagingRequested;
     uint32_t m_swapchainImageIndex;
     int m_frameRate;
     double m_deltaTime;

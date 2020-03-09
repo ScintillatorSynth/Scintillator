@@ -48,3 +48,18 @@
     - scale: 3.0
       xmod: 1.0
       ymod: 0.7
+- name: "Constant Image"
+  category: "images"
+  comment: "Test simple image render with constant image"
+  shortName: "constImage"
+  scinthDef: "{
+    var size = TextureSize.fg(1);
+    var aspect = VX.fg(size) / VY.fg(size);
+    var pos = TexPos.fg;
+    pos = Vec2.fg((VX.fg(pos) - 0.125) / aspect, VY.fg(pos));
+    Sampler.fg(1, pos); }"
+  images:
+    - file: "molly.png"
+      number: 1
+  captureTimes: [ 1 ]
+

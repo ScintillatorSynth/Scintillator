@@ -41,12 +41,16 @@ public:
     bool create(size_t numberOfImages);
     void destroy();
 
+    /*! StageManager will call the provided function each time there are items to be staged by the main submission
+     * thread.
+     */
+    void setStagingRequested(std::function<void()> requestFunction);
+
     /*! Typically not called on the main render thread, adds the necessary commands to a command buffer to copy the
      * host-accessible image bytes into optimal tiling and layout for read-only sampling.
      */
     bool stageImage(std::shared_ptr<vk::HostBuffer> hostBuffer, std::shared_ptr<vk::DeviceImage> deviceImage,
                     std::function<void()> completion);
-
 
     /*! Since VkFence objects can only be waited on by one thread, we submit the transfer commands separately from the
      * compositor commands. This function must be called on the main submission thread.
@@ -59,6 +63,7 @@ private:
     std::shared_ptr<vk::Device> m_device;
     std::shared_ptr<vk::CommandPool> m_commandPool;
     std::vector<VkFence> m_fences;
+    std::function<void()> m_stagingRequested;
 
     struct Wait {
         Wait(): fenceIndex(0) {}

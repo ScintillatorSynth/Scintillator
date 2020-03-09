@@ -18,19 +18,7 @@ Sampler : VGen {
 	var <>clampBorderColor = \transparentBlack;
 
 	*fg { |image, pos|
-		var sampler = this.multiNew(\fragment, pos);
-		image = image.asVGenInput;
-		case
-		{ image.isNumber } {
-			sampler.image = image;
-			sampler.imageArgType = \constant;
-		}
-		{ image.isControlVGen } {
-			sampler.image = image.outputIndex;
-			sampler.imageArgType = \parameter;
-		}
-		{ Error.new("Unsupported argument type to Sampler image argument. Supported types are constants and parameters.").throw; };
-		^sampler;
+		^this.multiNew(\fragment, pos).prSetupImageInput(image);
 	}
 
 	inputDimensions {
@@ -43,5 +31,33 @@ Sampler : VGen {
 
 	isSamplerVGen {
 		^true;
+	}
+
+	prSetupImageInput { |inImage|
+		inImage = inImage.asVGenInput;
+		case
+		{ inImage.isNumber } {
+			image = inImage;
+			imageArgType = \constant;
+		}
+		{ inImage.isControlVGen } {
+			image = inImage.outputIndex;
+			imageArgType = \parameter;
+		}
+		{ Error.new("Unsupported argument type to Sampler image argument. Supported types are constants and parameters.").throw; };
+	}
+}
+
+TextureSize : Sampler {
+	*fg { |image|
+		^this.multiNew(\fragment).prSetupImageInput(image);
+	}
+
+	inputDimensions {
+		^[[]];
+	}
+
+	outputDimensions {
+		^[[2]];
 	}
 }

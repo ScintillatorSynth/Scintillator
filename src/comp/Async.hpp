@@ -5,11 +5,12 @@
 
 #include <atomic>
 #include <condition_variable>
-#include <functional>
 #include <deque>
+#include <functional>
+#include <mutex>
 #include <string>
 #include <thread>
-#include <mutex>
+#include <unordered_set>
 #include <vector>
 
 namespace scin {
@@ -137,6 +138,11 @@ private:
     std::mutex m_syncCallbackMutex;
     std::condition_variable m_syncActiveCondition;
     std::deque<std::function<void()>> m_syncCallbacks;
+
+    std::mutex m_stagingMutex;
+    std::unordered_set<size_t> m_activeStaging;
+    size_t m_stagingSerial;
+    std::condition_variable m_activeStagingCondition;
 };
 
 } // namespace comp

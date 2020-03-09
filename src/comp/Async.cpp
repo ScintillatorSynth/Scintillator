@@ -21,7 +21,8 @@ Async::Async(std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<Compo
     m_compositor(compositor),
     m_device(device),
     m_quit(false),
-    m_numberOfActiveWorkers(0) {}
+    m_numberOfActiveWorkers(0),
+    m_stagingSerial(0) {}
 
 Async::~Async() { stop(); }
 
@@ -188,7 +189,20 @@ void Async::syncThreadMain() {
             }
         }
 
-        spdlog::debug("Async sync watcher thread idle, firing callbacks.");
+        spdlog::debug("Async sync watcher threads idle, waiting for all staging completed.");
+
+        {
+            std::unique_lock<std::mutex> lock(m_stagingMutex);
+            m_activeStagingCondition.wait(lock, [this] { return m_quit || m_activeStaging.size() == 0; });
+            if (m_quit) {
+                break;
+            }
+            if (m_activeStaging.size()) {
+                continue;
+            }
+        }
+
+        spdlog::debug("Async sync watcher true idle, firing callbacks.");
 
         // Now we can empty the callback queue.
         std::function<void()> syncCallback;
@@ -337,7 +351,25 @@ void Async::asyncReadImageIntoNewBuffer(int bufferID, std::string filePath, int 
         return;
     }
 
-    m_compositor->stageImage(bufferID, textureWidth, textureHeight, imageBuffer, completion);
+    // Save unique identifier in active staging set, for removal when staging is complete. This allows Async threads to
+    // continue working, but track active staging requests so a server sync will still block until all staging has
+    // completed.
+    size_t serial = 0;
+    {
+        std::lock_guard<std::mutex> lock(m_stagingMutex);
+        serial = m_stagingSerial;
+        ++m_stagingSerial;
+        m_activeStaging.insert(serial);
+    }
+
+    m_compositor->stageImage(bufferID, textureWidth, textureHeight, imageBuffer, [this, serial, completion] {
+        {
+            std::lock_guard<std::mutex> lock(m_stagingMutex);
+            m_activeStaging.erase(serial);
+        }
+        m_activeStagingCondition.notify_one();
+        completion();
+    });
 }
 
 } // namespace comp
