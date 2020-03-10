@@ -37,13 +37,13 @@ VkSamplerAddressMode addressModeForAbstract(scin::base::AbstractSampler::Address
 VkBorderColor borderColorForAbstract(scin::base::AbstractSampler::ClampBorderColor borderColor) {
     switch (borderColor) {
     case scin::base::AbstractSampler::ClampBorderColor::kTransparentBlack:
-        return VK_BORDER_COLOR_INT_TRANSPARENT_BLACK;
+        return VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
 
     case scin::base::AbstractSampler::ClampBorderColor::kBlack:
-        return VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        return VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
 
     case scin::base::AbstractSampler::ClampBorderColor::kWhite:
-        return VK_BORDER_COLOR_INT_OPAQUE_WHITE;
+        return VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
     }
 }
 

@@ -21,6 +21,12 @@ Sampler : VGen {
 		^this.multiNew(\fragment, pos).prSetupImageInput(image);
 	}
 
+	// Sets both U and V address modes at the same time.
+	addressMode { |mode|
+		addressModeU = mode;
+		addressModeV = mode;
+	}
+
 	inputDimensions {
 		^[[2]];
 	}

@@ -193,8 +193,9 @@ bool Scinth::allocateDescriptors() {
             ++binding;
         }
 
-        std::vector<VkDescriptorImageInfo> imageInfos;
+        std::vector<VkDescriptorImageInfo> imageInfos(totalSamplers);
         auto samplerIndex = 0;
+        auto imageInfoIndex = 0;
         for (const auto pair : m_scinthDef->abstract()->fixedImages()) {
             std::shared_ptr<vk::DeviceImage> image = m_imageMap->getImage(pair.second);
             if (!image) {
@@ -202,14 +203,9 @@ bool Scinth::allocateDescriptors() {
                 return false;
             }
 
-            VkDescriptorImageInfo imageInfo = {};
-            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.imageView = image->view();
-            imageInfo.sampler = m_scinthDef->fixedSamplers()[samplerIndex]->get();
-            imageInfos.emplace_back(imageInfo);
-
-            ++samplerIndex;
-            m_fixedImages.emplace_back(image);
+            imageInfos[imageInfoIndex].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfos[imageInfoIndex].imageView = image->view();
+            imageInfos[imageInfoIndex].sampler = m_scinthDef->fixedSamplers()[samplerIndex]->get();
 
             VkWriteDescriptorSet imageWrite = {};
             imageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -218,10 +214,15 @@ bool Scinth::allocateDescriptors() {
             imageWrite.dstArrayElement = 0;
             imageWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             imageWrite.descriptorCount = 1;
-            imageWrite.pImageInfo = imageInfos.data() + (imageInfos.size() - 1);
+            imageWrite.pImageInfo = imageInfos.data() + imageInfoIndex;
             descriptorWrites.emplace_back(imageWrite);
 
             ++binding;
+            ++samplerIndex;
+            ++imageInfoIndex;
+            if (i == 0) {
+                m_fixedImages.emplace_back(image);
+            }
         }
 
         samplerIndex = 0;
@@ -243,13 +244,9 @@ bool Scinth::allocateDescriptors() {
                 sampler = m_scinthDef->emptySampler();
             }
 
-            VkDescriptorImageInfo imageInfo = {};
-            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.imageView = image->view();
-            imageInfo.sampler = sampler->get();
-            imageInfos.emplace_back(imageInfo);
-
-            ++samplerIndex;
+            imageInfos[imageInfoIndex].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfos[imageInfoIndex].imageView = image->view();
+            imageInfos[imageInfoIndex].sampler = sampler->get();
 
             VkWriteDescriptorSet imageWrite = {};
             imageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -258,10 +255,12 @@ bool Scinth::allocateDescriptors() {
             imageWrite.dstArrayElement = 0;
             imageWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             imageWrite.descriptorCount = 1;
-            imageWrite.pImageInfo = imageInfos.data() + (imageInfos.size() - 1);
+            imageWrite.pImageInfo = imageInfos.data() + imageInfoIndex;
             descriptorWrites.emplace_back(imageWrite);
 
             ++binding;
+            ++samplerIndex;
+            ++imageInfoIndex;
         }
 
         vkUpdateDescriptorSets(m_device->get(), descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);

@@ -418,7 +418,7 @@ add_custom_command(OUTPUT ${SCLANG_SCIN_CONFIG}
 
 # Reference source and test images. We always use a specific git hash, to control which images we compare against.
 include(ExternalProject)
-set(SCIN_TEST_IMAGE_HASH "ecb05d9be47f5b8a173dcd86e91614dbaf42870e")
+set(SCIN_TEST_IMAGE_HASH "926ab9c0abbae292628e2f65507a712480985e24")
 ExternalProject_Add(reference_images
     PREFIX ref
     STEP_TARGETS update
