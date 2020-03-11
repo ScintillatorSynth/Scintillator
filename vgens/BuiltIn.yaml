@@ -27,3 +27,11 @@ dimensions:
     - inputs: 4
       outputs: 4
 shader: "@out = step(@edge, @x);"
+---
+name: TextureSize
+sampler: true
+outputs: [ out ]
+dimensions:
+    - outputs: 2
+shader: "@out = vec2(textureSize(@sampler, 0));"
+

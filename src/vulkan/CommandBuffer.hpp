@@ -6,13 +6,17 @@
 #include <memory>
 #include <vector>
 
-namespace scin { namespace vk {
+namespace scin {
 
-class Buffer;
+namespace comp {
+// TODO: this dependency back to comp namespace is a serious code smell.
+class Scinth;
+}
+
+namespace vk {
+
 class CommandPool;
 class Device;
-class Pipeline;
-class Uniform;
 
 /*! Simple wrapper class around an array of Vulkan CommandBuffer objects.
  */
@@ -31,16 +35,11 @@ public:
 
     void destroy();
 
-    /*! Associates graphical resources with this command buffer, allowing the destruction these resources to be tied to
-     * after the destruction of this CommandBuffer, ensuring the dependencies are destructed in the right order.
-     *
-     * \param vertexBuffer The vertex buffer bound by this CommandBuffer.
-     * \param indexBuffer The index buffer bound by this CommandBuffer.
-     * \param uniform The uniform, if any, bound by this CommanBuffer.
-     * \param pipeline The pipeline bound by this CommandBuffer.
+    /*! Associate a Scinth with the command buffer, so none of the associated resources in the Scinth will be destroyed
+     * until after this CommandBuffer goes out of scope.
      */
-    void associateResources(std::shared_ptr<Buffer> vertexBuffer, std::shared_ptr<Buffer> indexBuffer,
-                            std::shared_ptr<Uniform> uniform, std::shared_ptr<Pipeline> pipeline);
+    void associateScinth(std::shared_ptr<comp::Scinth> scinth);
+    void associateSecondaryCommands(const std::vector<std::shared_ptr<CommandBuffer>>& secondary);
 
     VkCommandBuffer buffer(size_t i) { return m_commandBuffers[i]; }
     size_t count() const { return m_commandBuffers.size(); }
@@ -49,10 +48,8 @@ private:
     std::shared_ptr<Device> m_device;
     std::shared_ptr<CommandPool> m_commandPool;
     std::vector<VkCommandBuffer> m_commandBuffers;
-    std::shared_ptr<Buffer> m_vertexBuffer;
-    std::shared_ptr<Buffer> m_indexBuffer;
-    std::shared_ptr<Uniform> m_uniform;
-    std::shared_ptr<Pipeline> m_pipeline;
+    std::shared_ptr<comp::Scinth> m_scinth;
+    std::vector<std::shared_ptr<CommandBuffer>> m_secondaryCommands;
 };
 
 } // namespace vk

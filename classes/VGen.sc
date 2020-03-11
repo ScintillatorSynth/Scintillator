@@ -99,6 +99,10 @@ VGen : AbstractFunction {
 	outputDimensions {
 		^[[]];
 	}
+
+	isSamplerVGen {
+		^false;
+	}
 }
 
 MultiOutVGen : VGen {
@@ -152,6 +156,7 @@ VOutputProxy : VGen {
 	isValidVGenInput { ^false }
 	isVGen { ^false }
 	isControlVGen { ^false }
+	isSamplerVGen { ^false }
 }
 
 + AbstractFunction {

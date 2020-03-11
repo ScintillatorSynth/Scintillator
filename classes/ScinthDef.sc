@@ -80,6 +80,17 @@ ScinthDef {
 		children.do({ | vgen, index |
 			yaml = yaml ++ depthIndent ++ "- className:"  + vgen.name ++ "\n";
 			yaml = yaml ++ depthIndent ++ "  rate: fragment\n";
+			if (vgen.isSamplerVGen, {
+				yaml = yaml ++ depthIndent ++ "  sampler:\n";
+				yaml = yaml ++ secondDepth ++ "  image:" + vgen.image ++ "\n";
+				yaml = yaml ++ secondDepth ++ "  imageArgType:" + vgen.imageArgType ++ "\n";
+				yaml = yaml ++ secondDepth ++ "  minFilterMode:" + vgen.minFilterMode ++ "\n";
+				yaml = yaml ++ secondDepth ++ "  magFilterMode:" + vgen.magFilterMode ++ "\n";
+				yaml = yaml ++ secondDepth ++ "  enableAnisotropicFiltering:" + vgen.enableAnisotropicFiltering.asString + "\n";
+				yaml = yaml ++ secondDepth ++ "  addressModeU:" + vgen.addressModeU ++ "\n";
+				yaml = yaml ++ secondDepth ++ "  addressModeV:" + vgen.addressModeV ++ "\n";
+				yaml = yaml ++ secondDepth ++ "  clampBorderColor:" + vgen.clampBorderColor ++ "\n";
+			});
 			if (vgen.inputs.size > 0, {
 				yaml = yaml ++ depthIndent ++ "  inputs:\n";
 				vgen.inputs.do({ |input, inputIndex|
@@ -100,7 +111,7 @@ ScinthDef {
 						yaml = yaml ++ secondDepth ++ "  outputIndex: 0\n";
 						yaml = yaml ++ secondDepth ++ "  dimension:" + vgen.inDims[inputIndex] ++ "\n";
 					}
-					{ thisMethod.notImplemented }
+					{ Error.new("unknown input").throw };
 				});
 			});
 			yaml = yaml ++ depthIndent ++ "  outputs:\n";

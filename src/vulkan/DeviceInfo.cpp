@@ -32,7 +32,6 @@ bool DeviceInfo::build() {
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(m_physicalDevice, &queueFamilyCount, queueFamilies.data());
     int familyIndex = 0;
-    bool allFamiliesFound = false;
     for (const auto& queueFamily : queueFamilies) {
         // Ask glfw for presentation support in this queue family.
         if (glfwGetPhysicalDevicePresentationSupport(m_instance->get(), m_physicalDevice, familyIndex) == GLFW_TRUE) {
@@ -70,6 +69,8 @@ bool DeviceInfo::build() {
     }
     m_supportsMemoryBudget = optionalExtensions.empty();
     m_supportsWindow = windowExtensions.empty() && (m_presentFamilyIndex >= 0);
+
+    vkGetPhysicalDeviceFeatures(m_physicalDevice, &m_features);
 
     return true;
 }

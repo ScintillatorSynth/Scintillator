@@ -5,3 +5,9 @@ outputs: [ out ]
 dimensions:
     - outputs: 2
 shader: "@out = @normPos;"
+---
+name: TexPos
+outputs: [ out ]
+dimensions:
+    - outputs: 2
+shader: "@out = @texPos;"

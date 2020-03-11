@@ -9,53 +9,56 @@ include_directories(
 )
 
 #### "Core" files (without external dependencies)
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/core")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/base")
 
-add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp"
-    COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/core/Intrinsic.cpp.in"
-    MAIN_DEPENDENCY core/Intrinsic.cpp.in
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/core"
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/base/Intrinsic.cpp"
+    COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/base/Intrinsic.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/base/Intrinsic.cpp.in"
+    MAIN_DEPENDENCY base/Intrinsic.cpp.in
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/base"
 )
 
-add_library(scintillator_core STATIC
-    "${CMAKE_CURRENT_BINARY_DIR}/core/Intrinsic.cpp"
-    core/AbstractScinthDef.cpp
-    core/AbstractScinthDef.hpp
-    core/AbstractVGen.cpp
-    core/AbstractVGen.hpp
-    core/Archetypes.cpp
-    core/Archetypes.hpp
-    core/FileSystem.hpp
-    core/Intrinsic.hpp
-    core/Manifest.cpp
-    core/Manifest.hpp
-    core/Parameter.cpp
-    core/Parameter.hpp
-    core/Shape.cpp
-    core/Shape.hpp
-    core/VGen.cpp
-    core/VGen.hpp
+add_library(scintillator_base STATIC
+    "${CMAKE_CURRENT_BINARY_DIR}/base/Intrinsic.cpp"
+    base/AbstractSampler.cpp
+    base/AbstractSampler.hpp
+    base/AbstractScinthDef.cpp
+    base/AbstractScinthDef.hpp
+    base/AbstractVGen.cpp
+    base/AbstractVGen.hpp
+    base/Archetypes.cpp
+    base/Archetypes.hpp
+    base/FileSystem.hpp
+    base/Intrinsic.hpp
+    base/Manifest.cpp
+    base/Manifest.hpp
+    base/Parameter.cpp
+    base/Parameter.hpp
+    base/Shape.cpp
+    base/Shape.hpp
+    base/VGen.cpp
+    base/VGen.hpp
 )
 
-target_link_libraries(scintillator_core
+target_link_libraries(scintillator_base
     fmt
     glm
     spdlog
     yaml-cpp
 )
 if (UNIX AND NOT APPLE)
-    target_link_libraries(scintillator_core
+    target_link_libraries(scintillator_base
         stdc++fs
     )
 endif()
 
 #### Unit Testing for Core Files
 add_executable(run_unittests
-    core/AbstractScinthDef_unittests.cpp
-    core/AbstractVGen_unittests.cpp
-    core/Archetypes_unittests.cpp
-    core/Manifest_unittests.cpp
-    core/VGen_unittests.cpp
+    base/AbstractSampler_unittests.cpp
+    base/AbstractScinthDef_unittests.cpp
+    base/AbstractVGen_unittests.cpp
+    base/Archetypes_unittests.cpp
+    base/Manifest_unittests.cpp
+    base/VGen_unittests.cpp
 
     run_unittests.cpp
 )
@@ -64,7 +67,7 @@ target_link_libraries(run_unittests
     gflags
     glm
     gtest
-    scintillator_core
+    scintillator_base
 )
 if (UNIX AND NOT APPLE)
     target_link_libraries(run_unittests
@@ -74,8 +77,7 @@ endif()
 
 #### Scintillator Binary
 
-
-configure_file(Version.hpp.in "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp")
+configure_file(infra/Version.hpp.in "${CMAKE_CURRENT_BINARY_DIR}/infra/Version.hpp")
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/osc/commands")
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp"
     COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/osc/commands/Command.cpp.in"
@@ -84,18 +86,8 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp"
 )
 
 set(scintillator_synth_files
-    "${CMAKE_CURRENT_BINARY_DIR}/Version.hpp"
+    "${CMAKE_CURRENT_BINARY_DIR}/infra/Version.hpp"
     "${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp"
-    Async.cpp
-    Async.hpp
-    Compositor.cpp
-    Compositor.hpp
-    Logger.cpp
-    Logger.hpp
-    Scinth.cpp
-    Scinth.hpp
-    ScinthDef.cpp
-    ScinthDef.hpp
     scinsynth.cpp
 
     av/AVIncludes.hpp
@@ -103,14 +95,52 @@ set(scintillator_synth_files
     av/Buffer.hpp
     av/BufferPool.cpp
     av/BufferPool.hpp
+    av/Decoder.cpp
+    av/Decoder.hpp
     av/Encoder.cpp
     av/Encoder.hpp
     av/Frame.cpp
     av/Frame.hpp
+    av/ImageDecoder.cpp
+    av/ImageDecoder.hpp
     av/ImageEncoder.cpp
     av/ImageEncoder.hpp
     av/Packet.cpp
     av/Packet.hpp
+
+    comp/Async.cpp
+    comp/Async.hpp
+    comp/Canvas.cpp
+    comp/Canvas.hpp
+    comp/Compositor.cpp
+    comp/Compositor.hpp
+    comp/FrameTimer.cpp
+    comp/FrameTimer.hpp
+    comp/ImageMap.cpp
+    comp/ImageMap.hpp
+    comp/Offscreen.cpp
+    comp/Offscreen.hpp
+    comp/Pipeline.cpp
+    comp/Pipeline.hpp
+    comp/RenderSync.cpp
+    comp/RenderSync.hpp
+    comp/SamplerFactory.cpp
+    comp/SamplerFactory.hpp
+    comp/Scinth.cpp
+    comp/Scinth.hpp
+    comp/ScinthDef.cpp
+    comp/ScinthDef.hpp
+    comp/ShaderCompiler.cpp
+    comp/ShaderCompiler.hpp
+    comp/StageManager.cpp
+    comp/StageManager.hpp
+    comp/Swapchain.cpp
+    comp/Swapchain.hpp
+    comp/Window.cpp
+    comp/Window.hpp
+
+    infra/Logger.cpp
+    infra/Logger.hpp
 
     osc/Address.cpp
     osc/Address.hpp
@@ -133,6 +163,10 @@ set(scintillator_synth_files
     osc/commands/DumpOSC.hpp
     osc/commands/Echo.cpp
     osc/commands/Echo.hpp
+    osc/commands/ImageBufferAllocRead.cpp
+    osc/commands/ImageBufferAllocRead.hpp
+    osc/commands/ImageBufferQuery.cpp
+    osc/commands/ImageBufferQuery.hpp
     osc/commands/LogAppend.cpp
     osc/commands/LogAppend.hpp
     osc/commands/LogLevel.cpp
@@ -162,8 +196,6 @@ set(scintillator_synth_files
 
     vulkan/Buffer.cpp
     vulkan/Buffer.hpp
-    vulkan/Canvas.cpp
-    vulkan/Canvas.hpp
     vulkan/CommandBuffer.cpp
     vulkan/CommandBuffer.hpp
     vulkan/CommandPool.cpp
@@ -176,48 +208,19 @@ set(scintillator_synth_files
     vulkan/DeviceInfo.hpp
     vulkan/Framebuffer.cpp
     vulkan/Framebuffer.hpp
-    vulkan/FrameTimer.cpp
-    vulkan/FrameTimer.hpp
-    vulkan/ImageSet.cpp
-    vulkan/ImageSet.hpp
+    vulkan/Image.cpp
+    vulkan/Image.hpp
     vulkan/Instance.cpp
     vulkan/Instance.hpp
-    vulkan/Offscreen.cpp
-    vulkan/Offscreen.hpp
-    vulkan/Pipeline.cpp
-    vulkan/Pipeline.hpp
-    vulkan/RenderSync.cpp
-    vulkan/RenderSync.hpp
+    vulkan/Sampler.cpp
+    vulkan/Sampler.hpp
     vulkan/Shader.cpp
     vulkan/Shader.hpp
-    vulkan/ShaderCompiler.cpp
-    vulkan/ShaderCompiler.hpp
-    vulkan/Swapchain.cpp
-    vulkan/Swapchain.hpp
-    vulkan/Uniform.cpp
-    vulkan/Uniform.hpp
-    vulkan/UniformLayout.cpp
-    vulkan/UniformLayout.hpp
     vulkan/Vulkan.hpp
-    vulkan/Window.cpp
-    vulkan/Window.hpp
 )
 
 if (APPLE)
     add_executable(scinsynth MACOSX_BUNDLE ${scintillator_synth_files})
-else()
-    add_executable(scinsynth ${scintillator_synth_files})
-endif()
-
-if (NOT APPLE)
-    find_path(AVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
-    find_library(AVCODEC_LIBRARY avcodec)
-    find_path(AVFORMAT_INCLUDE_DIR libavformat/avformat.h)
-    find_library(AVFORMAT_LIBRARY avformat)
-    find_path(AVUTIL_INCLUDE_DIR libavutil/avutil.h)
-    find_library(AVUTIL_LIBRARY avutil)
-    find_library(SHADERC_LIBRARY shaderc_combined)
-else()
     find_library(AVCODEC_LIBRARY
         NAMES avcodec
         PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
@@ -233,6 +236,11 @@ else()
         PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
         NO_DEFAULT_PATH
     )
+    find_library(SWSCALE_LIBRARY
+        NAMES swscale
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
     find_library(Vulkan_LIBRARY
         NAMES vulkan
         PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
@@ -243,20 +251,32 @@ else()
         PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
         NO_DEFAULT_PATH
     )
+else()
+    add_executable(scinsynth ${scintillator_synth_files})
+    find_path(AVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
+    find_library(AVCODEC_LIBRARY avcodec)
+    find_path(AVFORMAT_INCLUDE_DIR libavformat/avformat.h)
+    find_library(AVFORMAT_LIBRARY avformat)
+    find_path(AVUTIL_INCLUDE_DIR libavutil/avutil.h)
+    find_library(AVUTIL_LIBRARY avutil)
+    find_path(SWSCALE_INCLUDE_DIR libswscale/swscale.h)
+    find_library(SWSCALE_LIBRARY swscale)
+    find_library(SHADERC_LIBRARY shaderc_combined)
 endif()
 
 target_link_libraries(scinsynth
     "${SCIN_EXT_INSTALL_DIR}/lib/liblo.a"
+    "${Vulkan_LIBRARY}"
     ${AVCODEC_LIBRARY}
     ${AVFORMAT_LIBRARY}
     ${AVUTIL_LIBRARY}
     ${SHADERC_LIBRARY}
-    "${Vulkan_LIBRARY}"
+    ${SWSCALE_LIBRARY}
     VulkanMemoryAllocator
     gflags
     glfw
     glm
-    scintillator_core
+    scintillator_base
     spdlog
 )
 
@@ -265,6 +285,7 @@ target_include_directories(scinsynth PRIVATE
     ${AVFORMAT_INCLUDE_DIR}
     ${AVUTIL_INCLUDE_DIR}
     ${Vulkan_INCLUDE_DIRS}
+    ${SWSCALE_INCLUDE_DIR}
 )
 
 if (NOT APPLE)
@@ -395,9 +416,23 @@ add_custom_command(OUTPUT ${SCLANG_SCIN_CONFIG}
     VERBATIM
 )
 
+# Reference source and test images. We always use a specific git hash, to control which images we compare against.
+include(ExternalProject)
+set(SCIN_TEST_IMAGE_HASH "926ab9c0abbae292628e2f65507a712480985e24")
+ExternalProject_Add(reference_images
+    PREFIX ref
+    STEP_TARGETS update
+    EXCLUDE_FROM_ALL ON
+    GIT_REPOSITORY https://github.com/ScintillatorSynth/TestGoldImages
+    GIT_TAG ${SCIN_TEST_IMAGE_HASH}
+    GIT_PROGRESS ON
+)
+
+set(SCIN_REF_IMAGES_PATH "${CMAKE_CURRENT_BINARY_DIR}/ref/src/reference_images")
+
 add_custom_target(test_images
-    DEPENDS ${SCLANG_SCIN_CONFIG} scinsynth
-    COMMAND  ${SCIN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/makeTestImages.scd" "${PROJECT_SOURCE_DIR}" ${SCIN_TEST_IMAGES_ENV}
+    DEPENDS ${SCLANG_SCIN_CONFIG} scinsynth reference_images-update
+    COMMAND  ${SCIN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/makeTestImages.scd" "${PROJECT_SOURCE_DIR}" ${SCIN_REF_IMAGES_PATH} ${SCIN_TEST_IMAGES_ENV}
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     VERBATIM
 )
@@ -409,21 +444,9 @@ add_custom_target(sclang_unit_tests
     VERBATIM
 )
 
-# Reference test images. We always use a specific git hash, to control which images we compare against.
-include(ExternalProject)
-set(SCIN_TEST_IMAGE_HASH "848ac1b2586984844d49fb22000907e246b472c6")
-ExternalProject_Add(reference_images
-    PREFIX ref
-    STEP_TARGETS update
-    EXCLUDE_FROM_ALL ON
-    GIT_REPOSITORY https://github.com/ScintillatorSynth/TestGoldImages
-    GIT_TAG ${SCIN_TEST_IMAGE_HASH}
-    GIT_PROGRESS ON
-)
-
 add_custom_target(compare_images
     DEPENDS test_images reference_images-update
-    COMMAND ${PYTHON_EXECUTABLE} ../tools/compare-test-images.py "${PROJECT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/ref/src/reference_images" ${GIT_COMMIT_HASH} ${SCIN_TEST_IMAGE_HASH} "${PROJECT_BINARY_DIR}/report"
+    COMMAND ${PYTHON_EXECUTABLE} ../tools/compare-test-images.py "${PROJECT_SOURCE_DIR}" ${SCIN_REF_IMAGES_PATH} ${GIT_COMMIT_HASH} ${SCIN_TEST_IMAGE_HASH} "${PROJECT_BINARY_DIR}/report"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
     VERBATIM
 )

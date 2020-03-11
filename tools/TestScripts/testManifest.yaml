@@ -48,3 +48,103 @@
     - scale: 3.0
       xmod: 1.0
       ymod: 0.7
+- name: "Constant Image"
+  category: "images"
+  comment: "Test simple image render with constant image"
+  shortName: "constImage"
+  scinthDef: "{
+    var size = TextureSize.fg(1);
+    var aspect = VX.fg(size) / VY.fg(size);
+    var pos = TexPos.fg;
+    pos = Vec2.fg((VX.fg(pos) - 0.125) / aspect, VY.fg(pos));
+    Sampler.fg(1, pos); }"
+  images:
+    - file: "molly.png"
+      number: 1
+  captureTimes: [ 1 ]
+- name: "Parameterized Image"
+  category: "images"
+  comment: "Test simple image render with parameterized image"
+  shortName: "paramImage"
+  scinthDef: "{ |i|
+    var size = TextureSize.fg(i);
+    var aspect = VX.fg(size) / VY.fg(size);
+    var pos = TexPos.fg;
+    pos = Vec2.fg((VX.fg(pos) - 0.125) / aspect, VY.fg(pos));
+    Sampler.fg(i, pos); }"
+  images:
+    - file: "storm.png"
+      number: 1
+    - file: "molly.png"
+      number: 2
+  captureTimes: [ 1, 1, 1, 1 ]
+  parameters:
+    - "none"
+    - i: 1
+    - i: 2
+    - i: 123
+- name: "Sampler with white border"
+  category: "images"
+  comment: "Test sampler border mode clamp with a white border"
+  shortName: "whiteBorder"
+  scinthDef: "{ Sampler.fg(1, TexPos.fg * 3.0).clampBorderColor_('white'); }"
+  images:
+    - file: "molly.png"
+      number: 1
+  captureTimes: [ 1 ]
+- name: "Sampler with opaque black border"
+  category: "images"
+  comment: "Test sampler with border mode clamp with an opaque black border"
+  shortName: "blackBorder"
+  scinthDef: "{ Sampler.fg(1, TexPos.fg * 3.0).clampBorderColor_('black'); }"
+  images:
+    - file: "molly.png"
+      number: 1
+  captureTimes: [ 1 ]
+- name: "Sampler with clamp to edge border"
+  category: "images"
+  comment: "Test sampler with clamp to edge border mode"
+  shortName: "edgeBorder"
+  scinthDef: "{ Sampler.fg(1, TexPos.fg * 3.0).addressMode('clampToEdge'); }"
+  images:
+    - file: "molly.png"
+      number: 1
+  captureTimes: [ 1 ]
+- name: "Sampler with repeat border"
+  category: "images"
+  comment: "Test sampler with repeat border mode"
+  shortName: "repeatBorder"
+  scinthDef: "{ Sampler.fg(1, TexPos.fg * 3.0).addressMode('repeat'); }"
+  images:
+    - file: "molly.png"
+      number: 1
+  captureTimes: [ 1 ]
+- name: "Sampler with mirrored repeat border"
+  category: "images"
+  comment: "Test sampler with repeat border mode"
+  shortName: "mirrorBorder"
+  scinthDef: "{ Sampler.fg(1, TexPos.fg * 3.0).addressMode('mirroredRepeat'); }"
+  images:
+    - file: "molly.png"
+      number: 1
+  captureTimes: [ 1 ]
+- name: "Sampler with uniform buffer, constant, and parameterized images"
+  category: "images"
+  comment: "Test providing all forms of parameters to an Scinth"
+  shortName: "complexImage"
+  scinthDef: "{ |i = 2|
+    var pos = TexPos.fg;
+    var m = Sampler.fg(1, Vec2.fg(VSaw.fg(freq: 0.5, phase: VX.fg(pos)), VSaw.fg(freq: (0.75 / 2.0), phase: VY.fg(pos))));
+    var s = Sampler.fg(i, Vec2.fg(VSaw.fg(freq: 2.0, phase: 1.0 - VX.fg(pos)), VSaw.fg(freq: 1.5, phase: 1.0 - VY.fg(pos))) * 2.0);
+    s + m; }"
+  images:
+    - file: "molly.png"
+      number: 1
+    - file: "storm.png"
+      number: 2
+  captureTimes: [ 1, 1, 1, 1 ]
+  parameters:
+    - "none"
+    - i: 1
+    - i: 2
+    - i: 123

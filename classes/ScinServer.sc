@@ -109,7 +109,12 @@ ScinServer {
             scinQuarkVersion = "unknown";
         });
 
-		scinBinaryPath = options.quarkPath +/+ "bin" +/+ "scinsynth";
+		scinBinaryPath = options.quarkPath +/+ "bin";
+		Platform.case(
+			\osx, { scinBinaryPath = scinBinaryPath +/+ "scinsynth.app" +/+ "Contents" +/+ "MacOS" +/+ "scinsynth" },
+			\linux, { scinBinaryPath = scinBinaryPath +/+ "scinsynth" },
+			\windows, { Error.new("Windows not (yet) supported!").throw }
+		);
 		statusPoller = ScinServerStatusPoller.new(this);
 	}
 

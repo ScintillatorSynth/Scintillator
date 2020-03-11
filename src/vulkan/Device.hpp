@@ -49,6 +49,7 @@ public:
     int presentFamilyIndex() const { return m_presentFamilyIndex; }
     VkQueue graphicsQueue() { return m_graphicsQueue; }
     VkQueue presentQueue() { return m_presentQueue; }
+    bool supportsSamplerAnisotropy() const { return m_supportsSamplerAnisotropy; }
 
 private:
     std::shared_ptr<Instance> m_instance;
@@ -57,7 +58,8 @@ private:
     int m_graphicsFamilyIndex;
     int m_presentFamilyIndex;
     int m_numberOfMemoryHeaps;
-    int m_supportsMemoryBudget;
+    bool m_supportsMemoryBudget;
+    bool m_supportsSamplerAnisotropy;
     VkDevice m_device;
     VmaAllocator m_allocator;
     VkQueue m_graphicsQueue;

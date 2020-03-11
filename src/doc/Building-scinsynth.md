@@ -6,7 +6,7 @@ formal guide later.
 
 ```
 sudo apt-get install libxinerama-dev libxcursor-dev libxi-dev libxrandr-dev gperf python3-distutils libavcodec-dev
-libavformat-dev libwayland-dev
+libavformat-dev libswscale-dev libavutil-dev libwayland-dev
 ```
 
 Also the Vulkan SDK, instructions at https://vulkan.lunarg.com/doc/view/1.1.114.0/linux/getting_started_ubuntu.html

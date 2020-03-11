@@ -38,6 +38,10 @@ public:
         // Scinth Commands
         kSNew = 9,
 
+        // ImageBuffer Commands
+        kIBAllocRead = 29,
+        kIBQuery = 47,
+
         // Non Real Time Commands
         kNRTScreenShot = 67,
         kNRTAdvanceFrame = 68,

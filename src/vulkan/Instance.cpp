@@ -1,8 +1,8 @@
 #include "vulkan/Instance.hpp"
 
-#include "spdlog/spdlog.h"
+#include "infra/Version.hpp"
 
-#include "Version.hpp"
+#include "spdlog/spdlog.h"
 
 #include <cstring>
 #include <vector>

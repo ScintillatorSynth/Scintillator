@@ -2,7 +2,6 @@
 
 #include "vulkan/DeviceInfo.hpp"
 #include "vulkan/Instance.hpp"
-#include "vulkan/Window.hpp"
 
 #include "spdlog/spdlog.h"
 
@@ -19,6 +18,7 @@ Device::Device(std::shared_ptr<Instance> instance, const DeviceInfo& deviceInfo)
     m_presentFamilyIndex(deviceInfo.presentFamilyIndex()),
     m_numberOfMemoryHeaps(deviceInfo.numberOfMemoryHeaps()),
     m_supportsMemoryBudget(deviceInfo.supportsMemoryBudget()),
+    m_supportsSamplerAnisotropy(deviceInfo.supportsSamplerAnisotropy()),
     m_device(VK_NULL_HANDLE),
     m_allocator(VK_NULL_HANDLE),
     m_presentQueue(VK_NULL_HANDLE) {}
@@ -45,6 +45,10 @@ bool Device::create(bool supportWindow) {
     }
 
     VkPhysicalDeviceFeatures deviceFeatures = {};
+    if (m_supportsSamplerAnisotropy) {
+        deviceFeatures.samplerAnisotropy = VK_TRUE;
+    }
+
     VkDeviceCreateInfo deviceCreateInfo = {};
     deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();

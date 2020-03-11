@@ -4,14 +4,24 @@
 #include "vulkan/Vulkan.hpp"
 
 #include <memory>
+#include <vector>
 
-namespace scin { namespace vk {
+namespace scin {
 
+namespace comp {
+// TODO: another serious code smell from Framebuffer.
 class Canvas;
+}
+
+namespace vk {
+
 class Device;
-class ImageSet;
+class Image;
 
 /*! A container for an offscreen render target that can also be sampled as a texture and blitted from.
+ *
+ * TODO: Kinda weird that *Canvas* is actually the keeper of the VkFramebuffer obejcts. Consider merging this class
+ * either down or up, like pushing this into either Canvas or owners of Framebuffer (Offscreen? Any other takers?)
  */
 class Framebuffer {
 public:
@@ -23,13 +33,13 @@ public:
 
     VkFormat format();
     VkImage image(size_t index);
-    std::shared_ptr<Canvas> canvas() { return m_canvas; }
+    std::shared_ptr<comp::Canvas> canvas() { return m_canvas; }
 
 private:
     std::shared_ptr<Device> m_device;
 
-    std::shared_ptr<ImageSet> m_images;
-    std::shared_ptr<Canvas> m_canvas;
+    std::vector<std::shared_ptr<Image>> m_images;
+    std::shared_ptr<comp::Canvas> m_canvas;
 };
 
 } // namespace vk

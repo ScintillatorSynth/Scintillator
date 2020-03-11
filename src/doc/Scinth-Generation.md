@@ -11,7 +11,7 @@ This process is broken into two phases. The first phase does not depend on Vulka
 program generation and gathering of requirements in order to create the Vulkan-specific ScinthDef. The output of the
 first phase is an AbstractScinthDef object that contains all of the information necessary to generate a ScinthDef.
 
-The two-part process allows the code in the core/ directory, where AbstractScinthDef and its related objects reside, to
+The two-part process allows the code in the base/ directory, where AbstractScinthDef and its related objects reside, to
 not depend on Vulkan and to therefore be readily unit-testable. Once the Vulkan code is introduced the testing strategy
 shifts to integration testing with Vulkan validation layers and Swiftshader, ensuring that the scinsynth usage of the
 Vulkan API is correct with the spec and working as intended.

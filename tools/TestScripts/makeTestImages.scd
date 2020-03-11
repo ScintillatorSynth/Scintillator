@@ -1,19 +1,20 @@
 // Generates a series of images for validation of individual VGens and
 // integration testing of the render stack.
 (
-var quarkPath, imageOut, options, server, c, d, testDefs;
-if (thisProcess.argv.size < 1, {
-    "requires at least one argument, the path to the Scintillator Quark directory.".postln;
+var quarkPath, testImagesPath, imageOut, options, server, c, d, testDefs;
+if (thisProcess.argv.size < 2, {
+    "requires at least two arguments, the path to the Scintillator Quark directory followed by the path to the test images repository.".postln;
     -1.exit;
 });
 // Remaining arguments, if any, should be environment variables to set before invoking the server.
-thisProcess.argv[1..].do({ |pairs|
+thisProcess.argv[2..].do({ |pairs|
     var splitPairs = pairs.split($=);
     "setting environment variable % to %".format(splitPairs[0], splitPairs[1]).postln;
     splitPairs[0].setenv(splitPairs[1]);
 });
 fork {
 	quarkPath = thisProcess.argv[0];
+	testImagesPath = thisProcess.argv[1] +/+ "sourceMedia";
 	c = Condition.new;
 	d = Condition.new;
     imageOut = quarkPath +/+ "build" +/+ "testing";
@@ -37,6 +38,14 @@ fork {
 		var scinth, fileName, params, t;
 		// Make sure output subdirectory exists.
 		(imageOut +/+ def["category"]).mkdir;
+
+		// Load any images first.
+		if (def["images"].notNil, {
+			def["images"].do({ |img|
+				ImageBuffer.read(server, testImagesPath +/+ img["file"], bufnum: img["number"].asInteger);
+			});
+			server.sync;
+		});
 		if (def["scinthDef"].size > 0, {
 			"sending ScinthDef for %".format(def["shortName"]).postln;
 			ScinthDef.new(\test, def["scinthDef"].interpret).add;

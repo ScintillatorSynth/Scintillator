@@ -2,7 +2,6 @@
 
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
-#include "vulkan/Uniform.hpp"
 
 #include "spdlog/spdlog.h"
 
@@ -37,18 +36,19 @@ bool CommandBuffer::create(size_t count, bool isPrimary) {
 
 void CommandBuffer::destroy() {
     spdlog::debug("CommandBuffer destructor");
+    m_scinth = nullptr;
+    m_secondaryCommands.clear();
+
     if (m_commandBuffers.size()) {
         vkFreeCommandBuffers(m_device->get(), m_commandPool->get(), m_commandBuffers.size(), m_commandBuffers.data());
         m_commandBuffers.clear();
     }
 }
 
-void CommandBuffer::associateResources(std::shared_ptr<Buffer> vertexBuffer, std::shared_ptr<Buffer> indexBuffer,
-                                       std::shared_ptr<Uniform> uniform, std::shared_ptr<Pipeline> pipeline) {
-    m_vertexBuffer = vertexBuffer;
-    m_indexBuffer = indexBuffer;
-    m_uniform = uniform;
-    m_pipeline = pipeline;
+void CommandBuffer::associateScinth(std::shared_ptr<comp::Scinth> scinth) { m_scinth = scinth; }
+
+void CommandBuffer::associateSecondaryCommands(const std::vector<std::shared_ptr<CommandBuffer>>& commands) {
+    m_secondaryCommands.insert(m_secondaryCommands.begin(), commands.begin(), commands.end());
 }
 
 } // namespace vk

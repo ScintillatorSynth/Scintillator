@@ -29,6 +29,7 @@ addons:
             - libicu-dev
             - libjack-jackd2-dev
             - libreadline6-dev
+            - libswscale-dev
             - libudev-dev
             - libvulkan-dev
             - libwayland-dev

@@ -6,9 +6,9 @@
 
 namespace scin { namespace vk {
 
-Buffer::Buffer(Kind kind, size_t size, std::shared_ptr<Device> device):
-    m_kind(kind),
+Buffer::Buffer(std::shared_ptr<Device> device, Kind kind, size_t size):
     m_device(device),
+    m_kind(kind),
     m_size(size),
     m_buffer(VK_NULL_HANDLE) {}
 
@@ -41,6 +41,10 @@ bool Buffer::createVulkanBuffer(bool hostAccessRequired) {
         bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
         break;
 
+    case kStaging:
+        bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        break;
+
     default:
         spdlog::error("buffer created with unsupported buffer type.");
         return false;
@@ -48,14 +52,19 @@ bool Buffer::createVulkanBuffer(bool hostAccessRequired) {
 
     VmaAllocationCreateInfo allocInfo = {};
     if (hostAccessRequired) {
-        allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
-        allocInfo.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-        allocInfo.preferredFlags = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+        allocInfo.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+        allocInfo.preferredFlags = VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+        if (m_kind == kStaging) {
+            allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+        } else {
+            allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+        }
+        allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
     } else {
         allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
         allocInfo.preferredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
     }
-    if (vmaCreateBuffer(m_device->allocator(), &bufferInfo, &allocInfo, &m_buffer, &m_allocation, nullptr)
+    if (vmaCreateBuffer(m_device->allocator(), &bufferInfo, &allocInfo, &m_buffer, &m_allocation, &m_info)
         != VK_SUCCESS) {
         spdlog::error("failed to allocate buffer memory of {} bytes.", m_size);
     }
@@ -63,25 +72,27 @@ bool Buffer::createVulkanBuffer(bool hostAccessRequired) {
     return true;
 }
 
-DeviceBuffer::DeviceBuffer(Buffer::Kind kind, size_t size, std::shared_ptr<Device> device):
-    Buffer(kind, size, device) {}
+DeviceBuffer::DeviceBuffer(std::shared_ptr<Device> device, Buffer::Kind kind, size_t size):
+    Buffer(device, kind, size) {}
 
 DeviceBuffer::~DeviceBuffer() {}
 
 bool DeviceBuffer::create() { return createVulkanBuffer(false); }
 
-HostBuffer::HostBuffer(Buffer::Kind kind, size_t size, std::shared_ptr<Device> device): Buffer(kind, size, device) {}
+HostBuffer::HostBuffer(std::shared_ptr<Device> device, Buffer::Kind kind, size_t size):
+    Buffer(device, kind, size),
+    m_mappedAddress(nullptr) {}
 
 HostBuffer::~HostBuffer() {}
 
-bool HostBuffer::create() { return createVulkanBuffer(true); }
-
-void HostBuffer::copyToGPU(const void* source) {
-    void* mappedAddress = nullptr;
-    vmaMapMemory(m_device->allocator(), m_allocation, &mappedAddress);
-    std::memcpy(mappedAddress, source, m_size);
-    vmaUnmapMemory(m_device->allocator(), m_allocation);
+bool HostBuffer::create() {
+    if (!createVulkanBuffer(true)) {
+        return false;
+    }
+    m_mappedAddress = m_info.pMappedData;
+    return true;
 }
+
 
 } // namespace scin
 

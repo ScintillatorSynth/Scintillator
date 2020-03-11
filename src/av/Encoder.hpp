@@ -2,7 +2,7 @@
 #define SRC_AV_ENCODER_HPP_
 
 #include "av/AVIncludes.hpp"
-#include "core/FileSystem.hpp"
+#include "base/FileSystem.hpp"
 
 #include <functional>
 #include <memory>
@@ -49,7 +49,7 @@ protected:
     AVOutputFormat* m_outputFormat;
     AVCodec* m_codec;
     AVCodecContext* m_codecContext;
-    AVFormatContext* m_outputContext;
+    AVFormatContext* m_formatContext;
 };
 
 } // namespace av

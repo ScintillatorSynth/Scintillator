@@ -8,7 +8,12 @@ Packet::~Packet() { destroy(); }
 
 bool Packet::create() {
     m_packet = av_packet_alloc();
-    return m_packet != nullptr;
+    if (m_packet == nullptr) {
+        return false;
+    }
+    m_packet->data = nullptr;
+    m_packet->size = 0;
+    return true;
 }
 
 void Packet::destroy() {

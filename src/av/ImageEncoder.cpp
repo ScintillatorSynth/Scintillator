@@ -11,9 +11,9 @@ ImageEncoder::ImageEncoder(int width, int height, std::function<void(bool)> comp
     Encoder(width, height, completion) {}
 
 ImageEncoder::~ImageEncoder() {
-    if (m_outputContext) {
-        avformat_free_context(m_outputContext);
-        m_outputContext = nullptr;
+    if (m_formatContext) {
+        avformat_free_context(m_formatContext);
+        m_formatContext = nullptr;
     }
 }
 
@@ -38,7 +38,7 @@ bool ImageEncoder::createFile(const fs::path& filePath, const std::string& mimeT
     spdlog::info("Encoder chose output format name '{}', codec name '{}' for file '{}', mime type '{}'",
                  m_outputFormat->name, m_codec->name, filePath.string(), mimeType);
 
-    if (avformat_alloc_output_context2(&m_outputContext, m_outputFormat, nullptr, filePath.string().data()) < 0) {
+    if (avformat_alloc_output_context2(&m_formatContext, m_outputFormat, nullptr, filePath.string().data()) < 0) {
         spdlog::error("Encoder failed to allocate output context for file {}", filePath.string());
         return false;
     }
@@ -64,15 +64,15 @@ bool ImageEncoder::createFile(const fs::path& filePath, const std::string& mimeT
     }
 
     // Add a video stream for output image to the output context.
-    AVStream* stream = avformat_new_stream(m_outputContext, nullptr);
+    AVStream* stream = avformat_new_stream(m_formatContext, nullptr);
     avcodec_parameters_from_context(stream->codecpar, m_codecContext);
 
-    if (avio_open(&m_outputContext->pb, filePath.string().data(), AVIO_FLAG_WRITE) < 0) {
+    if (avio_open(&m_formatContext->pb, filePath.string().data(), AVIO_FLAG_WRITE) < 0) {
         spdlog::error("Encoder failed to open file '{}'", filePath.string());
         return false;
     }
 
-    if (avformat_write_header(m_outputContext, nullptr) < 0) {
+    if (avformat_write_header(m_formatContext, nullptr) < 0) {
         spdlog::error("Encoder failed to write header to file '{}'", filePath.string());
         return false;
     }
@@ -85,8 +85,8 @@ bool ImageEncoder::queueEncode(double frameTime, size_t frameNumber, SendBuffer&
 
     callbackOut = SendBuffer([this](std::shared_ptr<Buffer> buffer) {
         spdlog::debug("ImageEncoder got callback to encode frame.");
-        Frame frame(buffer);
-        if (!frame.create()) {
+        Frame frame;
+        if (!frame.createFromBuffer(buffer)) {
             spdlog::error("ImageEncoder failed creating frame.");
             finishEncode(false);
             return;
@@ -112,7 +112,7 @@ bool ImageEncoder::queueEncode(double frameTime, size_t frameNumber, SendBuffer&
         ret = avcodec_receive_packet(m_codecContext, packet.get());
         while (ret >= 0) {
             spdlog::trace("ImageEncoder through avcodec_receive_packet.");
-            if (av_write_frame(m_outputContext, packet.get()) < 0) {
+            if (av_write_frame(m_formatContext, packet.get()) < 0) {
                 spdlog::error("ImageEncoder failed writing frame data.");
                 finishEncode(false);
                 return;

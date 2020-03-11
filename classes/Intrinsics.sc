@@ -11,3 +11,17 @@ NormPos : VGen {
 		^[[2]];
 	}
 }
+
+TexPos : VGen {
+	*fg {
+		^this.multiNew(\fragment);
+	}
+
+	inputDimensions {
+		^[[]];
+	}
+
+	outputDimensions {
+		^[[2]];
+	}
+}

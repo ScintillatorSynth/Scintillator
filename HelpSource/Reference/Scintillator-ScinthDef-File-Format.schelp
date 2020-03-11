@@ -39,8 +39,25 @@ table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
 ## code::className:: || string || name of the VGen class, must match the name of a VGen configured on the server
 ## code::rate:: || string || currently either code::fragment:: or code::vertex::
+## code::sampler:: || dictionary || Only required for sampling VGens. Specifies sampler parameters.
 ## code::inputs:: || list || input YAML dictionaries in an ordered list. May be absent if VGen has no inputs.
 ## code::outputs:: || list || output YAML dictionaries in an ordered list
+::
+
+subsection::VGen Sampler Dictionary Spec
+
+Sampling VGens must include the sampler dictionary, which contains configuration data for the image sampler. For more details see the documentation on link::Classes/Sampler:: parameters.
+
+table::
+## strong::key:: || strong::YAML type:: || strong::notes::
+## code::image:: || integer || Depending on code::imageArgType::, either an image buffer number or the index of the parameter expected to contain the image buffer number.
+## code::imageArgType:: || string || Either code::constant::, in which case code::image:: must be a valid image buffer number, or code::parameter::, in which case code::image:: must be a valid parameter index.
+## code::minFilterMode:: || string || emphasis::Optional.:: Either code::linear:: or code::nearest::. Default is code::linear::.
+## code::magFilterMode:: || string || emphasis::Optional.:: Either code::linear:: or code::nearest::. Default is code::linear::.
+## code::enableAnisotropicFiltering:: || boolean || emphasis::Optional::. Default is code::true::.
+## code::addressModeU:: || string || emphasis::Optional.:: One of code::repeat::, code::mirroredRepeat::, code::clampToEdge::, or code::clampToBorder::. Default is code::clampToBorder::.
+## code::addressModeV:: || string || emphasis::Optional.:: One of code::repeat::, code::mirroredRepeat::, code::clampToEdge::, or code::clampToBorder::. Default is code::clampToBorder::.
+## code::clampBorderColor:: || string || emphasis::Optional.:: Ignored unless code::addressMode:: is code::clampToBorder::, in which case it is one of code::transparentBlack::, code::black::, or code::white::. Default is code::transparentBlack::.
 ::
 
 subsection::VGen Input Dictionary Spec
@@ -74,10 +91,6 @@ table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
 ## code::index:: || int || The parameter index to use.
 ::
-::
-
-note::
-Intrinsics right now are being treated like normal VGens.
 ::
 
 subsection::VGen Output Dictionary Spec

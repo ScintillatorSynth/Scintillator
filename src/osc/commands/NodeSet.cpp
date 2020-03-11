@@ -1,6 +1,6 @@
 #include "osc/commands/NodeSet.hpp"
 
-#include "Compositor.hpp"
+#include "comp/Compositor.hpp"
 #include "osc/Dispatcher.hpp"
 
 #include "spdlog/spdlog.h"
@@ -28,11 +28,17 @@ void NodeSet::processMessage(int argc, lo_arg** argv, const char* types, lo_addr
         --argc;
     }
     for (auto i = 1; i < argc; i += 2) {
-        if (types[i + 1] != LO_FLOAT) {
-            spdlog::warn("OSC NodeSet got nonfloat control value, ignoring pair at index {}", i);
+        float controlValue = 0;
+        if (types[i + 1] == LO_FLOAT) {
+            controlValue = *reinterpret_cast<float*>(argv[i + 1]);
+        } else if (types[i + 1] == LO_INT32) {
+            int32_t value = *reinterpret_cast<int32_t*>(argv[i + 1]);
+            controlValue = static_cast<float>(value);
+        } else {
+            spdlog::warn("OSC NodeSet got non-numeric control value, ignoring pair at index {}", i);
             continue;
         }
-        float controlValue = *reinterpret_cast<float*>(argv[i + 1]);
+
         if (types[i] == LO_STRING) {
             namedValues.emplace_back(std::make_pair(std::string(reinterpret_cast<const char*>(argv[i])), controlValue));
         } else if (types[i] == LO_INT32) {

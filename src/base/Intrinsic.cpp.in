@@ -1,0 +1,42 @@
+%{
+// Generated file, please edit original file at src/base/Intrinsic.cpp.in
+// TODO: lint generated file, copy diff back to this one.
+#include "base/Intrinsic.hpp"
+
+#include <cstring>
+
+// Some of the gperf generated code uses the register keyword, which is deprecated in C++17.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wregister"
+
+namespace {
+
+%}
+%language=C++
+%struct-type
+struct IntrinsicPair { const char* name; scin::base::Intrinsic intrinsic; };
+%%
+normPos,    scin::base::Intrinsic::kNormPos
+pi,         scin::base::Intrinsic::kPi
+sampler,    scin::base::Intrinsic::kSampler
+time,       scin::base::Intrinsic::kTime
+texPos,     scin::base::Intrinsic::kTexPos
+%%
+
+} // namespace
+
+#pragma clang diagnostic pop
+
+namespace scin { namespace base {
+
+Intrinsic getIntrinsicNamed(const std::string& name) {
+    const IntrinsicPair* pair = Perfect_Hash::in_word_set(name.data(), name.size());
+    if (!pair) {
+        return Intrinsic::kNotFound;
+    }
+    return pair->intrinsic;
+}
+
+} // namespace base
+
+} // namespace scin
