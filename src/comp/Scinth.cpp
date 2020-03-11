@@ -57,6 +57,12 @@ bool Scinth::create() {
     return rebuildBuffers();
 }
 
+void Scinth::destroy() {
+    // Break circular references here so Scinth can be automatically reclaimed when referencing objects (namely the
+    // command buffer) go out of scope and are themselves deleted.
+    m_commands.reset();
+}
+
 bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
     // If this is our first call to prepareFrame we treat this frameTime as our startTime.
     if (m_cueued) {
@@ -333,8 +339,6 @@ bool Scinth::rebuildBuffers() {
         spdlog::error("failed creating command buffers for Scinth {}", m_nodeID);
         return false;
     }
-
-    m_commands->associateResources(m_scinthDef->vertexBuffer(), m_scinthDef->indexBuffer(), m_scinthDef->pipeline());
 
     for (auto i = 0; i < m_scinthDef->canvas()->numberOfImages(); ++i) {
         VkCommandBufferBeginInfo beginInfo = {};

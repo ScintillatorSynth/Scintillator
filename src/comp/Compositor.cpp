@@ -164,6 +164,7 @@ void Compositor::freeNodes(const std::vector<int>& nodeIDs) {
             if ((*(node->second))->running()) {
                 needRebuild = true;
             }
+            (*(node->second))->destroy();
             freeScinthLockAcquired(node);
         } else {
             spdlog::warn("Compositor attempted to free nonexistent nodeID {}", nodeID);
@@ -217,7 +218,9 @@ std::shared_ptr<vk::CommandBuffer> Compositor::prepareFrame(uint32_t imageIndex,
         for (auto scinth : m_scinths) {
             if (scinth->running()) {
                 scinth->prepareFrame(imageIndex, frameTime);
-                m_secondaryCommands.emplace_back(scinth->frameCommands());
+                std::shared_ptr<vk::CommandBuffer> commands = scinth->frameCommands();
+                commands->associateScinth(scinth);
+                m_secondaryCommands.emplace_back(commands);
             }
         }
     }
@@ -239,6 +242,7 @@ void Compositor::destroy() {
         m_scinthMap.clear();
         m_scinths.clear();
     }
+    // TODO: as a last resort, could call destroy on each of these
     m_primaryCommands.reset();
     m_secondaryCommands.clear();
     m_frameCommands.clear();
@@ -250,6 +254,7 @@ void Compositor::destroy() {
 
     m_stageManager->destroy();
     m_imageMap = nullptr;
+    m_samplerFactory = nullptr;
 
     // Now delete all of the ScinthDefs, which hold shared graphics resources.
     {
@@ -311,6 +316,9 @@ bool Compositor::rebuildCommandBuffer() {
         return false;
     }
 
+    // Ensure the secondary command buffers get retained as long as this buffer is retained.
+    m_primaryCommands->associateSecondaryCommands(m_secondaryCommands);
+
     VkClearColorValue clearColor = { { m_clearColor.x, m_clearColor.y, m_clearColor.z, 1.0f } };
     VkClearValue clearValue = {};
     clearValue.color = clearColor;
@@ -343,7 +351,7 @@ bool Compositor::rebuildCommandBuffer() {
 
             std::vector<VkCommandBuffer> commandBuffers;
             for (auto command : m_secondaryCommands) {
-                commandBuffers.push_back(command->buffer(i));
+                commandBuffers.emplace_back(command->buffer(i));
             }
             vkCmdExecuteCommands(m_primaryCommands->buffer(i), commandBuffers.size(), commandBuffers.data());
         } else {

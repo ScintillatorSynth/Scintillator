@@ -36,6 +36,8 @@ public:
      */
     bool create();
 
+    void destroy();
+
     /*! Prepare for the next frame to render.
      *
      * Update the Uniform buffer associated with the imageIndex, if present, and any other operations to prepare a
