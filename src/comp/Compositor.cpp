@@ -240,6 +240,9 @@ void Compositor::destroy() {
     {
         std::lock_guard<std::mutex> lock(m_scinthMutex);
         m_scinthMap.clear();
+	for (auto scinth : m_scinths) {
+		scinth->destroy();
+	}
         m_scinths.clear();
     }
     // TODO: as a last resort, could call destroy on each of these

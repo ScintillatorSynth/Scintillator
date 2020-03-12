@@ -1,30 +1,57 @@
-TITLE:: ScinthDef
-summary:: (put short description here)
+title:: ScinthDef
+summary:: Represents a Scintillator Synth Definition
 categories:: Quarks>Scintillator
-related:: Classes/VGen
+related:: Classes/VGen, Classes/Scinth, Classes/SynthDef, Reference/Scintillator-Parallel-Classes, Reference/Scintillator-ScinthDef-File-Format
 
-DESCRIPTION::
-(put long description here)
+description::
 
+ScinthDef is intended to be the visual synthesis paralell to the audio synthesis class link::Classes/SynthDef::. The Scintillator server uses ScinthDefs as templates from which to build link::Classes/Scinth:: nodes, which run on the server to produce imagery.
 
-CLASSMETHODS::
+classmethods::
 
+method::new
+argument::name
+strong::A symbol.:: The name to associate with this ScinthDef, for creating link::Classes/Scinth:: instances from this definition.
+argument::vGenGraphFunc
+strong::A function.:: The graph function defining the how the link::Classes/VGen:: objects are connected.
 
-INSTANCEMETHODS::
+returns::
+A new ScinthDef object.
 
-METHOD:: name
-(describe method here)
+instancemethods::
+private::addVGen, build, children, controlNames, controls, defServer, prBuildControls, prFitDimensions
 
-returns:: (describe returnvalue here)
+method::add
+argument::server
+A link::Classes/ScinServer:: instance, or nil, in which case the default ScinServer is chosen. The server to send the Scinth definition to.
+argument::completionMsg
+strong::An array::, or nil. An optional message to be processed by the server once the ScinthDef has been processed.
 
-METHOD:: func
-(describe method here)
+method::asYAML
+Returns a string in YAML format conforming to the link::Reference/Scintillator-ScinthDef-File-Format:: that describes this ScinthDef.
+argument::indentDepth
+strong::An integer.:: How many spaces to indent the generated yaml, for embedding this string into a larger YAML document.
+returns::A yaml string.
 
-returns:: (describe returnvalue here)
+method::free
+Removes the ScinthDef from the server. Any running Scinths are not impacted, but further requests to create Scinths from this ScinthDef will fail.
 
+method::func
+returns::Returns this definition's VGen Graph function.
 
-EXAMPLES::
+method::name
+returns::Returns this definition's name.
+
+examples::
 
 code::
-(some example code)
+(
+~t = ScinthDef.new(\t, {
+	BWOut.fg(ScinOsc.fg(1.0, Length.fg(NormPos.fg)));
+});
+)
+
+(
+~k = Scinth.new(\t, 1);
+)
 ::
