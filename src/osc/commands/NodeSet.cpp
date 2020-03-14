@@ -44,7 +44,7 @@ void NodeSet::processMessage(int argc, lo_arg** argv, const char* types, lo_addr
         } else if (types[i] == LO_INT32) {
             indexedValues.emplace_back(std::make_pair(*reinterpret_cast<int32_t*>(argv[i]), controlValue));
         } else {
-            spdlog::warn("OSC NodeSet got unspoorted type for control ID, ignoring pair at index {}", i);
+            spdlog::warn("OSC NodeSet got unsupported type for control ID, ignoring pair at index {}", i);
             continue;
         }
     }

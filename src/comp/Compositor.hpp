@@ -61,13 +61,18 @@ public:
     void freeScinthDefs(const std::vector<std::string>& names);
 
     /*! Adds a node to the default root blend group at the end of the line, playing after all other nodes. The node
-     * will be started on the next call to prepareFrame, and will treat that frameTime as its start time.
+     * will be started on the next call to prepareFrame, and will treat that frameTime as its start time. The named
+     * and indexed values are applied to set the initial values of the parameters in the Scinth, otherwise default
+     * values as specified in the ScinthDef are used.
      *
      * \param scinthDefName The name of the ScinthDef to invoke.
      * \param nodeID A nodeID for this scinth, if -1 the Compositor will assign a unique negative value.
+     * \param namedValues A vector of pairs of parameter names and initial values.
+     * \param indexedValues A vector of pairs of parameter indices and initial values.
      * \return True on success, false on error.
      */
-    bool cue(const std::string& scinthDefName, int nodeID);
+    bool cue(const std::string& scinthDefName, int nodeID, const std::vector<std::pair<std::string, float>>& namedValues,
+             const std::vector<std::pair<int, float>>& indexedValues);
 
     /*! Stops and removes the nodes from the playing list, and frees the associated resources.
      *
