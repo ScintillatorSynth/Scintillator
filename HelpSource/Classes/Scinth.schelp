@@ -1,6 +1,6 @@
 TITLE:: Scinth
 summary:: Represents a running synth node on the Scintillator server.
-categories:: Undocumented classes
+categories:: Quarks>Scintillator
 related:: Classes/ScinthDef, Classes/VGen
 
 description::

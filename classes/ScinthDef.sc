@@ -43,7 +43,7 @@ ScinthDef {
 			case
 			{ vgen.inputs[i].isNumber } { 1 }
 			{ vgen.inputs[i].isControlVGen } { 1 }
-			{ vgen.inputs[i].isVGen } { children[vgen.inputs[i].scinthIndex].outDims[0] }
+			{ vgen.inputs[i].isVGen } { children[vgen.inputs[i].scinthIndex].outDims[vgen.inputs[i].outputIndex] }
 			{ "*** vgen input class: %".format(vgen.inputs[i]).postln; nil; }
 		});
 

@@ -1,0 +1,50 @@
+title:: Scintillator User Guide
+summary:: User manual for the Scintillator visual synthesizer.
+categories:: Quarks>Scintillator
+related:: Classes/ScinthDef, Classes/ScinServer
+
+In keeping with the high-energy physics themes of SuperCollider, a emphasis::scintillator:: is any material that produces light when struck by radition. Scintillator is intended to be an accompanying visual synthesizer designed to be intuitive to users already familiar with SuperCollider idioms. Distributed as a Quark plus a synthesizer binary, Scintillator follows the client/server archiecture established by SuperCollider, accepts link::Classes/ScinthDef::s in a similar manner to SuperCollider link::Classes/SynthDef::s, provides facilities to invoke and control link::Classes/Scinth:: instances similar to link::Classes/Synth::, and so on. For a detailed list of classes with analogous SuperCollider classes see link::Reference/Scintillator-Parallel-Classes::.s
+
+section::Project Status (March 2020)
+
+Scintillator is an open-source (GPLv3) project developed and maintained by Luke Nihlen. It is in early pre-alpha stage and the purpose of these first few releases is to gather feedback and identify any outstanding major bugs that might need to be resolved before considering a beta or even production-quality release. Central features are under active development, and the classes and their methods may change from point release to point release without notice. As such Scintillator is ready for review but building a larger composition or planning a performance on it may not be advisable.
+
+All that said, it is my sincere hope you find Scintillator useful and interesting, and I'm keen to hear your feedback. Drop by the GitHub main page, if you encounter any bugs or have any feature requests please feel free to file them there, or drop me an email at code::scintillator.synth@gmail.com::.
+
+section::Installation
+
+Scintillator is distributed in two pieces and both are required in order for it to run. The first piece contains the SuperCollider classes and support, and is distributed as a Quark. Installation should be as simple as executing the following code:
+
+code::
+(
+Quarks.install("Scintillator");
+)
+::
+
+Or you can use the Quarks GUI to pick out Scintillator and install it. See link::Guides/UsingQuarks:: for more information. The second half of the Scintillator distribution consists of the code::scinsynth:: binary, which is the C++-based visual synthesis server. Official releases of the Scintillator Quark will always have an associated server binary, which can be obtained from the GitHub releases page (link TBD).
+
+The binary will need to be installed in the Scintillator Quark directory in the code::/bin:: subdirectory.
+
+section::Quick Startup
+
+This section can serve to validate your Scintillator installation, as well as to establish some of the basic concepts and get some pixels lighting up on the screen.
+
+section::The Graphics Pipeline
+
+Much like audio programming, graphics programming is a highly specialized field with the opportunity for a lifetime of learning in domain-specific knowledge and experience. Scintillator presents a simplified view of the process of producing real-time graphics on modern graphics architectures, both to keep the metaphor to SuperCollider audio programming intact and to avoid cluttering the interface with less beneficial detail. What follows here is an overview of the different stages of producing images that are exposed to Scintillator for manipulation. Much has been simplified or omitted, please refer to the Further Reading section below for more detail.
+ß
+subsection::Rendering Architectures
+
+The gold standard for visual quality in computer-generated imagery has long been a body of technique called emphasis::ray tracing::, which models individual rays of light interacting with a visual scene consisting of mathematical descriptions of shapes and the reflective and absorbative properties of their surfaces. However, until recently ray tracing has been considered too computationally expensive to perform at real-time frame rates necessary for simulations, video games, and video synthesis. Instead, thanks largely to the commercial success of video games, a body of techniques and supporting hardware and software has emerged under the umbrella term of emphasis::real-time rendering::. While ray tracing is inspired by physics, and seeks to model light and its interactions with the materials in a scene, rendering is much more pragmatic and is concerend with generating realistic imagery on a tight performance budget.
+
+The rendering of a scene consists of a series of one or more emphasis::render passes::, the input of which is typically some geometric model describing points, lines, or polygons, and the output of the pass is individual pixel colors stored in a two-dimensional image buffer, intended either for manipulation by subsequent render passes or emphasis::presentation:: to the user on the screen. Modern graphics hardware has to operate quickly at vast scale in order to maintain an acceptable frame rate. For example, a modern high-definition 1080p display is 1920 pixels wide by 1080 pixels tall, giving a total of just over emphasis::2 million:: pixels that the GPU must compute the color for in under 17 milliseconds at 60 Hz. This means that a modern GPU must perform emphasis::124 million:: pixel color computations a second. Rendering engines on modern video games perform multiple render passes and each render pass contains a small program that must be exectued at every pixel, quickly raising the compute costs of rendering to the astronomical.
+
+In order to scale to high resolutions modern GPU (Graphics Processing Unit) architectures are massively parallel, with the high-end discrete GPUs capable of executing thousands of independent threads simultaneously to calculate individual pixel colors. This is a scale much different then the typical CPU, where a high-end CPU might offer 8 cores supporting up to 16 simultaneous threads of independent execution at a time. In order to support such massive paralellism yet remain cost-effective GPUs process information in a fixed series of stages called a emphasis::graphics pipeline::, which comes with some assumptions about the flow of information from one stage to the next and makes many assumptions about the kind of information being processed and the nature of the computations peformed. The trend in graphics programming has been over time to radically increase the flexibility of the graphics pipeline to allow for a broader variety of different kinds of computations to be performed, but GPUs remain significantly more specialized than the general-purpose CPU most programming gets performed on.
+
+subsection::The Graphics Pipeline
+
+There are several more stages to a modern pipeline than detailed here but we will discuss only the stages the Scintillator allows for creation of link::Classes/VGen::s in.
+
+section::Further Reading
+
+Here is a collection of links to reference documentation in Scintillator, as well as a few other sources that might be helpful in deepening your understanding of computer graphics.

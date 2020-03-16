@@ -1,5 +1,5 @@
-# Standalone cmake project to build and install sclang (The SuperCollider language interpreter) without X dependencies
-# Current production builds of sclang break on headless environments like Travis CI. See:
+# Standalone cmake project to build and install sclang on MacOS and Windows, for use in integration testing.
+
 # https://github.com/supercollider/supercollider/issues/1736
 # for more information.
 
@@ -7,7 +7,7 @@ include(ExternalProject)
 cmake_policy(SET CMP0048 NEW)
 cmake_minimum_required(VERSION 3.9)
 
-project(sclang-dev VERSION 0.0.1)
+project(sclang-ext VERSION 0.0.1)
 
 # if the Scintillator main build directory was not manually specified, attempt to guess it from repository structure.
 if (NOT SCIN_BUILD_DIR)
@@ -32,8 +32,8 @@ ExternalProject_add(supercollider
     GIT_SHALLOW ON
     GIT_PROGRESS ON
     UPDATE_COMMAND ""
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${INSTALL_EXT_DIR} -DSC_QT=OFF -DSC_IDE=OFF -DNO_X11=ON -DENABLE_TESTSUITE=OFF -DSUPERNOVA=OFF -DSC_ABLETON_LINK=OFF -DNO_AVAHI=ON -DNO_LIBSNDFILE=ON -DSC_EL=OFF
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${INSTALL_EXT_DIR} -DSC_IDE=OFF -DENABLE_TESTSUITE=OFF -DSUPERNOVA=OFF -DSC_ABLETON_LINK=OFF -DNO_AVAHI=ON -DNO_LIBSNDFILE=ON -DSC_EL=OFF
 )
 
-add_custom_target(sclang-dev)
-add_dependencies(sclang-dev supercollider-install)
+add_custom_target(sclang-ext)
+add_dependencies(sclang-ext supercollider-install)
