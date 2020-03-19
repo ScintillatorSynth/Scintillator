@@ -9,6 +9,17 @@ file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d")
 
 #### Swiftshader software renderer
 # See https://github.com/google/amber/issues/754 for discussion of shared linker flag.
+if (UNIX AND NOT APPLE)
+    set(SWIFTSHADER_SHARED_LINKER "-DCMAKE_SHARED_LINKER_FLAGS=\"-fuse-ld=gold\"")
+    set(SWIFTSHADER_INSTALL_COMMAND "cp \"<BINARY_DIR>/Linux/libvk_swiftshader.so\" \"<BINARY_DIR>/Linux/vk_swiftshader_icd.json\" \"${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d\"")
+elseif(APPLE)
+    set(SWIFTSHADER_SHARED_LINKER "")
+    set(SWIFTSHADER_INSTALL_COMMAND "cp \"<BINARY_DIR>/Debug/libvk_swiftshader.dylib\" \"<BINARY_DIR>/Darwin/vk_swiftshader_icd.json\" \"${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d/.\"")
+else()
+    set(SWIFTSHADER_SHARED_LINKER "")
+    set(SWIFTSHADER_INSTALL_COMMAND "")
+endif()
+
 # TODO(43): figure out why non-Debug builds crash on Pipeline creation.
 ExternalProject_Add(swiftshader
     PREFIX ext
@@ -18,10 +29,11 @@ ExternalProject_Add(swiftshader
     GIT_TAG 8def9063c4fdefa8e644198d2254ef279952c88b
     GIT_PROGRESS ON
     UPDATE_COMMAND ""
-    CMAKE_ARGS -DCMAKE_BUILD_TYPE=Debug -DSWIFTSHADER_BUILD_SAMPLES=OFF -DSWIFTSHADER_BUILD_TESTS=OFF -DSWIFTSHADER_WARNINGS_AS_ERRORS=OFF -DSWIFTSHADER_BUILD_VULKAN=ON -DSWIFTSHADER_BUILD_EGL=OFF -DSWIFTSHADER_BUILD_GLESv2=OFF -DSWIFTSHADER_BUILD_GLES_CM=OFF -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=gold"
-    INSTALL_COMMAND cp "<BINARY_DIR>/Linux/libvk_swiftshader.so" "<BINARY_DIR>/Linux/vk_swiftshader_icd.json" "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d"
+    CMAKE_ARGS -DCMAKE_BUILD_TYPE=Debug -DSWIFTSHADER_BUILD_SAMPLES=OFF -DSWIFTSHADER_BUILD_TESTS=OFF -DSWIFTSHADER_WARNINGS_AS_ERRORS=OFF -DSWIFTSHADER_BUILD_VULKAN=ON -DSWIFTSHADER_BUILD_EGL=OFF -DSWIFTSHADER_BUILD_GLESv2=OFF -DSWIFTSHADER_BUILD_GLES_CM=OFF -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} ${SWIFTSHADER_SHARED_LINKER}
+    INSTALL_COMMAND ${SWIFTSHADER_INSTALL_COMMAND}
 )
 
+if(UNIX AND NOT APPLE)
 add_custom_target(swiftshader-local
     COMMAND mkdir -p "$ENV{HOME}/.local/share/vulkan"
     COMMAND cp -R "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d" "$ENV{HOME}/.local/share/vulkan/."
@@ -29,6 +41,9 @@ add_custom_target(swiftshader-local
     DEPENDS swiftshader-install
     VERBATIM
 )
+elseif(APPLE)
+
+endif()
 
 #### liblo
 ExternalProject_Add(liblo
