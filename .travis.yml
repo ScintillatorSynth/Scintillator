@@ -55,7 +55,7 @@ before_install:
 
 before_script:
     - mkdir build
-    - mkdir third_party/sclang-dev/build && cd third_party/sclang-dev/build
+    - mkdir third_party/sclang-ext/build && cd third_party/sclang-ext/build
     - cmake ..
     - make -j2 install
     - cd ../../../build
