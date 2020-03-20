@@ -312,6 +312,9 @@ if (APPLE)
     install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/libMoltenVK.dylib"
         DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Frameworks"
     )
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d/libvk_swiftshader.dylib"
+        DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Frameworks"
+    )
     install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/macos/Resources/vulkan"
         DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Resources"
     )
@@ -357,8 +360,8 @@ add_custom_target(formatall
     VERBATIM
 )
 
-#### Code Coverage Computation
-if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
+#### Code Coverage Computation (Linux Only)
+if (UNIX AND NOT APPLE AND CMAKE_BUILD_TYPE STREQUAL "Coverage")
     if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         message(FATAL_ERROR "Scintillator code coverage analysis requires Clang to build")
     endif()
