@@ -14,7 +14,7 @@ Also the Vulkan SDK, instructions at https://vulkan.lunarg.com/doc/view/1.1.114.
 From the Vulkan ppa you will want:
 
 ```
-sudo apt-get install shaderc spirv-headers spirv-tools glslang-dev vulkan-headers libvulkan-dev vulkan-validationlayers
+sudo apt-get install shaderc spirv-headers spirv-tools glslang-dev vulkan-headers libvulkan-dev vulkan-validationlayers xvfb
 ```
 
 If you want to run the integration tests you'll need to build SwiftShader and will also need to install some additional

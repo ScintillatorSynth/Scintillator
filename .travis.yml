@@ -10,6 +10,7 @@ addons:
         sources:
             - sourceline: 'deb https://packages.lunarg.com/vulkan bionic main'
               key_url: 'http://packages.lunarg.com/lunarg-signing-key-pub.asc'
+            - sourceline: 'ppa:supercollider/ppa'
         update: true
         packages: &common_packages
             - build-essential
@@ -44,8 +45,10 @@ addons:
             - shaderc
             - spirv-headers
             - spirv-tools
+            - supercollider
             - vulkan-headers
             - vulkan-validationlayers
+            - xvfb
             - zlib1g
 
 env:
@@ -55,11 +58,8 @@ before_install:
 
 before_script:
     - mkdir build
-    - mkdir third_party/sclang-ext/build && cd third_party/sclang-ext/build
-    - cmake ..
-    - make -j2 install
-    - cd ../../../build
-    - cmake -DSCIN_BUILD_DOCS=ON -DCMAKE_BUILD_TYPE=Coverage -DLLVM_COV="llvm-cov-8" -DLLVM_PROFDATA="llvm-profdata-8" -DPYTHON_EXECUTABLE=`which python3` -DSCIN_SCLANG=$TRAVIS_BUILD_DIR/build/install-ext/bin/sclang ..
+    - cd build
+    - cmake -DSCIN_BUILD_DOCS=ON -DCMAKE_BUILD_TYPE=Coverage -DLLVM_COV="llvm-cov-8" -DLLVM_PROFDATA="llvm-profdata-8" -DPYTHON_EXECUTABLE=`which python3` -DSCIN_SCLANG=`which sclang` ..
 
 script:
     - make -j2 swiftshader-local

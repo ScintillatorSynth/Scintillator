@@ -24,6 +24,11 @@ fork {
 fork {
 	d.wait;
 	c.wait;
+    if (exitCode == 0, {
+        "*** SCRIPT OK ***".postln;
+    }, {
+        "*** SCRIPT FAILED ***".postln;
+    });
 	exitCode.exit;
 }
 )

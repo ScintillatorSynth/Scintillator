@@ -12,9 +12,10 @@ quarkPath = thisProcess.argv[0];
 fork {
     // TODO: remove workaround for https://github.com/supercollider/supercollider/issues/3393
     1.sleep;
-	LanguageConfig.addIncludePath(quarkPath +/+ "classes");
-	LanguageConfig.addIncludePath(quarkPath +/+ "tests");
+    LanguageConfig.addIncludePath(quarkPath +/+ "classes");
+    LanguageConfig.addIncludePath(quarkPath +/+ "tests");
     LanguageConfig.store(quarkPath +/+ "build" +/+ "testing" +/+ "sclang_config.yaml");
+    "*** SCRIPT OK ***".postln;
     0.exit;
 }
 )

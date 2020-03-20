@@ -411,9 +411,11 @@ if (NOT DEFINED SCIN_SCLANG)
     set(SCIN_SCLANG sclang)
 endif()
 
+set(SCIN_RUN_SCLANG ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/tools/run-sclang.py" ${SCIN_SCLANG})
+
 set(SCLANG_SCIN_CONFIG "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml")
 add_custom_command(OUTPUT ${SCLANG_SCIN_CONFIG}
-    COMMAND ${SCIN_SCLANG} "${PROJECT_SOURCE_DIR}/tools/TestScripts/addQuark.scd" "${PROJECT_SOURCE_DIR}"
+    COMMAND ${SCIN_RUN_SCLANG} "${PROJECT_SOURCE_DIR}/tools/TestScripts/addQuark.scd" "${PROJECT_SOURCE_DIR}"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
     COMMENT "configuring sclang to include Scintillator classes."
     VERBATIM
@@ -435,14 +437,14 @@ set(SCIN_REF_IMAGES_PATH "${CMAKE_CURRENT_BINARY_DIR}/ref/src/reference_images")
 
 add_custom_target(test_images
     DEPENDS ${SCLANG_SCIN_CONFIG} scinsynth reference_images-update
-    COMMAND  ${SCIN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/makeTestImages.scd" "${PROJECT_SOURCE_DIR}" ${SCIN_REF_IMAGES_PATH} ${SCIN_TEST_IMAGES_ENV}
+    COMMAND  ${SCIN_RUN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/makeTestImages.scd" "${PROJECT_SOURCE_DIR}" ${SCIN_REF_IMAGES_PATH} ${SCIN_TEST_IMAGES_ENV}
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     VERBATIM
 )
 
 add_custom_target(sclang_unit_tests
     DEPENDS ${SCLANG_SCIN_CONFIG}
-    COMMAND ${SCIN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/runUnitTests.scd"
+    COMMAND ${SCIN_RUN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/runUnitTests.scd"
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     VERBATIM
 )
@@ -457,7 +459,7 @@ add_custom_target(compare_images
 add_custom_target(test_osc_commands
     # Artificial dependency to force serialization of the two integration tests during coverage build.
     DEPENDS compare_images
-    COMMAND ${SCIN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/oscTest.scd" "${PROJECT_SOURCE_DIR}" ${PROJECT_VERSION_MAJOR} ${PROJECT_VERSION_MINOR} ${PROJECT_VERSION_PATCH} ${GIT_BRANCH} ${GIT_COMMIT_HASH} ${SCIN_TEST_OSC_ENV}
+    COMMAND ${SCIN_RUN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/oscTest.scd" "${PROJECT_SOURCE_DIR}" ${PROJECT_VERSION_MAJOR} ${PROJECT_VERSION_MINOR} ${PROJECT_VERSION_PATCH} ${GIT_BRANCH} ${GIT_COMMIT_HASH} ${SCIN_TEST_OSC_ENV}
     COMMENT "testing OSC commands on scinsynth"
     VERBATIM
 )

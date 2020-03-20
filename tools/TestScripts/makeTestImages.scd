@@ -4,6 +4,7 @@
 var quarkPath, testImagesPath, imageOut, options, server, c, d, testDefs;
 if (thisProcess.argv.size < 2, {
     "requires at least two arguments, the path to the Scintillator Quark directory followed by the path to the test images repository.".postln;
+    "*** SCRIPT FAILED ***".postln;
     -1.exit;
 });
 // Remaining arguments, if any, should be environment variables to set before invoking the server.
@@ -29,6 +30,7 @@ fork {
 	options.swiftshader = true;
 	options.onServerError = { |exitCode|
 		"*** nonzero exit code % on server, exiting.".format(exitCode).postln;
+        "*** SCRIPT FAILED ***".postln;
 		exitCode.exit;
 	};
 	server = ScinServer.new(options);
@@ -85,6 +87,7 @@ fork {
 
     server.quit;
     1.wait;
+    "*** SCRIPT OK ***".postln;
     0.exit;
 }
 )
