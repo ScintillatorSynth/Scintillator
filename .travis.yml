@@ -1,73 +1,24 @@
 language: cpp
 
-dist: bionic
-os: linux
-compiler: clang
+matrix:
+    include:
+        - os: linux
+          dist: bionic
+          compiler: clang
+          env:
+              - CC=clang-8 CXX=clang++-8
+
 cache: ccache
 
-addons:
-    apt:
-        sources:
-            - sourceline: 'deb https://packages.lunarg.com/vulkan bionic main'
-              key_url: 'http://packages.lunarg.com/lunarg-signing-key-pub.asc'
-            - sourceline: 'ppa:supercollider/ppa'
-        update: true
-        packages: &common_packages
-            - build-essential
-            - clang-8
-            - clang-format-8
-            - cmake
-            - doxygen
-            - glslang-dev
-            - gperf
-            - imagemagick
-            - libasound2-dev
-            - libavcodec-dev
-            - libavformat-dev
-            - libc++-8-dev
-            - libc++abi-8-dev
-            - libfftw3-dev
-            - libicu-dev
-            - libjack-jackd2-dev
-            - libreadline6-dev
-            - libswscale-dev
-            - libudev-dev
-            - libvulkan-dev
-            - libwayland-dev
-            - libxcursor-dev
-            - libxi-dev
-            - libxinerama-dev
-            - libxrandr-dev
-            - llvm-8-dev
-            - pkg-config
-            - python3-distutils
-            - python3-yaml
-            - shaderc
-            - spirv-headers
-            - spirv-tools
-            - supercollider
-            - vulkan-headers
-            - vulkan-validationlayers
-            - xvfb
-            - zlib1g
-
-env:
-    - CC=clang-8 CXX=clang++-8
-
 before_install:
+    - $TRAVIS_BUILD_DIR/.travis/before-install-$TRAVIS_OS_NAME.sh
 
 before_script:
-    - mkdir build
-    - cd build
-    - cmake -DSCIN_BUILD_DOCS=ON -DCMAKE_BUILD_TYPE=Coverage -DLLVM_COV="llvm-cov-8" -DLLVM_PROFDATA="llvm-profdata-8" -DPYTHON_EXECUTABLE=`which python3` -DSCIN_SCLANG=`which sclang` ..
+    - mkdir build && cd build
+    - $TRAVIS_BUILD_DIR/.travis/before-script-$TRAVIS_OS_NAME.sh
 
 script:
-    - make -j2 swiftshader-local
-    - make -j2 install
-    - make coverage_report
-    - make sclang_unit_tests
-    - make -j2 lintall
-    - make -j2 docs
+    - $TRAVIS_BUILD_DIR/.travis/script-$TRAVIS_OS_NAME.sh
 
 before_deploy:
     - mkdir -p $HOME/artifacts/coverage
@@ -85,5 +36,7 @@ deploy:
       verbose: true
       edge: true
       skip_cleanup: true
+      acl: public_read
       on:
+        condition: $TRAVIS_OS_NAME = linux
         branch: master
