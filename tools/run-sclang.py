@@ -29,21 +29,22 @@ def main(argv):
         stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE,
         env=env)
 
-    timeout = 90
+    timeout = 300
     done_string = "*** SCRIPT OK ***"
     error_string = "*** SCRIPT FAILED ***"
     start_time = time.time()
     output = ""
     while not ((done_string in output) or (error_string in output)):
         if time.time() > (start_time + timeout):
-                sys.exit("Timed out.")
+            output = error_string
+            break
 
         output = non_block_read(proc.stdout)
         error = non_block_read(proc.stderr)
         if error:
-                print("ERROR:" + error, end="")
+            print("ERROR:" + error, end="")
         elif output:
-                print(output, end="")
+            print(output, end="")
 
         time.sleep(0.01)
 
