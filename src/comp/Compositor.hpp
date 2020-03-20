@@ -71,7 +71,8 @@ public:
      * \param indexedValues A vector of pairs of parameter indices and initial values.
      * \return True on success, false on error.
      */
-    bool cue(const std::string& scinthDefName, int nodeID, const std::vector<std::pair<std::string, float>>& namedValues,
+    bool cue(const std::string& scinthDefName, int nodeID,
+             const std::vector<std::pair<std::string, float>>& namedValues,
              const std::vector<std::pair<int, float>>& indexedValues);
 
     /*! Stops and removes the nodes from the playing list, and frees the associated resources.

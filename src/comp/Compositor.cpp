@@ -111,7 +111,8 @@ void Compositor::freeScinthDefs(const std::vector<std::string>& names) {
     }
 }
 
-bool Compositor::cue(const std::string& scinthDefName, int nodeID, const std::vector<std::pair<std::string, float>>& namedValues,
+bool Compositor::cue(const std::string& scinthDefName, int nodeID,
+                     const std::vector<std::pair<std::string, float>>& namedValues,
                      const std::vector<std::pair<int, float>>& indexedValues) {
     std::shared_ptr<ScinthDef> scinthDef;
     {
@@ -249,9 +250,9 @@ void Compositor::destroy() {
     {
         std::lock_guard<std::mutex> lock(m_scinthMutex);
         m_scinthMap.clear();
-	for (auto scinth : m_scinths) {
-		scinth->destroy();
-	}
+        for (auto scinth : m_scinths) {
+            scinth->destroy();
+        }
         m_scinths.clear();
     }
     // TODO: as a last resort, could call destroy on each of these

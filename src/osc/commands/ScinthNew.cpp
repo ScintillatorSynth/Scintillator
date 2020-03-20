@@ -44,7 +44,8 @@ void ScinthNew::processMessage(int argc, lo_arg** argv, const char* types, lo_ad
             }
 
             if (types[i] == LO_STRING) {
-                namedValues.emplace_back(std::make_pair(std::string(reinterpret_cast<const char*>(argv[i])), controlValue));
+                namedValues.emplace_back(
+                    std::make_pair(std::string(reinterpret_cast<const char*>(argv[i])), controlValue));
             } else if (types[i] == LO_INT32) {
                 indexedValues.emplace_back(std::make_pair(*reinterpret_cast<int32_t*>(argv[i]), controlValue));
             } else {
