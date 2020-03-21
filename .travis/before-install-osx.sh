@@ -13,10 +13,6 @@ brew link qt5 --force || exit 5
 # according to https://docs.travis-ci.com/user/caching#ccache-cache
 export PATH="/usr/local/opt/ccache/libexec:$PATH"
 
-# temporarily moved here for fail fast
-brew install python
-brew install ninja doxygen lame libass shtool texi2html nasm
-
 # Checkout and build SuperCollider into $HOME/bin
 mkdir $HOME/bin
 mkdir $HOME/src
@@ -32,6 +28,6 @@ cmake --build . --target install --config RelWithDebInfo
 cd $TRAVIS_BUILD_DIR
 
 # Install Scintillator buildtime dependencies
-#brew install python
-#brew install ninja doxygen lame libass shtool texi2html nasm
+brew install python
+brew install ninja doxygen lame libass shtool texi2html nasm
 

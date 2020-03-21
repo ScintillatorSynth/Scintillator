@@ -40,11 +40,19 @@ ScinServerOptions {
 
 	init {
 		defaultValues.keysValuesDo({ |key, value| this.instVarPut(key, value); });
+        if (quarkPath.isNil, {
+            Quarks.installed.do({ |quark, index|
+                if (quark.name == "Scintillator", {
+                    quarkPath = quark.localPath;
+                });
+            });
+        });
 		onServerError = {};
 	}
 
 	asOptionsString {
 		var o = "--quark_dir=" ++ quarkPath;
+
 		if (portNumber != defaultValues[\portNumber], {
 			o = o + "--port_number=" ++ portNumber;
 		});
@@ -84,7 +92,6 @@ ScinServer {
 
 	var options;
 	var scinBinaryPath;
-	var scinQuarkVersion;
 	var scinPid;
 	var addr;
 	var statusPoller;
@@ -98,16 +105,6 @@ ScinServer {
 		if (options.isNil, {
 			options = ScinServerOptions.new;
 		});
-        if (options.quarkPath.isNil, {
-            Quarks.installed.do({ |quark, index|
-                if (quark.name == "Scintillator", {
-                    scinQuarkVersion = quark.version;
-                    options.quarkPath = quark.localPath;
-                });
-            });
-        }, {
-            scinQuarkVersion = "unknown";
-        });
 
 		scinBinaryPath = options.quarkPath +/+ "bin";
 		Platform.case(
