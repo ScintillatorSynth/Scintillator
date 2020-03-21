@@ -1,6 +1,7 @@
 language: cpp
 
 matrix:
+    fast_finish: true
     include:
         - os: linux
           dist: bionic
@@ -8,6 +9,7 @@ matrix:
           env:
               - CC=clang-8 CXX=clang++-8
         - os: osx
+          osx_image: xcode9.4
 
 cache: ccache
 
