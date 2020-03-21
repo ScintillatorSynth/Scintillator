@@ -38,7 +38,7 @@ deploy:
       upload-dir: artifacts/$TRAVIS_COMMIT
       verbose: true
       edge: true
-      skip_cleanup: true
+      cleanup: false
       acl: public_read
       on:
         condition: $TRAVIS_OS_NAME = linux

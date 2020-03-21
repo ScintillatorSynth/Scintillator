@@ -25,9 +25,6 @@ cmake -G Xcode -DCMAKE_INSTALL_PREFIX=$HOME/bin -DCMAKE_PREFIX_PATH=`brew --pref
     -DSC_EL=OFF ..
 cmake --build . --target install --config RelWithDebInfo
 
-# temporarily print out file tree of SuperCollider install
-find $HOME/bin --print
-
 cd $TRAVIS_BUILD_DIR
 
 # Install Scintillator buildtime dependencies
