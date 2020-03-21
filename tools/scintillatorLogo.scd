@@ -1,5 +1,5 @@
 (
-~k = ScinthDef.new(\scinLogo, { |freq = 35.0|
+~logo = ScinthDef.new(\scintillatorLogo, { |freq = 35.0|
 	var pos = NormPos.fg;
 	var x = VX.fg(pos);
 	var y = VY.fg(pos);
