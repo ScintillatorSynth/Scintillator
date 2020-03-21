@@ -220,7 +220,7 @@ set(scintillator_synth_files
 )
 
 if (APPLE)
-    add_executable(scinsynth MACOSX_BUNDLE ${scintillator_synth_files})
+    add_executable(scinsynth MACOSX_BUNDLE macos/Resources/AppIcon.icns ${scintillator_synth_files})
     find_library(AVCODEC_LIBRARY
         NAMES avcodec
         PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
@@ -304,6 +304,9 @@ add_dependencies(scinsynth
 
 file(MAKE_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
 if (APPLE)
+    set(MACOSX_BUNDLE_ICON_FILE AppIcon.icns)
+    set_source_files_properties(macos/Resources/AppIcon.icns PROPERTIES
+       MACOSX_PACKAGE_LOCATION "Resources")
     install(TARGETS scinsynth
         BUNDLE DESTINATION "${PROJECT_SOURCE_DIR}/bin" COMPONENT Runtime
     )
