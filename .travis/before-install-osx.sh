@@ -27,6 +27,5 @@ cmake --build . --target install --config RelWithDebInfo
 cd $TRAVIS_BUILD_DIR
 
 # Install Scintillator buildtime dependencies
-brew install python || brew upgrade python || exit 9
 brew install ninja doxygen lame libass shtool texi2html nasm
 
