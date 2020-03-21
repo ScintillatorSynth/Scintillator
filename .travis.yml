@@ -7,6 +7,7 @@ matrix:
           compiler: clang
           env:
               - CC=clang-8 CXX=clang++-8
+        - os: osx
 
 cache: ccache
 
