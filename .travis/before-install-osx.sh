@@ -3,14 +3,17 @@
 export HOMEBREW_NO_ANALYTICS=1
 
 # SuperCollider build dependencies
-brew update
-brew install libsndfile || brew install libsndfile || exit 1
-brew install portaudio || exit 2
-brew install ccache || exit 3
-brew link qt5 --force || exit 5
+brew -q update
+brew -q install libsndfile || brew install libsndfile || exit 1
+brew -q install portaudio || exit 2
+brew -q install ccache || exit 3
+brew -q link qt5 --force || exit 5
 
 # according to https://docs.travis-ci.com/user/caching#ccache-cache
 export PATH="/usr/local/opt/ccache/libexec:$PATH"
+
+# To get less noise in xcode output, as some builds are terminated for exceeding maximum log length.
+gem install xcpretty
 
 # Checkout and build SuperCollider into $HOME/bin
 mkdir $HOME/bin
@@ -27,6 +30,6 @@ cmake --build . --target install --config RelWithDebInfo
 cd $TRAVIS_BUILD_DIR
 
 # Install Scintillator buildtime dependencies
-brew unlink python@2
-brew install ninja doxygen lame libass shtool texi2html nasm
+brew -q unlink python@2
+brew -q install ninja doxygen lame libass shtool texi2html nasm
 
