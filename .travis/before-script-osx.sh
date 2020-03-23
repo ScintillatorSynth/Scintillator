@@ -1,6 +1,6 @@
 #!/bin/sh
 
-XCPRETTY='xcpretty --simple --no-utf --no-color'
+XCPRETTY='xcpretty -f `xcpretty-travis-formatter`'
 
 # Need to build Vulkan and ffmpeg deps first
 cd $TRAVIS_BUILD_DIR/third_party/ffmpeg-ext
