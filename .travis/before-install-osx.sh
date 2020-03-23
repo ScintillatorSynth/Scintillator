@@ -13,7 +13,7 @@ brew link qt5 --force || exit 5
 export PATH="/usr/local/opt/ccache/libexec:$PATH"
 
 # To get less noise in xcode output, as some builds are terminated for exceeding maximum log length.
-gem install xcpretty
+gem install xcpretty-travis-formatter
 
 # Checkout and build SuperCollider into $HOME/bin
 mkdir $HOME/bin
