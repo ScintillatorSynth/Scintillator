@@ -19,12 +19,15 @@ def non_block_read(output):
 
 def main(argv):
     sclang_path = argv[0]
+    assert os.path.exists(sclang_path)
+
     env = dict(os.environ)
     xvfb = None
     if sys.platform == 'linux':
         env['QT_PLATFORM_PLUGIN'] = 'offscreen'
         env['DISPLAY'] = ':99.0'
         xvfb = subprocess.Popen(['Xvfb', ':99', '-ac', '-screen', '0', '1280x1024x24'])
+
     proc = subprocess.Popen([sclang_path] + argv[1:],
         stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE,
         env=env)
