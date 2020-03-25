@@ -4,7 +4,8 @@ export HOMEBREW_NO_ANALYTICS=1
 
 brew update
 brew unlink python@2
-brew install ccache doxygen shtool supercollider
+brew install ccache doxygen shtool
+brew cask install supercollider
 
 # according to https://docs.travis-ci.com/user/caching#ccache-cache
 export PATH="/usr/local/opt/ccache/libexec:$PATH"
