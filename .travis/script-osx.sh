@@ -1,6 +1,6 @@
 #!/bin/sh
 
-XCPRETTY='xcpretty -f `xcpretty-travis-formatter`'
+XCPRETTY='xcpretty --simple --no-utf --no-color'
 
 cmake --build . --target swiftshader | $XCPRETTY
 cmake --build . | $XCPRETTY
