@@ -10,5 +10,8 @@ brew install ccache doxygen shtool supercollider
 export PATH="/usr/local/opt/ccache/libexec:$PATH"
 
 # To get less noise in xcode output, as some builds are terminated for exceeding maximum log length.
-gem install xcpretty-travis-formatter
+gem install xcpretty
+
+cd $TRAVIS_BUILD_DIR
+python3 tools/fetch-binary-deps.py
 

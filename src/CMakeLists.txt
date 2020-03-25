@@ -288,11 +288,7 @@ target_include_directories(scinsynth PRIVATE
     ${SWSCALE_INCLUDE_DIR}
 )
 
-if (APPLE)
-    add_dependencies(scinsynth
-        swiftshader-install
-    )
-else()
+if(UNIX AND NOT APPLE)
     target_link_libraries(scinsynth
         stdc++fs
     )

@@ -40,8 +40,7 @@ def main(argv):
         needed_deps = ['swiftshader-ext']
     elif platform.system() == 'Darwin':
         os_name = 'osx'
-        # needed_deps = ['ffmpeg-ext', 'vulkan-ext', 'swiftshader-ext']
-        needed_deps = ['ffmpeg-ext']
+        needed_deps = ['ffmpeg-ext', 'vulkan-ext', 'swiftshader-ext']
     else:
         print('Unsupported operating system.')
         sys.exit(1)

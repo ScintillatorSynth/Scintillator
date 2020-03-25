@@ -16,7 +16,6 @@ before_install:
     - $TRAVIS_BUILD_DIR/.travis/before-install-$TRAVIS_OS_NAME.sh
 
 before_script:
-    - mkdir build && cd build
     - $TRAVIS_BUILD_DIR/.travis/before-script-$TRAVIS_OS_NAME.sh
 
 script:
