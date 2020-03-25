@@ -19,6 +19,7 @@ import os
 import pathlib
 import platform
 import shutil
+import subprocess
 import sys
 import urllib.request
 
@@ -61,9 +62,9 @@ def main(argv):
 
         print('latest url for ' + dep + ' is ' + url_file)
         file_path = os.path.join(binary_path, url_file.split('/')[-1])
-        sha_path = pathlib.PurePath(file_path).stem + '.sha256'
-        url_sha = url_base + dep + '/' + sha_path
-        sha_path = os.path.join(binary_path, sha_path)
+        sha_file = pathlib.PurePath(file_path).stem + '.sha256'
+        url_sha = url_base + dep + '/' + sha_file
+        sha_path = os.path.join(binary_path, sha_file)
 
         # Check if the file already exists, and download if not.
         if not os.path.exists(file_path):
@@ -81,6 +82,15 @@ def main(argv):
             print('skipping download of existing file ' + sha_path)
 
         # Check the hash of the downloaded file
+        hash_check = subprocess.run(['shasum', '-c', sha_file], cwd=binary_path, capture_output=True)
+        hash_result = hash_check.stdout.decode('utf-8')
+        if hash_result[-3:-1] != 'OK':
+            print('file ' + file_path + ' failed hash!')
+            sys.exit(1)
+
+        # Extract file
+        print('extracting ' + file_path + ' to ' + binary_path)
+        extract_file = subprocess.run(['tar', 'xzf', file_path, '-C', install_ext ])
 
 
 if __name__ == "__main__":
