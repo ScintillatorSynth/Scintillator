@@ -81,7 +81,7 @@ def main(argv):
             print('skipping download of existing file ' + sha_path)
 
         # Check the hash of the downloaded file
-        hash_check = subprocess.run(['shasum', '-c', sha_file], cwd=binary_path, capture_output=True)
+        hash_check = subprocess.run(['shasum', '-c', sha_file], cwd=binary_path, stdout=subprocess.PIPE)
         hash_result = hash_check.stdout.decode('utf-8')
         if hash_result[-3:-1] != 'OK':
             print('file ' + file_path + ' failed hash!')

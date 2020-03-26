@@ -292,6 +292,9 @@ if(UNIX AND NOT APPLE)
     target_link_libraries(scinsynth
         stdc++fs
     )
+    add_custom_target(swiftshader-local-install
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${SCIN_EXT_INSTALL_DIR}/share ~/.local/share/.
+    )
 endif()
 
 add_dependencies(scinsynth

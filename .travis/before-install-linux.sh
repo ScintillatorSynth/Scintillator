@@ -13,3 +13,6 @@ sudo apt-get install --yes build-essential clang-8 clang-format-8 cmake doxygen 
 	libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev llvm-8-dev pkg-config python3-distutils python3-yaml        \
 	shaderc spirv-headers spirv-tools supercollider-ide vulkan-headers vulkan-validationlayers xvfb zlib1g
 
+cd $TRAVIS_BUILD_DIR
+python3 tools/fetch-binary-deps.py
+
