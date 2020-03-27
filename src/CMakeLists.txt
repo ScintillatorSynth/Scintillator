@@ -45,7 +45,11 @@ target_link_libraries(scintillator_base
     spdlog
     yaml-cpp
 )
-if (UNIX AND NOT APPLE)
+if(APPLE)
+    add_dependencies(scintillator_base
+        ghc_filesystem-install
+    )
+elseif(UNIX)
     target_link_libraries(scintillator_base
         stdc++fs
     )
