@@ -53,7 +53,7 @@ def main(argv):
         print('fetching latest for ' + dep + ' from ' + url_latest)
         req = urllib.request.urlopen(url_latest)
         # Response should be a simple html redirect, which we parse to extract url of the actual resource.
-        resp = req.read(1024).decode('utf-8')
+        resp = req.read().decode('utf-8')
         begin_str = 'content="0; url='
         start = resp.find(begin_str) + len(begin_str)
         end = resp.find('"', start)

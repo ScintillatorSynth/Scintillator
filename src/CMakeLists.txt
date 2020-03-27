@@ -421,7 +421,8 @@ set(SCIN_RUN_SCLANG ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/tools/run-sclang
 
 set(SCLANG_SCIN_CONFIG "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml")
 add_custom_command(OUTPUT ${SCLANG_SCIN_CONFIG}
-    COMMAND ${SCIN_RUN_SCLANG} -a "${PROJECT_SOURCE_DIR}/tools/TestScripts/addQuark.scd" "${PROJECT_SOURCE_DIR}"
+	#    COMMAND ${SCIN_RUN_SCLANG} -a "${PROJECT_SOURCE_DIR}/tools/TestScripts/addQuark.scd" "${PROJECT_SOURCE_DIR}"
+    COMMAND ${SCIN_RUN_SCLANG} "${PROJECT_SOURCE_DIR}/tools/TestScripts/addQuark.scd" "${PROJECT_SOURCE_DIR}"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
     COMMENT "configuring sclang to include Scintillator classes."
     VERBATIM

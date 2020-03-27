@@ -4,8 +4,8 @@ export HOMEBREW_NO_ANALYTICS=1
 
 brew update
 brew unlink python@2
-brew install ccache doxygen shtool
-brew cask install supercollider
+brew install ccache doxygen shtool imagemagick
+python3 -m pip install pyyaml
 
 # according to https://docs.travis-ci.com/user/caching#ccache-cache
 export PATH="/usr/local/opt/ccache/libexec:$PATH"
@@ -15,4 +15,5 @@ gem install xcpretty
 
 cd $TRAVIS_BUILD_DIR
 python3 tools/fetch-binary-deps.py
+python3 tools/fetch-sclang.py $TRAVIS_HOME/sclang
 
