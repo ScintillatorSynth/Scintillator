@@ -48,7 +48,13 @@ DEFINE_bool(keep_on_top, true, "If true will keep the window on top of other win
 DEFINE_int32(async_worker_threads, 2,
              "Number of threads to reserve for asynchronous operations (like loading ScinthDefs).");
 
+// Release builds disable the Vulkan Validation layers by default, but they can be re-enabled via the command line. As
+// they validate the arguments to every Vulkan call, they can be expensive in terms of performance.
+#if defined(SCIN_RELEASE)
+DEFINE_bool(vulkan_validation, false, "Enable Vulkan validation layers.");
+#else
 DEFINE_bool(vulkan_validation, true, "Enable Vulkan validation layers.");
+#endif
 
 DEFINE_int32(frame_rate, -1,
              "Target framerate in frames per second. Negative number means track windowing system "

@@ -1,8 +1,18 @@
 (
 fork {
-	var server, iconsDir, logoScinth, targetFile;
+	var server, iconsDir, targetFile, defImage, makeImage;
 	var options = ScinServerOptions.new;
 	this.executeFile(options.quarkPath +/+ "tools" +/+ "scintillatorLogo.scd");
+	defImage = { |v|
+		~logoDefBlue.add(v);
+		~logoDefGreen.add(v);
+		~logoDefRed.add(v);
+	};
+	makeImage = { |v|
+		~logoBlue = Scinth.new(\scintillatorLogoBlue, server: v);
+		~logoGreen = Scinth.new(\scintillatorLogoGreen, server: v);
+		~logoRed = Scinth.new(\scintillatorLogoRed, server: v);
+	};
 
 	iconsDir = options.quarkPath +/+ "build" +/+ "AppIcon.iconset";
 	File.mkdir(iconsDir);
@@ -12,12 +22,13 @@ fork {
 	options.width = 16;
 	options.height = 16;
 	options.swiftshader = true;
+	options.logLevel = 2;
 	server = ScinServer.new(options);
 	server.bootSync;
 
-	~logoDef.add(server);
+	defImage.value(server);
 	server.sync;
-	logoScinth = Scinth.new(\scintillatorLogo, server: server);
+	makeImage.value(server);
 	server.queueScreenShotSync(iconsDir +/+ "icon_16x16.png", "image/png");
 	server.advanceFrame(1, 1);
 	server.sync;
@@ -29,9 +40,9 @@ fork {
 	options.height = 32;
 	server = ScinServer.new(options);
 	server.bootSync;
-	~logoDef.add(server);
+	defImage.value(server);
 	server.sync;
-	logoScinth = Scinth.new(\scintillatorLogo, server: server);
+	makeImage.value(server);
 	server.queueScreenShotSync(iconsDir +/+ "icon_16x16@2x.png", "image/png");
 	server.queueScreenShotSync(iconsDir +/+ "icon_32x32.png", "image/png");
 	server.advanceFrame(1, 1);
@@ -44,9 +55,9 @@ fork {
 	options.height = 64;
 	server = ScinServer.new(options);
 	server.bootSync;
-	~logoDef.add(server);
+	defImage.value(server);
 	server.sync;
-	logoScinth = Scinth.new(\scintillatorLogo, server: server);
+	makeImage.value(server);
 	server.queueScreenShotSync(iconsDir +/+ "icon_32x32@2x.png", "image/png");
 	server.queueScreenShotSync(iconsDir +/+ "icon_64x64.png", "image/png");
 	server.advanceFrame(1, 1);
@@ -59,9 +70,9 @@ fork {
 	options.height = 128;
 	server = ScinServer.new(options);
 	server.bootSync;
-	~logoDef.add(server);
+	defImage.value(server);
 	server.sync;
-	logoScinth = Scinth.new(\scintillatorLogo, server: server);
+	makeImage.value(server);
 	server.queueScreenShotSync(iconsDir +/+ "icon_64x64@2x.png", "image/png");
 	server.queueScreenShotSync(iconsDir +/+ "icon_128x128.png", "image/png");
 	server.advanceFrame(1, 1);
@@ -74,9 +85,9 @@ fork {
 	options.height = 256;
 	server = ScinServer.new(options);
 	server.bootSync;
-	~logoDef.add(server);
+	defImage.value(server);
 	server.sync;
-	logoScinth = Scinth.new(\scintillatorLogo, server: server);
+	makeImage.value(server);
 	server.queueScreenShotSync(iconsDir +/+ "icon_128x128@2x.png", "image/png");
 	server.queueScreenShotSync(iconsDir +/+ "icon_256x256.png", "image/png");
 	server.advanceFrame(1, 1);
@@ -89,9 +100,9 @@ fork {
 	options.height = 512;
 	server = ScinServer.new(options);
 	server.bootSync;
-	~logoDef.add(server);
+	defImage.value(server);
 	server.sync;
-	logoScinth = Scinth.new(\scintillatorLogo, server: server);
+	makeImage.value(server);
 	server.queueScreenShotSync(iconsDir +/+ "icon_256x256@2x.png", "image/png");
 	server.queueScreenShotSync(iconsDir +/+ "icon_512x512.png", "image/png");
 	server.advanceFrame(1, 1);
@@ -104,9 +115,9 @@ fork {
 	options.height = 1024;
 	server = ScinServer.new(options);
 	server.bootSync;
-	~logoDef.add(server);
+	defImage.value(server);
 	server.sync;
-	logoScinth = Scinth.new(\scintillatorLogo, server: server);
+	makeImage.value(server);
 	server.queueScreenShotSync(iconsDir +/+ "icon_512x512@2x.png", "image/png");
 	server.advanceFrame(1, 1);
 	server.sync;
@@ -115,7 +126,7 @@ fork {
 	5.wait;
 
 	("iconutil -c icns" + iconsDir).systemCmd;
-	targetFile = options.quarkPath +/+ "src" +/+ "macos" +/+ "AppIcon.icns";
+	targetFile = options.quarkPath +/+ "src" +/+ "macos" +/+ "Resources" +/+ "AppIcon.icns";
 	if (File.exists(targetFile), {
 		File.delete(targetFile);
 	});
