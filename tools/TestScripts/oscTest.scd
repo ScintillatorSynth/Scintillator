@@ -3,6 +3,8 @@
 // TODO: add a timeout on the Condition waits so that missing messages don't hang this script.
 (
 var quarkPath, versionMajor, versionMinor, versionPatch, gitBranch, gitHash, options, binPath;
+var scriptFailed = "*** SCRIPT FAILED ***";
+var scriptOk = "*** SCRIPT OK ***";
 if (thisProcess.argv.size < 6, {
 	"requires at least six arguments:".postln;
 	"  the path to the Scintillator Quark directory".postln;
@@ -45,9 +47,15 @@ fork {
 		if (valid, {
 			// We'll exit this script with the same exit code as scinsynth provides here.
 			"got scinsynth exit code %, terminating.".format(exitCode).postln;
+			if (exitCode == 0, {
+				scriptOk.postln;
+			}, {
+				scriptFailed.postln;
+			});
 			exitCode.exit;
 		}, {
 			"** didn't get response from /scin_quit".postln;
+			scriptFailed.postln;
 			1.exit;
 		});
 	});
@@ -74,6 +82,7 @@ fork {
 		if (booted.not, {
 			"timed out waiting for boot!".postln;
 			Platform.killAll("scinsynth");
+			scriptFailed.postln;
 			1.exit;
 		});
 	};
@@ -124,6 +133,7 @@ fork {
 		"*** /scin_status test on error warning counts failed!".postln;
 		"expected % warnings and % errors, got % warnings and % errors".format(
 			numWarn, numError, gotWarn, gotError).postln;
+		scriptFailed.postln;
 		1.exit;
 	});
 
@@ -144,6 +154,7 @@ fork {
 	if (valid.not, {
 		"*** /scin_sync test on empty work queue failed!".postln;
 		"didn't get back same ID as what was sent.".postln;
+		scriptFailed.postln;
 		1.exit;
 	});
 
@@ -184,6 +195,7 @@ fork {
 	if (valid.not or: { awakeCount != 10 }, {
 		"*** /scin_sync test on busy queue failed!".postln;
 		"expected 5 dones, got back %".format(awakeCount).postln;
+		scriptFailed.postln;
 		1.exit;
 	});
 	awakeFunc.free;
@@ -223,6 +235,7 @@ fork {
 		"*** /scin_version test got back different results than expected.".postln;
 		"expected version major: % minor: % patch: % branch: % hash: %".format(
 			versionMajor, versionMinor, versionPatch, gitBranch, gitHash).postln;
+		scriptFailed.postln;
 		1.exit;
 	});
 
@@ -262,6 +275,7 @@ fork {
 
 	if (valid.not, {
 		"*** /scin_d_recv added to valid def count but no valid def sent.".postln;
+		scriptFailed.postln;
 		1.exit;
 	});
 
@@ -286,6 +300,7 @@ fork {
 	d.wait;
 	if (valid.not, {
 		"*** /scin_d_recv status def count not received or incorrect.".postln;
+		scriptFailed.postln;
 		1.exit;
 	});
 
@@ -316,6 +331,7 @@ fork {
 	d.wait;
 	if (valid.not, {
 		"*** /scin_d_load echo back not received.".postln;
+		scriptFailed.postln;
 		1.exit;
 	});
 
@@ -337,6 +353,7 @@ fork {
 	response.free;
 	if (valid.not, {
 		"*** /scin_d_load got incorrect def count back.".postln;
+		scriptFailed.postln;
 		1.exit;
 	});
 
@@ -363,6 +380,7 @@ fork {
 
 	if (valid.not, {
 		"*** calling /scin_d_loadDir with invalid path caused change in def count.".postln;
+		scriptFailed.postln;
 		1.exit;
 	});
 
@@ -376,6 +394,7 @@ fork {
 	d.wait;
 	if (valid.not, {
 		"*** calling /scin_d_loadDir on % resulted in incorrect def count".format(testDefPath).postln;
+		scriptFailed.postln;
 		1.exit;
 	});
 	response.free;
@@ -399,6 +418,7 @@ fork {
 	c.wait;
 	if (valid.not, {
 		"*** calling /scin_d_free resulted in incorrect def count".postln;
+		scriptFailed.postln;
 		1.exit;
 	});
 
@@ -421,6 +441,7 @@ fork {
 	c.wait;
 	if (valid.not, {
 		"*** calling /scin_d_free with already freed ScinthDef resulted in incorrect def count.".postln;
+		scriptFailed.postln;
 		1.exit;
 	});
 	udp.sendMsg('/scin_n_run', 1, 0);

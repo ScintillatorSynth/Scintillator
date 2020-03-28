@@ -1,0 +1,24 @@
+title:: Scintillator Parallels to SuperCollider Synth Classes
+summary:: A table of Scintillator classes similar to scsynth classes
+categories:: Quarks>Scintillator
+
+Scintillator is designed to parallel, in as much a way as makes sense, the existing design conventions for audio synthesis established by SuperCollider.
+
+section::General Class Parallels
+
+table::
+## strong::Parallel Class:: || strong::Scintillator Class:: || strong::comments::
+## link::Classes/SynthDef:: || link::Classes/ScinthDef:: || The synth definition class for Scintillator, a template for link::Classes/Scinth:: objects.
+## link::Classes/Synth:: || link::Classes/Scinth:: || A runnable instance of a ScinthDef template, capable of generating imagery on the server.
+## link::Classes/Server:: || link::Classes/ScinServer:: || Represents the Scintillator server application.
+## link::Classes/ServerOptions:: || link::Classes/ScinServerOptions:: || Options for controlling various features of the Scintillator features at boot time.
+::
+
+section::VGen to UGen Parallels
+
+table::
+## strong::Parallel UGen:: || strong::VGen:: || strong::comments::
+## link::Classes/SinOsc:: || link::Classes/ScinOsc:: || Sinusoidal oscillator.
+## link::Classes/LFSaw:: || link::Classes/VSaw:: || Sawtooth oscillator.
+## link::Classes/PlayBuf:: || link::Classes/Sampler:: || Image sampling VGen. TODO: maybe consider making Sampler a pure base class.
+::

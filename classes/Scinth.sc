@@ -1,12 +1,16 @@
 Scinth {
 	var <>defName;
-	var <>nodeID;
-	var <>server;
+	var <nodeID;
+	var <server;
 
-	*new { |defName, nodeID, server|
+	*new { |defName, args, server|
+		var nodeID = UniqueID.next;
 		server = server ? ScinServer.default;
-		nodeID = (nodeID ? -1).asInteger;
-		server.sendMsg('/scin_s_new', defName, nodeID);
+		if (args.notNil, {
+			server.sendMsg('/scin_s_new', defName, nodeID, 0, 0, *args);
+		}, {
+			server.sendMsg('/scin_s_new', defName, nodeID);
+		});
 		^super.newCopyArgs(defName, nodeID, server);
 	}
 
@@ -16,9 +20,11 @@ Scinth {
 
 	run { |flag=true|
 		server.sendMsg('/scin_n_run', nodeID, flag.binaryValue);
+		^this;
 	}
 
 	set { |...args|
 		server.sendMsg('/scin_n_set', nodeID, *args);
+		^this;
 	}
 }

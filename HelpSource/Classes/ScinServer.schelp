@@ -1,0 +1,163 @@
+TITLE:: ScinServer
+summary:: Represents a Scintillator server application.
+categories:: Quarks>Scintillator
+related:: Classes/ScinServerOptions
+
+DESCRIPTION::
+This class is analagous to the SuperCollider link::Classes/Server:: class. It is a client-side representation of an instance of the Scintillator video synthesis server.
+
+CLASSMETHODS::
+
+METHOD:: default
+Get or set the default Scintillator server. This is the server reference that will be used as the default in all server arguments to ScinthDef and others that accept an optional server argument. By default is the local server instance.
+
+METHOD:: new
+Creates a new ScinServer instance. For now only local servers are supported.
+
+ARGUMENT:: options
+An optional instance of link::ScinServerOptions::. If code::nil::, an instance of ScinServerOptions will be created using the default values.
+
+INSTANCEMETHODS::
+
+METHOD:: queueScreenShotSync
+Call from a link::Classes/Routine::. Requests the server take a screenshot and blocks the calling thread until the screenshot is complete.
+
+ARGUMENT:: fileName
+(describe argument here)
+
+ARGUMENT:: mimeType
+(describe argument here)
+
+ARGUMENT:: onComplete
+(describe argument here)
+
+ARGUMENT:: condition
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: logLevel
+(describe method here)
+
+ARGUMENT:: level
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: screenShot
+(describe method here)
+
+ARGUMENT:: fileName
+(describe argument here)
+
+ARGUMENT:: mimeType
+(describe argument here)
+
+ARGUMENT:: onReady
+(describe argument here)
+
+ARGUMENT:: onComplete
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: init
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: advanceFrame
+(describe method here)
+
+ARGUMENT:: num
+(describe argument here)
+
+ARGUMENT:: denom
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: boot
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: numberOfWarnings
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: numberOfErrors
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: bootSync
+(describe method here)
+
+ARGUMENT:: condition
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: dumpOSC
+(describe method here)
+
+ARGUMENT:: on
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: sync
+(describe method here)
+
+ARGUMENT:: condition
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: sendMsg
+(describe method here)
+
+ARGUMENT::  ... msg
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: serverBooting
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: quit
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: doWhenBooted
+(describe method here)
+
+ARGUMENT:: onComplete
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: serverRunning
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: waitForBoot
+(describe method here)
+
+ARGUMENT:: onComplete
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+
+EXAMPLES::
+
+code::
+(some example code)
+::

@@ -181,7 +181,7 @@ table::
 ## strong::int:: || node ID
 ## N * || table::
 ## strong::int:: or strong::string:: || A control index or name
-## strong::float:: || A control value
+## strong::int:: or strong::float:: || A control value
 ::
 ::
 
@@ -196,6 +196,10 @@ table::
 ## strong::int:: || scinth ID
 ## strong::int:: || add action (not yet supported)
 ## strong::int:: || add target ID (not yet supported)
+## N * || table::
+## strong::int:: or strong::string:: || A control index or name
+## strong::int:: or strong::float:: || A control value
+::
 ::
 
 As Scintillator does not currently support groups, offscreen render targets, or scinth controls, only the first two fields are processed by the server. The server will add the Scinth to the default group and start playing it immediately.
@@ -259,6 +263,7 @@ table::
 ## strong::int:: || Image size in bytes, 0 if invalid
 ## strong::int:: || Image width, -1 if invalid
 ## strong::int:: || Image height, -1 if invalid
+::
 ::
 
 section::Non Real Time Commands

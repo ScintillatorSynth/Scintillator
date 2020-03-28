@@ -14,7 +14,7 @@ Also the Vulkan SDK, instructions at https://vulkan.lunarg.com/doc/view/1.1.114.
 From the Vulkan ppa you will want:
 
 ```
-sudo apt-get install shaderc spirv-headers spirv-tools glslang-dev vulkan-headers libvulkan-dev vulkan-validationlayers
+sudo apt-get install shaderc spirv-headers spirv-tools glslang-dev vulkan-headers libvulkan-dev vulkan-validationlayers xvfb
 ```
 
 If you want to run the integration tests you'll need to build SwiftShader and will also need to install some additional
@@ -40,9 +40,40 @@ The way we do it on travis-ci right now is to supply -DPYTHON_EXECUTABLE=`which 
 MacOS
 -----
 
-Need to build prerequisites, ffmpeg-dev, vulkan-dev, and swiftshader.
+First install the necessary tools to build. These are in addition, generally, to the build pre-requisites for
+SuperCollider. if a computer is set up to build SuperCollider that is a good starting place to build Scintillator.
+You will need to install these additional dependencies:
 
 ```
-brew install ninja doxygen automake fdk-aac git lame libass libtool libvorbis libvpx opus sdl shtool texi2html theora wget x264 x265 xvid nasm
+brew install ninja doxygen automake git lame libass libtool shtool texi2html wget nasm
 ```
+
+## ffmpeg-dev
+
+This is a large download and the build takes a bit of time to complete, so the build is separated from the main build
+and for development should only need to be performed on setup.
+
+```
+cd third_party/ffmpeg-dev
+mkdir build
+cd build
+cmake -G Xcode ..
+cmake --build .
+cmake --install .
+```
+
+## vulkan-dev
+
+Same as ffmpeg-dev in both philosphy and execution. Since MacOS doesn't have native Vulkan support we build the
+requisite libraries, including MoltenVK, from source and prepare them for building against the main compilation.
+
+```
+cd third_party/vulkan-dev
+mkdir build
+cd build
+cmake -G Xcode ..
+cmake --build .
+cmake --install .
+```
+
 

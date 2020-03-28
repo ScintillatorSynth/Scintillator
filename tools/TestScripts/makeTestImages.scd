@@ -4,6 +4,7 @@
 var quarkPath, testImagesPath, imageOut, options, server, c, d, testDefs;
 if (thisProcess.argv.size < 2, {
     "requires at least two arguments, the path to the Scintillator Quark directory followed by the path to the test images repository.".postln;
+    "*** SCRIPT FAILED ***".postln;
     -1.exit;
 });
 // Remaining arguments, if any, should be environment variables to set before invoking the server.
@@ -29,6 +30,7 @@ fork {
 	options.swiftshader = true;
 	options.onServerError = { |exitCode|
 		"*** nonzero exit code % on server, exiting.".format(exitCode).postln;
+        "*** SCRIPT FAILED ***".postln;
 		exitCode.exit;
 	};
 	server = ScinServer.new(options);
@@ -46,22 +48,27 @@ fork {
 			});
 			server.sync;
 		});
-		if (def["scinthDef"].size > 0, {
-			"sending ScinthDef for %".format(def["shortName"]).postln;
-			ScinthDef.new(\test, def["scinthDef"].interpret).add;
-			server.sync;
-			scinth = Scinth.new(\test, 1);
-		});
 		if (def["parameters"].notNil, {
 			params = def["parameters"];
 		}, {
 			params = ["none"].extend(def["captureTimes"].size, "none");
 		});
+		if (def["scinthDef"].size > 0, {
+			"sending ScinthDef for %".format(def["shortName"]).postln;
+			ScinthDef.new(\test, def["scinthDef"].interpret).add;
+			server.sync;
+			if (params[0].class == Dictionary, {
+				var pairs = params[0].asPairs.collect({ |item, j| if ((j % 2) == 1, { item.asFloat; }, { item }) });
+				scinth = Scinth.new(\test, args: pairs);
+			}, {
+				scinth = Scinth.new(\test, 1);
+			});
+		});
 		// *** Need to add support for the new parameters: key right here.
 		t = 0;
 		def["captureTimes"].do({ |dt, i|
 			d.test = false;
-			if (params[i].class == Dictionary, {
+			if (i > 0 and: { params[i].class == Dictionary }, {
 				var pairs = params[i].asPairs.collect({ |item, j| if ((j % 2) == 1, { item.asFloat; }, { item }) });
 				scinth.set(*pairs);
 			});
@@ -85,6 +92,7 @@ fork {
 
     server.quit;
     1.wait;
+    "*** SCRIPT OK ***".postln;
     0.exit;
 }
 )

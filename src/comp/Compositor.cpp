@@ -111,7 +111,9 @@ void Compositor::freeScinthDefs(const std::vector<std::string>& names) {
     }
 }
 
-bool Compositor::cue(const std::string& scinthDefName, int nodeID) {
+bool Compositor::cue(const std::string& scinthDefName, int nodeID,
+                     const std::vector<std::pair<std::string, float>>& namedValues,
+                     const std::vector<std::pair<int, float>>& indexedValues) {
     std::shared_ptr<ScinthDef> scinthDef;
     {
         std::lock_guard<std::mutex> lock(m_scinthDefMutex);
@@ -134,6 +136,14 @@ bool Compositor::cue(const std::string& scinthDefName, int nodeID) {
     if (!scinth->create()) {
         spdlog::error("failed to build Scinth {} from ScinthDef {}.", nodeID, scinthDefName);
         return false;
+    }
+
+    // Override default values in the Scinth as required.
+    for (const auto& pair : namedValues) {
+        scinth->setParameterByName(pair.first, pair.second);
+    }
+    for (const auto& pair : indexedValues) {
+        scinth->setParameterByIndex(pair.first, pair.second);
     }
 
     {
@@ -240,6 +250,9 @@ void Compositor::destroy() {
     {
         std::lock_guard<std::mutex> lock(m_scinthMutex);
         m_scinthMap.clear();
+        for (auto scinth : m_scinths) {
+            scinth->destroy();
+        }
         m_scinths.clear();
     }
     // TODO: as a last resort, could call destroy on each of these

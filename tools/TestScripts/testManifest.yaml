@@ -28,7 +28,7 @@
 }"
   captureTimes: [ 1, 1, 1 ]
   parameters:
-    - "none"
+    - r: 0.1
     - b: 0.1
     - r: 0.8
       g: 0.3
@@ -43,7 +43,7 @@
     BWOut.fg(sawA * sawB); }"
   captureTimes: [ 1, 1, 1 ]
   parameters:
-    - "none"
+    - xmod: 0.2
     - "none"
     - scale: 3.0
       xmod: 1.0

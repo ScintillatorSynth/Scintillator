@@ -1,0 +1,100 @@
+TITLE:: ScinServerOptions
+summary:: (put short description here)
+categories:: Undocumented classes
+related:: Classes/SomeRelatedClass, Reference/SomeRelatedStuff, etc.
+
+DESCRIPTION::
+(put long description here)
+
+
+CLASSMETHODS::
+
+METHOD:: new
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: initClass
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+
+INSTANCEMETHODS::
+
+METHOD:: portNumber
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: dumpOSC
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: createWindow
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: swiftshader
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: asOptionsString
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: quarkPath
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: frameRate
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: logLevel
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: onServerError
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: deviceName
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: width
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: init
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: keepOnTop
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: height
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+
+EXAMPLES::
+
+code::
+(some example code)
+::

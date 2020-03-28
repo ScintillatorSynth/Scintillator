@@ -45,7 +45,11 @@ target_link_libraries(scintillator_base
     spdlog
     yaml-cpp
 )
-if (UNIX AND NOT APPLE)
+if(APPLE)
+    add_dependencies(scintillator_base
+        ghc_filesystem-install
+    )
+elseif(UNIX)
     target_link_libraries(scintillator_base
         stdc++fs
     )
@@ -220,7 +224,7 @@ set(scintillator_synth_files
 )
 
 if (APPLE)
-    add_executable(scinsynth MACOSX_BUNDLE ${scintillator_synth_files})
+    add_executable(scinsynth MACOSX_BUNDLE macos/Resources/AppIcon.icns ${scintillator_synth_files})
     find_library(AVCODEC_LIBRARY
         NAMES avcodec
         PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
@@ -288,9 +292,12 @@ target_include_directories(scinsynth PRIVATE
     ${SWSCALE_INCLUDE_DIR}
 )
 
-if (NOT APPLE)
+if(UNIX AND NOT APPLE)
     target_link_libraries(scinsynth
         stdc++fs
+    )
+    add_custom_target(swiftshader-local-install
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${SCIN_EXT_INSTALL_DIR}/share ~/.local/share/.
     )
 endif()
 
@@ -300,6 +307,9 @@ add_dependencies(scinsynth
 
 file(MAKE_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
 if (APPLE)
+    set(MACOSX_BUNDLE_ICON_FILE AppIcon.icns)
+    set_source_files_properties(macos/Resources/AppIcon.icns PROPERTIES
+       MACOSX_PACKAGE_LOCATION "Resources")
     install(TARGETS scinsynth
         BUNDLE DESTINATION "${PROJECT_SOURCE_DIR}/bin" COMPONENT Runtime
     )
@@ -310,6 +320,9 @@ if (APPLE)
         DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Frameworks"
     )
     install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/libMoltenVK.dylib"
+        DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Frameworks"
+    )
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d/libvk_swiftshader.dylib"
         DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Frameworks"
     )
     install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/macos/Resources/vulkan"
@@ -357,8 +370,8 @@ add_custom_target(formatall
     VERBATIM
 )
 
-#### Code Coverage Computation
-if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
+#### Code Coverage Computation (Linux Only)
+if (UNIX AND NOT APPLE AND CMAKE_BUILD_TYPE STREQUAL "Coverage")
     if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         message(FATAL_ERROR "Scintillator code coverage analysis requires Clang to build")
     endif()
@@ -408,9 +421,11 @@ if (NOT DEFINED SCIN_SCLANG)
     set(SCIN_SCLANG sclang)
 endif()
 
+set(SCIN_RUN_SCLANG ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/tools/run-sclang.py" ${SCIN_SCLANG})
+
 set(SCLANG_SCIN_CONFIG "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml")
 add_custom_command(OUTPUT ${SCLANG_SCIN_CONFIG}
-    COMMAND ${SCIN_SCLANG} "${PROJECT_SOURCE_DIR}/tools/TestScripts/addQuark.scd" "${PROJECT_SOURCE_DIR}"
+    COMMAND ${SCIN_RUN_SCLANG} "${PROJECT_SOURCE_DIR}/tools/TestScripts/addQuark.scd" "${PROJECT_SOURCE_DIR}"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
     COMMENT "configuring sclang to include Scintillator classes."
     VERBATIM
@@ -418,7 +433,7 @@ add_custom_command(OUTPUT ${SCLANG_SCIN_CONFIG}
 
 # Reference source and test images. We always use a specific git hash, to control which images we compare against.
 include(ExternalProject)
-set(SCIN_TEST_IMAGE_HASH "926ab9c0abbae292628e2f65507a712480985e24")
+set(SCIN_TEST_IMAGE_HASH "79f9a766b24ea887de97a18fdaad87ce33fec1d0")
 ExternalProject_Add(reference_images
     PREFIX ref
     STEP_TARGETS update
@@ -432,14 +447,14 @@ set(SCIN_REF_IMAGES_PATH "${CMAKE_CURRENT_BINARY_DIR}/ref/src/reference_images")
 
 add_custom_target(test_images
     DEPENDS ${SCLANG_SCIN_CONFIG} scinsynth reference_images-update
-    COMMAND  ${SCIN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/makeTestImages.scd" "${PROJECT_SOURCE_DIR}" ${SCIN_REF_IMAGES_PATH} ${SCIN_TEST_IMAGES_ENV}
+    COMMAND  ${SCIN_RUN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/makeTestImages.scd" "${PROJECT_SOURCE_DIR}" ${SCIN_REF_IMAGES_PATH} ${SCIN_TEST_IMAGES_ENV}
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     VERBATIM
 )
 
 add_custom_target(sclang_unit_tests
     DEPENDS ${SCLANG_SCIN_CONFIG}
-    COMMAND ${SCIN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/runUnitTests.scd"
+    COMMAND ${SCIN_RUN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/runUnitTests.scd"
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     VERBATIM
 )
@@ -454,7 +469,7 @@ add_custom_target(compare_images
 add_custom_target(test_osc_commands
     # Artificial dependency to force serialization of the two integration tests during coverage build.
     DEPENDS compare_images
-    COMMAND ${SCIN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/oscTest.scd" "${PROJECT_SOURCE_DIR}" ${PROJECT_VERSION_MAJOR} ${PROJECT_VERSION_MINOR} ${PROJECT_VERSION_PATCH} ${GIT_BRANCH} ${GIT_COMMIT_HASH} ${SCIN_TEST_OSC_ENV}
+    COMMAND ${SCIN_RUN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/oscTest.scd" "${PROJECT_SOURCE_DIR}" ${PROJECT_VERSION_MAJOR} ${PROJECT_VERSION_MINOR} ${PROJECT_VERSION_PATCH} ${GIT_BRANCH} ${GIT_COMMIT_HASH} ${SCIN_TEST_OSC_ENV}
     COMMENT "testing OSC commands on scinsynth"
     VERBATIM
 )
