@@ -425,7 +425,6 @@ set(SCIN_RUN_SCLANG ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/tools/run-sclang
 
 set(SCLANG_SCIN_CONFIG "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml")
 add_custom_command(OUTPUT ${SCLANG_SCIN_CONFIG}
-	#    COMMAND ${SCIN_RUN_SCLANG} -a "${PROJECT_SOURCE_DIR}/tools/TestScripts/addQuark.scd" "${PROJECT_SOURCE_DIR}"
     COMMAND ${SCIN_RUN_SCLANG} "${PROJECT_SOURCE_DIR}/tools/TestScripts/addQuark.scd" "${PROJECT_SOURCE_DIR}"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
     COMMENT "configuring sclang to include Scintillator classes."
@@ -434,7 +433,7 @@ add_custom_command(OUTPUT ${SCLANG_SCIN_CONFIG}
 
 # Reference source and test images. We always use a specific git hash, to control which images we compare against.
 include(ExternalProject)
-set(SCIN_TEST_IMAGE_HASH "926ab9c0abbae292628e2f65507a712480985e24")
+set(SCIN_TEST_IMAGE_HASH "79f9a766b24ea887de97a18fdaad87ce33fec1d0")
 ExternalProject_Add(reference_images
     PREFIX ref
     STEP_TARGETS update

@@ -48,22 +48,27 @@ fork {
 			});
 			server.sync;
 		});
-		if (def["scinthDef"].size > 0, {
-			"sending ScinthDef for %".format(def["shortName"]).postln;
-			ScinthDef.new(\test, def["scinthDef"].interpret).add;
-			server.sync;
-			scinth = Scinth.new(\test, 1);
-		});
 		if (def["parameters"].notNil, {
 			params = def["parameters"];
 		}, {
 			params = ["none"].extend(def["captureTimes"].size, "none");
 		});
+		if (def["scinthDef"].size > 0, {
+			"sending ScinthDef for %".format(def["shortName"]).postln;
+			ScinthDef.new(\test, def["scinthDef"].interpret).add;
+			server.sync;
+			if (params[0].class == Dictionary, {
+				var pairs = params[0].asPairs.collect({ |item, j| if ((j % 2) == 1, { item.asFloat; }, { item }) });
+				scinth = Scinth.new(\test, args: pairs);
+			}, {
+				scinth = Scinth.new(\test, 1);
+			});
+		});
 		// *** Need to add support for the new parameters: key right here.
 		t = 0;
 		def["captureTimes"].do({ |dt, i|
 			d.test = false;
-			if (params[i].class == Dictionary, {
+			if (i > 0 and: { params[i].class == Dictionary }, {
 				var pairs = params[i].asPairs.collect({ |item, j| if ((j % 2) == 1, { item.asFloat; }, { item }) });
 				scinth.set(*pairs);
 			});
