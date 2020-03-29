@@ -3,15 +3,15 @@ fork {
 	var server, iconsDir, targetFile, defImage, makeImage;
 	var options = ScinServerOptions.new;
 	this.executeFile(options.quarkPath +/+ "tools" +/+ "scintillatorLogo.scd");
-	defImage = { |v|
-		~logoDefBlue.add(v);
-		~logoDefGreen.add(v);
-		~logoDefRed.add(v);
+	defImage = { |vs|
+		~logoDefBlue.add(vs);
+		~logoDefGreen.add(vs);
+		~logoDefRed.add(vs);
 	};
-	makeImage = { |v|
-		~logoBlue = Scinth.new(\scintillatorLogoBlue, server: v);
-		~logoGreen = Scinth.new(\scintillatorLogoGreen, server: v);
-		~logoRed = Scinth.new(\scintillatorLogoRed, server: v);
+	makeImage = { |vs|
+		~logoBlue = Scinth.new(\scintillatorLogoBlue, server: vs);
+		~logoGreen = Scinth.new(\scintillatorLogoGreen, server: vs);
+		~logoRed = Scinth.new(\scintillatorLogoRed, server: vs);
 	};
 
 	iconsDir = options.quarkPath +/+ "build" +/+ "AppIcon.iconset";
