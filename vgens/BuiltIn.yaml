@@ -34,4 +34,17 @@ outputs: [ out ]
 dimensions:
     - outputs: 2
 shader: "@out = vec2(textureSize(@sampler, 0));"
-
+---
+name: Clamp
+inputs: [ x, min, max ]
+outputs: [ out ]
+dimensions:
+    - inputs: 1
+      outputs: 1
+    - inputs: 2
+      outputs: 2
+    - inputs: 3
+      outputs: 3
+    - inputs: 4
+      outputs: 4
+shader: "@out = clamp(@x, @min, @max);"

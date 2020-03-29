@@ -1,7 +1,7 @@
 // Generates a series of images for validation of individual VGens and
 // integration testing of the render stack.
 (
-var quarkPath, testImagesPath, imageOut, options, server, c, d, testDefs;
+var quarkPath, testImagesPath, imageOut, options, server, c, d, testDefs, keptScinths;
 if (thisProcess.argv.size < 2, {
     "requires at least two arguments, the path to the Scintillator Quark directory followed by the path to the test images repository.".postln;
     "*** SCRIPT FAILED ***".postln;
@@ -35,9 +35,10 @@ fork {
 	};
 	server = ScinServer.new(options);
 	server.bootSync(c);
+	keptScinths = IdentityDictionary.new;
 
 	testDefs.do({ |def|
-		var scinth, fileName, params, t;
+		var scinth, fileName, params, shortName, keep, t;
 		// Make sure output subdirectory exists.
 		(imageOut +/+ def["category"]).mkdir;
 
@@ -48,23 +49,54 @@ fork {
 			});
 			server.sync;
 		});
+
+		// Check for parameters, in case there are initial values to set.
 		if (def["parameters"].notNil, {
 			params = def["parameters"];
 		}, {
 			params = ["none"].extend(def["captureTimes"].size, "none");
 		});
+
+		// If there are Scinths that we've kept that we are now to free, free them.
+		if (def["free"].notNil, {
+			def["free"].do({ |name|
+				var freeName = name.asSymbol;
+				var freeScinth = keptScinths.at(freeName);
+				"freeing Scinth %".format(name).postln;
+				freeScinth.free;
+				keptScinths.removeAt(freeName);
+			});
+		});
+
+		// We have a check in place to make sure that all kept scinths have been freed, so check if that is requested
+		// and, if so, then assert if it is not the case.
+		if (def["assertAllFree"].notNil, {
+			if (keptScinths.isEmpty.not, {
+				"*** Kepth Scinths not empty, but test requires that it is.".postln;
+				"*** SCRIPT FAILED ***".postln;
+				1.exit;
+			});
+		});
+
+		// If there is a ScinthDef to send to the server send it.
 		if (def["scinthDef"].size > 0, {
-			"sending ScinthDef for %".format(def["shortName"]).postln;
-			ScinthDef.new(\test, def["scinthDef"].interpret).add;
+			shortName = def["shortName"].asSymbol;
+			"sending ScinthDef for %".format(shortName).postln;
+			ScinthDef.new(shortName, def["scinthDef"].interpret).add;
 			server.sync;
 			if (params[0].class == Dictionary, {
 				var pairs = params[0].asPairs.collect({ |item, j| if ((j % 2) == 1, { item.asFloat; }, { item }) });
-				scinth = Scinth.new(\test, args: pairs);
+				scinth = Scinth.new(shortName, args: pairs);
 			}, {
-				scinth = Scinth.new(\test, 1);
+				scinth = Scinth.new(shortName, 1);
 			});
 		});
-		// *** Need to add support for the new parameters: key right here.
+		keep = false;
+		if (def["keep"].notNil, {
+			keep = def["keep"] == "true";
+		});
+
+		// Now advance time and record images.
 		t = 0;
 		def["captureTimes"].do({ |dt, i|
 			d.test = false;
@@ -85,8 +117,14 @@ fork {
 			d.wait;
 			t = t + dt;
 		});
+
 		if (scinth.notNil, {
-			scinth.free;
+			if (keep, {
+				"kept Scinth %".format(shortName).postln;
+				keptScinths.put(shortName, scinth);
+			}, {
+				scinth.free;
+			});
 		});
 	});
 
@@ -96,3 +134,4 @@ fork {
     0.exit;
 }
 )
+

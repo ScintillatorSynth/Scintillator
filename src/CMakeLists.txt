@@ -8,6 +8,11 @@ include_directories(
     ${SCIN_EXT_INSTALL_DIR}/include
 )
 
+
+if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    add_definitions(-DSCIN_RELEASE)
+endif()
+
 #### "Core" files (without external dependencies)
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/base")
 
@@ -433,7 +438,7 @@ add_custom_command(OUTPUT ${SCLANG_SCIN_CONFIG}
 
 # Reference source and test images. We always use a specific git hash, to control which images we compare against.
 include(ExternalProject)
-set(SCIN_TEST_IMAGE_HASH "79f9a766b24ea887de97a18fdaad87ce33fec1d0")
+set(SCIN_TEST_IMAGE_HASH "d329aafc7aca154d24cb93206988e0f37fbc8ef6")
 ExternalProject_Add(reference_images
     PREFIX ref
     STEP_TARGETS update

@@ -159,6 +159,8 @@ bool Compositor::cue(const std::string& scinthDefName, int nodeID,
         m_scinthMap.insert({ nodeID, it });
     }
 
+    spdlog::info("Scinth id {} from def {} cueued.", nodeID, scinthDefName);
+
     // Will need to rebuild command buffer on next frame to include the new scinths.
     m_commandBufferDirty = true;
     return true;
