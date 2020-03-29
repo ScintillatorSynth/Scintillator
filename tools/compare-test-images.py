@@ -53,13 +53,16 @@ def main(argv):
 <hr/>
 <h3>{category}</h3>
 """.format(category=category))
+        scinthDef = 'none specified'
+        if 'scinthDef' in item:
+            scinthDef = item['scinthDef']
         outFile.write("""
 <h4>{name}</h4>
 <p>{comment}</p>
 <p>ScinthDef source: <pre>{scinthDef}</pre></p>
 <table>
 <tr><th>status</th><th>Scinth time (s)</th><th>reference image</th><th>{commitHash} image</th><th>difference</th></tr>
-""".format(name=item['name'], comment=item['comment'], scinthDef=item['scinthDef'], commitHash=commitHash))
+""".format(name=item['name'], comment=item['comment'], scinthDef=scinthDef, commitHash=commitHash))
         t = 0
         for dt in item['captureTimes']:
             imageFileName = item['shortName'] + '_' + str(t) + '.png'

@@ -25,7 +25,7 @@
   shortName: "paramColors"
   scinthDef: "{ |r = 0.5, g = 0.1, b = 0.9|
     RGBOut.fg(r, g, b);
-}"
+  }"
   captureTimes: [ 1, 1, 1 ]
   parameters:
     - r: 0.1
@@ -40,7 +40,8 @@
     var pos = NormPos.fg() * scale;
     var sawA = VSaw.fg(0.7, (VX.fg(pos) % xmod) * VY.fg(pos));
     var sawB = VSaw.fg(0.9, VX.fg(pos) * (VY.fg(pos) % ymod));
-    BWOut.fg(sawA * sawB); }"
+    BWOut.fg(sawA * sawB);
+  }"
   captureTimes: [ 1, 1, 1 ]
   parameters:
     - xmod: 0.2
@@ -71,7 +72,8 @@
     var aspect = VX.fg(size) / VY.fg(size);
     var pos = TexPos.fg;
     pos = Vec2.fg((VX.fg(pos) - 0.125) / aspect, VY.fg(pos));
-    Sampler.fg(i, pos); }"
+    Sampler.fg(i, pos);
+  }"
   images:
     - file: "storm.png"
       number: 1
@@ -136,7 +138,8 @@
     var pos = TexPos.fg;
     var m = Sampler.fg(1, Vec2.fg(VSaw.fg(freq: 0.5, phase: VX.fg(pos)), VSaw.fg(freq: (0.75 / 2.0), phase: VY.fg(pos))));
     var s = Sampler.fg(i, Vec2.fg(VSaw.fg(freq: 2.0, phase: 1.0 - VX.fg(pos)), VSaw.fg(freq: 1.5, phase: 1.0 - VY.fg(pos))) * 2.0);
-    s + m; }"
+    s + m;
+  }"
   images:
     - file: "molly.png"
       number: 1
@@ -148,3 +151,70 @@
     - i: 1
     - i: 2
     - i: 123
+- name: "Alpha blending with Scinths, white opaque base layer"
+  category: "alpha"
+  comment: "Test alpha blending colors between different Scinths, starting with a white opaque background."
+  shortName: "alphaWhite"
+  scinthDef: "{
+    BWOut.fg(1.0);
+  }"
+  captureTimes: [ 1 ]
+  keep: true
+- name: "Green layer on top of white"
+  category: "alpha"
+  comment: "Add in a green alpha-blended offset circle."
+  shortName: "alphaGreen"
+  scinthDef: "{
+    var off = Vec2.fg(-0.3, 0.3);
+    var v = Clamp.fg(1.1 - (Length.fg(NormPos.fg - off)), 0.0, 1.0);
+    RGBAOut.fg(0, v, 0, v);
+  }"
+  captureTimes: [ 1 ]
+  keep: true
+- name: "Red layer on top of white and green"
+  category: "alpha"
+  comment: "Now add in a red layer. Note that the generated image is order-dependent."
+  shortName: "alphaRed"
+  scinthDef: "{
+    var off = Vec2.fg(0.3, 0.3);
+    var v = Clamp.fg(1.1 - (Length.fg(NormPos.fg - off)), 0.0, 1.0);
+    RGBAOut.fg(v, 0, 0, v);
+  }"
+  captureTimes: [ 1 ]
+  keep: true
+- name: "Blue layer on top of white, green, red"
+  category: "alpha"
+  comment: "Add in a blue layer to complete the color wheel."
+  shortName: "alphaBlue"
+  scinthDef: "{
+    var off = Vec2.fg(0.0, -1.0 * Length.fg(0.3, 0.3));
+    var v = Clamp.fg(1.1 - (Length.fg(NormPos.fg - off)), 0.0, 1.0);
+    RGBAOut.fg(0, 0, v, v);
+  }"
+  captureTimes: [ 1 ]
+  keep: true
+- name: "Remove middle red layer first"
+  category: "alpha"
+  comment: "Test removing Scinths in a different order than they were added."
+  shortName: "removeRed"
+  captureTimes: [ 1 ]
+  free: [ "alphaRed" ]
+- name: "Remove white backdrop layer"
+  category: "alpha"
+  comment: "Test blending Scinths against the default clear color."
+  shortName: "removeWhite"
+  captureTimes: [ 1 ]
+  free: [ "alphaWhite" ]
+- name: "Remove green layer"
+  category: "alpha"
+  comment: "Should now just be the remaining blue layer."
+  shortName: "removeGreen"
+  captureTimes: [ 1 ]
+  free: [ "alphaGreen" ]
+- name: "Remove final blue layer"
+  category: "alpha"
+  comment: "Test removing final Scinth"
+  shortName: "removeBlue"
+  captureTimes: [ 1 ]
+  free: [ "alphaBlue" ]
+  assertAllFree: true
