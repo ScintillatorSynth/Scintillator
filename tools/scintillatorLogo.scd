@@ -34,6 +34,7 @@
 ~logoDefBlue = ScinthDef.new(\scintillatorLogoBlue, { |freq = 7.0|
 	var pos = NormPos.fg;
 	var blue = (1.0 - ((Length.fg(pos) / 2).min(1.0))) * Vec4.fg(0.031, 0.486, 0.729);
+	blue = blue + Vec4.fg(0.0, 0.0, 0.0, 1.0);
 	blue;
 });
 ~logoDefRed = ScinthDef.new(\scintillatorLogoRed, { |freq = 7.0|
