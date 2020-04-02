@@ -30,8 +30,11 @@ code::
 (
 ~vquad = ScinthDef.new(\vquad, {
 	var length = Length.fg(NormPos.fg);
-	ScinOsc.fg(Vec4.fg(1.0, 1.5, 2.0, 3.0), Vec4.fg(length, length * 2, length * 4, length * 8),
-		Splat4.fg(0.5), Splat4.fg(0.5));
+	ScinOsc.fg(
+		Vec4.fg(1.0, 1.5, 2.0, 3.0),
+		Vec4.fg(length, length * 2, length * 4, length * 8),
+		Splat4.fg(0.5),
+		Splat4.fg(0.5));
 }).add;
 )
 ::

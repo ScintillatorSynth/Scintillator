@@ -18,79 +18,60 @@ ARGUMENT:: options
 An optional instance of link::ScinServerOptions::. If code::nil::, an instance of ScinServerOptions will be created using the default values.
 
 INSTANCEMETHODS::
-
-METHOD:: queueScreenShotSync
-Call from a link::Classes/Routine::. Requests the server take a screenshot and blocks the calling thread until the screenshot is complete.
-
-ARGUMENT:: fileName
-(describe argument here)
-
-ARGUMENT:: mimeType
-(describe argument here)
-
-ARGUMENT:: onComplete
-(describe argument here)
-
-ARGUMENT:: condition
-(describe argument here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: logLevel
-(describe method here)
-
-ARGUMENT:: level
-(describe argument here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: screenShot
-(describe method here)
-
-ARGUMENT:: fileName
-(describe argument here)
-
-ARGUMENT:: mimeType
-(describe argument here)
-
-ARGUMENT:: onReady
-(describe argument here)
-
-ARGUMENT:: onComplete
-(describe argument here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: init
-(describe method here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: advanceFrame
-(describe method here)
-
-ARGUMENT:: num
-(describe argument here)
-
-ARGUMENT:: denom
-(describe argument here)
-
-returns:: (describe returnvalue here)
+private::init
 
 METHOD:: boot
-(describe method here)
-
-returns:: (describe returnvalue here)
+It not already booted, boots the Scintillator synthesis server.
 
 METHOD:: numberOfWarnings
-(describe method here)
-
-returns:: (describe returnvalue here)
+Returns the current number of errors reported by the server since boot.
 
 METHOD:: numberOfErrors
-(describe method here)
+Returns the current number of errors reported by the server since boot.
 
-returns:: (describe returnvalue here)
+METHOD:: logLevel
+Updates the logging level on the server to the provided argument. Lower log levels are inclusive of all higher log levels, so they tend to log more, and the highest log level turns off logging. This overrides any command-line argument supplied to scinsynth at startup.
+
+ARGUMENT:: level
+
+The values for the log level are as follows:
+table::
+## 0 || Trace
+## 1 || Debug
+## 2 || Informational
+## 3 || Warnings
+## 4 || Errors
+## 5 || Critical Errors
+## 6 || Disable Logging
+::
+
+METHOD:: screenShot
+Requests the server to take a screen shot of the next frame rendered, encode it into the provided file format, and save to disk.
+
+ARGUMENT:: fileName
+A string with the full path and file name, including extension, of the desired file to save the screenshot image to.
+
+ARGUMENT:: mimeType
+An optional string. A hint to the image encoder as to which file format is desired, for example code::"image/png"::, code::"image/gif"::, code::"image/jpeg"::.
+
+ARGUMENT:: onReady
+An optional function to call when the ScinServer responds that it has enqueued the screenshot for encode on the next rendered frame.
+
+ARGUMENT:: onComplete
+An optional function to call when the ScinServer responds that it has completed encoding and writing the image to disc.
+
+note::
+The screenShot functionality is only supported in non-realtime rendering modes. See link::Guides/ScinServer-Recording:: for more information.
+::
+
+METHOD:: advanceFrame
+If the server is configured with zero frame rate, will advance the time on the synth by the provided fraction of time in seconds and render a new frame. Otherwise this command is ignored.
+
+ARGUMENT:: num
+An integer representing the numerator in the fraction of time to advance the frame by.
+
+ARGUMENT:: denom
+An integer representing the denominator in the fraction of time to advance the frame by. Sending time in terms of fractions allows for traditional media frame rates (like 24 frames per second).
 
 METHOD:: bootSync
 (describe method here)
@@ -104,14 +85,6 @@ METHOD:: dumpOSC
 (describe method here)
 
 ARGUMENT:: on
-(describe argument here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: sync
-(describe method here)
-
-ARGUMENT:: condition
 (describe argument here)
 
 returns:: (describe returnvalue here)
@@ -151,6 +124,39 @@ METHOD:: waitForBoot
 (describe method here)
 
 ARGUMENT:: onComplete
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+subsection:: Asynchronous Commands
+
+The server provides support for waiting on the completion of asynchronous OSC-commands such as reading or writing sound files.
+
+note::
+The following methods must be called from within a running link::Classes/Routine::. Explicitly passing in a link::Classes/Condition:: allows multiple elements to depend on different conditions. The examples below should make clear how all this works.
+::
+
+METHOD:: sync
+(describe method here)
+
+ARGUMENT:: condition
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: queueScreenShotSync
+Call from a link::Classes/Routine::. Requests the server take a screenshot and blocks the calling thread until the screenshot is complete.
+
+ARGUMENT:: fileName
+(describe argument here)
+
+ARGUMENT:: mimeType
+(describe argument here)
+
+ARGUMENT:: onComplete
+(describe argument here)
+
+ARGUMENT:: condition
 (describe argument here)
 
 returns:: (describe returnvalue here)

@@ -162,6 +162,7 @@ ScinServer {
 		if (level >= 0 and: { level <= 6 }, {
 			this.sendMsg('/scin_logLevel', level);
 		});
+		^this;
 	}
 
 	sendMsg { |... msg|
@@ -193,12 +194,14 @@ ScinServer {
 			}, '/scin_done');
 		});
         this.sendMsg('/scin_nrt_screenShot', fileName, mimeType);
+		^this;
     }
 
 	advanceFrame { |num, denom|
 		if (options.frameRate == 0) {
 			this.sendMsg('/scin_nrt_advanceFrame', num, denom);
 		}
+		^this;
 	}
 
 	waitForBoot { |onComplete|
