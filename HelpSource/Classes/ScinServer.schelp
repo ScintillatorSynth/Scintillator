@@ -15,7 +15,7 @@ METHOD:: new
 Creates a new ScinServer instance. For now only local servers are supported.
 
 ARGUMENT:: options
-An optional instance of link::ScinServerOptions::. If code::nil::, an instance of ScinServerOptions will be created using the default values.
+An optional instance of link::Classes/ScinServerOptions::. If code::nil::, an instance of ScinServerOptions will be created using the default values.
 
 INSTANCEMETHODS::
 private::init
@@ -48,6 +48,10 @@ table::
 METHOD:: screenShot
 Requests the server to take a screen shot of the next frame rendered, encode it into the provided file format, and save to disk.
 
+note::
+The screenShot functionality is only supported in non-realtime rendering modes. See link::Guides/ScinServer-Recording:: for more information.
+::
+
 ARGUMENT:: fileName
 A string with the full path and file name, including extension, of the desired file to save the screenshot image to.
 
@@ -60,10 +64,6 @@ An optional function to call when the ScinServer responds that it has enqueued t
 ARGUMENT:: onComplete
 An optional function to call when the ScinServer responds that it has completed encoding and writing the image to disc.
 
-note::
-The screenShot functionality is only supported in non-realtime rendering modes. See link::Guides/ScinServer-Recording:: for more information.
-::
-
 METHOD:: advanceFrame
 If the server is configured with zero frame rate, will advance the time on the synth by the provided fraction of time in seconds and render a new frame. Otherwise this command is ignored.
 
@@ -73,97 +73,144 @@ An integer representing the numerator in the fraction of time to advance the fra
 ARGUMENT:: denom
 An integer representing the denominator in the fraction of time to advance the frame by. Sending time in terms of fractions allows for traditional media frame rates (like 24 frames per second).
 
-METHOD:: bootSync
-(describe method here)
-
-ARGUMENT:: condition
-(describe argument here)
-
-returns:: (describe returnvalue here)
-
 METHOD:: dumpOSC
-(describe method here)
+Controls if the server should dump received OSC messages to the log or not.
+
+note::
+The server writes OSC messages to the log at the emphasis::Informational:: level, meaning that any logLevel higher than that will not show the OSC messages. Also note that the default log level for ScinServer is at the emphasis::Warning:: level, meaning that at default logging dumpOSC will not appear to work.
+::
 
 ARGUMENT:: on
-(describe argument here)
-
-returns:: (describe returnvalue here)
+A boolean. If true, the server will start dumping incoming OSC messages to the log. If false, the server will stop.
 
 METHOD:: sendMsg
-(describe method here)
+Sends the provided arguments as an OSC message to the associated server process.
 
 ARGUMENT::  ... msg
-(describe argument here)
-
-returns:: (describe returnvalue here)
+The OSC message to send, typically starting with an OSC path like code::/scin_logLevel::. For documentation about supported command consult the link::Reference/Scintillator-Scinth-Server-Command-Reference::.
 
 METHOD:: serverBooting
-(describe method here)
-
-returns:: (describe returnvalue here)
+Returns true if the server is in the process of booting, specifically that the ScinServer instance object has started the server but not yet heard back a response to the status polling.
 
 METHOD:: quit
-(describe method here)
-
-returns:: (describe returnvalue here)
+Requests the server stop immediately.
 
 METHOD:: doWhenBooted
-(describe method here)
+Adds the provided function to the list of functions to be called after the ScinServer instance object detects that the server has booted.
 
 ARGUMENT:: onComplete
-(describe argument here)
-
-returns:: (describe returnvalue here)
+A function, the method to be called when boot is detected. The function is called with one argument, which is the ScinServer object which just booted.
 
 METHOD:: serverRunning
-(describe method here)
-
-returns:: (describe returnvalue here)
+Returns true if the server associated with this ScinServer instance object is currently running.
 
 METHOD:: waitForBoot
-(describe method here)
+Convenience method that adds the provided function to the boot callbacks list and then boots the server if it is not currently running.
 
 ARGUMENT:: onComplete
-(describe argument here)
+The function to call when the server is detected as booted. The function is called with one argument, the ScinServer object which just booted.
 
-returns:: (describe returnvalue here)
+subsection:: Synchronous Commands
 
-subsection:: Asynchronous Commands
-
-The server provides support for waiting on the completion of asynchronous OSC-commands such as reading or writing sound files.
+The server provides support for waiting on the completion of asynchronous OSC-commands such as reading or writing sound files, making them synchronous.
 
 note::
 The following methods must be called from within a running link::Classes/Routine::. Explicitly passing in a link::Classes/Condition:: allows multiple elements to depend on different conditions. The examples below should make clear how all this works.
 ::
 
 METHOD:: sync
-(describe method here)
+Sends a request to the server to finish all emphasis::asynchronous commands::, such as compiling a link::Classes/ScinthDef:: or decoding an image. Will block the calling thread until the completion of all pending tasks is reported by the server.
 
 ARGUMENT:: condition
-(describe argument here)
-
-returns:: (describe returnvalue here)
+An optional link::Classes/Condition:: to use to block the Routine. If not provided ScinServer will make a new one for use.
 
 METHOD:: queueScreenShotSync
-Call from a link::Classes/Routine::. Requests the server take a screenshot and blocks the calling thread until the screenshot is complete.
+Call from a link::Classes/Routine::. Requests the server take a screenshot and blocks the calling thread until the screenshot is emphasis::queued:: to render on the next frame.
+
+note::
+The screenshot functionality is only supported in non-realtime rendering modes. See link::Guides/ScinServer-Recording:: for more information.
+::
 
 ARGUMENT:: fileName
-(describe argument here)
+A string containing the path and file name to save the resulting image to.
 
 ARGUMENT:: mimeType
-(describe argument here)
+An opitional string with a mime type to provide additional context to the image encoder (in addition to the fileName extension) about what image encoding type is requested for saving the image as.
 
 ARGUMENT:: onComplete
-(describe argument here)
+An optional function to callback when the screenshot has been completed, meaning the render has completed and the file has been saved to disc.
 
 ARGUMENT:: condition
-(describe argument here)
+An optional link::Classes/Condition:: object to use to wait on. If not provided ScinServer will create its own.
 
-returns:: (describe returnvalue here)
+METHOD:: bootSync
+Boot the server, then block the Routine until the server is detected as having booted.
 
+ARGUMENT:: condition
+An optional link::Classes/Condition:: object to use to wait on. If not provided ScinServer will create its own.
 
 EXAMPLES::
 
 code::
-(some example code)
+// This example starts a ScinServer configured to render offscreen into a 1024x768 image buffer.
+// It creates a new monochrome ScinthDef, makes a Scinth instance of it, renders a single frame,
+// requests a screenshot, renders a frame which is saved as that screenshot, changes a parameter
+// on the running Scinth, takes another screenshot, then quits the server.
+(
+~scinOptions = ScinServerOptions.new;
+~scinOptions.frameRate = 0;
+~scinOptions.width = 1024;
+~scinOptions.height = 768;
+~scinOptions.logLevel = 2;
+~scinOptions.createWindow = false;
+~scinOptions.swiftshader = true;
+
+// Run on a Routine so we can use the blocking
+fork {
+	var c, f;
+	c = Condition.new;
+	f = { c.test = true; c.signal; };
+
+	// Boot the server, and wait for it to boot.
+	~videoServer = ScinServer.new(~scinOptions).bootSync;
+
+	// Send a ScinthDef to the server
+	~def = ScinthDef.new(\t, { |sx = 1.0, sy = 2.0|
+		BWOut.fg(ScinOsc.fg(1.0, Length.fg(NormPos.fg * Vec2.fg(sx, sy))));
+	}).add;
+
+	// Wait for the server to complete building the ScinthDef just provided.
+	~videoServer.sync;
+
+	// Start rendering an instance of the ScinthDef on next frame render.
+	~scinth = Scinth.new(\t);
+
+	// Render one frame, then advance time by 1/24th of a second.
+	~videoServer.advanceFrame(1, 24);
+
+	// Queue a screenshot request for render, wait until queuing is complete.
+	c.test = false;
+	~videoServer.queueScreenShotSync("test1.png", "image/png", onComplete: f);
+
+	// Render a frame, to capture the screenshot.
+	~videoServer.advanceFrame(1, 24);
+
+	// Block until the onComplete function is called, which will clear the
+	// Condition.
+	c.wait;
+
+	// Set a parameter on the running Scinth.
+	~scinth.set(\sx, 2.0, \sy, 1.0);
+	~videoServer.advanceFrame(1, 24);
+
+	// Request another screenshot.
+	c.test = false;
+	~videoServer.queueScreenShotSync("test2.png", "image/png", onComplete: f);
+	~videoServer.advanceFrame(1, 24);
+	c.wait;
+
+	// Exit the server.
+	~videoServer.quit;
+};
+)
 ::

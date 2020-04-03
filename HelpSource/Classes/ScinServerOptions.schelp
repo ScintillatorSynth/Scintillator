@@ -1,61 +1,37 @@
 TITLE:: ScinServerOptions
-summary:: (put short description here)
-categories:: Undocumented classes
-related:: Classes/SomeRelatedClass, Reference/SomeRelatedStuff, etc.
+summary:: Encapsulates commadn line and other options for the Scintillator synthesis server.
+categories:: Quarks>Scintillator
+related:: Classes/ScinServer
 
 DESCRIPTION::
-(put long description here)
+This class is intended to be analogous to the link::Classes/ServerOptions:: class used to boot the SuperCollider audio synthesis server. Like that object, every link::Classes/ScinServer:: has an instance of ScinServerOptions created for it if one is not provided to it by the code::options:: argument on link::Classes/ScinServer:: creation.
 
+Also like link::Classes/ServerOptions::, these parameters are translated into command line arguments for the server boot, so changing the options after the server has booted will take no effect until the server is restarted.
 
 CLASSMETHODS::
+private::initClass
 
 METHOD:: new
-(describe method here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: initClass
-(describe method here)
-
-returns:: (describe returnvalue here)
-
+Creates a new ScinServerOptions instance with all default options.
 
 INSTANCEMETHODS::
 
-METHOD:: portNumber
-(describe method here)
+subsection::Server Boot Options
 
-returns:: (describe returnvalue here)
+METHOD:: portNumber
+An integer, default strong::5511::. ScinServer binds both TCP and UDP ports at the provided port number.
 
 METHOD:: dumpOSC
-(describe method here)
-
-returns:: (describe returnvalue here)
+A boolean, default strong::false::. If true, ScinServer will log all received OSC message at the informational log level. This can also be changed at runtime with the ScinServer code::dumpOSC:: method.
 
 METHOD:: createWindow
-(describe method here)
-
-returns:: (describe returnvalue here)
+A boolean, default strong::true::. If true, ScinServer will create a window onscreen for rendering. If false, it will not, and all rendering will occur offscreen.
 
 METHOD:: swiftshader
-(describe method here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: asOptionsString
-(describe method here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: quarkPath
-(describe method here)
-
-returns:: (describe returnvalue here)
+A boolean, default strong::false::. If true, ScinServer will ignore any installed graphics hardware and instead will use the open-source software renderer SwiftShader.
 
 METHOD:: frameRate
-(describe method here)
-
-returns:: (describe returnvalue here)
+An integer, default strong::-1::. If a negative number, the server will run in emphasis::interactive:: mode, optimized to reduce latency from render to presentation. If zero the server will run in emphasis::snapshot:: mode, and will only render a new frame when instructed by an code::advanceFrame:: call. If a positive number the server will run in emphasis::throughput:: mode, will render frames as quickly as possible, updated the onscreen window (if present) at the provided refresh rate. For more information see link::Reference/ScinServer-Recording::
 
 METHOD:: logLevel
 (describe method here)
@@ -92,6 +68,13 @@ METHOD:: height
 
 returns:: (describe returnvalue here)
 
+subsection::Other Methods
+
+METHOD:: asOptionsString
+Returns a string reflecting the current options and which can be passed to the command line of the ScinServer binary on boot. Used primarily by ScinServer code on server boot.
+
+METHOD:: quarkPath
+A convenience method that exposes the path to the Scintillator Quark. Used primarily by the Scintillator integration test suite and other internal tooling to quickly locate the Scintillator project files.
 
 EXAMPLES::
 

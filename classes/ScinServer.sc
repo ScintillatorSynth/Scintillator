@@ -151,10 +151,12 @@ ScinServer {
 			// could do some interesting post quit stuff here.
 		}, '/scin_done').oneShot;
 		addr.sendMsg('/scin_quit');
+		^this;
 	}
 
 	dumpOSC { |on|
 		addr.sendMsg('/scin_dumpOSC', on.binaryValue);
+		^this;
 	}
 
 	// Integer from 0 to 6.
@@ -167,6 +169,7 @@ ScinServer {
 
 	sendMsg { |... msg|
 		addr.sendMsg(*msg)
+		^this;
 	}
 
     screenShot { |fileName, mimeType, onReady, onComplete|
@@ -209,10 +212,12 @@ ScinServer {
 		if (this.serverRunning.not, {
 			this.boot;
 		});
+		^this;
 	}
 
 	doWhenBooted { |onComplete|
 		statusPoller.doWhenBooted(onComplete);
+		^this;
 	}
 
 	// Call on Routine
@@ -224,6 +229,7 @@ ScinServer {
 			condition.signal;
 		});
 		condition.wait;
+		^this;
 	}
 
 	// Call on Routine
@@ -241,6 +247,7 @@ ScinServer {
 		}, '/scin_synced');
 		this.sendMsg('/scin_sync', id);
 		condition.wait;
+		^this;
 	}
 
 	// Call on Routine, blocks until the screen shot is queued, then returns status
