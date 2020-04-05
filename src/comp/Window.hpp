@@ -34,7 +34,7 @@ class Swapchain;
 class Window {
 public:
     Window(std::shared_ptr<vk::Instance> instance, std::shared_ptr<vk::Device> device, int width, int height,
-           bool keepOnTop, int frameRate);
+           bool alwaysOnTop, int frameRate);
     ~Window();
 
     bool create();
@@ -73,7 +73,7 @@ private:
     std::shared_ptr<vk::Device> m_device;
     int m_width;
     int m_height;
-    bool m_keepOnTop;
+    bool m_alwaysOnTop;
     int m_frameRate;
     bool m_directRendering;
     GLFWwindow* m_window;

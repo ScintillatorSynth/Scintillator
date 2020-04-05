@@ -49,7 +49,7 @@ table::
 
 
 METHOD:: deviceName
-A string, default strong::empty::. If empty, this argument is ignored. If non-empty, the server will attempt to match the fragment of the name in the argument against the names of the available devices and choose the first matching device name it encounters, or exit if no match can be made. On startup, the synth logs at the Informational level all the Vulkan-supported devices available on the computer it is running on, so this can be consulted as a source to pick names from. For example this code boots the server with the right log level to see the supported devices:
+A string, default strong::empty::. If empty, this argument is ignored. If non-empty, the server will attempt to match the fragment of the name in the argument against the names of the available devices and choose the first matching device name it encounters, or exit if no match can be made. The synth logs on startup at the Informational level all the Vulkan-supported devices available on the computer it is running on, so the log can be consulted as a source to pick names from. For example this code boots the server with the right log level to see the supported devices:
 
 code::
 (
@@ -88,22 +88,13 @@ teletype::
 ::
 
 METHOD:: width
-An integer, default strong::600::. The width of the window (or framebuffer, in the case of offscreen rendering) to create in pixels.
-
-METHOD:: init
-(describe method here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: keepOnTop
-(describe method here)
-
-returns:: (describe returnvalue here)
+An integer, default strong::800::. The width of the window (or framebuffer, in the case of offscreen rendering) to create in pixels.
 
 METHOD:: height
-(describe method here)
+An integer, default strong::600::. The height of the window (or framebuffer, in the case of offscreen rendering) to create in pixels.
 
-returns:: (describe returnvalue here)
+METHOD:: alwaysOnTop
+A boolean, default strong::true::. Just like the link::Classes/Window:: method of the same name, if true the server will create a window that floats on top of other windows. If false, the window will allow other windows to layer on top of it. If code::createWindow:: is false this value is ignored.
 
 subsection::Other Methods
 
@@ -115,9 +106,3 @@ A convenience method that exposes the path to the Scintillator Quark. Used prima
 
 METHOD:: onServerError
 A function, default strong::empty::. This function will be called if the ScinServer object detects an abnormal server exit code.
-
-EXAMPLES::
-
-code::
-(some example code)
-::
