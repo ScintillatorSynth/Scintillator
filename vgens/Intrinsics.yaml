@@ -1,5 +1,11 @@
 # Direct access to some of the Intrinsics within Scintillator.
 ---
+name: FragCoord
+outputs: [ out ]
+dimensions:
+    - outputs: 2
+shader: "@out = vec2(@fragCoord.x, @fragCoord.y);"
+---
 name: NormPos
 outputs: [ out ]
 dimensions:

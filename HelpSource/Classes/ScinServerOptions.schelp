@@ -1,5 +1,5 @@
 TITLE:: ScinServerOptions
-summary:: Encapsulates commadn line and other options for the Scintillator synthesis server.
+summary:: Encapsulates command line and other options for the Scintillator synthesis server.
 categories:: Quarks>Scintillator
 related:: Classes/ScinServer
 
@@ -15,6 +15,7 @@ METHOD:: new
 Creates a new ScinServerOptions instance with all default options.
 
 INSTANCEMETHODS::
+private::init
 
 subsection::Server Boot Options
 
@@ -34,24 +35,60 @@ METHOD:: frameRate
 An integer, default strong::-1::. If a negative number, the server will run in emphasis::interactive:: mode, optimized to reduce latency from render to presentation. If zero the server will run in emphasis::snapshot:: mode, and will only render a new frame when instructed by an code::advanceFrame:: call. If a positive number the server will run in emphasis::throughput:: mode, will render frames as quickly as possible, updated the onscreen window (if present) at the provided refresh rate. For more information see link::Reference/ScinServer-Recording::
 
 METHOD:: logLevel
-(describe method here)
+An integer, default strong::3::. Sets the initial logging level of the server.  The values range from most verbose at 0 to disabling logging entirely at 6. All level values are inclusive of the higher-level values, meaning that 0 will include all higher levels, and 5 will only show cirtical errors. The values for the log level are as follows:
 
-returns:: (describe returnvalue here)
+table::
+## 0 || Trace
+## 1 || Debug
+## 2 || Informational
+## 3 || Warnings
+## 4 || Errors
+## 5 || Critical Errors
+## 6 || Disable Logging
+::
 
-METHOD:: onServerError
-(describe method here)
-
-returns:: (describe returnvalue here)
 
 METHOD:: deviceName
-(describe method here)
+A string, default strong::empty::. If empty, this argument is ignored. If non-empty, the server will attempt to match the fragment of the name in the argument against the names of the available devices and choose the first matching device name it encounters, or exit if no match can be made. On startup, the synth logs at the Informational level all the Vulkan-supported devices available on the computer it is running on, so this can be consulted as a source to pick names from. For example this code boots the server with the right log level to see the supported devices:
 
-returns:: (describe returnvalue here)
+code::
+(
+var options = ScinServerOptions.new;
+options.logLevel = 2;
+~v = ScinServer.new(options).boot;
+)
+::
+
+Which on my laptop produces in the log stream (among other things) the following console log entry:
+
+teletype::
+[1586121895.197] 9593357 [info] found 3 Vulkan devices:
+  name: AMD Radeon Pro 5500M, type: Discrete GPU, vendorID: 1002, deviceID: 7340
+  name: Intel(R) UHD Graphics 630, type: Integrated GPU, vendorID: 8086, deviceID: 3e9b
+  name: SwiftShader Device (LLVM 7.0.0), type: CPU, vendorID: 1ae0, deviceID: c0de
+
+[1586121895.197] 9593357 [info] Choosing fastest device class Discrete GPU, device AMD Radeon Pro 5500M
+::
+
+From a performance standpoint Discrete GPUs are typically faster than Integrated GPUs, which are typically much faster than CPU (or software) renderers, and by default the server will pick the highest-performing device by category, so in this case the teletype::AMD Radeon Pro 5500M::, but if I wanted ensure that the Intel integrated GPU got picked I could provide the (note: case-sensitive) following string in options:
+
+code::
+(
+var options = ScinServerOptions.new;
+options.logLevel = 2;
+options.deviceName = "Intel";
+~v = ScinServer.new(options).boot;
+)
+::
+
+Which when run produces the following logstream:
+
+teletype::
+[1586122278.866] 9595542 [info] Device name Intel match, selecting Intel(R) UHD Graphics 630
+::
 
 METHOD:: width
-(describe method here)
-
-returns:: (describe returnvalue here)
+An integer, default strong::600::. The width of the window (or framebuffer, in the case of offscreen rendering) to create in pixels.
 
 METHOD:: init
 (describe method here)
@@ -75,6 +112,9 @@ Returns a string reflecting the current options and which can be passed to the c
 
 METHOD:: quarkPath
 A convenience method that exposes the path to the Scintillator Quark. Used primarily by the Scintillator integration test suite and other internal tooling to quickly locate the Scintillator project files.
+
+METHOD:: onServerError
+A function, default strong::empty::. This function will be called if the ScinServer object detects an abnormal server exit code.
 
 EXAMPLES::
 

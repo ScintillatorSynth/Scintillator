@@ -90,7 +90,7 @@ ScinServerOptions {
 ScinServer {
 	classvar <>default;
 
-	var options;
+	var <options;
 	var scinBinaryPath;
 	var scinPid;
 	var addr;

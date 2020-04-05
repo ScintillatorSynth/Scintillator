@@ -266,6 +266,7 @@ bool AbstractScinthDef::buildFragmentShader() {
     // For now, all intrinsics are global, coming from either the vertex shader or the uniform buffer, so we can define
     // a single map with all of their substitutions.
     std::unordered_map<Intrinsic, std::string> intrinsicNames;
+    intrinsicNames.insert({ Intrinsic::kFragCoord, "gl_FragCoord" });
     intrinsicNames.insert({ Intrinsic::kPi, "3.1415926535897932384626433832795f" });
 
     // Now add any inputs that might have come from the vertex shader by processing the vertex manifest.

@@ -1,0 +1,23 @@
+TITLE:: NormPos
+summary:: VGen for aspect-ratio correct and size-independent fragment positions.
+categories:: Quarks>Scintillator>VGens>Intrinsics
+related:: Classes/FragCoord, Classes/TexPos, Reference/Scintillator-Default-Graphics-Setup
+
+DESCRIPTION::
+NormPos provides a 2D fragment screen position, adjusted for screen width and height and normalized to [-1, +1] in the shortest dimension, to ensure a square aspect ratio and full range of coordinates in the shortest pixel dimension.
+
+CLASSMETHODS::
+
+METHOD:: fg
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+INSTANCEMETHODS::
+private::inputDimensions, outputDimensions
+
+EXAMPLES::
+
+code::
+(some example code)
+::

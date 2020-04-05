@@ -3,7 +3,7 @@ summary:: User manual for the Scintillator visual synthesizer.
 categories:: Quarks>Scintillator
 related:: Classes/ScinthDef, Classes/ScinServer
 
-In keeping with the high-energy physics themes of SuperCollider, a emphasis::scintillator:: is any material that produces light when struck by radition. Scintillator is intended to be an accompanying visual synthesizer designed to be intuitive to users already familiar with SuperCollider idioms. Distributed as a Quark plus a synthesizer binary, Scintillator follows the client/server archiecture established by SuperCollider, accepts link::Classes/ScinthDef::s in a similar manner to SuperCollider link::Classes/SynthDef::s, provides facilities to invoke and control link::Classes/Scinth:: instances similar to link::Classes/Synth::, and so on. For a detailed list of classes with analogous SuperCollider classes see link::Reference/Scintillator-Parallel-Classes::.s
+In keeping with the high-energy physics themes of SuperCollider, a emphasis::scintillator:: is any material that produces light when struck by radition. Scintillator is intended to be an accompanying visual synthesizer designed to be intuitive to users already familiar with SuperCollider idioms. Distributed as a Quark plus a synthesizer binary, Scintillator follows the client/server archiecture established by SuperCollider, accepts link::Classes/ScinthDef::s in a similar manner to SuperCollider link::Classes/SynthDef::s, provides facilities to invoke and control link::Classes/Scinth:: instances similar to link::Classes/Synth::, and so on. For a detailed list of classes with analogous SuperCollider classes see link::Reference/Scintillator-Parallel-Classes::.
 
 section::Project Status (March 2020)
 
@@ -32,7 +32,7 @@ This section can serve to validate your Scintillator installation, as well as to
 section::The Graphics Pipeline
 
 Much like audio programming, graphics programming is a highly specialized field with the opportunity for a lifetime of learning in domain-specific knowledge and experience. Scintillator presents a simplified view of the process of producing real-time graphics on modern graphics architectures, both to keep the metaphor to SuperCollider audio programming intact and to avoid cluttering the interface with less beneficial detail. What follows here is an overview of the different stages of producing images that are exposed to Scintillator for manipulation. Much has been simplified or omitted, please refer to the Further Reading section below for more detail.
-ß
+
 subsection::Rendering Architectures
 
 The gold standard for visual quality in computer-generated imagery has long been a body of technique called emphasis::ray tracing::, which models individual rays of light interacting with a visual scene consisting of mathematical descriptions of shapes and the reflective and absorbative properties of their surfaces. However, until recently ray tracing has been considered too computationally expensive to perform at real-time frame rates necessary for simulations, video games, and video synthesis. Instead, thanks largely to the commercial success of video games, a body of techniques and supporting hardware and software has emerged under the umbrella term of emphasis::real-time rendering::. While ray tracing is inspired by physics, and seeks to model light and its interactions with the materials in a scene, rendering is much more pragmatic and is concerend with generating realistic imagery on a tight performance budget.
