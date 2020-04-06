@@ -1,23 +1,46 @@
 TITLE:: NormPos
-summary:: VGen for aspect-ratio correct and size-independent fragment positions.
+summary:: VGen for image size invariant fragment positions.
 categories:: Quarks>Scintillator>VGens>Intrinsics
 related:: Classes/FragCoord, Classes/TexPos, Reference/Scintillator-Default-Graphics-Setup
 
 DESCRIPTION::
-NormPos provides a 2D fragment screen position, adjusted for screen width and height and normalized to [-1, +1] in the shortest dimension, to ensure a square aspect ratio and full range of coordinates in the shortest pixel dimension.
+NormPos provides a 2D fragment screen position, adjusted for screen width and height and normalized to [-1, +1] in the shortest dimension, to ensure a square aspect ratio and full range of coordinates in the shortest pixel dimension. This example window is created with the default width of 800 and height of 600, so is therefore wider than it is tall. To adjust for this NormPos varies from -1 to +1 in the vertical axis but from -1.333 to +1.333 in the horizontal axis.
+
+image::NormPosLayout.png::
 
 CLASSMETHODS::
 
 METHOD:: fg
-(describe method here)
 
-returns:: (describe returnvalue here)
+strong::dimensions::
+table::
+## strong::input:: || strong::output::
+## none || 2
+::
 
 INSTANCEMETHODS::
 private::inputDimensions, outputDimensions
 
 EXAMPLES::
 
+Because the example window is wider than it is tall, the circle generated is just touching the top and bottom of the frame and is centered in the horizontal frame with some space on either side to spare.
+
+image::NormPosExample.png::
+
 code::
-(some example code)
+(
+~k = ScinthDef.new(\k, {
+	// This radius will go from black at the center where NormPos is close to zero
+	// and increase to > 1 at the edges of the image.
+	var r = Length.fg(NormPos.fg);
+	// We use the Step function to clip all values of r > 1 to make the cirle more
+	// visually obvious.
+	var clip = 1.0 - Step.fg(1.0, r);
+	BWOut.fg(r * clip);
+}).add;
+)
+
+(
+~t = Scinth.new(\k);
+)
 ::

@@ -51,10 +51,11 @@ DEFINE_int32(asyncWorkerThreads, 2,
 // Release builds disable the Vulkan Validation layers by default, but they can be re-enabled via the command line. As
 // they validate the arguments to every Vulkan call, they can be expensive in terms of performance.
 #if defined(SCIN_RELEASE)
-DEFINE_bool(vulkanValidation, false, "Enable Vulkan validation layers.");
+constexpr bool defaultVulkanValidation = false;
 #else
-DEFINE_bool(vulkanValidation, true, "Enable Vulkan validation layers.");
+constexpr bool defaultVulkanValidation = true;
 #endif
+DEFINE_bool(vulkanValidation, defaultVulkanValidation, "Enable Vulkan validation layers.");
 
 DEFINE_int32(frameRate, -1,
              "Target framerate in frames per second. Negative number means track windowing system "
