@@ -1,6 +1,6 @@
 title:: Scintillator ScinthDef File Format
 summary:: Description of ScinthDef file format used by Scintillator synth server.
-categories:: Quarks>Scintillator
+categories:: Quarks>Scintillator>Developer Documentation
 related:: Classes/VGen, Classes/ScinthDef, Reference/Synth-Definition-File-Format
 
 This is the documentation for the file format used to describe a Video synth, called a ScinthDef, to the Scintillator synth server, scinsynth. The development file format is in YAML, making for easier human readability and debugging. However, despite the difference in format from SuperCollider SynthDef files, the ScinthDef files mostly follow the same structure so should look conceptually familiar. The primary differences are:

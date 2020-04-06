@@ -1,6 +1,6 @@
 title:: Scintillator Parallels to SuperCollider Synth Classes
 summary:: A table of Scintillator classes similar to scsynth classes
-categories:: Quarks>Scintillator
+categories:: Quarks>Scintillator>Guides
 
 Scintillator is designed to parallel, in as much a way as makes sense, the existing design conventions for audio synthesis established by SuperCollider.
 

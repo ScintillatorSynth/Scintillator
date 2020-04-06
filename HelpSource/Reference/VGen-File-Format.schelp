@@ -1,6 +1,6 @@
 title:: VGen File Format
 summary:: Description of VGen yaml file format used by Scintillator synth server.
-categories:: Quarks>Scintillator
+categories:: Quarks>Scintillator>Developer Documentation
 related:: Classes/VGen, Classes/ScinthDef, Reference/Scintillator-Scinth-Definition-File-Format
 
 section::File Format
