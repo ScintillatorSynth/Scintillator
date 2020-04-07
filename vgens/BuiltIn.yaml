@@ -1,4 +1,24 @@
-# VGens that wrap GLSL built-in functions. This is not an exhaustive list, adding things as needed.
+# VGens that wrap GLSL built-in functions or variables. This is not an exhaustive list, adding things as needed.
+---
+name: Clamp
+inputs: [ x, min, max ]
+outputs: [ out ]
+dimensions:
+    - inputs: 1
+      outputs: 1
+    - inputs: 2
+      outputs: 2
+    - inputs: 3
+      outputs: 3
+    - inputs: 4
+      outputs: 4
+shader: "@out = clamp(@x, @min, @max);"
+---
+name: FragCoord
+outputs: [ out ]
+dimensions:
+    - outputs: 2
+shader: "@out = vec2(@fragCoord.x, @fragCoord.y);"
 ---
 name: Length
 inputs: [ in ]
@@ -34,17 +54,3 @@ outputs: [ out ]
 dimensions:
     - outputs: 2
 shader: "@out = vec2(textureSize(@sampler, 0));"
----
-name: Clamp
-inputs: [ x, min, max ]
-outputs: [ out ]
-dimensions:
-    - inputs: 1
-      outputs: 1
-    - inputs: 2
-      outputs: 2
-    - inputs: 3
-      outputs: 3
-    - inputs: 4
-      outputs: 4
-shader: "@out = clamp(@x, @min, @max);"
