@@ -25,8 +25,6 @@ EXAMPLES::
 
 Because the example window is wider than it is tall, the circle generated is just touching the top and bottom of the frame and is centered in the horizontal frame with some space on either side to spare.
 
-image::NormPosExample.png::
-
 code::
 (
 ~k = ScinthDef.new(\k, {
@@ -44,3 +42,5 @@ code::
 ~t = Scinth.new(\k);
 )
 ::
+
+image::NormPosExample.png::

@@ -21,8 +21,6 @@ private::inputDimensions, outputDimensions
 
 EXAMPLES::
 
-image::TexCoordA.png::
-
 code::
 // This code snippet starts the server, loads the test image from the Scintillator
 // image testing repository, and renders it to the entire quad using the TexPos
@@ -49,13 +47,12 @@ code::
 )
 ::
 
-
-image::TexCoordB.png::
+image::TexPosA.png::
 
 code::
-// Molly doesn't appreciate being rendered in the wrong aspect ratio! We need to
-// adjust for two different aspect ratios, the aspect ratio of the screen and the
-// aspect ratio of the image.
+// Molly doesn't appreciate being rendered in the wrong aspect ratio! It compromises
+// some of her remarkable charisma. We need to adjust for two different aspect ratios,
+// the aspect ratio of the screen and the aspect ratio of the image.
 (
 ~t.free;
 )
@@ -73,3 +70,5 @@ code::
 ~t = Scinth.new(\f);
 )
 ::
+
+image::TexPosB.png::

@@ -3,9 +3,9 @@ Scintillator Synth References and Acknowledgements {#ReferencesAndAcknowledgemen
 
 # Acknowledgements
 
-A big thank you to my wife Hilary Nihlen, whos support and companionship has made Scintillator possible.
+A big thank you to my wife Hilary Nihlen, who's unfailing support and companionship has made Scintillator possible.
 
-I'd also like to thank Nathan Ho for his friendship and many conversations about Scintillator and SuperCollider
+I'd also like to thank Nathan Ho for his friendship, and many conversations about Scintillator and SuperCollider
 development.
 
 # Vulkan Programming
@@ -16,3 +16,7 @@ development.
   on [GitHub](https://github.com/SaschaWillems/Vulkan) from which I have cribbed from heavily. Also the
   [Vulkan Hardware Database](https://vulkan.gpuinfo.org/) is a great source of information about the diversity of
   hardware out there supporting Vulkan.
+
+# Website
+
+  * External link icon courtesy of [Feather Icons](https://feathericons.com/).

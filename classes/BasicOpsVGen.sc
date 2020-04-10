@@ -70,7 +70,7 @@ UnaryOpVGen : BasicOpVGen {
 			'theta', { ^thisMethod.notYetImplemented },
 			'not', { ^thisMethod.notYetImplemented },
 			'ref', { ^thisMethod.notYetImplemented },
-			{ "Unknown VGen unary operation: %".format(selector).postln; ^nil; }
+			{ "Unknown VGen unary operation: %".format(selector).error; ^nil; }
 		);
 		// Unary operators should take on whatever rate the
 		// target VGen is running.
@@ -150,7 +150,7 @@ BinaryOpVGen : BasicOpVGen {
 			'&&', { ^thisMethod.notYetImplemented },
 			'xor', { ^thisMethod.notYetImplemented },
 			'nand', { ^thisMethod.notYetImplemented },
-			{ "Unknown VGen binary operation: %".format(selector).postln; ^nil; }
+			{ "Unknown VGen binary operation: %".format(selector).error; ^nil; }
 		);
 		^this.multiNew(\fragment, binaryName, a, b);
 	}

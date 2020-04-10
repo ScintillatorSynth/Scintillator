@@ -21,8 +21,6 @@ private::inputDimensions, outputDimensions
 
 EXAMPLES::
 
-image::FragCoordVis.png::
-
 code::
 (
 ~o = ScinServerOptions.new;
@@ -44,3 +42,5 @@ code::
 ~t = Scinth.new(\f);
 )
 ::
+
+image::FragCoordVis.png::
