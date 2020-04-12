@@ -74,3 +74,39 @@ dimensions:
     - inputs: [4, 4, 1]
       outputs: 4
 shader: "@out = mix(@x, @y, @a);"
+---
+name: Dot
+inputs: [ x, y ]
+outputs: [ out ]
+dimensions:
+    - inputs: 1
+      outputs: 1
+    - inputs: 2
+      outputs: 1
+    - inputs: 3
+      outputs: 1
+    - inputs: 4
+      outputs: 1
+shader: "@out = dot(@x, @y);"
+---
+name: Cross
+inputs: [ x, y ]
+outputs: [ out ]
+dimensions:
+    - inputs: 3
+      outputs: 3
+shader: "@out = cross(@x, @y);"
+---
+name: VNorm
+inputs: [ x ]
+outputs: [ out ]
+dimensions:
+    - inputs: 1
+      outputs: 1
+    - inputs: 2
+      outputs: 2
+    - inputs: 3
+      outputs: 3
+    - inputs: 4
+      outputs: 4
+shader: "@out = normalize(@x);"

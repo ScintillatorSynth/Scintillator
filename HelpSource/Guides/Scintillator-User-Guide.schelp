@@ -3,7 +3,7 @@ summary:: User manual for the Scintillator visual synthesizer.
 categories:: Quarks>Scintillator>Guides
 related:: Classes/ScinthDef, Classes/ScinServer
 
-In keeping with the high-energy physics themes of SuperCollider, a emphasis::scintillator:: is any material that produces light when struck by radition. Scintillator is intended to be an accompanying visual synthesizer designed to be intuitive to users already familiar with SuperCollider idioms. Distributed as a Quark plus a synthesizer binary, Scintillator follows the client/server archiecture established by SuperCollider, accepts link::Classes/ScinthDef::s in a similar manner to SuperCollider link::Classes/SynthDef::s, provides facilities to invoke and control link::Classes/Scinth:: instances similar to link::Classes/Synth::, and so on. For a detailed list of classes with analogous SuperCollider classes see link::Reference/Scintillator-Parallel-Classes::.
+In keeping with the high-energy physics themes of SuperCollider, a emphasis::scintillator:: is any material that produces light when struck by radition. Scintillator is intended to be an accompanying visual synthesizer designed to be intuitive to users already familiar with SuperCollider idioms. Distributed as a Quark plus a synthesizer binary, Scintillator follows the client/server archiecture established by SuperCollider, accepts link::Classes/ScinthDef::s in a similar manner to SuperCollider link::Classes/SynthDef::s, provides facilities to invoke and control link::Classes/Scinth:: instances similar to link::Classes/Synth::, and so on. For a detailed list of classes with analogous SuperCollider classes see link::Guides/Scintillator-Parallel-Classes::.
 
 section::Project Status (March 2020)
 
