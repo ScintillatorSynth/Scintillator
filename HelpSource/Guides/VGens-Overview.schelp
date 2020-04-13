@@ -67,7 +67,7 @@ table::
 :: || Onscreen coordinates of current fragment in pixels
 ::
 
-section::Vector Packing and Unpacking
+section::Vector Manipulation
 
 These utility UGens allow the grouping of one-dimensional elements into vectors, access to individual elements within vectors, and lastly a convenience function to repeat (or emphasis::splat::) a single element across all elements within a vector.
 
@@ -178,13 +178,20 @@ table::
 ## 4, 4, 4 || 4
 :: || Video equivalent of link::Classes/Clip:: UGen, piecewise bounds input code::x:: between code::[min, max]::
 
-## link::Classes/Length::code::.fg():: || table::
+## link::Classes/Length::code::.fg(x):: || table::
 ## strong::input:: || strong::output::
 ## 1 || 1
 ## 2 || 1
 ## 3 || 1
 ## 4 || 1
-:: || Returns the length of the vector, or the square root of the sum of the squares
+:: || Returns the length of the vector code::x::, or the square root of the sum of the squares
+
+## link::Classes/Distance::code::.fg(x, y):: || table::
+## 1, 1 || 1
+## 2, 2 || 1
+## 3, 3 || 1
+## 4, 4 || 1
+:: || Computes the distance between code::x:: and code::y::, which is the length of the vector code::x - y::
 
 ## link::Classes/Step::code::.fg(step, x):: || table::
 ## strong::input:: || strong::output::

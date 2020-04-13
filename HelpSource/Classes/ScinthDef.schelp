@@ -1,7 +1,7 @@
 title:: ScinthDef
 summary:: Represents a Scintillator Synth Definition
 categories:: Quarks>Scintillator>Scinth
-related:: Classes/VGen, Classes/Scinth, Classes/SynthDef, Reference/Scintillator-Parallel-Classes, Reference/Scintillator-ScinthDef-File-Format
+related:: Classes/VGen, Classes/Scinth, Classes/SynthDef, Guides/Scintillator-Parallel-Classes, Reference/Scintillator-ScinthDef-File-Format
 
 description::
 

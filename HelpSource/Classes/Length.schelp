@@ -1,0 +1,57 @@
+TITLE:: Length
+summary:: Computes the length of the provided vector
+categories:: Quarks>Scintillator>VGens>Mathematics>Vector Math
+related:: Classes/Distance
+
+DESCRIPTION::
+Similar to the absolute value in one dimension, code::Length:: computes the length of the provided vector as the square root of the sum of the squares of its components. It works on input dimensions 1-4. In the 1D case it returns the absolute value of the input.
+
+CLASSMETHODS::
+
+METHOD:: fg
+
+strong::dimensions::
+table::
+## strong::input:: || strong::output::
+## 1 || 1
+## 2 || 1
+## 3 || 1
+## 4 || 1
+::
+
+ARGUMENT:: vec
+The input vector.
+
+INSTANCEMETHODS::
+private::inputDimensions, outputDimensions
+
+EXAMPLES::
+
+code::
+(
+// This example uses the Length operator to plot the distance at each pixel to the
+// moving point on three different Lissajous curves, one in each color channel.
+// The dot parameter controls the size of the dot around each curve, by scaling how
+// quickly the dot will drive the length to the clamp values as distance from each
+// Lissajous point increases.
+~k = ScinthDef.new(\k, { |dot = 0.5|
+	var rx = ScinOsc.fg(freq: 1.5, mul: 0.9, add: 0.0);
+	var ry = ScinOsc.fg(freq: 1, phase: pi / 4, mul: 0.9, add: 0.0);
+	var gx = ScinOsc.fg(freq: 0.5, phase: pi / 2, mul: 0.9, add: 0.0);
+	var gy = ScinOsc.fg(freq: 1.25, mul: 1.0, add: 0.0);
+	var bx = ScinOsc.fg(freq: 0.75, phase: pi / 3, mul: 0.9, add: 0.0);
+	var by = ScinOsc.fg(phase: 3 * pi / 4, mul: 0.9, add: 0.0);
+	var pos = NormPos.fg;
+	var r = Clamp.fg(1.0 - (Length.fg(Vec2.fg(rx, ry) - pos) / dot), 0.0, 1.0);
+	var g = Clamp.fg(1.0 - (Length.fg(Vec2.fg(gx, gy) - pos) / dot), 0.0, 1.0);
+	var b = Clamp.fg(1.0 - (Length.fg(Vec2.fg(bx, by) - pos) / dot), 0.0, 1.0);
+	RGBOut.fg(r, g, b);
+}).add;
+)
+
+(
+~t = Scinth.new(\k);
+)
+::
+
+image::Length.png::

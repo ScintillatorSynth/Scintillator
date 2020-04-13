@@ -12,6 +12,49 @@ Clamp : VGen {
 	}
 }
 
+
+Cross : VGen {
+	*fg { |x, y|
+		^this.multiNew(\fragment, x, y);
+	}
+
+	inputDimensions {
+		^[[3, 3]];
+	}
+
+	outputDimensions {
+		^[[3]];
+	}
+}
+
+Dot : VGen {
+	*fg { |x, y|
+		^this.multiNew(\fragment, x, y);
+	}
+
+	inputDimensions {
+		^[[1, 1], [2, 2], [3, 3], [4, 4]];
+	}
+
+	outputDimensions {
+		^[[1], [1], [1], [1]];
+	}
+}
+
+Distance : VGen {
+	*fg { |x, y|
+		^this.multiNew(\fragment, x, y);
+	}
+
+	inputDimensions {
+		^[[1, 1], [2, 2], [3, 3], [4, 4]];
+	}
+
+	outputDimensions {
+		^[[1], [1], [1], [1]];
+	}
+}
+
 FragCoord : VGen {
 	*fg {
 		^this.multiNew(\fragment);
@@ -65,34 +108,6 @@ VecMix : VGen {
 
 	outputDimensions {
 		^[[1], [2], [3], [4], [2], [3], [4]];
-	}
-}
-
-Dot : VGen {
-	*fg { |x, y|
-		^this.multiNew(\fragment, x, y);
-	}
-
-	inputDimensions {
-		^[[1, 1], [2, 2], [3, 3], [4, 4]];
-	}
-
-	outputDimensions {
-		^[[1], [1], [1], [1]];
-	}
-}
-
-Cross : VGen {
-	*fg { |x, y|
-		^this.multiNew(\fragment, x, y);
-	}
-
-	inputDimensions {
-		^[[3, 3]];
-	}
-
-	outputDimensions {
-		^[[3]];
 	}
 }
 
