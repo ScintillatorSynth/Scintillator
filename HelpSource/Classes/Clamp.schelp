@@ -1,10 +1,9 @@
 TITLE:: Clamp
-summary:: (put short description here)
-categories:: Undocumented classes
-related:: Classes/SomeRelatedClass, Reference/SomeRelatedStuff, etc.
+summary:: Video oscillator to constrain a value between two parameters
+categories:: Quarks>Scintillator>VGens>Mathematics>Signal Processing
+related:: Classes/Clip
 
 DESCRIPTION::
-(put long description here)
 
 
 CLASSMETHODS::
