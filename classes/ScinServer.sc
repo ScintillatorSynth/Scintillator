@@ -130,7 +130,6 @@ ScinServer {
 
 		statusPoller.serverBooting = true;
 		commandLine = scinBinaryPath + options.asOptionsString();
-		commandLine.postln;
 
 		scinPid = commandLine.unixCmd({ |exitCode, exitPid|
 			"*** got scinsynth exit code %".format(exitCode).postln;

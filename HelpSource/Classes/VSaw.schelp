@@ -1,0 +1,53 @@
+TITLE:: VSaw
+summary:: Multidimensional sawtooth video oscillator
+categories:: Quarks>Scintillator>VGens>Video Oscillators
+related:: Classes/LFSaw
+
+DESCRIPTION::
+Similar to its analog sibling link::Classes/LFSaw:: the VSaw is a video sawtooth oscillator. It can process inputs of one to four dimensions and produces an output in the same dimension. The arguments parallel the arguments used by link::Classes/LFSaw::, although the output is configured to range from code::[0, 1]::.
+
+CLASSMETHODS::
+
+METHOD:: fg
+
+strong::dimensions::
+table::
+## strong::input:: || strong::output::
+## 1, 1, 1, 1 || 1
+## 2, 2, 2, 2 || 2
+## 3, 3, 3, 3 || 3
+## 4, 4, 4, 4 || 4
+::
+
+ARGUMENT:: freq
+Oscillator frequency in cycles per second or Hz.
+
+ARGUMENT:: phase
+Oscillator phase in radians.
+
+
+INSTANCEMETHODS::
+private::inputDimensions, outputDimensions
+
+EXAMPLES::
+
+code::
+// This example represents some of the early origins of the Scintillator logo.
+// It uses a VSaw to generate the bands. Each pixel on the screen is oscillating
+// at 5 Hz, but the phase changes as a function of distance from the center of
+// the screen. This smooth variation in phase causes the bands to appear to
+// move outward over time.
+(
+~t = ScinthDef.new(\t, {
+	var pos = NormPos.fg.abs.neg;
+	var z = min(VX.fg(pos), VY.fg(pos));
+	BWOut.fg(Step.fg(0.5, VSaw.fg(freq: 5, phase: z)));
+}).add;
+)
+
+(
+~k = Scinth.new(\t);
+)
+::
+
+image::VSaw.png::
