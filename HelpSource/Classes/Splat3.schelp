@@ -1,0 +1,34 @@
+TITLE:: Splat3
+summary:: Copy a single value into a 3-D vector
+categories:: Quarks>Scintillator>VGens>Vector Manipulation
+related:: Classes/Splat4, Classes/Splat2
+
+DESCRIPTION::
+Like its partner classes link::Classes/Splat2:: and link::Classes/Splat4::, copies a single-dimensional value into each part of multidimensional signal, in this case a 3-D signal.
+
+CLASSMETHODS::
+
+METHOD:: fg
+
+strong::dimensions::
+
+table::
+## strong::input:: || strong::output::
+## 1 || 3
+::
+
+
+ARGUMENT:: x
+The value to copy into all three channels.
+
+INSTANCEMETHODS::
+private::inputDimensions, outputDimensions
+
+EXAMPLES::
+
+code::
+var v = Splat3.fg(1.0);
+var x = VX.fg(v); // x: 1
+var y = VY.fg(v); // y: 1
+var z = VZ.fg(v); // z: 1
+::

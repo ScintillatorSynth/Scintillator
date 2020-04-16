@@ -1,0 +1,54 @@
+TITLE:: Length
+summary:: Computes the length of the provided vector
+categories:: Quarks>Scintillator>VGens>Mathematics>Vector Math
+related:: Classes/Distance
+
+DESCRIPTION::
+Length computes the length of the provided vector as the square root of the sum of the squares of its components. It works on input dimensions 1-4. In the 1D case it returns the absolute value of the input.
+
+CLASSMETHODS::
+
+METHOD:: fg
+
+strong::dimensions::
+table::
+## strong::input:: || strong::output::
+## 1 || 1
+## 2 || 1
+## 3 || 1
+## 4 || 1
+::
+
+ARGUMENT:: vec
+The input vector.
+
+INSTANCEMETHODS::
+private::inputDimensions, outputDimensions
+
+EXAMPLES::
+
+code::
+(
+// This demo shows a graph of the magnetic flux density around a
+// dipole magnet pointing along the y axis. It is a 3D radial
+// function and uses the Length operator to compute the radius
+// at each pixel, which is an input to the function (see
+// https://en.wikipedia.org/wiki/Magnetic_dipole), as well as
+// the magnitude of the magnetic flux vector at each point,
+// to generate the black and white image.
+~k = ScinthDef.new(\k, {
+	var pos = NormPos.fg;
+	var r = Vec3.fg(VX.fg(pos), VY.fg(pos), 0.0);
+	var magR = Length.fg(r);
+	var m = Vec3.fg(0.0, 0.1, 0.0);
+	var flux = Cross.fg(m, r) / magR.cubed;
+	BWOut.fg(Clamp.fg(Length.fg(flux), 0.0, 1.0));
+}).add;
+)
+
+(
+~t = Scinth.new(\k);
+)
+::
+
+image::Length.png::

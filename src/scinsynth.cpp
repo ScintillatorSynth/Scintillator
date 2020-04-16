@@ -28,63 +28,64 @@
 #include <vector>
 
 // Command-line options specified to gflags.
-DEFINE_bool(print_version, false, "Print the Scintillator version and exit.");
-DEFINE_bool(print_devices, false, "Print the detected devices and exit.");
-DEFINE_string(port_number, "5511", "A port number 1024-65535.");
-DEFINE_bool(dump_osc, false, "Start dumping OSC messages immediately on bootup.");
+DEFINE_bool(printVersion, false, "Print the Scintillator version and exit.");
+DEFINE_bool(printDevices, false, "Print the list of detected devices and exit.");
+DEFINE_string(portNumber, "5511", "A port number 1024-65535.");
+DEFINE_bool(dumpOSC, false, "Start dumping OSC messages immediately on bootup.");
 // TODO: find a way to get liblo to bind less widely.
 // DEFINE_string(bind_to_address, "127.0.0.1", "Bind the UDP socket to this address.");
 
-DEFINE_int32(log_level, 3,
+DEFINE_int32(logLevel, 3,
              "Verbosity of logs, lowest value of 0 logs everything, highest value of 6 disables all "
              "logging.");
 
-DEFINE_string(quark_dir, "..", "Root directory of the Scintillator Quark, for finding dependent files.");
+DEFINE_string(quarkDir, "..", "Root directory of the Scintillator Quark, for finding dependent files.");
 
 DEFINE_int32(width, 800, "Viewable width in pixels of window to create. Ignored if --fullscreen is supplied.");
 DEFINE_int32(height, 600, "Viewable height in pixels of window to create. Ignored if --fullscreen is supplied.");
-DEFINE_bool(keep_on_top, true, "If true will keep the window on top of other windows with focus.");
+DEFINE_bool(alwaysOnTop, true, "If true will keep the window on top of other windows with focus.");
 
-DEFINE_int32(async_worker_threads, 2,
+DEFINE_int32(asyncWorkerThreads, 2,
              "Number of threads to reserve for asynchronous operations (like loading ScinthDefs).");
 
 // Release builds disable the Vulkan Validation layers by default, but they can be re-enabled via the command line. As
 // they validate the arguments to every Vulkan call, they can be expensive in terms of performance.
 #if defined(SCIN_RELEASE)
-DEFINE_bool(vulkan_validation, false, "Enable Vulkan validation layers.");
+constexpr bool defaultVulkanValidation = false;
 #else
-DEFINE_bool(vulkan_validation, true, "Enable Vulkan validation layers.");
+constexpr bool defaultVulkanValidation = true;
 #endif
+DEFINE_bool(vulkanValidation, defaultVulkanValidation, "Enable Vulkan validation layers.");
 
-DEFINE_int32(frame_rate, -1,
+DEFINE_int32(frameRate, -1,
              "Target framerate in frames per second. Negative number means track windowing system "
              "framerate. Zero means non-interactive. Positive means to render at that frame per second rate.");
-DEFINE_bool(create_window, true, "If false, Scintillator will not create a window.");
+DEFINE_bool(createWindow, true, "If false, Scintillator will not create a window.");
 
-DEFINE_string(device_name, "",
+DEFINE_string(deviceName, "",
               "If empty, will pick the highest performance device available. Otherwise, should be as "
               "many characters of the name as needed to uniquely identify the device.");
 DEFINE_bool(swiftshader, false,
-            "If true, ignores --device_name and will always match the swiftshader device, if present.");
+            "If true, ignores --deviceName and will always match the swiftshader device, if present.");
 
 int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
     std::shared_ptr<scin::infra::Logger> logger(new scin::infra::Logger());
-    logger->initLogging(FLAGS_log_level);
+    logger->initLogging(FLAGS_logLevel);
 
     // Check for early exit conditions.
     std::string version = fmt::format("scinsynth version {}.{}.{} from branch {} at revision {}", kScinVersionMajor,
                                       kScinVersionMinor, kScinVersionPatch, kScinBranch, kScinCommitHash);
-    if (FLAGS_print_version) {
+    if (FLAGS_printVersion) {
         fmt::print(version);
         return EXIT_SUCCESS;
     }
-    if (!fs::exists(FLAGS_quark_dir)) {
-        fmt::print("invalid or nonexistent path {} supplied for --quark_dir, terminating.", FLAGS_quark_dir);
+    if (!fs::exists(FLAGS_quarkDir)) {
+        fmt::print("invalid or nonexistent path {} supplied for --quarkDir, terminating.", FLAGS_quarkDir);
         return EXIT_FAILURE;
     }
 
-    fs::path quarkPath = fs::canonical(FLAGS_quark_dir);
+    fs::path quarkPath = fs::canonical(FLAGS_quarkDir);
     if (!fs::exists(quarkPath / "Scintillator.quark")) {
         spdlog::error("Path {} doesn't look like Scintillator Quark root directory, terminating.", quarkPath.string());
         return EXIT_FAILURE;
@@ -99,13 +100,13 @@ int main(int argc, char* argv[]) {
 
     // ========== glfw setup, this also loads Vulkan for us via the Vulkan-Loader.
     glfwInit();
-    if (FLAGS_create_window && (glfwVulkanSupported() != GLFW_TRUE)) {
+    if (FLAGS_createWindow && (glfwVulkanSupported() != GLFW_TRUE)) {
         spdlog::error("This platform does not support Vulkan!");
         return EXIT_FAILURE;
     }
 
     // ========== Vulkan setup.
-    std::shared_ptr<scin::vk::Instance> instance(new scin::vk::Instance(FLAGS_vulkan_validation));
+    std::shared_ptr<scin::vk::Instance> instance(new scin::vk::Instance(FLAGS_vulkanValidation));
     if (!instance->create()) {
         spdlog::error("scinsynth unable to create Vulkan instance.");
         return EXIT_FAILURE;
@@ -118,7 +119,7 @@ int main(int argc, char* argv[]) {
         deviceReport += fmt::format("  name: {}, type: {}, vendorID: {:x}, deviceID: {:x}\n", info.name(),
                                     info.typeName(), info.vendorID(), info.deviceID());
     }
-    if (FLAGS_print_devices) {
+    if (FLAGS_printDevices) {
         fmt::print(deviceReport);
         return EXIT_SUCCESS;
     } else {
@@ -141,14 +142,14 @@ int main(int argc, char* argv[]) {
             return EXIT_FAILURE;
         }
     } else {
-        if (FLAGS_device_name.size()) {
+        if (FLAGS_deviceName.size()) {
             for (auto info : chooser.devices()) {
-                if (std::strncmp(FLAGS_device_name.data(), info.name(), FLAGS_device_name.size()) == 0) {
-                    if (FLAGS_create_window && !info.supportsWindow()) {
+                if (std::strncmp(FLAGS_deviceName.data(), info.name(), FLAGS_deviceName.size()) == 0) {
+                    if (FLAGS_createWindow && !info.supportsWindow()) {
                         spdlog::error("Device name {}, does not support rendering to a window.", info.name());
                         return EXIT_FAILURE;
                     }
-                    spdlog::info("Device name {} match, selecting {}", FLAGS_device_name, info.name());
+                    spdlog::info("Device name {} match, selecting {}", FLAGS_deviceName, info.name());
                     device.reset(new scin::vk::Device(instance, info));
                     // break;
                 }
@@ -158,7 +159,7 @@ int main(int argc, char* argv[]) {
 
     if (!device && chooser.bestDeviceIndex() >= 0) {
         auto info = chooser.devices().at(chooser.bestDeviceIndex());
-        if (FLAGS_create_window && !info.supportsWindow()) {
+        if (FLAGS_createWindow && !info.supportsWindow()) {
             spdlog::error("Automatically chosen device {} doesn't support window rendering.", info.name());
             return EXIT_FAILURE;
         }
@@ -170,7 +171,7 @@ int main(int argc, char* argv[]) {
         spdlog::error("failed to find a suitable Vulkan device.");
         return EXIT_FAILURE;
     }
-    if (!device->create(FLAGS_create_window)) {
+    if (!device->create(FLAGS_createWindow)) {
         spdlog::error("unable to create Vulkan device.");
         return EXIT_FAILURE;
     }
@@ -179,9 +180,9 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<scin::comp::Canvas> canvas;
     std::shared_ptr<scin::comp::Offscreen> offscreen;
     std::shared_ptr<const scin::comp::FrameTimer> frameTimer;
-    if (FLAGS_create_window) {
+    if (FLAGS_createWindow) {
         window.reset(
-            new scin::comp::Window(instance, device, FLAGS_width, FLAGS_height, FLAGS_keep_on_top, FLAGS_frame_rate));
+            new scin::comp::Window(instance, device, FLAGS_width, FLAGS_height, FLAGS_alwaysOnTop, FLAGS_frameRate));
         if (!window->create()) {
             spdlog::error("Failed to create window.");
             return EXIT_FAILURE;
@@ -190,7 +191,7 @@ int main(int argc, char* argv[]) {
         offscreen = window->offscreen();
         frameTimer = window->frameTimer();
     } else {
-        offscreen.reset(new scin::comp::Offscreen(device, FLAGS_width, FLAGS_height, FLAGS_frame_rate));
+        offscreen.reset(new scin::comp::Offscreen(device, FLAGS_width, FLAGS_height, FLAGS_frameRate));
         if (!offscreen->create(3)) {
             spdlog::error("Failed to create offscreen renderer.");
             return EXIT_FAILURE;
@@ -207,7 +208,7 @@ int main(int argc, char* argv[]) {
 
     std::shared_ptr<scin::base::Archetypes> archetypes(new scin::base::Archetypes());
     std::shared_ptr<scin::comp::Async> async(new scin::comp::Async(archetypes, compositor, device));
-    async->run(FLAGS_async_worker_threads);
+    async->run(FLAGS_asyncWorkerThreads);
 
     // Chain async calls to load VGens, then ScinthDefs.
     async->vgenLoadDirectory(quarkPath / "vgens", [async, &quarkPath, compositor](int) {
@@ -216,13 +217,13 @@ int main(int argc, char* argv[]) {
     });
 
     std::function<void()> quitHandler;
-    if (FLAGS_create_window) {
+    if (FLAGS_createWindow) {
         quitHandler = [window] { window->stop(); };
     } else {
         quitHandler = [offscreen] { offscreen->stop(); };
     }
     scin::osc::Dispatcher dispatcher(logger, async, archetypes, compositor, offscreen, frameTimer, quitHandler);
-    if (!dispatcher.create(FLAGS_port_number, FLAGS_dump_osc)) {
+    if (!dispatcher.create(FLAGS_portNumber, FLAGS_dumpOSC)) {
         spdlog::error("Failed creating OSC command dispatcher.");
         return EXIT_FAILURE;
     }
@@ -232,7 +233,7 @@ int main(int argc, char* argv[]) {
     }
 
     // ========== Main loop.
-    if (FLAGS_create_window) {
+    if (FLAGS_createWindow) {
         window->run(compositor);
     } else {
         offscreen->run(compositor);
@@ -244,7 +245,7 @@ int main(int argc, char* argv[]) {
     // ========== Vulkan cleanup.
     async->stop();
     compositor->destroy();
-    if (FLAGS_create_window) {
+    if (FLAGS_createWindow) {
         window->destroy();
     } else {
         offscreen->destroy();

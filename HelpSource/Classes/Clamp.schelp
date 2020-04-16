@@ -1,0 +1,43 @@
+TITLE:: Clamp
+summary:: Video oscillator to constrain a value between two parameters
+categories:: Quarks>Scintillator>VGens>Mathematics>Signal Processing
+related:: Classes/Clip
+
+DESCRIPTION::
+
+
+CLASSMETHODS::
+
+METHOD:: fg
+(describe method here)
+
+ARGUMENT:: x
+(describe argument here)
+
+ARGUMENT:: min
+(describe argument here)
+
+ARGUMENT:: max
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+
+INSTANCEMETHODS::
+
+METHOD:: inputDimensions
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: outputDimensions
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+
+EXAMPLES::
+
+code::
+(some example code)
+::

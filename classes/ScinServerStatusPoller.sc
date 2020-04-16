@@ -81,7 +81,7 @@ ScinServerStatusPoller {
 	prOnRunningStart {
 		fork {
 			scinServer.sync;
-			bootCallbacks.do({ |callback| callback.value(); });
+			bootCallbacks.do({ |callback| callback.value(scinServer); });
 			bootCallbacks.clear();
 		}
 	}

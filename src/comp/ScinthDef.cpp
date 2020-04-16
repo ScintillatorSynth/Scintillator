@@ -136,10 +136,11 @@ bool ScinthDef::buildVertexData() {
                     m_abstract->shape()->storeTextureVertexAtIndex(i, vertex);
                     break;
 
-                case base::Intrinsic::kTime:
-                case base::Intrinsic::kSampler:
-                case base::Intrinsic::kPi:
+                case base::Intrinsic::kFragCoord:
                 case base::Intrinsic::kNotFound:
+                case base::Intrinsic::kPi:
+                case base::Intrinsic::kSampler:
+                case base::Intrinsic::kTime:
                     spdlog::error("Invalid vertex intrinsic for ScinthDef {}", m_abstract->name());
                     return false;
                 }

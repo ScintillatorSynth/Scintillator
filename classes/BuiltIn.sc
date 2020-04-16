@@ -1,3 +1,74 @@
+Clamp : VGen {
+	*fg { |x, min, max|
+		^this.multiNew(\fragment, x, min, max);
+	}
+
+	inputDimensions {
+		^[[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4]];
+	}
+
+	outputDimensions {
+		^[[1], [2], [3], [4]];
+	}
+}
+
+
+Cross : VGen {
+	*fg { |x, y|
+		^this.multiNew(\fragment, x, y);
+	}
+
+	inputDimensions {
+		^[[3, 3]];
+	}
+
+	outputDimensions {
+		^[[3]];
+	}
+}
+
+Dot : VGen {
+	*fg { |x, y|
+		^this.multiNew(\fragment, x, y);
+	}
+
+	inputDimensions {
+		^[[1, 1], [2, 2], [3, 3], [4, 4]];
+	}
+
+	outputDimensions {
+		^[[1], [1], [1], [1]];
+	}
+}
+
+Distance : VGen {
+	*fg { |x, y|
+		^this.multiNew(\fragment, x, y);
+	}
+
+	inputDimensions {
+		^[[1, 1], [2, 2], [3, 3], [4, 4]];
+	}
+
+	outputDimensions {
+		^[[1], [1], [1], [1]];
+	}
+}
+
+FragCoord : VGen {
+	*fg {
+		^this.multiNew(\fragment);
+	}
+
+	inputDimensions {
+		^[[]];
+	}
+
+	outputDimensions {
+		^[[2]];
+	}
+}
+
 Length : VGen {
 	*fg { |vec|
 		^this.multiNew(\fragment, vec);
@@ -26,13 +97,27 @@ Step : VGen {
 	}
 }
 
-Clamp : VGen {
-	*fg { |x, min, max|
-		^this.multiNew(\fragment, x, min, max);
+VecMix : VGen {
+	*fg { |x, y, a|
+		^this.multiNew(\fragment, x, y, a);
 	}
 
 	inputDimensions {
-		^[[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4]];
+		^[[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4], [2, 2, 1], [3, 3, 1], [4, 4, 1]];
+	}
+
+	outputDimensions {
+		^[[1], [2], [3], [4], [2], [3], [4]];
+	}
+}
+
+VNorm : VGen {
+	*fg { |x|
+		^this.multiNew(\fragment, x);
+	}
+
+	inputDimensions {
+		^[[1], [2], [3], [4]];
 	}
 
 	outputDimensions {

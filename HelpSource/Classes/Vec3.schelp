@@ -1,0 +1,38 @@
+TITLE:: Vec3
+summary:: Pack three single-dimensional signals into a 3D signal.
+categories:: Quarks>Scintillator>VGens>Vector Manipulation
+related:: Classes/Vec4, Classes/Vec2
+
+DESCRIPTION::
+Like its partner classes link::Classes/Vec4:: and link::Classes/Vec2::, Vec3 packs single-dimensional signals into a single signal, in this case a 3-dimensional signal.
+
+CLASSMETHODS::
+
+METHOD:: fg
+
+strong::dimensions::
+table::
+## strong::input:: || strong::output::
+## 1, 1, 1 || 3
+::
+
+ARGUMENT:: x
+The first component in the resulting signal.
+
+ARGUMENT:: y
+The second component in the resulting signal.
+
+ARGUMENT:: z
+The third component in the resulting signal.
+
+INSTANCEMETHODS::
+private:: inputDimensions, outputDimensions
+
+EXAMPLES::
+
+code::
+var v = Vec3.fg(1, 2, 3);
+var x = VX.fg(v); // x: 1
+var y = VY.fg(v); // y: 2
+var z = VZ.fg(v); // z: 3
+::

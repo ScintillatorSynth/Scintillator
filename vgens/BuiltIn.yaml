@@ -1,4 +1,60 @@
-# VGens that wrap GLSL built-in functions. This is not an exhaustive list, adding things as needed.
+# VGens that wrap GLSL built-in functions or variables. This is not an exhaustive list, adding things as needed.
+---
+name: Distance
+inputs: [ x, y ]
+outputs: [ out ]
+dimensions:
+    - inputs: 1
+      outputs: 1
+    - inputs: 2
+      outputs: 1
+    - inputs: 3
+      outputs: 1
+    - inputs: 4
+      outputs: 1
+shader: "@out = distance(@x, @y);"
+---
+name: Dot
+inputs: [ x, y ]
+outputs: [ out ]
+dimensions:
+    - inputs: 1
+      outputs: 1
+    - inputs: 2
+      outputs: 1
+    - inputs: 3
+      outputs: 1
+    - inputs: 4
+      outputs: 1
+shader: "@out = dot(@x, @y);"
+---
+name: Clamp
+inputs: [ x, min, max ]
+outputs: [ out ]
+dimensions:
+    - inputs: 1
+      outputs: 1
+    - inputs: 2
+      outputs: 2
+    - inputs: 3
+      outputs: 3
+    - inputs: 4
+      outputs: 4
+shader: "@out = clamp(@x, @min, @max);"
+---
+name: Cross
+inputs: [ x, y ]
+outputs: [ out ]
+dimensions:
+    - inputs: 3
+      outputs: 3
+shader: "@out = cross(@x, @y);"
+---
+name: FragCoord
+outputs: [ out ]
+dimensions:
+    - outputs: 2
+shader: "@out = vec2(@fragCoord.x, @fragCoord.y);"
 ---
 name: Length
 inputs: [ in ]
@@ -35,8 +91,28 @@ dimensions:
     - outputs: 2
 shader: "@out = vec2(textureSize(@sampler, 0));"
 ---
-name: Clamp
-inputs: [ x, min, max ]
+name: VecMix
+inputs: [ x, y, a ]
+outputs: [ out ]
+dimensions:
+    - inputs: 1
+      outputs: 1
+    - inputs: 2
+      outputs: 2
+    - inputs: 3
+      outputs: 3
+      inputs: 4
+      outputs: 4
+    - inputs: [2, 2, 1]
+      outputs: 2
+    - inputs: [3, 3, 1]
+      outputs: 3
+    - inputs: [4, 4, 1]
+      outputs: 4
+shader: "@out = mix(@x, @y, @a);"
+---
+name: VNorm
+inputs: [ x ]
 outputs: [ out ]
 dimensions:
     - inputs: 1
@@ -47,4 +123,4 @@ dimensions:
       outputs: 3
     - inputs: 4
       outputs: 4
-shader: "@out = clamp(@x, @min, @max);"
+shader: "@out = normalize(@x);"

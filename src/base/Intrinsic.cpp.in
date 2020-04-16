@@ -16,6 +16,7 @@ namespace {
 %struct-type
 struct IntrinsicPair { const char* name; scin::base::Intrinsic intrinsic; };
 %%
+fragCoord,  scin::base::Intrinsic::kFragCoord
 normPos,    scin::base::Intrinsic::kNormPos
 pi,         scin::base::Intrinsic::kPi
 sampler,    scin::base::Intrinsic::kSampler

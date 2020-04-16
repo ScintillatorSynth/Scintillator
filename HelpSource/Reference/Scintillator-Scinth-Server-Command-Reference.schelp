@@ -1,6 +1,6 @@
 title:: Scintillator Scinth Server Command Reference
 summary:: A list of all OSC commands accepted by scscinth
-categories:: Quarks>Scintillator
+categories:: Quarks>Scintillator>Developer Documentation
 
 section::OSC Communication Details
 

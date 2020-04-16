@@ -21,12 +21,12 @@
 namespace scin { namespace comp {
 
 Window::Window(std::shared_ptr<vk::Instance> instance, std::shared_ptr<vk::Device> device, int width, int height,
-               bool keepOnTop, int frameRate):
+               bool alwaysOnTop, int frameRate):
     m_instance(instance),
     m_device(device),
     m_width(width),
     m_height(height),
-    m_keepOnTop(keepOnTop),
+    m_alwaysOnTop(alwaysOnTop),
     m_frameRate(frameRate),
     m_directRendering(frameRate < 0),
     m_window(nullptr),
@@ -42,7 +42,7 @@ bool Window::create() {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_FOCUSED, GLFW_FALSE);
-    glfwWindowHint(GLFW_FLOATING, m_keepOnTop ? GLFW_TRUE : GLFW_FALSE);
+    glfwWindowHint(GLFW_FLOATING, m_alwaysOnTop ? GLFW_TRUE : GLFW_FALSE);
     m_window = glfwCreateWindow(m_width, m_height, "ScintillatorSynth", nullptr, nullptr);
     if (glfwCreateWindowSurface(m_instance->get(), m_window, nullptr, &m_surface) != VK_SUCCESS) {
         const char* errorText = nullptr;

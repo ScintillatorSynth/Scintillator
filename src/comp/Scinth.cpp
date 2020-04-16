@@ -79,6 +79,7 @@ bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
                 *uniform = static_cast<float>(frameTime - m_startTime);
                 break;
 
+            case base::Intrinsic::kFragCoord:
             case base::Intrinsic::kNormPos:
             case base::Intrinsic::kNotFound:
             case base::Intrinsic::kPi:

@@ -1,6 +1,6 @@
 title:: VGen Design Document
 summary:: Notes about the design of a VGen.
-categories:: Quarks>Scintillator
+categories:: Quarks>Scintillator>Developer Documentation
 related:: Classes/VGen
 
 Theese are some early notes, and need to be reorganized, possibly moved to the devblog.

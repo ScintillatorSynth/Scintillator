@@ -21,12 +21,17 @@ ImageBuffer {
 					queryFunc.free;
 					width = msg[3];
 					height = msg[4];
+					if (action.notNil, {
+						action.value(this);
+					});
 				});
 			}, '/scin_ib_info');
 		});
 	}
 
-	// Buffer completion is a function, ours is just a message array
+	// Buffer completion is a function, ours is just a message array. Currently this
+	// method is marked as "private" in the documentation, because we do not support
+	// allocating empty buffers on the server currently.
 	allocRead { |path, width, height, completion|
 		width = width ? -1;
 		height = height ? -1;

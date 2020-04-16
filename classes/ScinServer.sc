@@ -9,7 +9,7 @@ ScinServerOptions {
 	var <>logLevel;
 	var <>width;
 	var <>height;
-	var <>keepOnTop;
+	var <>alwaysOnTop;
 	var <>swiftshader;
 	var <>deviceName;
 
@@ -27,7 +27,7 @@ ScinServerOptions {
 				logLevel: 3,
 				width: 800,
 				height: 600,
-				keepOnTop: true,
+				alwaysOnTop: true,
 				swiftshader: false,
 				deviceName: nil
 			)
@@ -51,22 +51,22 @@ ScinServerOptions {
 	}
 
 	asOptionsString {
-		var o = "--quark_dir=" ++ quarkPath;
+		var o = "--quarkDir=" ++ quarkPath;
 
 		if (portNumber != defaultValues[\portNumber], {
-			o = o + "--port_number=" ++ portNumber;
+			o = o + "--portNumber=" ++ portNumber;
 		});
 		if (dumpOSC != defaultValues[\dumpOSC], {
-			o = o + "--dump_osc=" ++ dumpOSC;
+			o = o + "--dumpOSC=" ++ dumpOSC;
 		});
 		if (frameRate != defaultValues[\frameRate], {
-			o = o + "--frame_rate=" ++ frameRate;
+			o = o + "--frameRate=" ++ frameRate;
 		});
 		if (createWindow != defaultValues[\createWindow], {
-			o = o + "--create_window=" ++ createWindow;
+			o = o + "--createWindow=" ++ createWindow;
 		});
 		if (logLevel != defaultValues[\logLevel], {
-			o = o + "--log_level=" ++ logLevel;
+			o = o + "--logLevel=" ++ logLevel;
 		});
 		if (width != defaultValues[\width], {
 			o = o + "--width=" ++ width;
@@ -74,14 +74,14 @@ ScinServerOptions {
 		if (height != defaultValues[\height], {
 			o = o + "--height=" ++ height;
 		});
-		if (keepOnTop != defaultValues[\keepOnTop], {
-			o = o + "--keep_on_top=" ++ keepOnTop;
+		if (alwaysOnTop != defaultValues[\alwaysOnTop], {
+			o = o + "--alwaysOnTop=" ++ alwaysOnTop;
 		});
 		if (swiftshader != defaultValues[\swiftshader], {
 			o = o + "--swiftshader=" ++ swiftshader;
 		});
 		if (deviceName != defaultValues[\deviceName], {
-			o = o + "--device_name=" ++ deviceName;
+			o = o + "--deviceName=" ++ deviceName;
 		});
 		^o;
 	}
@@ -90,7 +90,7 @@ ScinServerOptions {
 ScinServer {
 	classvar <>default;
 
-	var options;
+	var <options;
 	var scinBinaryPath;
 	var scinPid;
 	var addr;
@@ -130,7 +130,6 @@ ScinServer {
 
 		statusPoller.serverBooting = true;
 		commandLine = scinBinaryPath + options.asOptionsString();
-		commandLine.postln;
 
 		scinPid = commandLine.unixCmd({ |exitCode, exitPid|
 			"*** got scinsynth exit code %".format(exitCode).postln;
@@ -151,10 +150,12 @@ ScinServer {
 			// could do some interesting post quit stuff here.
 		}, '/scin_done').oneShot;
 		addr.sendMsg('/scin_quit');
+		^this;
 	}
 
 	dumpOSC { |on|
 		addr.sendMsg('/scin_dumpOSC', on.binaryValue);
+		^this;
 	}
 
 	// Integer from 0 to 6.
@@ -162,10 +163,12 @@ ScinServer {
 		if (level >= 0 and: { level <= 6 }, {
 			this.sendMsg('/scin_logLevel', level);
 		});
+		^this;
 	}
 
 	sendMsg { |... msg|
 		addr.sendMsg(*msg)
+		^this;
 	}
 
     screenShot { |fileName, mimeType, onReady, onComplete|
@@ -193,12 +196,14 @@ ScinServer {
 			}, '/scin_done');
 		});
         this.sendMsg('/scin_nrt_screenShot', fileName, mimeType);
+		^this;
     }
 
 	advanceFrame { |num, denom|
 		if (options.frameRate == 0) {
 			this.sendMsg('/scin_nrt_advanceFrame', num, denom);
 		}
+		^this;
 	}
 
 	waitForBoot { |onComplete|
@@ -206,10 +211,12 @@ ScinServer {
 		if (this.serverRunning.not, {
 			this.boot;
 		});
+		^this;
 	}
 
 	doWhenBooted { |onComplete|
 		statusPoller.doWhenBooted(onComplete);
+		^this;
 	}
 
 	// Call on Routine
@@ -221,6 +228,7 @@ ScinServer {
 			condition.signal;
 		});
 		condition.wait;
+		^this;
 	}
 
 	// Call on Routine
@@ -238,6 +246,7 @@ ScinServer {
 		}, '/scin_synced');
 		this.sendMsg('/scin_sync', id);
 		condition.wait;
+		^this;
 	}
 
 	// Call on Routine, blocks until the screen shot is queued, then returns status
