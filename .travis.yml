@@ -45,7 +45,7 @@ deploy:
       secret_access_key: $AWS_SECRET
       bucket: scintillator-synth-coverage
       local-dir: $HOME/builds
-      upload-dir: builds/
+      upload-dir: builds
       verbose: true
       edge: true
       cleanup: false
