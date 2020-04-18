@@ -32,7 +32,7 @@ METHOD:: swiftshader
 A boolean, default strong::false::. If true, ScinServer will ignore any installed graphics hardware and instead will use the open-source software renderer SwiftShader.
 
 METHOD:: frameRate
-An integer, default strong::-1::. If a negative number, the server will run in emphasis::interactive:: mode, optimized to reduce latency from render to presentation. If zero the server will run in emphasis::snapshot:: mode, and will only render a new frame when instructed by an code::advanceFrame:: call. If a positive number the server will run in emphasis::throughput:: mode, will render frames as quickly as possible, updated the onscreen window (if present) at the provided refresh rate. For more information see link::Reference/ScinServer-Recording::
+An integer, default strong::-1::. If a negative number, the server will run in emphasis::interactive:: mode, optimized to reduce latency from render to presentation. If zero the server will run in emphasis::snapshot:: mode, and will only render a new frame when instructed by an code::advanceFrame:: call. If a positive number the server will run in emphasis::throughput:: mode, will render frames as quickly as possible, updated the onscreen window (if present) at the provided refresh rate. For more information see link::Guides/ScinServer-Recording::
 
 METHOD:: logLevel
 An integer, default strong::3::. Sets the initial logging level of the server.  The values range from most verbose at 0 to disabling logging entirely at 6. All level values are inclusive of the higher-level values, meaning that 0 will include all higher levels, and 5 will only show cirtical errors. The values for the log level are as follows:
