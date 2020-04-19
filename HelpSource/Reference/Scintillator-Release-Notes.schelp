@@ -5,6 +5,10 @@ related:: Guides/Scintillator-User-Guide
 
 section:: Release Notes
 
+subsection:: 0.0.2 18 April 2020
+
+Second attempt at a pre-alpha release of Scintillator. Fixes a bug in the Quark metadata formatting.
+
 subsection:: 0.0.1 18 April 2020
 
 This is a pre-alpha release of Scintillator. The primary purpose of this release is to test the distribution of the MacOS Scintillator server binary. The Linux redistributable binary is a work in progress, with the plan to release that in pre-alpha format for testing and validation as soon as it is ready.
