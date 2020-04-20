@@ -234,48 +234,40 @@ if (APPLE)
         MACOSX_BUNDLE_BUNDLE_NAME "scinsynth"
         MACOSX_BUNDLE_GUI_IDENTIFIER org.scintillatorsynth.scinsynth
     )
-    find_library(AVCODEC_LIBRARY
-        NAMES avcodec
-        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-        NO_DEFAULT_PATH
-    )
-    find_library(AVFORMAT_LIBRARY
-        NAMES avformat
-        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-        NO_DEFAULT_PATH
-    )
-    find_library(AVUTIL_LIBRARY
-        NAMES avutil
-        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-        NO_DEFAULT_PATH
-    )
-    find_library(SWSCALE_LIBRARY
-        NAMES swscale
-        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-        NO_DEFAULT_PATH
-    )
-    find_library(Vulkan_LIBRARY
-        NAMES vulkan
-        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-        NO_DEFAULT_PATH
-    )
-    find_library(SHADERC_LIBRARY
-        NAMES shaderc_combined
-        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-        NO_DEFAULT_PATH
-    )
 else()
     add_executable(scinsynth ${scintillator_synth_files})
-    find_path(AVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
-    find_library(AVCODEC_LIBRARY avcodec)
-    find_path(AVFORMAT_INCLUDE_DIR libavformat/avformat.h)
-    find_library(AVFORMAT_LIBRARY avformat)
-    find_path(AVUTIL_INCLUDE_DIR libavutil/avutil.h)
-    find_library(AVUTIL_LIBRARY avutil)
-    find_path(SWSCALE_INCLUDE_DIR libswscale/swscale.h)
-    find_library(SWSCALE_LIBRARY swscale)
-    find_library(SHADERC_LIBRARY shaderc_combined)
 endif()
+
+find_library(AVCODEC_LIBRARY
+    NAMES avcodec
+    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+    NO_DEFAULT_PATH
+)
+find_library(AVFORMAT_LIBRARY
+    NAMES avformat
+    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+    NO_DEFAULT_PATH
+)
+find_library(AVUTIL_LIBRARY
+    NAMES avutil
+    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+    NO_DEFAULT_PATH
+)
+find_library(SWSCALE_LIBRARY
+    NAMES swscale
+    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+    NO_DEFAULT_PATH
+)
+find_library(Vulkan_LIBRARY
+    NAMES vulkan
+    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+    NO_DEFAULT_PATH
+)
+find_library(SHADERC_LIBRARY
+    NAMES shaderc_combined
+    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+    NO_DEFAULT_PATH
+)
 
 target_link_libraries(scinsynth
     "${SCIN_EXT_INSTALL_DIR}/lib/liblo.a"
@@ -360,6 +352,8 @@ else()
     install(TARGETS scinsynth
         RUNTIME
         DESTINATION "${PROJECT_SOURCE_DIR}/bin")
+
+
 endif()
 
 #### Automatic Code Formatting and Linting
