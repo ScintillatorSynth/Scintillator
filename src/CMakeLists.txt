@@ -2,12 +2,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CXX_EXTENSIONS OFF)
 
+include(ExternalProject)
+
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
     ${SCIN_EXT_INSTALL_DIR}/include
 )
-
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     add_definitions(-DSCIN_RELEASE)
@@ -351,9 +352,19 @@ if (APPLE)
     include(CPack)
 else()
     configure_file(linux/scinsynth.desktop.in "${CMAKE_CURRENT_BINARY_DIR}/scinsynth.desktop")
-    install(TARGETS scinsynth
-        RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/bin"
+    file(MAKE_DIRECTORY ${SCIN_EXT_INSTALL_DIR}/bin)
+    ExternalProject_add(linuxdeploy
+        PREFIX ext
+        STEP_TARGETS install
+        URL https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+        DOWNLOAD_NO_EXTRACT ON
+        UPDATE_COMMAND ""
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND chmod u+x <DOWNLOADED_FILE> && cp <DOWNLOADED_FILE> ${SCIN_EXT_INSTALL_DIR}/bin
     )
+    set(SCIN_LINUX_DEPLOY "${SCIN_EXT_INSTALL_DIR}/bin/linuxdeploy-x86_64.AppImage")
+    set(SCIN_APPDIR "${PROJECT_BINARY_DIR}/AppDir")
 endif()
 
 #### Automatic Code Formatting and Linting
@@ -435,7 +446,6 @@ add_custom_command(OUTPUT ${SCLANG_SCIN_CONFIG}
 )
 
 # Reference source and test images. We always use a specific git hash, to control which images we compare against.
-include(ExternalProject)
 set(SCIN_TEST_IMAGE_HASH "d329aafc7aca154d24cb93206988e0f37fbc8ef6")
 ExternalProject_Add(reference_images
     PREFIX ref
