@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=scinsynth
+Exec=scinsynth
+Icon=scinsynth
+Categories=Graphics;
+Comment=A video synthesis engine for SuperCollider

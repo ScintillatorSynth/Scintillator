@@ -238,6 +238,7 @@ else()
     add_executable(scinsynth ${scintillator_synth_files})
 endif()
 
+# Force using the locally sourced libraries as opposed to system libs
 find_library(AVCODEC_LIBRARY
     NAMES avcodec
     PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
@@ -349,11 +350,10 @@ if (APPLE)
     set(CPACK_GENERATOR "DRAGNDROP")
     include(CPack)
 else()
+    configure_file(linux/scinsynth.desktop.in "${CMAKE_CURRENT_BINARY_DIR}/scinsynth.desktop")
     install(TARGETS scinsynth
-        RUNTIME
-        DESTINATION "${PROJECT_SOURCE_DIR}/bin")
-
-
+        RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/bin"
+    )
 endif()
 
 #### Automatic Code Formatting and Linting
