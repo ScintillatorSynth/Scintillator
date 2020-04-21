@@ -17,6 +17,14 @@ def main(argv):
 
 # LD_LIBRARY_PATH=/home/luken/src/Scintillator/build/install-ext/lib ~/Downloads/linuxdeploy-x86_64.AppImage -d /home/luken/src/Scintillator/build/src/scinsynth.desktop -i /home/luken/src/Scintillator/src/linux/scinsynth.png -e /home/luken/src/Scintillator/build/src/scinsynth --custom-apprun=/home/luken/src/Scintillator/src/linux/AppRun --appdir /home/luken/src/Scintillator/bin/AppDir --output appimage
 
+
+    # download linuxdeploy
+    # have it generate the initial directory structure with just --appdir /build/AppDir
+    # copy install-ext/share/vulkan/* to AppDir/usr/.
+    # (will need to fix up the validation layer to cop the ./ just like on MacOS)
+    # LD_LIBRARY_PATH=/home/luken/src/Scintillator/build/install-ext/lib ~/Downloads/linuxdeploy-x86_64.AppImage -d /home/luken/src/Scintillator/build/src/scinsynth.desktop -i /home/luken/src/Scintillator/src/linux/scinsynth.png -e /home/luken/src/Scintillator/build/src/scinsynth --custom-apprun=/home/luken/src/Scintillator/src/linux/AppRun --appdir /home/luken/src/Scintillator/bin/AppDir --output appimage
+    # done. I think this can all be done in CMake.
+
     return -1
 
 if __name__ == '__main__':
