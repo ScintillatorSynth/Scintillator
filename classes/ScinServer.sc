@@ -12,6 +12,7 @@ ScinServerOptions {
 	var <>alwaysOnTop;
 	var <>swiftshader;
 	var <>deviceName;
+	var <>vulkanValidation;
 
 	// Can install a function to call if server exits with a non-zero error code.
 	var <>onServerError;
@@ -29,7 +30,8 @@ ScinServerOptions {
 				height: 600,
 				alwaysOnTop: true,
 				swiftshader: false,
-				deviceName: nil
+				deviceName: nil,
+				vulkanValidation: false
 			)
 		);
 	}
@@ -78,10 +80,13 @@ ScinServerOptions {
 			o = o + "--alwaysOnTop=" ++ alwaysOnTop;
 		});
 		if (swiftshader != defaultValues[\swiftshader], {
-			o = o + "--swiftshader=" ++ swiftshader;
+			o = o + "--swiftshader";
 		});
 		if (deviceName != defaultValues[\deviceName], {
 			o = o + "--deviceName=" ++ deviceName;
+		});
+		if (vulkanValidation != defaultValues[\vulkanValidation], {
+			o = o + "--vulkanValidation";
 		});
 		^o;
 	}
@@ -115,7 +120,7 @@ ScinServer {
 						"See https://github.com/ScintillatorSynth/Scintillator/issues/70.").throw;
 				});
 			},
-			\linux, { scinBinaryPath = scinBinaryPath +/+ "scinsynth" },
+			\linux, { scinBinaryPath = scinBinaryPath +/+ "scinsynth-x86_64.AppImage" },
 			\windows, { Error.new("Windows not (yet) supported!").throw }
 		);
 		statusPoller = ScinServerStatusPoller.new(this);

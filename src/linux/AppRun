@@ -14,8 +14,8 @@ then
     export VK_ICD_FILENAMES=$HERE/usr/share/vulkan/icd.d/vk_swiftshader_icd.json
 fi
 
-# Like the driver search, the Vulkan loader will look for layers in a long list of hard-coded spots or a single
-# user-defined spot. Check again for the presence of the vulkanValidation flag to load the built-in validation layers.
+# Like the driver search, the Vulkan loader will look for layers in a long list of hard-coded paths or a single
+# user-defined path. Check for the presence of the vulkanValidation flag to force loading the Vulkan Validation Layers.
 if [[ "$*" == *vulkanValidation* ]]
 then
     echo "Scintillator loader forcing Vulkan Validation layers."

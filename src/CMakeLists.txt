@@ -237,6 +237,22 @@ if (APPLE)
     )
 else()
     add_executable(scinsynth ${scintillator_synth_files})
+    file(MAKE_DIRECTORY ${SCIN_EXT_INSTALL_DIR}/bin)
+    ExternalProject_add(linuxdeploy
+        PREFIX ext
+        STEP_TARGETS install
+        URL https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+        DOWNLOAD_NO_EXTRACT ON
+        UPDATE_COMMAND ""
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND chmod u+x <DOWNLOADED_FILE> && cp <DOWNLOADED_FILE> ${SCIN_EXT_INSTALL_DIR}/bin
+    )
+    set(SCIN_LINUX_DEPLOY "${SCIN_EXT_INSTALL_DIR}/bin/linuxdeploy-x86_64.AppImage")
+    # We need the linuxdeploy tool to construct the AppImage.
+    add_dependencies(scinsynth
+        linuxdeploy-install
+    )
 endif()
 
 # Force using the locally sourced libraries as opposed to system libs
@@ -352,19 +368,44 @@ if (APPLE)
     include(CPack)
 else()
     configure_file(linux/scinsynth.desktop.in "${CMAKE_CURRENT_BINARY_DIR}/scinsynth.desktop")
-    file(MAKE_DIRECTORY ${SCIN_EXT_INSTALL_DIR}/bin)
-    ExternalProject_add(linuxdeploy
-        PREFIX ext
-        STEP_TARGETS install
-        URL https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-        DOWNLOAD_NO_EXTRACT ON
-        UPDATE_COMMAND ""
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND chmod u+x <DOWNLOADED_FILE> && cp <DOWNLOADED_FILE> ${SCIN_EXT_INSTALL_DIR}/bin
-    )
-    set(SCIN_LINUX_DEPLOY "${SCIN_EXT_INSTALL_DIR}/bin/linuxdeploy-x86_64.AppImage")
     set(SCIN_APPDIR "${PROJECT_BINARY_DIR}/AppDir")
+    # Invoke linuxdeploy to build the AppDir directory structure. We remove any old cruft that may have existed there
+    # from a previous build.
+    install(CODE "
+        file(REMOVE_RECURSE ${SCIN_APPDIR})
+        execute_process(
+            COMMAND ${SCIN_LINUX_DEPLOY} --appdir ${SCIN_APPDIR}
+        )
+        file(MAKE_DIRECTORY ${SCIN_APPDIR}/usr/share/vulkan/explicit_layer.d)
+        file(MAKE_DIRECTORY ${SCIN_APPDIR}/usr/share/vulkan/icd.d)
+    "
+    VERBATIM
+    )
+    # Copy the Vulkan validation layer metadata into the appdir
+    install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/linux/share"
+        DESTINATION "${SCIN_APPDIR}/usr"
+    )
+    # Copy the validation layer library
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/libVkLayer_khronos_validation.so"
+        DESTINATION "${SCIN_APPDIR}/usr/share/vulkan/explicit_layer.d"
+    )
+    # Copy the swiftshader binary and metadata
+    install(DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d"
+        DESTINATION "${SCIN_APPDIR}/usr/share/vulkan"
+    )
+    # Now invoke linuxdeploy to assemble AppImage. Need to provide a path to LD_LIBRARY_PATH environment variable so the
+    # tool knows where to look for the dependent libraries.
+    set(LD_LIBRARY_PATH "${SCIN_EXT_INSTALL_DIR}/lib")
+    install(CODE "
+        execute_process(
+            COMMAND ${SCIN_LINUX_DEPLOY} -d ${CMAKE_CURRENT_BINARY_DIR}/scinsynth.desktop -i ${PROJECT_SOURCE_DIR}/src/linux/scinsynth.png -e ${CMAKE_CURRENT_BINARY_DIR}/scinsynth --custom-apprun=${PROJECT_SOURCE_DIR}/src/linux/AppRun --appdir ${SCIN_APPDIR} --output appimage
+            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/bin
+        )
+        file(RENAME \"${PROJECT_SOURCE_DIR}/bin/scinsynth-${GIT_COMMIT_HASH}-x86_64.AppImage\"
+            \"${PROJECT_SOURCE_DIR}/bin/scinsynth-x86_64.AppImage\")
+    "
+    VERBATIM
+    )
 endif()
 
 #### Automatic Code Formatting and Linting
