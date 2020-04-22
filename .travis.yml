@@ -42,7 +42,7 @@ deploy:
       cleanup: false
       acl: public_read
       on:
-        condition: $TRAVIS_OS_NAME = linux
+        condition: $DO_COVERAGE
         branch: master
     # build artifacts
     - provider: s3
