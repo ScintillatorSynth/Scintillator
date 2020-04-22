@@ -10,7 +10,7 @@ sudo apt-get install --yes build-essential  cmake doxygen gperf imagemagick libw
     libxinerama-dev libxrandr-dev pkg-config python3-distutils python3-yaml supercollider-ide xvfb zlib1g
 
 # Coverage and Linting requires clang-8
-if $DO_COVERAGE; then
+if [ $DO_COVERAGE = true ]; then
     sudo apt-get install --yes clang-8 clang-format-8 libc++-8-dev libc++abi-8-dev llvm-8-dev libc++abi-8-dev llvm-8-dev
 fi
 
