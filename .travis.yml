@@ -14,6 +14,8 @@ matrix:
               - DO_COVERAGE=false
         - os: osx
           osx_image: xcode11
+          env:
+              - DO_COVERAGE=false
 
 cache: ccache
 
@@ -42,7 +44,7 @@ deploy:
       cleanup: false
       acl: public_read
       on:
-        condition: $DO_COVERAGE
+        condition: $DO_COVERAGE = true
         branch: master
     # build artifacts
     - provider: s3

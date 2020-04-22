@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if $DO_COVERAGE; then
+if [ $DO_COVERAGE = true ]; then
     mkdir -p $HOME/artifacts/coverage
     cp $TRAVIS_BUILD_DIR/build/src/scinsynth_coverage.json $HOME/artifacts
     cp -R $TRAVIS_BUILD_DIR/build/doc $HOME/artifacts
