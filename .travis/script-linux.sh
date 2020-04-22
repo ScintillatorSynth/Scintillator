@@ -2,7 +2,7 @@
 
 cd $TRAVIS_BUILD_DIR/build
 
-make install || exit 1
+make -j install || exit 1
 
 if $DO_COVERAGE; then
     make coverage_report || exit 2

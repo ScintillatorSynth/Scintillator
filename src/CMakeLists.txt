@@ -393,7 +393,7 @@ else()
     # Now invoke linuxdeploy to assemble AppImage. Need to provide a path to LD_LIBRARY_PATH environment variable so the
     # tool knows where to look for the dependent libraries.
     install(CODE "
-        set(LD_LIBRARY_PATH \"${SCIN_EXT_INSTALL_DIR}/lib\")
+        set(ENV{LD_LIBRARY_PATH} \"${SCIN_EXT_INSTALL_DIR}/lib\")
         execute_process(
             COMMAND ${SCIN_LINUX_DEPLOY} -d ${CMAKE_CURRENT_BINARY_DIR}/scinsynth.desktop -i ${PROJECT_SOURCE_DIR}/src/linux/scinsynth.png -e ${CMAKE_CURRENT_BINARY_DIR}/scinsynth --custom-apprun=${PROJECT_SOURCE_DIR}/src/linux/AppRun --appdir ${SCIN_APPDIR} --output appimage
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/bin
