@@ -399,10 +399,9 @@ else()
     install(CODE "
         execute_process(
             COMMAND ${SCIN_LINUX_DEPLOY} -d ${CMAKE_CURRENT_BINARY_DIR}/scinsynth.desktop -i ${PROJECT_SOURCE_DIR}/src/linux/scinsynth.png -e ${CMAKE_CURRENT_BINARY_DIR}/scinsynth --custom-apprun=${PROJECT_SOURCE_DIR}/src/linux/AppRun --appdir ${SCIN_APPDIR} --output appimage
+            COMMAND mv \"${PROJECT_SOURCE_DIR}/bin/scinsynth-${GIT_COMMIT_HASH}-x86_64.AppImage\" \"${PROJECT_SOURCE_DIR}/bin/scinsynth-x86_64.AppImage\"
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/bin
         )
-        file(RENAME \"${PROJECT_SOURCE_DIR}/bin/scinsynth-${GIT_COMMIT_HASH}-x86_64.AppImage\"
-            \"${PROJECT_SOURCE_DIR}/bin/scinsynth-x86_64.AppImage\")
     "
     VERBATIM
     )
