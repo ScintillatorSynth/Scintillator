@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Custom AppRun script needed to set up Vulkan Loader environment variables, needed to load the validation layers and
+# SwiftShader from inside the AppImage directory.
+
+HERE="$(dirname "$(readlink -f "${0}")")"
+
+# The Vulkan Loader will search a predefined list of hard-coded directories for device drivers, or will accept the path
+# to a single device driver at provided at the VK_ICD_FILENAMES environment variable. So we scan the command line
+# arguments for the swiftshader argument, and only hard-code the path to the swiftshader driver if it is requested.
+if [[ "$*" == *swiftshader* ]]
+then
+    echo "Scintillator loader forcing Vulkan SwiftShader loader."
+    export VK_ICD_FILENAMES=$HERE/usr/share/vulkan/icd.d/vk_swiftshader_icd.json
+fi
+
+# Like the driver search, the Vulkan loader will look for layers in a long list of hard-coded paths or a single
+# user-defined path. Check for the presence of the vulkanValidation flag to force loading the Vulkan Validation Layers.
+if [[ "$*" == *vulkanValidation* ]]
+then
+    echo "Scintillator loader forcing Vulkan Validation layers."
+    export VK_LAYER_PATH=$HERE/usr/share/vulkan/explicit_layer.d
+fi
+
+exec "$HERE/usr/bin/scinsynth" "$@"
+

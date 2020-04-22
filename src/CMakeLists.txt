@@ -2,12 +2,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CXX_EXTENSIONS OFF)
 
+include(ExternalProject)
+
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
     ${SCIN_EXT_INSTALL_DIR}/include
 )
-
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     add_definitions(-DSCIN_RELEASE)
@@ -234,48 +235,57 @@ if (APPLE)
         MACOSX_BUNDLE_BUNDLE_NAME "scinsynth"
         MACOSX_BUNDLE_GUI_IDENTIFIER org.scintillatorsynth.scinsynth
     )
-    find_library(AVCODEC_LIBRARY
-        NAMES avcodec
-        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-        NO_DEFAULT_PATH
-    )
-    find_library(AVFORMAT_LIBRARY
-        NAMES avformat
-        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-        NO_DEFAULT_PATH
-    )
-    find_library(AVUTIL_LIBRARY
-        NAMES avutil
-        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-        NO_DEFAULT_PATH
-    )
-    find_library(SWSCALE_LIBRARY
-        NAMES swscale
-        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-        NO_DEFAULT_PATH
-    )
-    find_library(Vulkan_LIBRARY
-        NAMES vulkan
-        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-        NO_DEFAULT_PATH
-    )
-    find_library(SHADERC_LIBRARY
-        NAMES shaderc_combined
-        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-        NO_DEFAULT_PATH
-    )
 else()
     add_executable(scinsynth ${scintillator_synth_files})
-    find_path(AVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
-    find_library(AVCODEC_LIBRARY avcodec)
-    find_path(AVFORMAT_INCLUDE_DIR libavformat/avformat.h)
-    find_library(AVFORMAT_LIBRARY avformat)
-    find_path(AVUTIL_INCLUDE_DIR libavutil/avutil.h)
-    find_library(AVUTIL_LIBRARY avutil)
-    find_path(SWSCALE_INCLUDE_DIR libswscale/swscale.h)
-    find_library(SWSCALE_LIBRARY swscale)
-    find_library(SHADERC_LIBRARY shaderc_combined)
+    file(MAKE_DIRECTORY ${SCIN_EXT_INSTALL_DIR}/bin)
+    ExternalProject_add(linuxdeploy
+        PREFIX ext
+        STEP_TARGETS install
+        URL https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+        DOWNLOAD_NO_EXTRACT ON
+        UPDATE_COMMAND ""
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND chmod u+x <DOWNLOADED_FILE> && cp <DOWNLOADED_FILE> ${SCIN_EXT_INSTALL_DIR}/bin
+    )
+    set(SCIN_LINUX_DEPLOY "${SCIN_EXT_INSTALL_DIR}/bin/linuxdeploy-x86_64.AppImage")
+    # We need the linuxdeploy tool to construct the AppImage.
+    add_dependencies(scinsynth
+        linuxdeploy-install
+    )
 endif()
+
+# Force using the locally sourced libraries as opposed to system libs
+find_library(AVCODEC_LIBRARY
+    NAMES avcodec
+    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+    NO_DEFAULT_PATH
+)
+find_library(AVFORMAT_LIBRARY
+    NAMES avformat
+    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+    NO_DEFAULT_PATH
+)
+find_library(AVUTIL_LIBRARY
+    NAMES avutil
+    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+    NO_DEFAULT_PATH
+)
+find_library(SWSCALE_LIBRARY
+    NAMES swscale
+    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+    NO_DEFAULT_PATH
+)
+find_library(Vulkan_LIBRARY
+    NAMES vulkan
+    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+    NO_DEFAULT_PATH
+)
+find_library(SHADERC_LIBRARY
+    NAMES shaderc_combined
+    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+    NO_DEFAULT_PATH
+)
 
 target_link_libraries(scinsynth
     "${SCIN_EXT_INSTALL_DIR}/lib/liblo.a"
@@ -304,9 +314,6 @@ target_include_directories(scinsynth PRIVATE
 if(UNIX AND NOT APPLE)
     target_link_libraries(scinsynth
         stdc++fs
-    )
-    add_custom_target(swiftshader-local-install
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${SCIN_EXT_INSTALL_DIR}/share ~/.local/share/.
     )
 endif()
 
@@ -357,9 +364,46 @@ if (APPLE)
     set(CPACK_GENERATOR "DRAGNDROP")
     include(CPack)
 else()
-    install(TARGETS scinsynth
-        RUNTIME
-        DESTINATION "${PROJECT_SOURCE_DIR}/bin")
+    configure_file(linux/scinsynth.desktop.in "${CMAKE_CURRENT_BINARY_DIR}/scinsynth.desktop")
+    set(SCIN_APPDIR "${PROJECT_BINARY_DIR}/AppDir")
+    # Invoke linuxdeploy to build the AppDir directory structure. We remove any old cruft that may have existed there
+    # from a previous build.
+    install(CODE "
+        file(REMOVE_RECURSE ${SCIN_APPDIR})
+        execute_process(
+            COMMAND ${SCIN_LINUX_DEPLOY} --appdir ${SCIN_APPDIR}
+        )
+        file(MAKE_DIRECTORY ${SCIN_APPDIR}/usr/share/vulkan/explicit_layer.d)
+        file(MAKE_DIRECTORY ${SCIN_APPDIR}/usr/share/vulkan/icd.d)
+    "
+    VERBATIM
+    )
+    # Copy the Vulkan validation layer metadata into the appdir
+    install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/linux/share"
+        DESTINATION "${SCIN_APPDIR}/usr"
+    )
+    # Copy the validation layer library
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/libVkLayer_khronos_validation.so"
+        DESTINATION "${SCIN_APPDIR}/usr/share/vulkan/explicit_layer.d"
+    )
+    # Copy the swiftshader binary and metadata
+    install(DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d"
+        DESTINATION "${SCIN_APPDIR}/usr/share/vulkan"
+    )
+    # Now invoke linuxdeploy to assemble AppImage. Need to provide a path to LD_LIBRARY_PATH environment variable so the
+    # tool knows where to look for the dependent libraries.
+    install(CODE "
+        set(ENV{LD_LIBRARY_PATH} \"${SCIN_EXT_INSTALL_DIR}/lib\")
+        execute_process(
+            COMMAND ${SCIN_LINUX_DEPLOY} -d ${CMAKE_CURRENT_BINARY_DIR}/scinsynth.desktop -i ${PROJECT_SOURCE_DIR}/src/linux/scinsynth.png -e ${CMAKE_CURRENT_BINARY_DIR}/scinsynth --custom-apprun=${PROJECT_SOURCE_DIR}/src/linux/AppRun --appdir ${SCIN_APPDIR} --output appimage
+            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/bin
+        )
+        file(RENAME \"${PROJECT_SOURCE_DIR}/bin/scinsynth-${GIT_COMMIT_HASH}-x86_64.AppImage\"
+            \"${PROJECT_SOURCE_DIR}/bin/scinsynth-x86_64.AppImage\"
+        )
+    "
+    VERBATIM
+    )
 endif()
 
 #### Automatic Code Formatting and Linting
@@ -441,7 +485,6 @@ add_custom_command(OUTPUT ${SCLANG_SCIN_CONFIG}
 )
 
 # Reference source and test images. We always use a specific git hash, to control which images we compare against.
-include(ExternalProject)
 set(SCIN_TEST_IMAGE_HASH "d329aafc7aca154d24cb93206988e0f37fbc8ef6")
 ExternalProject_Add(reference_images
     PREFIX ref

@@ -10,7 +10,8 @@ if (thisProcess.argv.size < 6, {
 	"  the path to the Scintillator Quark directory".postln;
 	"  Scintillator major, minor, and patch version numbers".postln;
 	"  Git branch name and first seven hex digits of the commit hash".postln;
-    -1.exit;
+	scriptFailed.postln;
+	-1.exit;
 });
 // Remaining arguments, if any, should be environment variables to set before invoking the server.
 thisProcess.argv[6..].do({ |pairs|
@@ -33,7 +34,9 @@ options.frameRate = 0;
 options.width = 200;
 options.height = 200;
 options.dumpOSC = true;
-binPath = quarkPath +/+ "build/src/scinsynth";
+options.swiftshader = true;
+options.vulkanValidation = true;
+binPath = quarkPath +/+ "bin/scinsynth-x86_64.AppImage";
 fork {
 	var commandLine, scinPid, udp, c, d, valid, response;
 	var gotFrameRate, numWarn, numError, gotWarn, gotError;
@@ -108,6 +111,8 @@ fork {
 		"*** /scin_status test checking framerate failed!".postln;
 		"expected % as frame rate, got %".format(
 			options.frameRate, gotFrameRate).postln;
+		scriptFailed.postln;
+		1.exit;
 	});
 
 	udp.sendMsg('/scin_logAppend', 3, "Test Warning - ignore");
@@ -221,10 +226,10 @@ fork {
 			valid = false;
 		});
 		if (msg[5] != gitBranch, {
-			valid = false;
+			"/scin_version branch differs, expected: %, got: %".format(gitBranch, msg[5]).warn;
 		});
 		if (msg[6] != gitHash, {
-			valid = false;
+			"/scin_version hash differs, expected: %, got: %".format(gitHash, msg[6]).warn;
 		});
 		c.test = true;
 		c.signal;

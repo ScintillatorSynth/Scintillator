@@ -35,12 +35,11 @@ def main(argv):
     os.makedirs(binary_path, exist_ok=True)
     os.makedirs(install_ext, exist_ok=True)
 
+    needed_deps = ['ffmpeg-ext', 'vulkan-ext', 'swiftshader-ext']
     if platform.system() == 'Linux':
         os_name = 'linux'
-        needed_deps = ['swiftshader-ext']
     elif platform.system() == 'Darwin':
         os_name = 'osx'
-        needed_deps = ['ffmpeg-ext', 'vulkan-ext', 'swiftshader-ext']
     else:
         print('Unsupported operating system.')
         sys.exit(1)
