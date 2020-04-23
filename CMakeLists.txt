@@ -21,7 +21,7 @@ endif()
 # The authoritative version of Scintillator is always in the Scintillator.quark file in the root directory of the
 # project. This version is manually kept in sync and should be updated to match. Both C++ and sclang Scintillator code
 # is developed in parallel, and is designed to be released together.
-project(Scintillator VERSION 0.0.1 LANGUAGES C CXX)
+project(Scintillator VERSION 0.0.4 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED)
 
