@@ -85,7 +85,7 @@ code::
 
 image::red-window.png::
 
-What's happening here is that for every frame, the graphics hardware at every pixel is running an instance of the code::\red:: ScinthDef to compute the color of that pixel. Since code::\red:: defines that pixel as a constant, that number defines the output everywhere, giving a field of solid red. We'll make a more interesting link::Classes/ScinthDef:: soon, so let's turn this one off for now:
+What's happening here is that for every frame, and at every pixel, the graphics hardware is running an instance of the code::\red:: ScinthDef to compute the color of that pixel. Since code::\red:: defines that pixel as a constant, that number defines the output everywhere, giving a field of solid red. We'll make a more interesting link::Classes/ScinthDef:: soon, so let's turn this one off for now:
 
 code::
 (
@@ -94,4 +94,127 @@ code::
 ::
 
 image::empty-window.png::
+
+subsection::Time-Varying Video Synths
+
+The link::Classes/ScinOsc:: oscillator is similar to the similar class link::Classes/SinOsc::, with the soft emphasis::sc:: sound at the start intended to be a play on the name scintillator. There are some differences in a video synth from an audio one, however. The first consideration is that signals don't have to vary over time to impact the output. The first Scinth, code::\red::, should prove that. A similar constant output in an audio context would be inaudible, except for that it might damage certain audo setups, so caution is advised in testing that assertion!
+
+Another point to note is that while audio signals normally operate in the domain from -1 to +1, with negative signals indicating a moment of underpressure in the sound wave, video signals only vary from 0 to 1. Light can only be present or absent in this video synthesizer, with 0 indicating no light and 1 indicating maximum brightness of light. Most video cards will clamp output between 0 and 1, but Scintillator doesn't take any special steps to limit signals, and video signals outside of the range are typically clamped. As a result of the different range, many of the default inputs on link::Classes/VGen::s with analogous link::Classes/UGen::s are  are adjusted so that instead of providing a signal input from -1 to +1 they output from 0 to 1. This can be seen, for example, in the defaults to link::Classes/SinOsc::, where the code::mul:: and code::add:: arguments are both code::0.5::, constraining the video signal between 0 and 1.
+
+code::
+(
+~w = ScinthDef.new(\wave, { |f=1|
+	BWOut.fg(ScinOsc.fg(freq: f));
+}).add;
+)
+
+(
+~k = Scinth.new(\wave);
+)
+::
+
+This should produce a 1 Hz wave, with the entire screen lightening and darkening in unison. Each frame, each pixel is subject to the same computation, and so will produce an output pixel with the same level of brightness. A few other things to note from this example. First is that the video signal at 1Hz is easily observeable, whereas a 1 Hz audio signal is below the range of human hearing. The second is to note that this Scinth has a emphasis::parameter::, just like audio link::Classes/Synth:: objects. Try playing around with the parameter to see the frequency change in the output.
+
+note::
+Flashing warning! It is possible to set the frequency in a way that might be harmful to folks sensitive to flashing lights. Best to try and stay under 1 or 2 Hz unless you are sure you are comfortable going higher, or if you make the window very small.
+::
+
+code::
+(
+~k.set(\f, 0.2);
+)
+::
+
+Another thing to note is that Scintillator does its best to track your visual display refresh rate. Typical consumer displays refresh at 60 Hz, sometimes slower at 30 Hz. Some gaming monitors go as high as 240 Hz. So setting a frequency higher than about 30Hz is not going to notably change the flashing frequency. This can be considered a rough visual proof of the Nyquist Theorem.
+
+subsection::Space-Varying Video Synths
+
+So we've seen time-varying signals, what about spatial variation? Let's clean up the current Scinth, and define a new Scinth using the link::Classes/NormPos:: VGen:
+
+code::
+(
+~k.free;
+)
+
+(
+~spot = ScinthDef.new(\spot, {
+	BWOut.fg(Length.fg(NormPos.fg));
+}).add;
+)
+
+(
+~d = Scinth.new(\spot);
+)
+::
+
+image::spot.png::
+
+What's going on here? At every pixel, link::Classes/NormPos:: is producing a emphasis::2-dimensional:: constant signal that varies from -1 to +1 in the y (or vertical) dimension, and from around -1.33 to +1.33 in the x (or horizontal) dimension. The link::Classes/NormPos:: documentation has details about how the coordinate system is set up. That 2D signal is then being converted by the link::Classes/Length:: VGen into a single, mono signal, which varies from 0 or black at the origin in the center of the screen, to 1 (or greater than 1) at the edges of the screen. The video hardware is clamping the signal at 1, which is why outside of the top and bottom of the image the gradient stops at the edge of the unit circle.
+
+subsection::Dimensions in Video Signals
+
+Astute readers may have noticed in the previous discussion that link::Classes/NormPos:: produces a 2D output signal for consumption by the link::Classes/Length:: VGen. There's a longer discussion about signal dimension in the "Dimensional Analysis" section of the link::Classes/ScinthDef:: documentation. In short, video signals emphasis::at output:: are always four-dimensional signals, and in Scintillator are always packed as code::red, green, blue, alpha:: signals. The multichannel expansion mechanism used in SuperCollider is flexible in that it allows SynthDefs to be defined for audio signals varying from a signal channel to complex multichannel ambisonic arrangements. Video signals trade a lot of this flexibility for the massive parallelism required to compute a color at each pixel 60 times per second. Furthermore, video cards are optimized to handle mathematical operations on all four channels at once in a single instruction. So instead of treating every ScinthDef as a hard-coded 4-channel signal chain, Scintillator tracks which combination of dimensions in input and output each VGen will produce, and validates at definition time if the combination of VGens and signal dimensions is valid. Furthermore, each VGen includes in its documentation a discussion of the supported pairs of input and output channels.
+
+So, for example, the link::Classes/NormPos:: VGen accepts no inputs and produces a 2D output always. The link::Classes/Length:: VGen accepts inputs from 1 to 4 channels and computes a vector length on the input. The result of the operation is a scalar, so regardless of the dimension that the input was link::Classes/Length:: will always produce a single-dimensional output. This single-dimensional output is accepted by BWOut, which emphasis::splats:: the single input into the first three code::red, blue, green:: output channels, and adds the hard-coded code::alpha:: channel at 1.0, or completely opaque.
+
+There are helper VGens that can pack single-channel signals into multi-channel ones, these are the link::Classes/Vec2::, link::Classes/Vec3::, and link::Classes/Vec4:: classes. There are also VGens for extracting single-channel signals from individual channels from multi-channel signals, these are the link::Classes/VX::, link::Classes/VY::, link::Classes/VZ::, and link::Classes/VW:: VGens.
+
+Scintillator supports most common mathematical operations from 1-4 dimensions. Additionally, many vector operations support combining with scalars. For instance, it is possible to multiply a single-channel value against 1, 2, 3, or 4 channel values. For the current list of supported operations see the link::Guides/VGens-Overview::. The important thing to understand is that multi-channel operations typically operate emphasis::per-channel::. An example might make this more clear:
+
+code::
+// Clean up the \spot Scinth from the above example
+(
+~d.free;
+)
+
+(
+~rings = ScinthDef.new(\rings, {
+	var rad = Length.fg(NormPos.fg);  // rad is one-dimensional
+	var rgb = rad * Vec3.fg(31, 41, 61); // rgb is 3D
+	rgb = 0.5 + (rgb.sin * 0.5); // This is all 3D math!
+	Vec4.fg(VX.fg(rgb), VY.fg(rgb), VZ.fg(rgb), 1.0);
+}).add;
+)
+
+(
+~rg = Scinth.new(\rings);
+)
+::
+
+image::rings.png::
+
+Important to understand that the code::sin:: operation is happening on emphasis::each channel independently::. It can be instructive to re-run this example with only one color channel enabled at a time, to understand what is happening in the red, green, and blue channels independently before trying to understand how the colors are mixing in the combined image. This example also demonstrates that any 4-D vector is accepted as valid output, the link::Classes/RGBOut::, link::Classes/RGBAOut::, and link::Classes/BWOut:: classes are just convenience methods.
+
+subsection::Variation in Time and Space
+
+The last experiment in this quick start guide is to combine variation in both time and space together:
+
+code::
+// Remove the \rings Scinth from the above example
+(
+~rg.free;
+)
+
+(
+~zoom = ScinthDef.new(\zoom, {
+	var pos = NormPos.fg;
+	var box = 1.0 - max(VX.fg(pos).abs, VY.fg(pos).abs);
+	BWOut.fg(VSaw.fg(phase: box));
+}).add;
+)
+
+(
+~z = Scinth.new(\zoom);
+)
+
+(
+~z.free;
+)
+::
+
+It can be instructive to think about why the code::phase:: argument to VSaw is needed to create the zoom effect. Remember that all pixels run this program independently of each other, every frame.
+
+subsection::Next Steps
+
+It's definitely worth perusing the link::Guides/VGens-Overview:: to get a better understanding of currently supported VGens, to expand your creative options. There are a lot of additional features planned for Scintillator, which will likely be documented in separate, independent guides. Lastly, join the conversation! Post your feedback and questions on the link::https://github.com/ScintillatorSynth/Scintillator##GitHub page::, find me on the SuperCollider slack channel, or drop me a line over email.
 
