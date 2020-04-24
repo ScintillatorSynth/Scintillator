@@ -5,7 +5,7 @@ related:: Classes/ScinthDef, Classes/ScinServer
 
 In keeping with the high-energy physics themes of SuperCollider, a emphasis::scintillator:: is any material that produces light when struck by radition. Scintillator is intended to be an accompanying visual synthesizer designed to be intuitive to users already familiar with SuperCollider idioms. Distributed as a Quark plus a synthesizer binary, Scintillator follows the client/server archiecture established by SuperCollider, accepts link::Classes/ScinthDef::s in a similar manner to SuperCollider link::Classes/SynthDef::s, provides facilities to invoke and control link::Classes/Scinth:: instances similar to link::Classes/Synth::, and so on. For a detailed list of classes with analogous SuperCollider classes see link::Guides/Scintillator-Parallel-Classes::.
 
-section::Project Status (March 2020)
+section::Project Status (April 2020)
 
 Scintillator is an open-source (GPLv3) project developed and maintained by Luke Nihlen. It is in early pre-alpha stage and the purpose of these first few releases is to gather feedback and identify any outstanding major bugs that might need to be resolved before considering a beta or even production-quality release. Central features are under active development, and the classes and their methods may change from point release to point release without notice. As such Scintillator is ready for review but building a larger composition or planning a performance on it may not be advisable.
 
@@ -23,14 +23,75 @@ Quarks.install("Scintillator");
 )
 ::
 
-Or you can use the Quarks GUI to pick out Scintillator and install it. See link::Guides/UsingQuarks:: for more information. The second half of the Scintillator distribution consists of the code::scinsynth:: binary, which is the C++-based visual synthesis server. Official releases of the Scintillator Quark will always have an associated server binary, which can be obtained from the GitHub releases page (link TBD).
+Or you can use the Quarks GUI to pick out Scintillator and install it. See link::Guides/UsingQuarks:: for more information.
 
-subsection::Server Binary Installation on MacOS
+subsection::Server Binary Installation
 
-Just like the audio synth, Scintillator includes a standalone video synth binary called code::scinsynth::. The binary will need to be installed in the Scintillator Quark directory in the code::/bin:: subdirectory. The point of this initial release is to test if the MacOS redestributable binary is working and can run on different Macs than it was developed on. The Linux destributable binary is a work in progress and will be generally available for the official alpha release.
+The second half of the Scintillator distribution consists of the code::scinsynth:: binary, which is the C++-based visual synthesis server. Official releases of the Scintillator Quark will always have an associated server binary, which can be obtained from the link::https://github.com/ScintillatorSynth/Scintillator/releases##GitHub Releases Page::. Each platform names the server binary file slightly differently, but generally once the binary is downloaded you need to move it into the code::/bin:: subdirectory inside of the Scintillator Quark directory. One way to quickly find the quark directory is to use the link::Classes/ScinServerOptions:: class, which computes the location by querying the Quarks system:
 
-To get the MacOS binary head to the link::https://github.com/ScintillatorSynth/Scintillator/releases##GitHub Releases Page:: and download the MacOS release binary for version 0.0.1. This is a zip file. Find the Scintillator quark directory (link::Classes/ScinServerOptions:: has the Quark path if you want to look there), and extract the zip file into the /bin subdirectory.
+code::
+// Prints the path of the quark to the console.
+(
+~o = ScinServerOptions.new;
+~o.quarkPath.postln;
+)
+::
 
-section::Quick Startup - TBD
+The binary is named and installed a bit differently on each platform:
+table::
+## strong::platform:: || strong::binary name:: || strong::post-install step::
+## MacOS || code::scinsynth.app.zip:: || Need to extract the zip file
+## Linux || code::scinsynth-x86_64.AppImage:: || Need to mark the file as executable
+## Windows || emphasis::not yet supported:: || Windows support planned for production release
+::
 
-This section can serve to validate your Scintillator installation, as well as to establish some of the basic concepts and get some pixels lighting up on the screen.
+section::Quick Startup
+
+This section can serve to validate your Scintillator installation, as well as to establish some of the basic concepts and get some pixels lighting up on the screen. The first step will be to get an instance of the video server running, which will require installing the correct server binary for your platform of choice. To validate that the server binary is installed correctly we'll start the server, define a link::Classes/ScinthDef::, and render the definition with a link::Classes/Scinth::.
+
+subsection::Starting the Server
+
+SuperCollider by convention stores the default audio synth server in the code::s:: environment variable. While developing Scintillator I have often found it convenient to store the video synth server in the code::v:: environment variable, but storing it in any suitable variable is fine.
+
+code::
+(
+~v = ScinServer.new.boot;
+)
+::
+
+image::empty-window.png::
+
+This should bring up an empty window with a black background. By default the window is 800 pixels wide and 600 pixels tall. It is configured to float on top of all other windows on the screen, but not to steal keyboard focus. The hope was that you could pop open these windows and still continue typing away in your SuperCollider IDE (or other editor of choice) uninterrupted. The server has many boot-time configuration options, for more details see the link::Classes/ScinServerOptions:: documentation.
+
+subsection::Creating a ScinthDef
+
+The simplest imaginable link::Classes/ScinthDef:: sets the same color everywhere on the screen. We'll use the link::Classes/RGBOut:: link::Classes/VGen:: for that.
+
+code::
+(
+~red = ScinthDef.new(\red, {
+	RGBOut.fg(1.0, 0.0, 0.0);
+}).add;
+)
+::
+
+You'll notice after running this code the screen is still black. This is because, just like the audio class link::Classes/SynthDef::, the server has only received a template for creating link::Classes/Scinth::s. We'll create a link::Classes/Scinth:: now from the code::\red:: template.
+
+code::
+(
+~redScinth = Scinth.new(\red);
+)
+::
+
+image::red-window.png::
+
+What's happening here is that for every frame, the graphics hardware at every pixel is running an instance of the code::\red:: ScinthDef to compute the color of that pixel. Since code::\red:: defines that pixel as a constant, that number defines the output everywhere, giving a field of solid red. We'll make a more interesting link::Classes/ScinthDef:: soon, so let's turn this one off for now:
+
+code::
+(
+~redScinth.free;
+)
+::
+
+image::empty-window.png::
+
