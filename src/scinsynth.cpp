@@ -27,6 +27,12 @@
 #include <memory>
 #include <vector>
 
+#if (__APPLE__)
+// For checking environment variables specific to Vulkan
+#    include <array>
+#    include <cstdlib>
+#endif
+
 // Command-line options specified to gflags.
 DEFINE_bool(printVersion, false, "Print the Scintillator version and exit.");
 DEFINE_bool(printDevices, false, "Print the list of detected devices and exit.");
@@ -59,6 +65,16 @@ DEFINE_string(deviceName, "",
 DEFINE_bool(swiftshader, false,
             "If true, ignores --deviceName and will always match the swiftshader device, if present.");
 
+#if (__APPLE__)
+void envCheckAndUnset(const char* name) {
+    const char* value = nullptr;
+    if ((value = getenv(name)) != nullptr) {
+        spdlog::warn("Ignoring Vulkan environment variable {}={}", name, value);
+        unsetenv(name);
+    }
+}
+#endif
+
 int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
     std::shared_ptr<scin::infra::Logger> logger(new scin::infra::Logger());
@@ -75,6 +91,15 @@ int main(int argc, char* argv[]) {
         fmt::print("invalid or nonexistent path {} supplied for --quarkDir, terminating.", FLAGS_quarkDir);
         return EXIT_FAILURE;
     }
+
+#if (__APPLE__)
+    // Look in the environment variables for hard-coded paths to Vulkan SDK components that might break our built-in
+    // loader. On other OS it's ok to respect these values because the app can load the unsigned binaries they might
+    // might point to. But on MacOS the Vulkan Loader will fail to load any unsigned binary it might be pointing to.
+    envCheckAndUnset("VK_ICD_FILENAMES");
+    envCheckAndUnset("VK_LAYER_PATH");
+    envCheckAndUnset("VULKAN_SDK");
+#endif
 
     fs::path quarkPath = fs::canonical(FLAGS_quarkDir);
     if (!fs::exists(quarkPath / "Scintillator.quark")) {
