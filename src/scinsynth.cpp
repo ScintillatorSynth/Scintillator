@@ -28,9 +28,9 @@
 #include <vector>
 
 #if (__APPLE__)
-    // For checking environment variables specific to Vulkan
-    #include <array>
-    #include <cstdlib>
+// For checking environment variables specific to Vulkan
+#   include <array>
+#   include <cstdlib>
 #endif
 
 // Command-line options specified to gflags.
