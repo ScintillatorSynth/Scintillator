@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [[ -z $TRAVIS_TAG ]] then
+if [[ -z $TRAVIS_TAG ]]; then
     mkdir -p $HOME/builds
     cd $TRAVIS_BUILD_DIR/bin && tar czf $HOME/builds/scinsynth.app.$TRAVIS_COMMIT.tgz scinsynth.app
     shasum -a 256 -b $HOME/builds/scinsynth.app.$TRAVIS_COMMIT.tgz > $HOME/builds/scinsynth.app.$TRAVIS_COMMIT.sha256

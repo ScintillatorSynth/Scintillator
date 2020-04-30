@@ -43,9 +43,9 @@ deploy:
       edge: true
       cleanup: false
       acl: public_read
-      #on:
-      #  condition: $DO_COVERAGE = true
-      #  branch: master
+      on:
+        condition: $DO_COVERAGE = true
+        branch: master
     # build artifacts
     - provider: s3
       access_key_id: $AWS_KEY
@@ -57,8 +57,8 @@ deploy:
       edge: true
       cleanup: false
       acl: public_read
-      #      on:
-      #  branch: master
+      on:
+        branch: master
     # releases
     - provider: s3
       access_key_id: $AWS_KEY
@@ -72,5 +72,5 @@ deploy:
       acl: public_read
       on:
         tags: true
-        #        branch: master
+        branch: master
 
