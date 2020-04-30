@@ -42,4 +42,5 @@ else
     cp $TRAVIS_BUILD_DIR/bin/scinsynth.app.zip $HOME/releases/$TRAVIS_TAG/.
     cd $HOME/releases/$TRAVIS_TAG
     shasum -a 256 -b scinsynth.app.zip > scinsynth.app.zip.sha256
+    security delete-keychain build.keychain
 fi
