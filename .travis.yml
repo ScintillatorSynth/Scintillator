@@ -59,3 +59,17 @@ deploy:
       acl: public_read
       on:
         branch: master
+    # releases
+    - provider: s3
+      access_key_id: $AWS_KEY
+      secret_access_key: $AWS_SECRET
+      bucket: scintillator-synth-coverage
+      local-dir: $HOME/releases
+      upload-dir: releases
+      verbose: true
+      edge: true
+      cleanup: false
+      acl: public_read
+      on:
+        tags: true
+
