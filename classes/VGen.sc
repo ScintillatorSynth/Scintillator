@@ -87,6 +87,15 @@ VGen : AbstractFunction {
 
 	asVGenInput { ^this }
 	isValidVGenInput { ^true }
+	checkInputs { ^this.checkValidInputs; }
+	checkValidInputs {
+		inputs.do { | input, ind |
+			if(input.isValidVGenInput.not) {
+				^"arg: '%' has bad input: %".format(this.argNameForInputAt(ind), input);
+			};
+		};
+		^nil;
+	}
 	isVGen { ^true }
 	name { ^this.class.asString }
 	numOutputs { this.outputDimensions.length }
@@ -102,6 +111,31 @@ VGen : AbstractFunction {
 
 	isSamplerVGen {
 		^false;
+	}
+
+	dumpArgs {
+		" ARGS: ".postln;
+		inputs.do { | input, ind |
+			"     % : % %".format(this.argNameForInputAt(ind) ? ind.asString, input, input.class).postln;
+		};
+	}
+
+	argNamesInputOffset { ^1; }
+
+	argNameForInputAt { | ind |
+		var method = this.class.class.findMethod(this.methodSelectorForRate);
+
+		if(method.isNil || method.argNames.isNil) {
+			^nil;
+		};
+
+		^method.argNames.at(ind + this.argNamesInputOffset);
+	}
+
+	methodSelectorForRate {
+		^switch(rate)
+		{\fragment} { \fg }
+		{nil}
 	}
 }
 
@@ -168,6 +202,10 @@ VOutputProxy : VGen {
 
 	// could add some additional interesting ops vgens here, thinking
 	// .dot, .cross, etc.
+}
+
++ UGen {
+	isValidVGenInput { ^false }
 }
 
 + Array {

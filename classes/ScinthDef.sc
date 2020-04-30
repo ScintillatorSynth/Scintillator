@@ -14,9 +14,13 @@ ScinthDef {
 		VGen.buildScinthDef = this;
 		func = vGenGraphFunc;
 		func.valueArray(this.prBuildControls);
-		VGen.buildScinthDef = nil;
-		children.do({ |vgen, index| this.prFitDimensions(vgen) });
-		^this;
+
+		protect {
+			this.checkInputs;
+			children.do({ |vgen, index| this.prFitDimensions(vgen) });
+		} {
+			VGen.buildScinthDef = nil;
+		}
 	}
 
 	// All controls right now are at the fragment rate, so no grouping or sorting is needed, and we only
@@ -139,6 +143,29 @@ ScinthDef {
 	addVGen { |vgen|
 		vgen.scinthIndex = children.size;
 		children = children.add(vgen);
+	}
+
+	checkInputs {
+		var firstErr;
+		children.do { | vgen |
+			var err;
+			if((err = vgen.checkInputs).notNil) {
+				err = vgen.class.asString + err;
+				err.postln;
+				vgen.dumpArgs;
+
+				if(firstErr.isNil) {
+					firstErr = err;
+				};
+			};
+		};
+
+		if(firstErr.notNil) {
+			"ScinthDef % build failed".format(this.name).postln;
+			Error(firstErr).throw;
+		};
+
+		^true;
 	}
 
 }
