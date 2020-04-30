@@ -111,6 +111,8 @@ ScinServer {
 			options = ScinServerOptions.new;
 		});
 
+		addr = NetAddr.new("127.0.0.1", options.portNumber);
+
 		scinBinaryPath = options.quarkPath +/+ "bin";
 		Platform.case(
 			\osx, {
@@ -123,6 +125,7 @@ ScinServer {
 			\linux, { scinBinaryPath = scinBinaryPath +/+ "scinsynth-x86_64.AppImage" },
 			\windows, { Error.new("Windows not (yet) supported!").throw }
 		);
+
 		statusPoller = ScinServerStatusPoller.new(this);
 	}
 
@@ -139,6 +142,7 @@ ScinServer {
 		scinPid = commandLine.unixCmd({ |exitCode, exitPid|
 			"*** got scinsynth exit code %".format(exitCode).postln;
 			if (exitCode != 0, {
+				statusPoller.serverBooting = false;
 				options.onServerError.value(exitCode);
 			});
 		});
@@ -146,7 +150,6 @@ ScinServer {
 		if (ScinServer.default.isNil, {
 			ScinServer.default = this;
 		});
-		addr = NetAddr.new("127.0.0.1", options.portNumber);
 		^this;
 	}
 
