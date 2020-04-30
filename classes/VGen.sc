@@ -204,6 +204,10 @@ VOutputProxy : VGen {
 	// .dot, .cross, etc.
 }
 
++ UGen {
+	isValidVGenInput { ^false }
+}
+
 + Array {
 	asVGenInput { |for|
 		^this.collect(_.asVGenInput(for));
