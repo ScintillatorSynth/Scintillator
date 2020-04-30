@@ -27,6 +27,7 @@ before_script:
 
 script:
     - $TRAVIS_BUILD_DIR/.travis/script-$TRAVIS_OS_NAME.sh
+    - $TRAVIS_BUILD_DIR/.travis/before-deploy-$TRAVIS_OS_NAME.sh # TODO: remove me
 
 before_deploy:
     - $TRAVIS_BUILD_DIR/.travis/before-deploy-$TRAVIS_OS_NAME.sh
