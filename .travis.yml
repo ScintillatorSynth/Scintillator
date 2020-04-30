@@ -29,7 +29,7 @@ script:
     - $TRAVIS_BUILD_DIR/.travis/script-$TRAVIS_OS_NAME.sh
 
 before_deploy:
-    - export $TRAVIS_TAG=0.0.4
+    - export $TRAVIS_TAG=0.0.4 # remove me after testing!
     - $TRAVIS_BUILD_DIR/.travis/before-deploy-$TRAVIS_OS_NAME.sh
 
 deploy:
@@ -71,6 +71,7 @@ deploy:
       edge: true
       cleanup: false
       acl: public_read
+      all_branches: true  # remove me after testing!
       on:
         tags: true
 
