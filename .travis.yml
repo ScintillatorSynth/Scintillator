@@ -71,7 +71,7 @@ deploy:
       edge: true
       cleanup: false
       acl: public_read
-      all_branches: true  # remove me after testing!
       on:
+        all_branches: true  # remove me after testing!
         tags: true
 
