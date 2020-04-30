@@ -45,7 +45,7 @@ deploy:
       acl: public_read
       on:
         condition: $DO_COVERAGE = true
-        branch: master
+        branch: topic/fix-tag-upload
     # build artifacts
     - provider: s3
       access_key_id: $AWS_KEY
@@ -58,7 +58,7 @@ deploy:
       cleanup: false
       acl: public_read
       on:
-        branch: master
+        branch: topic/fix-tag-upload
     # releases
     - provider: s3
       access_key_id: $AWS_KEY
@@ -72,4 +72,5 @@ deploy:
       acl: public_read
       on:
         tags: true
+        branch: topic/fix-tag-upload
 
