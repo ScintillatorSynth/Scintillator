@@ -172,4 +172,36 @@ TestScinthDef : UnitTest {
 		this.sanityCheckBuild(def);
 		this.sanityCheckYAML(def, def.asYAML);
 	}
+
+	test_vgenInputValid_nilIsInvalid {
+		var expected = "BWOut arg: 'v' has bad input: nil";
+		var err;
+
+		try {
+			ScinthDef(\vgen_nilIsInvalid, {
+				BWOut.fg(nil);
+			});
+		} { | e |
+			err = e;
+		};
+
+		this.assert(err != nil, "VGen threw an error");
+		this.assert(expected == err.what, "VGen threw the expected error");
+	}
+
+	test_vgenInputValid_ugenIsInvalid {
+		var expected = "BWOut arg: 'v' has bad input: a SinOsc";
+		var err;
+
+		try {
+			ScinthDef(\vgen_nilIsInvalid, {
+				BWOut.fg(SinOsc.ar());
+			});
+		} { | e |
+			err = e;
+		};
+
+		this.assert(err != nil, "VGen threw an error");
+		this.assert(expected == err.what, "VGen threw the expected error");
+	}
 }
