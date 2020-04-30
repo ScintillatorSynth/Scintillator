@@ -142,6 +142,7 @@ ScinServer {
 		scinPid = commandLine.unixCmd({ |exitCode, exitPid|
 			"*** got scinsynth exit code %".format(exitCode).postln;
 			if (exitCode != 0, {
+				statusPoller.serverBooting = false;
 				options.onServerError.value(exitCode);
 			});
 		});
