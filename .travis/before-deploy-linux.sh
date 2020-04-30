@@ -5,6 +5,12 @@ if [ $DO_COVERAGE = true ]; then
     cp $TRAVIS_BUILD_DIR/build/src/scinsynth_coverage.json $HOME/artifacts
     cp -R $TRAVIS_BUILD_DIR/build/doc $HOME/artifacts
     cp -R $TRAVIS_BUILD_DIR/build/report $HOME/artifacts
+elif [ $TRAVIS_TAG ]; then
+    mkdir -p $HOME/releases/$TRAVIS_TAG
+    cp $TRAVIS_BUILD_DIR/bin/scinsynth-x86_64.AppImage $HOME/releases/$TRAVIS_TAG/.
+    cd $HOME/releases/$TRAVIS_TAG
+    gzip scinsynth-x86_64.AppImage
+    shasum -a 256 -b scinsynth-x86_64.AppImage.gz > scinsynth-x86_64.AppImage.sha256
 else
     mkdir -p $HOME/builds
     cp $TRAVIS_BUILD_DIR/bin/scinsynth-x86_64.AppImage $HOME/builds/scinsynth-$TRAVIS_COMMIT-x86_64.AppImage

@@ -29,6 +29,7 @@ script:
     - $TRAVIS_BUILD_DIR/.travis/script-$TRAVIS_OS_NAME.sh
 
 before_deploy:
+    - export $TRAVIS_TAG=0.0.4
     - $TRAVIS_BUILD_DIR/.travis/before-deploy-$TRAVIS_OS_NAME.sh
 
 deploy:
@@ -59,3 +60,17 @@ deploy:
       acl: public_read
       on:
         branch: master
+    # releases
+    - provider: s3
+      access_key_id: $AWS_KEY
+      secret_access_key: $AWS_SECRET
+      bucket: scintillator-synth-coverage
+      local-dir: $HOME/releases
+      upload-dir: releases
+      verbose: true
+      edge: true
+      cleanup: false
+      acl: public_read
+      on:
+        tags: true
+
