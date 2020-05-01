@@ -1,21 +1,19 @@
 title:: Scintillator User Guide
-summary:: User manual for the Scintillator visual synthesizer.
+summary:: User manual for the Scintillator video synthesizer.
 categories:: Quarks>Scintillator>Guides
 related:: Classes/ScinthDef, Classes/ScinServer
 
-In keeping with the high-energy physics themes of SuperCollider, a emphasis::scintillator:: is any material that produces light when struck by radition. Scintillator is intended to be an accompanying visual synthesizer designed to be intuitive to users already familiar with SuperCollider idioms. Distributed as a Quark plus a synthesizer binary, Scintillator follows the client/server archiecture established by SuperCollider, accepts link::Classes/ScinthDef::s in a similar manner to SuperCollider link::Classes/SynthDef::s, provides facilities to invoke and control link::Classes/Scinth:: instances similar to link::Classes/Synth::, and so on. For a detailed list of classes with analogous SuperCollider classes see link::Guides/Scintillator-Parallel-Classes::.
+section::Overview
 
-section::Project Status (April 2020)
+Scintillator is a video synthesis extension for SuperCollider. It is distributed as a Quark, but requires an additional download and installation step to get the synthesizer program.
 
-Scintillator is an open-source (GPLv3) project developed and maintained by Luke Nihlen. It is in early pre-alpha stage and the purpose of these first few releases is to gather feedback and identify any outstanding major bugs that might need to be resolved before considering a beta or even production-quality release. Central features are under active development, and the classes and their methods may change from point release to point release without notice. As such Scintillator is ready for review but building a larger composition or planning a performance on it may not be advisable.
+Scintillator is designed to be intuitive to users already familiar with SuperCollider idioms. It follows the client/server archiecture established by SuperCollider, accepts link::Classes/ScinthDef::s in a similar manner to SuperCollider link::Classes/SynthDef::s, provides facilities to invoke and control link::Classes/Scinth:: instances similar to link::Classes/Synth::, and so on. For a detailed list of classes with analogous SuperCollider classes see link::Guides/Scintillator-Parallel-Classes::.
 
-All that said, it is my sincere hope you find Scintillator useful and interesting, and I'm keen to hear your feedback. Drop by the link::https://github.com/ScintillatorSynth/Scintillator##GitHub project page::, if you encounter any bugs or have any feature requests please feel free to file them there, or drop me an email at code::scintillator.synth@gmail.com::.
+section::Installation Instructions
 
-section::Installation
+subsection::1. Install Scintillator Quark
 
-subsection::Quark Installation
-
-Scintillator is distributed in two pieces and both are required in order for it to run. The first piece contains the SuperCollider classes and support, and is distributed as a Quark. Installation should be as simple as executing the following code:
+Run the following code:
 
 code::
 (
@@ -24,6 +22,14 @@ Quarks.install("Scintillator");
 ::
 
 Or you can use the Quarks GUI to pick out Scintillator and install it. See link::Guides/UsingQuarks:: for more information.
+
+subsection::2. Recompile Class Library
+
+After any Quark installation you need to recompile the SuperCollider class library. In the IDE menu select Langage -> Recompile Class Library.
+
+subsection::3. Download Server Binary
+
+Use a web browser and go to the the link::https://github.com/ScintillatorSynth/Scintillator/releases##GitHub Releases Page:: at https://github.com/ScintillatorSynth/Scintillator/releases. Download the latest release
 
 subsection::Server Binary Installation
 
@@ -216,5 +222,7 @@ It can be instructive to think about why the code::phase:: argument to VSaw is n
 
 subsection::Next Steps
 
-It's definitely worth perusing the link::Guides/VGens-Overview:: to get a better understanding of currently supported VGens, to expand your creative options. There are a lot of additional features planned for Scintillator, which will likely be documented in separate, independent guides. Lastly, join the conversation! Post your feedback and questions on the link::https://github.com/ScintillatorSynth/Scintillator##GitHub page::, find me on the SuperCollider slack channel, or drop me a line over email.
+Scintillator is still in active development. The link::https://scintillatorsynth.org/blog/##Development Blog:: typically has the most up-to-date information.
+
+It's definitely worth perusing the link::Guides/VGens-Overview:: to get a better understanding of currently supported VGens. There are a lot of additional features planned for Scintillator, which will likely be documented in separate, independent guides. Lastly, join the conversation! Post your feedback and questions on the link::https://github.com/ScintillatorSynth/Scintillator##GitHub page::, find me on the SuperCollider slack channel, or drop me a line over email.
 
