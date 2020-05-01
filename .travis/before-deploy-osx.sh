@@ -30,10 +30,12 @@ else
 
     # Decode the certificate from the environment variable and add to keychain.
     echo $CERTIFICATE_OSX_P12 | base64 --decode > $HOME/certificate.p12
-    security import $HOME/certificate.p12 -k build.keychain -P $OSX_CERT_PWD
+    security import $HOME/certificate.p12 -k build.keychain -P $OSX_CERT_PWD -A
 
     # re-unlock our new keychain so we don't get password prompts for it.
     security unlock-keychain -p $OSX_BUILD_KEYCHAIN_PWD build.keychain
+
+    security set-key-partition-list -S apple-tool:,apple: -s -k $OSX_BUILD_KEYCHAIN_PWD build.keychain
 
     # Run the script to sign and then notarize the build.
     echo "Certificate installed, running signing script"
