@@ -58,7 +58,7 @@ deploy:
       cleanup: false
       acl: public_read
       on:
-        tags: false
+        condition: $DO_COVERAGE = false
         branch: master
     # releases for tagged builds
     - provider: s3
@@ -73,5 +73,6 @@ deploy:
       acl: public_read
       on:
         tags: true
-        branch: master
+        condition: $DO_COVERAGE = false
+        all_branches: true
 
