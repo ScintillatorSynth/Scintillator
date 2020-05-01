@@ -12,10 +12,12 @@ matrix:
           dist: bionic
           env:
               - DO_COVERAGE=false
+              - TRAVIS_TAG="test_0.0.1"
         - os: osx
           osx_image: xcode11
           env:
               - DO_COVERAGE=false
+              - TRAVIS_TAG="test_0.0.1"
 
 cache: ccache
 
@@ -72,4 +74,5 @@ deploy:
       acl: public_read
       on:
         tags: true
+        branch: master
 

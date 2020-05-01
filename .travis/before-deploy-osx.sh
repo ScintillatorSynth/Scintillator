@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [[ -z $TRAVIS_TAG ]] then
+if [[ -z $TRAVIS_TAG ]]; then
     mkdir -p $HOME/builds
     cd $TRAVIS_BUILD_DIR/bin && tar czf $HOME/builds/scinsynth.app.$TRAVIS_COMMIT.tgz scinsynth.app
     shasum -a 256 -b $HOME/builds/scinsynth.app.$TRAVIS_COMMIT.tgz > $HOME/builds/scinsynth.app.$TRAVIS_COMMIT.sha256
@@ -42,4 +42,5 @@ else
     cp $TRAVIS_BUILD_DIR/bin/scinsynth.app.zip $HOME/releases/$TRAVIS_TAG/.
     cd $HOME/releases/$TRAVIS_TAG
     shasum -a 256 -b scinsynth.app.zip > scinsynth.app.zip.sha256
+    security delete-keychain build.keychain
 fi
