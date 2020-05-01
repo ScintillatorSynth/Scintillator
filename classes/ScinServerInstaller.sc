@@ -1,78 +1,251 @@
 ScinServerInstaller {
-	const releasesURL = "https://github.com/ScintillatorSynth/Scintillator/releases/download/";
+	const releasesURL = "https://scintillator-synth-coverage.s3-us-west-1.amazonaws.com/releases/";
+	classvar routine;
 
-	*install { |quarkPath|
-		var version, binPath, downloadName, url, download;
-
-		// Extract Scintillator version from Quark metadata.
-		Quarks.installed.do({ |quark, index|
-			if (quark.name == "Scintillator", {
-				if (quarkPath.isNil, {
-					quarkPath = quark.localPath;
-				});
-				version = quark.version;
-			});
+	*setup { |cleanup=true, validate=true|
+		if (routine.notNil, {
+			"*** setup already running! Did you mean to call abort?".postln;
+			^nil;
 		});
+		routine = {
+			var version, quarkBinPath, binaryPath, downloadURL, downloadPath, runtime;
+			var oldVersion, oldBinPath;
+			var state = \init;
+			var continue = true;
 
-		binPath = quarkPath +/+ "bin";
+			while ({ continue }, {
+				switch (state,
+					// Entry point for state machine. Setup variables.
+					\init, {
+						// Extract Scintillator version from Quark metadata.
+						Quarks.installed.do({ |quark, index|
+							if (quark.name == "Scintillator", {
+								quarkBinPath = quark.localPath +/+ "bin";
+								version = quark.version;
+							});
+						});
 
-		// Build URL with platform-dependent download filename.
-		Platform.case(
-			\osx, {
-				downloadName = "scinsynth.app.zip";
-			},
-			\linux, {
-				downloadName = "scinsynth-x86_64.AppImage";
-			},
-			\windows, { Error.new("Windows not (yet) supported!").throw }
-		);
+						if (quarkBinPath.isNil, {
+							"*** Unable to locate Scintillator Quark!".postln;
+							"Something seems wrong with your Scintillator install. Try uninstalling the Quark "
+							"and installing again.".postln;
+							continue = false;
+						});
 
-		File.delete(binPath +/+ downloadName);
+						Platform.case(
+							\osx, {
+								binaryPath = quarkBinPath +/+ "scinsynth.app";
+								downloadURL = releasesURL ++ version ++ "/scinsynth.app.zip";
+								downloadPath = quarkBinPath +/+ "scinsynth.app." ++ version ++ ".zip";
+								runtime = quarkBinPath +/+ "scinsynth.app/Contents/MacOS/scinsynth";
+							},
+							\linux, {
+								binaryPath = quarkBinPath +/+ "scinsynth-x86_64.AppImage";
+								downloadURL = releasesURL ++ version ++ "/scinsynth-x86_64.AppImage.gz";
+								downloadPath = quarkBinPath +/+ "scinsynth-x86_64.AppImage." ++ version ++ ".gz";
+								runtime = binaryPath;
+							},
+							\windows, {
+								"*** Windows not (yet) supported!".postln;
+								continue = false;
+							}
+						);
 
-		url = releasesURL ++ version ++ "/" ++ downloadName;
-		"Scintillator Server Installer downloading % server binary from %, saving to %".format(
-			thisProcess.platform.name, url, binPath).postln;
+						state = \checkIfBinaryExists;
+					},
 
-		download = Download.new(url, binPath +/+ "foo", {
-			ScinServerInstaller.prOnDownload(binPath)
-		}, {
-			ScinServerInstaller.prOnDownloadError;
-		}, { |r, t|
-			"  downloaded % / % bytes".format(r, t).postln;
+					// Check if the scinserver binary already exists.
+					\checkIfBinaryExists, {
+						if (File.exists(binaryPath), {
+							"scin installer detects pre-existing scinserver binary, checking version.".postln;
+							state = \checkBinaryVersion;
+						}, {
+							"scin installer doesn't detect pre-existing scinserver binary, downloading.".postln;
+							state = \checkIfDownloadExists;
+						});
+					},
+
+					// If there'a already a binary version, try to run it to query version
+					// string, to see if it matches the quark version.
+					\checkBinaryVersion, {
+						var prefix = "scinsynth version ";
+						var scinOutput = "\"%\" --printVersion".format(runtime).unixCmdGetStdOut;
+						if (scinOutput.beginsWith(prefix), {
+							var split = scinOutput.split($ );
+							var scinVersion = split[2];
+							if (scinVersion == version, {
+								"scin installer detects version match % between Quark and binary.".format(version).postln;
+								"*** You're all set, happy Scintillating!".postln;
+								continue = false;
+							}, {
+								"version mismatch between Quark (%) and binary (%), downloading matching binary".format(
+									version, scinOutput).postln;
+								oldVersion = scinVersion;
+								state = \checkIfDownloadExists;
+							});
+						}, {
+							if (cleanup, {
+								"*** error parsing scinserver version string, got back '%'. Deleting binary and redownloading."
+								.format(scinOutput).postln;
+								File.delete(binaryPath);
+								state = \checkIfDownloadExists;
+							}, {
+								"*** error parsing version string from installed scinsynth binary. This shouldn't normally"
+								"happen. Try manually deleting the file at %, or re-run this script with cleanup=true."
+								"Aborting.".format(runtime).postln;
+								continue = false;
+							});
+						});
+					},
+
+					\checkIfDownloadExists, {
+						if (File.exists(downloadPath), {
+							"detected existing download %, validating.".format(downloadPath).postln;
+							if (validate, {
+								state = \checkIfHashExists;
+							}, {
+								state = \extractBinary;
+							});
+						}, {
+							"no pre-existing download found.".postln;
+							state = \downloadBinary;
+						});
+					},
+
+					\downloadBinary, {
+						var result = false;
+						var c = Condition.new;
+						c.test = false;
+
+						"starting download of scinserver binary from % to %".format(downloadURL, downloadPath).postln;
+						Download.new(downloadURL, downloadPath, {
+							result = true;
+							c.test = true;
+							c.signal;
+						}, {
+							result = false;
+							c.test = true;
+							c.signal;
+						}, { |r, t|
+							"  downloaded % of % KB".format((r / 1024).asInteger, (t / 1024).asInteger).postln;
+						});
+
+						c.wait;
+						if (result, {
+							if (validate, {
+								"download complete, validating.".postln;
+								state = \checkIfHashExists;
+							}, {
+								"download complete, extracting.".postln;
+								state = \extractBinary;
+							});
+						}, {
+							"Scin server binary failed! Please check your Internet connection and try again.".postln;
+							if (cleanup, {
+								File.delete(downloadPath);
+							});
+							continue = false;
+						});
+					},
+
+					\checkIfHashExists, {
+						if (File.exists(downloadPath ++ ".sha256"), {
+							"detected pre-existing hash file %, checking hash.".format(
+								downloadPath ++ ".sha256").postln;
+							state = \checkHash;
+						}, {
+							"no pre-existing hash file found.".postln;
+							state = \downloadHashFile;
+						});
+					},
+
+					\downloadHashFile, {
+						var result = false;
+						var c = Condition.new;
+						c.test = false;
+						"downloading hash file.".post;
+						Download.new(downloadURL ++ ".sha256", downloadPath ++ ".sha256", {
+							result = true;
+							c.test = true;
+							c.signal;
+						}, {
+							result = false;
+							c.test = true;
+							c.signal;
+						}, {
+							".".post;
+						});
+
+						c.wait;
+						if (result, {
+							"\nhashfile downloaded, checking against downloaded binary.".postln;
+							state = \checkHash;
+						}, {
+							"\nScin hashfile download failed! Please check your Internet connection and try again.".postln;
+							continue = false;
+						});
+					},
+
+					\checkHash, {
+						// TODO: windows has a different command for hashing
+						var hashOutput = "shasum -a 256 -b \"%\"".format(downloadPath).unixCmdGetStdOut.split($ );
+						var targetHash = File.readAllString(downloadPath ++ ".sha256").split($ );
+						if (hashOutput[0] == targetHash[0], {
+							"downloaded file validated, extracting.".postln;
+							state = \extractBinary;
+						}, {
+							"*** hash mishmatch on downloaded file %. Expected '%', got '%'.".format(downloadPath,
+								targetHash[0], hashOutput[0]).postln;
+							if (cleanup, {
+								"deleting bad hash file % and aborting. Please try again.".format(downloadPath).postln;
+								File.delete(downloadPath);
+								File.delete(downloadPath ++ ".sha256");
+							}, {
+								"bad download detected, aborting.".postln;
+							});
+							continue = false;
+						});
+					},
+
+					\extractBinary, {
+						// We have a validated compressed binary, move anything currenty there out of the way.
+						if (File.exists(binaryPath), {
+							state = \moveOldBinary;
+						}, {
+							Platform.case(
+								\osx, {
+									var result = "unzip \"%\" -d \"%\"".format(downloadPath, quarkBinPath).unixCmdGetStdOut;
+									result.postln;
+									state = \checkIfBinaryExists;
+								},
+								\linux, {
+								},
+								\windows, {
+									continue = false;
+								}
+							);
+
+						});
+					},
+
+					\moveOldBinary, {
+						if (oldVersion.isNil, {
+							"*** unable to determine version of old binary, using \"unknown\"".postln;
+							oldVersion = ".unknown";
+						});
+						oldBinPath = binaryPath ++ oldVersion ++ ".bak";
+						"mv \"%\" \"%\"".format(binaryPath, oldBinPath).unixCmdGetStdOut;
+						state = \extractBinary;
+					},
+				); // switch
+			}); // while
+		}.fork(AppClock);  // Download wants to run on the AppClock.
+	} // *setup
+
+	*abort {
+		"*** aborting setup.".postln;
+		if (routine.notNil, {
+			routine.stop;
 		});
-	}
-
-	*prOnDownload { |binPath|
-		"Scintillator binary download complete. Finalizing..".postln;
-
-		Platform.case(
-			\osx, {
-				File.deleteAll(binPath +/+ "scinsynth.app");
-			},
-			\linux, {
-				"chmod u+x %/scinsynth-x86_64.AppImage".format(binPath).unixCmd({ |exit, pid|
-					if (exit == 0, {
-						ScinServerInstaller.prOnComplete;
-					}, {
-						ScinServerInstaller.prOnError;
-					});
-				}, false);
-			},
-			\windows, { Error.new("Windows not (yet) supported!").throw }
-		);
-	}
-
-	*prOnDownloadError {
-		"*** error downloading Scintillator binary!".postln;
-		"  Please double-check your Internet configuration. Failing that, try the manual "
-		"install path detailed in the Scintillator User Guide in the help.".postln;
-	}
-
-	*prOnComplete {
-		"*** Scintillator server download complete!".postln;
-	}
-
-	*prOnError {
-		"*** error finalizing Scintillator server setup.".postln;
 	}
 }
