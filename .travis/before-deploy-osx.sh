@@ -32,6 +32,9 @@ else
     echo $CERTIFICATE_OSX_P12 | base64 --decode > $HOME/certificate.p12
     security import $HOME/certificate.p12 -k build.keychain -P $OSX_CERT_PWD -T /usr/bin/codesign
 
+    # re-unlock our new keychain so we don't get password prompts for it.
+    security unlock-keychain -p $OSX_BUILD_KEYCHAIN_PWD build.keychain
+
     # Run the script to sign and then notarize the build.
     echo "Certificate installed, running signing script"
     cd $TRAVIS_BUILD_DIR

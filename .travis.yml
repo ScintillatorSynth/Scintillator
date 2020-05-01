@@ -48,7 +48,7 @@ deploy:
       on:
         condition: $DO_COVERAGE = true
         branch: master
-    # build artifacts
+    # build artifacts for non-tagged builds
     - provider: s3
       access_key_id: $AWS_KEY
       secret_access_key: $AWS_SECRET
@@ -60,8 +60,9 @@ deploy:
       cleanup: false
       acl: public_read
       on:
+        tags: false
         branch: master
-    # releases
+    # releases for tagged builds
     - provider: s3
       access_key_id: $AWS_KEY
       secret_access_key: $AWS_SECRET
