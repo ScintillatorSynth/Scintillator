@@ -30,7 +30,7 @@ else
 
     # Decode the certificate from the environment variable and add to keychain.
     echo $CERTIFICATE_OSX_P12 | base64 --decode > $HOME/certificate.p12
-    security import $HOME/certificate.p12 -k build.keychain -P $OSX_CERT_PWD -T /usr/bin/codesign
+    security import $HOME/certificate.p12 -k build.keychain -P $OSX_CERT_PWD
 
     # re-unlock our new keychain so we don't get password prompts for it.
     security unlock-keychain -p $OSX_BUILD_KEYCHAIN_PWD build.keychain
