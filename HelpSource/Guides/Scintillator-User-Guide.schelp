@@ -27,31 +27,23 @@ subsection::2. Recompile Class Library
 
 After any Quark installation you need to recompile the SuperCollider class library. In the IDE menu select Langage -> Recompile Class Library.
 
-subsection::3. Download Server Binary
+subsection::3. Option A - Automatic Server Install
 
-Use a web browser and go to the the link::https://github.com/ScintillatorSynth/Scintillator/releases##GitHub Releases Page:: at https://github.com/ScintillatorSynth/Scintillator/releases. Download the latest release
-
-subsection::Server Binary Installation
-
-The second half of the Scintillator distribution consists of the code::scinsynth:: binary, which is the C++-based visual synthesis server. Official releases of the Scintillator Quark will always have an associated server binary, which can be obtained from the link::https://github.com/ScintillatorSynth/Scintillator/releases##GitHub Releases Page::. Each platform names the server binary file slightly differently, but generally once the binary is downloaded you need to move it into the code::/bin:: subdirectory inside of the Scintillator Quark directory. One way to quickly find the quark directory is to use the link::Classes/ScinServerOptions:: class, which computes the location by querying the Quarks system:
+The link::Classes/ScinServerInstaller:: class is an install script that can download the synth binary and automatically install it. To use it run the following code:
 
 code::
-// Prints the path of the quark to the console.
 (
-~o = ScinServerOptions.new;
-~o.quarkPath.postln;
+ScinServerInstaller.setup;
 )
 ::
 
-The binary is named and installed a bit differently on each platform:
-table::
-## strong::platform:: || strong::binary name:: || strong::post-install step::
-## MacOS || code::scinsynth.app.zip:: || Need to extract the zip file
-## Linux || code::scinsynth-x86_64.AppImage:: || Need to mark the file as executable
-## Windows || emphasis::not yet supported:: || Windows support planned for production release
-::
+The installer will report status to the log. Please report any issues with using it to the developers.
 
-section::Quick Startup
+subsection::3. Option B - Manual Server Install
+
+Use a web browser and go to the the link::https://github.com/ScintillatorSynth/Scintillator/releases##GitHub Releases Page:: at https://github.com/ScintillatorSynth/Scintillator/releases. Follow the instructions on the Releases page to finish the install process.
+
+section::Tutorial
 
 This section can serve to validate your Scintillator installation, as well as to establish some of the basic concepts and get some pixels lighting up on the screen. The first step will be to get an instance of the video server running, which will require installing the correct server binary for your platform of choice. To validate that the server binary is installed correctly we'll start the server, define a link::Classes/ScinthDef::, and render the definition with a link::Classes/Scinth::.
 

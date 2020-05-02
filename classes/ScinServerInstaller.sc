@@ -143,10 +143,8 @@ ScinServerInstaller {
 						c.wait;
 						if (result, {
 							if (validate, {
-								"download complete, validating.".postln;
 								state = \checkIfHashExists;
 							}, {
-								"download complete, extracting.".postln;
 								state = \extractBinary;
 							});
 						}, {
@@ -183,7 +181,6 @@ ScinServerInstaller {
 							c.test = true;
 							c.signal;
 						}, {
-							".".post;
 						});
 
 						c.wait;
@@ -224,11 +221,15 @@ ScinServerInstaller {
 						}, {
 							Platform.case(
 								\osx, {
-									var result = "unzip \"%\" -d \"%\"".format(downloadPath, quarkBinPath).unixCmdGetStdOut;
-									result.postln;
+									"unzip \"%\" -d \"%\"".format(downloadPath, quarkBinPath).unixCmdGetStdOut.postln;
 									state = \checkIfBinaryExists;
 								},
 								\linux, {
+									"gzip -d \"%\"".format(downloadPath).unixCmdGetStdOut.postln;
+									"mv \"%\" \"%\"".format(downloadPath[0..downloadPath.size - 4],
+										binaryPath).unixCmdGetStdOut.postln;
+									"chmod u+x \"%\"".format(binaryPath).unixCmdGetStdOut.postln;
+									state = \checkIfBinaryExists;
 								},
 								\windows, {
 									continue = false;
