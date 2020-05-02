@@ -109,6 +109,7 @@ ScinServer {
 	*initClass {
 		Class.initClassTree(Quarks);
 		Class.initClassTree(ScinServerOptions);
+		Class.initClassTree(ScinServerStatusPoller);
 
 
 		default = ScinServer();
