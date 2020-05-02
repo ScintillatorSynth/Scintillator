@@ -126,6 +126,11 @@ ScinServer {
 			\windows, { Error.new("Windows not (yet) supported!").throw }
 		);
 
+		if (File.exists(scinBinaryPath).not, {
+			Error.new("Unable to find Scintillator Server binary. Please run ScinServerInstaller.setup first.").throw;
+			^nil;
+		});
+
 		statusPoller = ScinServerStatusPoller.new(this);
 	}
 
@@ -140,10 +145,10 @@ ScinServer {
 		commandLine = scinBinaryPath + options.asOptionsString();
 
 		scinPid = commandLine.unixCmd({ |exitCode, exitPid|
-			"*** got scinsynth exit code %".format(exitCode).postln;
-			if (exitCode != 0, {
-				statusPoller.serverBooting = false;
-				options.onServerError.value(exitCode);
+			if (exitCode == 0, {
+				"*** scinsynth exited normally.".postln;
+			}, {
+				"*** scinsynth fatal error, code: %".format(exitCode).postln;
 			});
 		});
 
