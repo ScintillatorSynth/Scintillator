@@ -1,27 +1,25 @@
 // Generates a series of images for validation of individual VGens and
 // integration testing of the render stack.
 (
-var quarkPath, testImagesPath, imageOut, options, server, c, d, testDefs, keptScinths;
-if (thisProcess.argv.size < 2, {
-    "requires at least two arguments, the path to the Scintillator Quark directory followed by the path to the test images repository.".postln;
+var testImagesPath, imageOut, options, server, c, d, testDefs, keptScinths;
+if (thisProcess.argv.size < 1, {
+    "requires at least one argument, the path to the test images repository.".postln;
     "*** SCRIPT FAILED ***".postln;
     -1.exit;
 });
 // Remaining arguments, if any, should be environment variables to set before invoking the server.
-thisProcess.argv[2..].do({ |pairs|
+thisProcess.argv[1..].do({ |pairs|
     var splitPairs = pairs.split($=);
     "setting environment variable % to %".format(splitPairs[0], splitPairs[1]).postln;
     splitPairs[0].setenv(splitPairs[1]);
 });
 fork {
-	quarkPath = thisProcess.argv[0];
-	testImagesPath = thisProcess.argv[1] +/+ "sourceMedia";
+	testImagesPath = thisProcess.argv[0] +/+ "sourceMedia";
 	c = Condition.new;
 	d = Condition.new;
-    imageOut = quarkPath +/+ "build" +/+ "testing";
-	testDefs = (quarkPath +/+ "tools" +/+ "TestScripts" +/+ "testManifest.yaml").parseYAMLFile;
+    imageOut = ScinServerOptions.quarkPath +/+ "build" +/+ "testing";
+	testDefs = (ScinServerOptions.quarkPath +/+ "tools" +/+ "TestScripts" +/+ "testManifest.yaml").parseYAMLFile;
 	options = ScinServerOptions.new;
-	ScinServerOptions.quarkPath = quarkPath;
 	options.logLevel = 2;
 	options.createWindow = false;
 	options.frameRate = 0;

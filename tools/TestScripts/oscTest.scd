@@ -2,32 +2,29 @@
 // in sclang and sends messages directly to the server.
 // TODO: add a timeout on the Condition waits so that missing messages don't hang this script.
 (
-var quarkPath, versionMajor, versionMinor, versionPatch, gitBranch, gitHash, options, binPath;
+var versionMajor, versionMinor, versionPatch, gitBranch, gitHash, options, binPath;
 var scriptFailed = "*** SCRIPT FAILED ***";
 var scriptOk = "*** SCRIPT OK ***";
-if (thisProcess.argv.size < 6, {
-	"requires at least six arguments:".postln;
-	"  the path to the Scintillator Quark directory".postln;
+if (thisProcess.argv.size < 5, {
+	"requires at least five arguments:".postln;
 	"  Scintillator major, minor, and patch version numbers".postln;
 	"  Git branch name and first seven hex digits of the commit hash".postln;
 	scriptFailed.postln;
 	-1.exit;
 });
 // Remaining arguments, if any, should be environment variables to set before invoking the server.
-thisProcess.argv[6..].do({ |pairs|
+thisProcess.argv[5..].do({ |pairs|
     var splitPairs = pairs.split($=);
     "setting environment variable % to %".format(splitPairs[0], splitPairs[1]).postln;
     splitPairs[0].setenv(splitPairs[1]);
 });
 OSCFunc.trace(true);
-quarkPath = thisProcess.argv[0];
-versionMajor = thisProcess.argv[1].asInteger;
-versionMinor = thisProcess.argv[2].asInteger;
-versionPatch = thisProcess.argv[3].asInteger;
-gitBranch = thisProcess.argv[4].asSymbol;
-gitHash = thisProcess.argv[5].asSymbol;
+versionMajor = thisProcess.argv[0].asInteger;
+versionMinor = thisProcess.argv[1].asInteger;
+versionPatch = thisProcess.argv[2].asInteger;
+gitBranch = thisProcess.argv[3].asSymbol;
+gitHash = thisProcess.argv[4].asSymbol;
 options = ScinServerOptions.new;
-options.quarkPath = quarkPath;
 options.logLevel = 2;
 options.createWindow = false;
 options.frameRate = 0;
@@ -36,7 +33,7 @@ options.height = 200;
 options.dumpOSC = true;
 options.swiftshader = true;
 options.vulkanValidation = true;
-binPath = quarkPath +/+ "bin/scinsynth-x86_64.AppImage";
+binPath = ScinServerOptions.quarkPath +/+ "bin/scinsynth-x86_64.AppImage";
 fork {
 	var commandLine, scinPid, udp, c, d, valid, response;
 	var gotFrameRate, numWarn, numError, gotWarn, gotError;
@@ -323,7 +320,7 @@ fork {
 	c.test = false;
 	d.test = false;
 	valid = false;
-	testDefPath = quarkPath +/+ "tools" +/+ "TestScripts" +/+ "testDefs";
+	testDefPath = ScinServerOptions.quarkPath +/+ "tools" +/+ "TestScripts" +/+ "testDefs";
 	callbackFunc = OSCFunc.new({ |msg|
 		if (msg[1] == 'xx', {
 			valid = true;

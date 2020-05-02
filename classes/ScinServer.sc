@@ -1,6 +1,5 @@
 ScinServerOptions {
 	classvar defaultValues;
-	classvar <>quarkPath;
 
 	var <>portNumber;
 	var <>dumpOSC;
@@ -22,7 +21,6 @@ ScinServerOptions {
 
 		defaultValues = IdentityDictionary.newFrom(
 			(
-				quarkPath: nil,
 				portNumber: 5511,
 				dumpOSC: false,
 				frameRate: -1,
@@ -36,17 +34,16 @@ ScinServerOptions {
 				vulkanValidation: false
 			)
 		);
-
-		Quarks.installed.do { | quark |
-			if(quark.name == "Scintillator") {
-				quarkPath = quark.localPath;
-			};
-		};
 	}
 
 	*new {
 		^super.new.init;
 	}
+
+	*quarkPath {
+		^PathName.new(ScinServerOptions.class.filenameSymbol.asString.dirname).parentPath;
+	}
+
 
 	init {
 		defaultValues.keysValuesDo({ |key, value| this.instVarPut(key, value); });
@@ -54,7 +51,7 @@ ScinServerOptions {
 	}
 
 	asOptionsString {
-		var o = "--quarkDir=" ++ quarkPath;
+		var o = "--quarkDir=" ++ ScinServerOptions.quarkPath;
 
 		if (portNumber != defaultValues[\portNumber], {
 			o = o + "--portNumber=" ++ portNumber;
