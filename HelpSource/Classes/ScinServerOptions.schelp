@@ -14,6 +14,9 @@ private::initClass
 METHOD:: new
 Creates a new ScinServerOptions instance with all default options.
 
+METHOD:: quarkPath
+A convenience method that exposes the path to the Scintillator Quark. Used by the link::Classes/ScinServerInstaller:: script, the Scintillator integration test suite and other internal tooling to quickly locate the Scintillator project files.
+
 INSTANCEMETHODS::
 private::init
 
@@ -100,9 +103,6 @@ subsection::Other Methods
 
 METHOD:: asOptionsString
 Returns a string reflecting the current options and which can be passed to the command line of the ScinServer binary on boot. Used primarily by ScinServer code on server boot.
-
-METHOD:: quarkPath
-A convenience method that exposes the path to the Scintillator Quark. Used primarily by the Scintillator integration test suite and other internal tooling to quickly locate the Scintillator project files.
 
 METHOD:: onServerError
 A function, default strong::empty::. This function will be called if the ScinServer object detects an abnormal server exit code.
