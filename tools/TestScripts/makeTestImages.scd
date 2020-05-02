@@ -21,7 +21,7 @@ fork {
     imageOut = quarkPath +/+ "build" +/+ "testing";
 	testDefs = (quarkPath +/+ "tools" +/+ "TestScripts" +/+ "testManifest.yaml").parseYAMLFile;
 	options = ScinServerOptions.new;
-	options.quarkPath = quarkPath;
+	ScinServerOptions.quarkPath = quarkPath;
 	options.logLevel = 2;
 	options.createWindow = false;
 	options.frameRate = 0;
