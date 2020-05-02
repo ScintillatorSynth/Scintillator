@@ -1,5 +1,5 @@
 NormPos : VGen {
-	*fg {
+	*fr {
 		^this.multiNew(\fragment);
 	}
 
@@ -13,7 +13,7 @@ NormPos : VGen {
 }
 
 TexPos : VGen {
-	*fg {
+	*fr {
 		^this.multiNew(\fragment);
 	}
 

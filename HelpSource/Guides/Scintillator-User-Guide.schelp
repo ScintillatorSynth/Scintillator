@@ -68,7 +68,7 @@ The simplest imaginable link::Classes/ScinthDef:: sets the same color everywhere
 code::
 (
 ~red = ScinthDef.new(\red, {
-	RGBOut.fg(1.0, 0.0, 0.0);
+	RGBOut.fr(1.0, 0.0, 0.0);
 }).add;
 )
 ::
@@ -102,7 +102,7 @@ Another point to note is that while audio signals normally operate in the domain
 code::
 (
 ~w = ScinthDef.new(\wave, { |f=1|
-	BWOut.fg(ScinOsc.fg(freq: f));
+	BWOut.fr(ScinOsc.fr(freq: f));
 }).add;
 )
 
@@ -136,7 +136,7 @@ code::
 
 (
 ~spot = ScinthDef.new(\spot, {
-	BWOut.fg(Length.fg(NormPos.fg));
+	BWOut.fr(Length.fr(NormPos.fr));
 }).add;
 )
 
@@ -167,10 +167,10 @@ code::
 
 (
 ~rings = ScinthDef.new(\rings, {
-	var rad = Length.fg(NormPos.fg);  // rad is one-dimensional
-	var rgb = rad * Vec3.fg(31, 41, 61); // rgb is 3D
+	var rad = Length.fr(NormPos.fr);  // rad is one-dimensional
+	var rgb = rad * Vec3.fr(31, 41, 61); // rgb is 3D
 	rgb = 0.5 + (rgb.sin * 0.5); // This is all 3D math!
-	Vec4.fg(VX.fg(rgb), VY.fg(rgb), VZ.fg(rgb), 1.0);
+	Vec4.fr(VX.fr(rgb), VY.fr(rgb), VZ.fr(rgb), 1.0);
 }).add;
 )
 
@@ -195,9 +195,9 @@ code::
 
 (
 ~zoom = ScinthDef.new(\zoom, {
-	var pos = NormPos.fg;
-	var box = 1.0 - max(VX.fg(pos).abs, VY.fg(pos).abs);
-	BWOut.fg(VSaw.fg(phase: box));
+	var pos = NormPos.fr;
+	var box = 1.0 - max(VX.fr(pos).abs, VY.fr(pos).abs);
+	BWOut.fr(VSaw.fr(phase: box));
 }).add;
 )
 

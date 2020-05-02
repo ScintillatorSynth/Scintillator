@@ -8,7 +8,7 @@ Like its partner classes link::Classes/Splat3:: and link::Classes/Splat4::, copi
 
 CLASSMETHODS::
 
-METHOD:: fg
+METHOD:: fr
 
 strong::dimensions::
 
@@ -27,7 +27,7 @@ private::inputDimensions, outputDimensions
 EXAMPLES::
 
 code::
-var v = Splat2.fg(1.0);
-var x = VX.fg(v); // x: 1
-var y = VY.fg(v); // y: 1
+var v = Splat2.fr(1.0);
+var x = VX.fr(v); // x: 1
+var y = VY.fr(v); // y: 1
 ::

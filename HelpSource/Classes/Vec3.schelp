@@ -8,7 +8,7 @@ Like its partner classes link::Classes/Vec4:: and link::Classes/Vec2::, Vec3 pac
 
 CLASSMETHODS::
 
-METHOD:: fg
+METHOD:: fr
 
 strong::dimensions::
 table::
@@ -31,8 +31,8 @@ private:: inputDimensions, outputDimensions
 EXAMPLES::
 
 code::
-var v = Vec3.fg(1, 2, 3);
-var x = VX.fg(v); // x: 1
-var y = VY.fg(v); // y: 2
-var z = VZ.fg(v); // z: 3
+var v = Vec3.fr(1, 2, 3);
+var x = VX.fr(v); // x: 1
+var y = VY.fr(v); // y: 2
+var z = VZ.fr(v); // z: 3
 ::

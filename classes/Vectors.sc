@@ -1,5 +1,5 @@
 Vec2 : VGen {
-	*fg { |x = 0.0, y = 0.0|
+	*fr { |x = 0.0, y = 0.0|
 		^this.multiNew(\fragment, x, y);
 	}
 
@@ -13,7 +13,7 @@ Vec2 : VGen {
 }
 
 Vec3 : VGen {
-	*fg { |x = 0.0, y = 0.0, z = 0.0|
+	*fr { |x = 0.0, y = 0.0, z = 0.0|
 		^this.multiNew(\fragment, x, y, z);
 	}
 
@@ -27,7 +27,7 @@ Vec3 : VGen {
 }
 
 Vec4 : VGen {
-	*fg { |x = 0.0, y = 0.0, z = 0.0, w = 0.0|
+	*fr { |x = 0.0, y = 0.0, z = 0.0, w = 0.0|
 		^this.multiNew(\fragment, x, y, z, w);
 	}
 
@@ -41,7 +41,7 @@ Vec4 : VGen {
 }
 
 VX : VGen {
-	*fg { |vec|
+	*fr { |vec|
 		^this.multiNew(\fragment, vec);
 	}
 
@@ -55,7 +55,7 @@ VX : VGen {
 }
 
 VY : VGen {
-	*fg { |vec|
+	*fr { |vec|
 		^this.multiNew(\fragment, vec);
 	}
 
@@ -69,7 +69,7 @@ VY : VGen {
 }
 
 VZ : VGen {
-	*fg { |vec|
+	*fr { |vec|
 		^this.multiNew(\fragment, vec);
 	}
 
@@ -84,7 +84,7 @@ VZ : VGen {
 
 
 VW : VGen {
-	*fg { |vec|
+	*fr { |vec|
 		^this.multiNew(\fragment, vec);
 	}
 
@@ -98,7 +98,7 @@ VW : VGen {
 }
 
 Splat2 : VGen {
-	*fg { |x|
+	*fr { |x|
 		^this.multiNew(\fragment, x);
 	}
 
@@ -112,7 +112,7 @@ Splat2 : VGen {
 }
 
 Splat3 : VGen {
-	*fg { |x|
+	*fr { |x|
 		^this.multiNew(\fragment, x);
 	}
 
@@ -126,7 +126,7 @@ Splat3 : VGen {
 }
 
 Splat4 : VGen {
-	*fg { |x|
+	*fr { |x|
 		^this.multiNew(\fragment, x);
 	}
 

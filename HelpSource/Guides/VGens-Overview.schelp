@@ -8,7 +8,7 @@ section::Video Oscillators
 There are only a few test oscillators implemented for now, with plans to add many more. One key conceptual difference between SuperCollider audio oscillators and Scintillator video oscillators to bear in mind is that video signals are constrained to values between code::[0, 1]::, unlike audio signals, which operate normally between code::[-1, 1]::.
 
 table::
-## link::Classes/ScinOsc::code::.fg(freq, phas, mul, add):: || table::
+## link::Classes/ScinOsc::code::.fr(freq, phas, mul, add):: || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1, 1 || 1
 ## 2, 2, 2, 2 || 2
@@ -16,7 +16,7 @@ table::
 ## 4, 4, 4, 4 || 4
 :: || Piecewise sinusodal oscillator, analogous to link::Classes/SinOsc::
 
-## link::Classes/VSaw::code::.fg(freq, phas, mul, add):: || table::
+## link::Classes/VSaw::code::.fr(freq, phas, mul, add):: || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1, 1 || 1
 ## 2, 2, 2, 2 || 2
@@ -30,17 +30,17 @@ section::Image Sampling
 VGens for reading from link::Classes/ImageBuffer:: objects.
 
 table::
-## link::Classes/Sampler::code::.fg(image, pos):: || table::
+## link::Classes/Sampler::code::.fr(image, pos):: || table::
 ## strong::input:: || strong::output::
 ## image, 2 || 4
 :: || Samples the provided imageBuffer at code::pos:: and returns the 4D color signal as code::(r, g, b, a)::
 
-## link::Classes/TexPos::code::.fg():: || table::
+## link::Classes/TexPos::code::.fr():: || table::
 ## strong::input:: || strong::output::
 ## - || 2
 :: || Texture Sampler position
 
-## link::Classes/TextureSize::code::.fg(image):: || table::
+## link::Classes/TextureSize::code::.fr(image):: || table::
 ## strong::input:: || strong::output::
 ## - || 2
 :: || Returns the dimensions in pixels of the provided ImageBuffer. Roughly analogous to link::Classes/BufFrames::.
@@ -51,17 +51,17 @@ section::Fragment Position
 Scintillator offers a few different means to determine the position of the current fragment shader relative to the geometry being rendered, or the onscreen pixel dimensions. The link::Classes/TexPos:: VGen is in the Image Sampling section.
 
 table::
-## link::Classes/NormPos::code::.fg():: || table::
+## link::Classes/NormPos::code::.fr():: || table::
 ## strong::input:: || strong::output::
 ## - || 2
 :: || Normalized fragment position
 
-## link::Classes/TexPos::code::.fg():: || table::
+## link::Classes/TexPos::code::.fr():: || table::
 ## strong::input:: || strong::output::
 ## - || 2
 :: || Texture Sampler position
 
-## link::Classes/FragCoord::code::.fg():: || table::
+## link::Classes/FragCoord::code::.fr():: || table::
 ## strong::input:: || strong::output::
 ## - || 2
 :: || Onscreen coordinates of current fragment in pixels
@@ -77,32 +77,32 @@ Some VGens require inputs that are higher-dimensional vectors. To construct thos
 
 table::
 ## strong::VGen:: || strong::dimensions:: || strong::description::
-## link::Classes/Vec2::code::.fg(x, y):: || table::
+## link::Classes/Vec2::code::.fr(x, y):: || table::
 ## strong::input:: || strong::output::
 ## 1, 1 || 2
 :: || Construct a 2D vector from individual elements code::x:: and code::y::
 
-## link::Classes/Vec3::code::.fg(x, y, z):: || table::
+## link::Classes/Vec3::code::.fr(x, y, z):: || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1 || 3
 :: || Construct a 3D vector from individual elements code::x:: and code::y::
 
-## link::Classes/Vec4::code::.fg(x, y, z, w):: || table::
+## link::Classes/Vec4::code::.fr(x, y, z, w):: || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1, 1 || 4
 :: || Construct a 4D vector from individual elements code::x:: and code::y::
 
-## link::Classes/Splat2::code::.fg(x):: || table::
+## link::Classes/Splat2::code::.fr(x):: || table::
 ## strong::input:: || strong::output::
 ## 1 || 2
 :: || Construct a 2D vector from a single element copied into both
 
-## link::Classes/Splat3::code::.fg(x):: || table::
+## link::Classes/Splat3::code::.fr(x):: || table::
 ## strong::input:: || strong::output::
 ## 1 || 3
 :: || Construct a 3D vector from a single element copied into both
 
-## link::Classes/Splat4::code::.fg(x):: || table::
+## link::Classes/Splat4::code::.fr(x):: || table::
 ## strong::input:: || strong::output::
 ## 1 || 4
 :: || Construct a 4D vector from a single element copied into both
@@ -114,7 +114,7 @@ To break out a single-dimensional signal from a higher-dimensional vector, use t
 
 table::
 ## strong::VGen:: || strong::dimensions:: || strong::description::
-## link::Classes/VX::code::.fg(v):: || table::
+## link::Classes/VX::code::.fr(v):: || table::
 ## strong::input:: || strong::output::
 ## 1 || 1
 ## 2 || 1
@@ -122,20 +122,20 @@ table::
 ## 4 || 1
 :: || Return the first element in the vector.
 
-## link::Classes/VY::code::.fg(v):: || table::
+## link::Classes/VY::code::.fr(v):: || table::
 ## strong::input:: || strong::output::
 ## 2 || 1
 ## 3 || 1
 ## 4 || 1
 :: || Return the second element in the vector.
 
-## link::Classes/VZ::code::.fg(v):: || table::
+## link::Classes/VZ::code::.fr(v):: || table::
 ## strong::input:: || strong::output::
 ## 3 || 1
 ## 4 || 1
 :: || Return the third element in the vector.
 
-## link::Classes/VW::code::.fg(v):: || table::
+## link::Classes/VW::code::.fr(v):: || table::
 ## strong::input:: || strong::output::
 ## 4 || 1
 :: || Return the fourth element in the vector.
@@ -146,17 +146,17 @@ subsection::Video Output Convenience
 Any 4D output is considered valid link::Classes/ScinthDef:: output.
 
 table::
-## link::Classes/RGBOut::code::.fg(r, g, b):: || table::
+## link::Classes/RGBOut::code::.fr(r, g, b):: || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1 || 4
 :: || Convenience object for color output at full alpha
 
-## link::Classes/RGBAOut::code::.fg(r, g, b):: || table::
+## link::Classes/RGBAOut::code::.fr(r, g, b):: || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1, 1 || 4
 :: || Convenience object for color output with alpha channel
 
-## link::Classes/BWOut::code::.fg(x):: || table::
+## link::Classes/BWOut::code::.fr(x):: || table::
 ## strong::input:: || strong::output::
 ## 1 || 4
 :: || Convenience object for black and white output at full alpha
@@ -170,7 +170,7 @@ subsection::Vector Operations
 
 table::
 ## strong::VGen:: || strong::dimensions:: || strong::description::
-## link::Classes/Clamp::code::.fg(x, min, max):: || table::
+## link::Classes/Clamp::code::.fr(x, min, max):: || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1 || 1
 ## 2, 2, 2 || 2
@@ -178,7 +178,7 @@ table::
 ## 4, 4, 4 || 4
 :: || Video equivalent of link::Classes/Clip:: UGen, piecewise bounds input code::x:: between code::[min, max]::
 
-## link::Classes/Length::code::.fg(x):: || table::
+## link::Classes/Length::code::.fr(x):: || table::
 ## strong::input:: || strong::output::
 ## 1 || 1
 ## 2 || 1
@@ -186,14 +186,14 @@ table::
 ## 4 || 1
 :: || Returns the length of the vector code::x::, or the square root of the sum of the squares
 
-## link::Classes/Distance::code::.fg(x, y):: || table::
+## link::Classes/Distance::code::.fr(x, y):: || table::
 ## 1, 1 || 1
 ## 2, 2 || 1
 ## 3, 3 || 1
 ## 4, 4 || 1
 :: || Computes the distance between code::x:: and code::y::, which is the length of the vector code::x - y::
 
-## link::Classes/Step::code::.fg(step, x):: || table::
+## link::Classes/Step::code::.fr(step, x):: || table::
 ## strong::input:: || strong::output::
 ## 1, 1 || 1
 ## 2, 2 || 2
@@ -201,7 +201,7 @@ table::
 ## 4, 4 || 4
 :: || Just like the binary operator code::thresh::, returns code::0:: when code::x < step::, otherwise code::x::
 
-## link::Classes/VecMix::code::.fg(x, y, a):: || table::
+## link::Classes/VecMix::code::.fr(x, y, a):: || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1 || 1
 ## 2, 2, 1 || 2
@@ -212,7 +212,7 @@ table::
 ## 4, 4, 4 || 4
 :: || Similar to the binary operator code::blend::, returns a linear mix of code::x, y:: with code::a:: between code::[0, 1]::. Supports piecewise comparison or a single blend argument to apply to all components
 
-## link::Classes/Dot::code::.fg(x, y):: || table::
+## link::Classes/Dot::code::.fr(x, y):: || table::
 ## strong::input:: || strong::output::
 ## 1, 1 || 1
 ## 2, 2 || 1
@@ -220,12 +220,12 @@ table::
 ## 4, 4 || 1
 :: || Returns the dot product between code::x:: and code::y::, or the sum of the product of each component in the vector
 
-## link::Classes/Cross::code::.fg(x, y):: || table::
+## link::Classes/Cross::code::.fr(x, y):: || table::
 ## strong::input:: || strong::output::
 ## 3, 3 || 3
 :: || Returns the cross product of code::x:: and code::y::
 
-## link::Classes/VNorm::code::.fg(x):: || table::
+## link::Classes/VNorm::code::.fr(x):: || table::
 ## strong::input:: || strong::output::
 ## 1, 1 || 1
 ## 2, 2 || 2
@@ -246,11 +246,11 @@ The following tables detail the current supported operations along with the ones
 All unary operations support inputs in 1-4 dimensions, and produce outputs of the same dimension. For higher-dimensional signals all operations happen emphasis::piecewise::, meaning the operator is applied to each component of the signal independently. For example if code::b = a.neg:: and both code::a:: and code::b:: are link::Classes/Vec4:: objects then:
 
 code::
-b = Vec4.fg(
-	VX.fg(a).neg,
-	VY.fg(a).neg,
-	VZ.fg(a).neg,
-	VW.fg(a).neg);
+b = Vec4.fr(
+	VX.fr(a).neg,
+	VY.fr(a).neg,
+	VZ.fr(a).neg,
+	VW.fr(a).neg);
 ::
 
 table::
@@ -315,11 +315,11 @@ subsection::Built-In Binary Operations
 Binary operations also happen emphasis::piecewise::, meaning that the binary operator is applied to each individual component separately. Conceptually if code::c = a * b:: and both code::a:: and code::b:: are link::Classes/Vec4::s then:
 
 code::
-c = Vec4.fg(
-	VX.fg(a) * VX.fg(b),
-	VY.fg(a) * VY.fg(b),
-	VZ.fg(a) * VZ.fg(b),
-	VW.fg(a) * VW.fg(b));
+c = Vec4.fr(
+	VX.fr(a) * VX.fr(b),
+	VY.fr(a) * VY.fr(b),
+	VZ.fr(a) * VZ.fr(b),
+	VW.fr(a) * VW.fr(b));
 ::
 
 table::

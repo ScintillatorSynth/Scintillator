@@ -29,12 +29,12 @@ When constructing a ScinthDef the VGens are subject to a validation step called 
 code::
 (
 ~vquad = ScinthDef.new(\vquad, {
-	var length = Length.fg(NormPos.fg);
-	ScinOsc.fg(
-		Vec4.fg(1.0, 1.5, 2.0, 3.0),
-		Vec4.fg(length, length * 2, length * 4, length * 8),
-		Splat4.fg(0.5),
-		Splat4.fg(0.5));
+	var length = Length.fr(NormPos.fr);
+	ScinOsc.fr(
+		Vec4.fr(1.0, 1.5, 2.0, 3.0),
+		Vec4.fr(length, length * 2, length * 4, length * 8),
+		Splat4.fr(0.5),
+		Splat4.fr(0.5));
 }).add;
 )
 ::
@@ -91,7 +91,7 @@ examples::
 code::
 (
 ~t = ScinthDef.new(\t, {
-	BWOut.fg(ScinOsc.fg(1.0, Length.fg(NormPos.fg)));
+	BWOut.fr(ScinOsc.fr(1.0, Length.fr(NormPos.fr)));
 });
 )
 

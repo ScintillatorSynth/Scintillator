@@ -176,7 +176,7 @@ fork {
 
 	// Send a ScinthDef to the server
 	~def = ScinthDef.new(\t, { |sx = 1.0, sy = 2.0|
-		BWOut.fg(ScinOsc.fg(1.0, Length.fg(NormPos.fg * Vec2.fg(sx, sy))));
+		BWOut.fr(ScinOsc.fr(1.0, Length.fr(NormPos.fr * Vec2.fr(sx, sy))));
 	}).add;
 
 	// Wait for the server to complete building the ScinthDef just provided.

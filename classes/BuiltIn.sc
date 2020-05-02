@@ -1,5 +1,5 @@
 Clamp : VGen {
-	*fg { |x, min, max|
+	*fr { |x, min, max|
 		^this.multiNew(\fragment, x, min, max);
 	}
 
@@ -14,7 +14,7 @@ Clamp : VGen {
 
 
 Cross : VGen {
-	*fg { |x, y|
+	*fr { |x, y|
 		^this.multiNew(\fragment, x, y);
 	}
 
@@ -28,7 +28,7 @@ Cross : VGen {
 }
 
 Dot : VGen {
-	*fg { |x, y|
+	*fr { |x, y|
 		^this.multiNew(\fragment, x, y);
 	}
 
@@ -42,7 +42,7 @@ Dot : VGen {
 }
 
 Distance : VGen {
-	*fg { |x, y|
+	*fr { |x, y|
 		^this.multiNew(\fragment, x, y);
 	}
 
@@ -56,7 +56,7 @@ Distance : VGen {
 }
 
 FragCoord : VGen {
-	*fg {
+	*fr {
 		^this.multiNew(\fragment);
 	}
 
@@ -70,7 +70,7 @@ FragCoord : VGen {
 }
 
 Length : VGen {
-	*fg { |vec|
+	*fr { |vec|
 		^this.multiNew(\fragment, vec);
 	}
 
@@ -84,7 +84,7 @@ Length : VGen {
 }
 
 Step : VGen {
-	*fg { |step, x|
+	*fr { |step, x|
 		^this.multiNew(\fragment, step, x);
 	}
 
@@ -98,7 +98,7 @@ Step : VGen {
 }
 
 VecMix : VGen {
-	*fg { |x, y, a|
+	*fr { |x, y, a|
 		^this.multiNew(\fragment, x, y, a);
 	}
 
@@ -112,7 +112,7 @@ VecMix : VGen {
 }
 
 VNorm : VGen {
-	*fg { |x|
+	*fr { |x|
 		^this.multiNew(\fragment, x);
 	}
 

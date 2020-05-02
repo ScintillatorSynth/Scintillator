@@ -134,7 +134,7 @@ VGen : AbstractFunction {
 
 	methodSelectorForRate {
 		^switch(rate)
-		{\fragment} { \fg }
+		{\fragment} { \fr }
 		{nil}
 	}
 }
