@@ -106,6 +106,13 @@ ScinServer {
 		^super.newCopyArgs(options).init;
 	}
 
+	*initClass {
+		Class.initClassTree(Quarks);
+
+
+		default = ScinServer();
+	}
+
 	init {
 		if (options.isNil, {
 			options = ScinServerOptions.new;
@@ -152,10 +159,6 @@ ScinServer {
 			});
 		});
 
-		if (ScinServer.default.isNil, {
-			ScinServer.default = this;
-		});
-		^this;
 	}
 
 	quit {
