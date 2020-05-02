@@ -26,6 +26,8 @@ ScinServerInstaller {
 							});
 						});
 
+						"*** ScinServerInstaller: checking installation..".postln;
+
 						if (quarkBinPath.isNil, {
 							"*** Unable to locate Scintillator Quark!".postln;
 							"Something seems wrong with your Scintillator install. Try uninstalling the Quark "
