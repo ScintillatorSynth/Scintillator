@@ -1,6 +1,7 @@
 ScinServerInstaller {
 	const releasesURL = "https://scintillator-synth-coverage.s3-us-west-1.amazonaws.com/releases/";
 	classvar routine;
+	classvar continue;
 
 	*setup { |cleanup=true, validate=true|
 		if (routine.notNil, {
@@ -11,7 +12,7 @@ ScinServerInstaller {
 			var version, quarkBinPath, binaryPath, downloadURL, downloadPath, runtime;
 			var oldVersion, oldBinPath;
 			var state = \init;
-			var continue = true;
+			continue = true;
 
 			while ({ continue }, {
 				switch (state,
@@ -75,6 +76,15 @@ ScinServerInstaller {
 							var scinVersion = split[2];
 							if (scinVersion == version, {
 								"scin installer detects version match % between Quark and binary.".format(version).postln;
+								if (cleanup, {
+									if (downloadPath.notNil, {
+										File.delete(downloadPath);
+										File.delete(downloadPath ++ ".sha256");
+									});
+									if (oldBinPath.notNil, {
+										File.deleteAll(oldBinPath);
+									});
+								});
 								"*** You're all set, happy Scintillating!".postln;
 								continue = false;
 							}, {
@@ -233,7 +243,7 @@ ScinServerInstaller {
 							"*** unable to determine version of old binary, using \"unknown\"".postln;
 							oldVersion = ".unknown";
 						});
-						oldBinPath = binaryPath ++ oldVersion ++ ".bak";
+						oldBinPath = binaryPath ++ "." ++ oldVersion ++ ".bak";
 						"mv \"%\" \"%\"".format(binaryPath, oldBinPath).unixCmdGetStdOut;
 						state = \extractBinary;
 					},
@@ -244,6 +254,7 @@ ScinServerInstaller {
 
 	*abort {
 		"*** aborting setup.".postln;
+		continue = false;
 		if (routine.notNil, {
 			routine.stop;
 		});
