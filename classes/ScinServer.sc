@@ -51,7 +51,7 @@ ScinServerOptions {
 	}
 
 	asOptionsString {
-		var o = "--quarkDir=" ++ ScinServerOptions.quarkPath;
+		var o = "--quarkDir=" ++ ScinServerOptions.quarkPath.shellQuote;
 
 		if (portNumber != defaultValues[\portNumber], {
 			o = o + "--portNumber=" ++ portNumber;
@@ -146,7 +146,7 @@ ScinServer {
 		});
 
 		statusPoller.serverBooting = true;
-		commandLine = scinBinaryPath + options.asOptionsString();
+		commandLine = scinBinaryPath.shellQuote + options.asOptionsString();
 
 		scinPid = commandLine.unixCmd({ |exitCode, exitPid|
 			if (exitCode == 0, {

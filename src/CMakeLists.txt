@@ -18,9 +18,10 @@ endif()
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/base")
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/base/Intrinsic.cpp"
-    COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/base/Intrinsic.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/base/Intrinsic.cpp.in"
+    COMMAND gperf --output-file=${CMAKE_CURRENT_BINARY_DIR}/base/Intrinsic.cpp ${CMAKE_CURRENT_SOURCE_DIR}/base/Intrinsic.cpp.in
     MAIN_DEPENDENCY base/Intrinsic.cpp.in
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/base"
+    VERBATIM
 )
 
 add_library(scintillator_base STATIC
@@ -90,9 +91,10 @@ endif()
 configure_file(infra/Version.hpp.in "${CMAKE_CURRENT_BINARY_DIR}/infra/Version.hpp")
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/osc/commands")
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp"
-    COMMAND gperf --output-file="${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/osc/commands/Command.cpp.in"
+    COMMAND gperf --output-file=${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp ${CMAKE_CURRENT_SOURCE_DIR}/osc/commands/Command.cpp.in
     MAIN_DEPENDENCY osc/commands/Command.cpp.in
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/osc/commands"
+    VERBATIM
 )
 
 set(scintillator_synth_files
@@ -359,7 +361,11 @@ if (APPLE)
     # coerce CMake to put the library anywhere else. So this script resolves the link to the actual dylib in the
     # Frameworks directory, and then creates a similar link to the same resolved library in the MacOS/ directory, which
     # is where the loader will look for the vulkan library. Is there a less kludgy way to do this?
-    install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/tools/macOS-fixup-vulkan.py ${PROJECT_SOURCE_DIR}/bin/scinsynth.app)")
+    install(CODE "
+        execute_process(COMMAND ${PYTHON_EXECUTABLE} \"${PROJECT_SOURCE_DIR}/tools/macOS-fixup-vulkan.py\" \"${PROJECT_SOURCE_DIR}/bin/scinsynth.app\")
+        "
+        VERBATIM
+    )
 
     set(CPACK_GENERATOR "DRAGNDROP")
     include(CPack)
