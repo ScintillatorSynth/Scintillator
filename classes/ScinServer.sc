@@ -155,6 +155,7 @@ ScinServer {
 			if (exitCode == 0, {
 				"*** scinsynth exited normally.".postln;
 			}, {
+				statusPoller.serverBooting = false;
 				"*** scinsynth fatal error, code: %".format(exitCode).postln;
 			});
 		});
