@@ -1,0 +1,38 @@
+TITLE:: ScinServerInstaller
+summary:: An automatic installation script for the Scintillator server.
+categories:: Quarks>Scintillator>Scintillator Server
+related:: Classes/ScinServer
+
+DESCRIPTION::
+Scintillator is distributed in two parts, the Quark code and the server binary. The ScinServerInstaller class is distributed with the Scintillator quark and can be used to update or install the server binary.
+
+CLASSMETHODS::
+
+METHOD:: setup
+
+Checks if the server binary is installed and if it is the correct version. If not, it will download, validate, and install the correct server binary.
+
+ARGUMENT:: cleanup
+A boolean, default true. If true, the setup script will delete the downloaded files and any old server binaries that might be still around. If false, it will rename any existing server binaries with their version suffix, and keep the downloaded files in place.
+
+ARGUMENT:: validate
+A boolean, default true. If true, the script will also compute a hash of the downloaded file and compare it to a precomputed value. If false it will skip validation.
+
+METHOD:: abort
+
+Call to cancel the installation script while it's in progress.
+
+EXAMPLES::
+
+code::
+// Script to update Scintillator to latest version.
+(
+Quarks.update("Scintillator");
+)
+
+// !! Recompile Class Libary Here !!
+
+(
+ScinServerInstaller.setup;
+)
+::
