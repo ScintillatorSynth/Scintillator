@@ -1,7 +1,6 @@
 ScinServerOptions {
 	classvar defaultValues;
 
-	var <>quarkPath;
 	var <>portNumber;
 	var <>dumpOSC;
 	var <>frameRate;
@@ -18,9 +17,10 @@ ScinServerOptions {
 	var <>onServerError;
 
 	*initClass {
+		Class.initClassTree(Quarks);
+
 		defaultValues = IdentityDictionary.newFrom(
 			(
-				quarkPath: nil,
 				portNumber: 5511,
 				dumpOSC: false,
 				frameRate: -1,
@@ -40,20 +40,18 @@ ScinServerOptions {
 		^super.new.init;
 	}
 
+	*quarkPath {
+		^PathName.new(ScinServerOptions.class.filenameSymbol.asString.dirname).parentPath;
+	}
+
+
 	init {
 		defaultValues.keysValuesDo({ |key, value| this.instVarPut(key, value); });
-        if (quarkPath.isNil, {
-            Quarks.installed.do({ |quark, index|
-                if (quark.name == "Scintillator", {
-                    quarkPath = quark.localPath;
-                });
-            });
-        });
 		onServerError = {};
 	}
 
 	asOptionsString {
-		var o = "--quarkDir=" ++ quarkPath;
+		var o = "--quarkDir=" ++ ScinServerOptions.quarkPath;
 
 		if (portNumber != defaultValues[\portNumber], {
 			o = o + "--portNumber=" ++ portNumber;
@@ -106,6 +104,12 @@ ScinServer {
 		^super.newCopyArgs(options).init;
 	}
 
+	*initClass {
+		Class.initClassTree(ScinServerOptions);
+
+		default = ScinServer();
+	}
+
 	init {
 		if (options.isNil, {
 			options = ScinServerOptions.new;
@@ -113,7 +117,7 @@ ScinServer {
 
 		addr = NetAddr.new("127.0.0.1", options.portNumber);
 
-		scinBinaryPath = options.quarkPath +/+ "bin";
+		scinBinaryPath = ScinServerOptions.quarkPath +/+ "bin";
 		Platform.case(
 			\osx, {
 				scinBinaryPath = scinBinaryPath +/+ "scinsynth.app" +/+ "Contents" +/+ "MacOS" +/+ "scinsynth";
@@ -148,14 +152,11 @@ ScinServer {
 			if (exitCode == 0, {
 				"*** scinsynth exited normally.".postln;
 			}, {
+				statusPoller.serverBooting = false;
 				"*** scinsynth fatal error, code: %".format(exitCode).postln;
 			});
 		});
 
-		if (ScinServer.default.isNil, {
-			ScinServer.default = this;
-		});
-		^this;
 	}
 
 	quit {
