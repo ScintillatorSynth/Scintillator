@@ -8,7 +8,7 @@ Length computes the length of the provided vector as the square root of the sum 
 
 CLASSMETHODS::
 
-METHOD:: fg
+METHOD:: fr
 
 strong::dimensions::
 table::
@@ -37,12 +37,12 @@ code::
 // the magnitude of the magnetic flux vector at each point,
 // to generate the black and white image.
 ~k = ScinthDef.new(\k, {
-	var pos = NormPos.fg;
-	var r = Vec3.fg(VX.fg(pos), VY.fg(pos), 0.0);
-	var magR = Length.fg(r);
-	var m = Vec3.fg(0.0, 0.1, 0.0);
-	var flux = Cross.fg(m, r) / magR.cubed;
-	BWOut.fg(Clamp.fg(Length.fg(flux), 0.0, 1.0));
+	var pos = NormPos.fr;
+	var r = Vec3.fr(VX.fr(pos), VY.fr(pos), 0.0);
+	var magR = Length.fr(r);
+	var m = Vec3.fr(0.0, 0.1, 0.0);
+	var flux = Cross.fr(m, r) / magR.cubed;
+	BWOut.fr(Clamp.fr(Length.fr(flux), 0.0, 1.0));
 }).add;
 )
 

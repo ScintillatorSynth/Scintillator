@@ -68,7 +68,7 @@ The simplest imaginable link::Classes/ScinthDef:: sets the same color everywhere
 code::
 (
 ~red = ScinthDef.new(\red, {
-	RGBOut.fg(1.0, 0.0, 0.0);
+	RGBOut.fr(1.0, 0.0, 0.0);
 }).add;
 )
 ::
@@ -95,14 +95,14 @@ image::empty-window.png::
 
 subsection::Time-Varying Video Synths
 
-The link::Classes/ScinOsc:: oscillator is similar to the similar class link::Classes/SinOsc::, with the soft emphasis::sc:: sound at the start intended to be a play on the name scintillator. There are some differences in a video synth from an audio one, however. The first consideration is that signals don't have to vary over time to impact the output. The first Scinth, code::\red::, should prove that. A similar constant output in an audio context would be inaudible, except for that it might damage certain audo setups, so caution is advised in testing that assertion!
+The link::Classes/VSinOsc:: oscillator is similar to the similar class link::Classes/SinOsc::, with the soft emphasis::sc:: sound at the start intended to be a play on the name scintillator. There are some differences in a video synth from an audio one, however. The first consideration is that signals don't have to vary over time to impact the output. The first Scinth, code::\red::, should prove that. A similar constant output in an audio context would be inaudible, except for that it might damage certain audo setups, so caution is advised in testing that assertion!
 
 Another point to note is that while audio signals normally operate in the domain from -1 to +1, with negative signals indicating a moment of underpressure in the sound wave, video signals only vary from 0 to 1. Light can only be present or absent in this video synthesizer, with 0 indicating no light and 1 indicating maximum brightness of light. Most video cards will clamp output between 0 and 1, but Scintillator doesn't take any special steps to limit signals, and video signals outside of the range are typically clamped. As a result of the different range, many of the default inputs on link::Classes/VGen::s with analogous link::Classes/UGen::s are  are adjusted so that instead of providing a signal input from -1 to +1 they output from 0 to 1. This can be seen, for example, in the defaults to link::Classes/SinOsc::, where the code::mul:: and code::add:: arguments are both code::0.5::, constraining the video signal between 0 and 1.
 
 code::
 (
 ~w = ScinthDef.new(\wave, { |f=1|
-	BWOut.fg(ScinOsc.fg(freq: f));
+	BWOut.fr(VSinOsc.fr(freq: f));
 }).add;
 )
 
@@ -136,7 +136,7 @@ code::
 
 (
 ~spot = ScinthDef.new(\spot, {
-	BWOut.fg(Length.fg(NormPos.fg));
+	BWOut.fr(Length.fr(NormPos.fr));
 }).add;
 )
 
@@ -167,10 +167,10 @@ code::
 
 (
 ~rings = ScinthDef.new(\rings, {
-	var rad = Length.fg(NormPos.fg);  // rad is one-dimensional
-	var rgb = rad * Vec3.fg(31, 41, 61); // rgb is 3D
+	var rad = Length.fr(NormPos.fr);  // rad is one-dimensional
+	var rgb = rad * Vec3.fr(31, 41, 61); // rgb is 3D
 	rgb = 0.5 + (rgb.sin * 0.5); // This is all 3D math!
-	Vec4.fg(VX.fg(rgb), VY.fg(rgb), VZ.fg(rgb), 1.0);
+	Vec4.fr(VX.fr(rgb), VY.fr(rgb), VZ.fr(rgb), 1.0);
 }).add;
 )
 
@@ -195,9 +195,9 @@ code::
 
 (
 ~zoom = ScinthDef.new(\zoom, {
-	var pos = NormPos.fg;
-	var box = 1.0 - max(VX.fg(pos).abs, VY.fg(pos).abs);
-	BWOut.fg(VSaw.fg(phase: box));
+	var pos = NormPos.fr;
+	var box = 1.0 - max(VX.fr(pos).abs, VY.fr(pos).abs);
+	BWOut.fr(VSaw.fr(phase: box));
 }).add;
 )
 

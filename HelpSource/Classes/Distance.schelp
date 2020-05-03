@@ -8,7 +8,7 @@ Distance computes the distance between two vectors by calculating the length of 
 
 CLASSMETHODS::
 
-METHOD:: fg
+METHOD:: fr
 
 strong::dimensions::
 table::
@@ -38,17 +38,17 @@ code::
 // quickly the dot will drive the length to the clamp values as distance from each
 // Lissajous point increases.
 ~k = ScinthDef.new(\k, { |dot = 0.5|
-	var rx = ScinOsc.fg(freq: 1.5, mul: 0.9, add: 0.0);
-	var ry = ScinOsc.fg(freq: 1, phase: pi / 4, mul: 0.9, add: 0.0);
-	var gx = ScinOsc.fg(freq: 0.5, phase: pi / 2, mul: 0.9, add: 0.0);
-	var gy = ScinOsc.fg(freq: 1.25, mul: 1.0, add: 0.0);
-	var bx = ScinOsc.fg(freq: 0.75, phase: pi / 3, mul: 0.9, add: 0.0);
-	var by = ScinOsc.fg(phase: 3 * pi / 4, mul: 0.9, add: 0.0);
-	var pos = NormPos.fg;
-	var r = Clamp.fg(1.0 - (Distance.fg(Vec2.fg(rx, ry), pos) / dot), 0.0, 1.0);
-	var g = Clamp.fg(1.0 - (Distance.fg(Vec2.fg(gx, gy), pos) / dot), 0.0, 1.0);
-	var b = Clamp.fg(1.0 - (Distance.fg(Vec2.fg(bx, by), pos) / dot), 0.0, 1.0);
-	RGBOut.fg(r, g, b);
+	var rx = VSinOsc.fr(freq: 1.5, mul: 0.9, add: 0.0);
+	var ry = VSinOsc.fr(freq: 1, phase: pi / 4, mul: 0.9, add: 0.0);
+	var gx = VSinOsc.fr(freq: 0.5, phase: pi / 2, mul: 0.9, add: 0.0);
+	var gy = VSinOsc.fr(freq: 1.25, mul: 1.0, add: 0.0);
+	var bx = VSinOsc.fr(freq: 0.75, phase: pi / 3, mul: 0.9, add: 0.0);
+	var by = VSinOsc.fr(phase: 3 * pi / 4, mul: 0.9, add: 0.0);
+	var pos = NormPos.fr;
+	var r = Clamp.fr(1.0 - (Distance.fr(Vec2.fr(rx, ry), pos) / dot), 0.0, 1.0);
+	var g = Clamp.fr(1.0 - (Distance.fr(Vec2.fr(gx, gy), pos) / dot), 0.0, 1.0);
+	var b = Clamp.fr(1.0 - (Distance.fr(Vec2.fr(bx, by), pos) / dot), 0.0, 1.0);
+	RGBOut.fr(r, g, b);
 }).add;
 )
 

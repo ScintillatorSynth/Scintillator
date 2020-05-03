@@ -1,5 +1,5 @@
 RGBOut : VGen {
-	*fg { |r, g, b|
+	*fr { |r, g, b|
 		^this.multiNew(\fragment, r, g, b);
 	}
 
@@ -13,7 +13,7 @@ RGBOut : VGen {
 }
 
 BWOut : VGen {
-	*fg { |v|
+	*fr { |v|
 		^this.multiNew(\fragment, v);
 	}
 
@@ -27,7 +27,7 @@ BWOut : VGen {
 }
 
 RGBAOut : VGen {
-	*fg { |r, g, b, a|
+	*fr { |r, g, b, a|
 		^this.multiNew(\fragment, r, g, b, a);
 	}
 
@@ -44,7 +44,7 @@ VControl : MultiOutVGen {
 	var <>values;
 
 	// TODO: it is not accurate to call these fragment rate.
-	*fg { |values|
+	*fr { |values|
 		^this.multiNewList([\fragment] ++ values.asArray);
 	}
 

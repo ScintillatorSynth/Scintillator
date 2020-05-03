@@ -36,7 +36,7 @@ ScinthDef {
 		}, {
 			controls = func.def.prototypeFrame.extend(controlNames.size);
 			controls = controls.collect({ |value| value ? 0.0 });
-			^VControl.fg(controls)
+			^VControl.fr(controls)
 		});
 	}
 

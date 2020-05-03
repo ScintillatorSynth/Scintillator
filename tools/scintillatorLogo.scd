@@ -32,33 +32,33 @@
 */
 (
 ~logoDefBlue = ScinthDef.new(\scintillatorLogoBlue, { |freq = 7.0|
-	var pos = NormPos.fg;
-	var blue = (1.0 - ((Length.fg(pos) / 2).min(1.0))) * Vec4.fg(0.031, 0.486, 0.729);
-	blue = blue + Vec4.fg(0.0, 0.0, 0.0, 1.0);
+	var pos = NormPos.fr;
+	var blue = (1.0 - ((Length.fr(pos) / 2).min(1.0))) * Vec4.fr(0.031, 0.486, 0.729);
+	blue = blue + Vec4.fr(0.0, 0.0, 0.0, 1.0);
 	blue;
 });
 ~logoDefRed = ScinthDef.new(\scintillatorLogoRed, { |freq = 7.0|
-	var pos = NormPos.fg;
-	var x = VX.fg(pos);
-	var y = VY.fg(pos);
+	var pos = NormPos.fr;
+	var x = VX.fr(pos);
+	var y = VY.fr(pos);
 	var dim = x.abs.max(y.abs);
-	var vDim = Vec2.fg(dim, dim);
-	var square = Step.fg((Length.fg(vDim * freq).sin / 2) + 0.5, 0.5);
-	var red = square * Vec4.fg(1.0, 0.224, 0.0);
-	red = red + Vec4.fg(0.0, 0.0, 0.0, Step.fg(0.1, square));
+	var vDim = Vec2.fr(dim, dim);
+	var square = Step.fr((Length.fr(vDim * freq).sin / 2) + 0.5, 0.5);
+	var red = square * Vec4.fr(1.0, 0.224, 0.0);
+	red = red + Vec4.fr(0.0, 0.0, 0.0, Step.fr(0.1, square));
 	red;
 });
 ~logoDefGreen = ScinthDef.new(\scintillatorLogoGreen, { |freq = 7.0|
-	var pos = NormPos.fg;
-	var x = VX.fg(pos);
-	var y = VY.fg(pos);
+	var pos = NormPos.fr;
+	var x = VX.fr(pos);
+	var y = VY.fr(pos);
 	var rotx = (x - y) / 2.sqrt;
 	var roty = (x + y) / 2.sqrt;
 	var rotDim = rotx.abs.max(roty.abs);
-	var rotVdim = Vec2.fg(rotDim, rotDim);
-	var rotSquare = Step.fg((Length.fg(rotVdim * (freq * 2.sqrt)).sin / 2) + 0.5, 0.5);
-	var green = rotSquare * Vec4.fg(0.482, 0.929, 0.0);
-	green = green + Vec4.fg(0.0, 0.0, 0.0, Step.fg(0.1, rotSquare));
+	var rotVdim = Vec2.fr(rotDim, rotDim);
+	var rotSquare = Step.fr((Length.fr(rotVdim * (freq * 2.sqrt)).sin / 2) + 0.5, 0.5);
+	var green = rotSquare * Vec4.fr(0.482, 0.929, 0.0);
+	green = green + Vec4.fr(0.0, 0.0, 0.0, Step.fr(0.1, rotSquare));
 	green;
 });
 )

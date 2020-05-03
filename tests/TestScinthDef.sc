@@ -83,7 +83,7 @@ TestScinthDef : UnitTest {
 
 	test_singleVgenBuild {
 		var def = ScinthDef.new(\singleVgenBuild, {
-			BWOut.fg(1.0);
+			BWOut.fr(1.0);
 		});
 
 		this.sanityCheckBuild(def);
@@ -99,14 +99,14 @@ TestScinthDef : UnitTest {
 
 	test_inputChainLinearBuild {
 		var def = ScinthDef.new(\inputChainLinearBuild, {
-			BWOut.fg(ScinOsc.fg.abs);
+			BWOut.fr(VSinOsc.fr.abs);
 		});
 
 		this.sanityCheckBuild(def);
 
 		this.assertEquals(def.name, \inputChainLinearBuild);
 		this.assertEquals(def.children.size, 3);
-		this.assertEquals(def.children[0].class, ScinOsc);
+		this.assertEquals(def.children[0].class, VSinOsc);
 		this.assertEquals(def.children[1].class, UnaryOpVGen);
 		this.assertEquals(def.children[1].name, 'VAbs');
 		this.assertEquals(def.children[1].inputs[0], def.children[0]);
@@ -116,7 +116,7 @@ TestScinthDef : UnitTest {
 
 	test_singleVgenYaml {
 		var def = ScinthDef.new(\singleVgenYaml, {
-			BWOut.fg(1.0.neg);
+			BWOut.fr(1.0.neg);
 		});
 		var yaml = def.asYAML;
 
@@ -126,8 +126,8 @@ TestScinthDef : UnitTest {
 
 	test_inputChainYaml {
 		var def = ScinthDef.new(\inputChainYaml, {
-			var pos = NormPos.fg;
-			BWOut.fg(ScinOsc.fg(freq: VY.fg(pos).neg, phase: VX.fg(pos), mul: 0.2, add: 0.5));
+			var pos = NormPos.fr;
+			BWOut.fr(VSinOsc.fr(freq: VY.fr(pos).neg, phase: VX.fr(pos), mul: 0.2, add: 0.5));
 		});
 		var yaml = def.asYAML;
 
@@ -137,8 +137,8 @@ TestScinthDef : UnitTest {
 
 	test_paramsNoValues {
 		var def = ScinthDef.new(\paramsNoValues, { |a, b, c|
-			var sin3 = Vec3.fg(a, b, c).sin;
-			RGBOut.fg(VX.fg(sin3), VY.fg(sin3), VZ.fg(sin3));
+			var sin3 = Vec3.fr(a, b, c).sin;
+			RGBOut.fr(VX.fr(sin3), VY.fr(sin3), VZ.fr(sin3));
 		});
 		// Make sure names are in correct order and all represented.
 		this.assertEquals(3, def.controlNames.size);
@@ -158,7 +158,7 @@ TestScinthDef : UnitTest {
 	test_paramsMixedValues {
 		var def = ScinthDef.new(\paramsValues, { |quick = 10.0, slow = 0.001, x = -17|
 			var average = quick + slow / 2;
-			BWOut.fg(average - x);
+			BWOut.fr(average - x);
 		});
 		this.assertEquals(3, def.controlNames.size);
 		this.assertEquals('quick', def.controlNames[0]);
@@ -179,7 +179,7 @@ TestScinthDef : UnitTest {
 
 		try {
 			ScinthDef(\vgen_nilIsInvalid, {
-				BWOut.fg(nil);
+				BWOut.fr(nil);
 			});
 		} { | e |
 			err = e;
@@ -195,7 +195,7 @@ TestScinthDef : UnitTest {
 
 		try {
 			ScinthDef(\vgen_nilIsInvalid, {
-				BWOut.fg(SinOsc.ar());
+				BWOut.fr(SinOsc.ar());
 			});
 		} { | e |
 			err = e;
