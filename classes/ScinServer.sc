@@ -107,6 +107,8 @@ ScinServer {
 	*initClass {
 		Class.initClassTree(ScinServerOptions);
 
+		ScinServerInstaller.setup;
+
 		default = ScinServer();
 	}
 
