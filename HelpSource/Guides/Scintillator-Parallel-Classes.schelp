@@ -20,7 +20,7 @@ For an exhaustive list of all supported Scintillator VGens, see the link::Guides
 
 table::
 ## strong::Parallel UGen:: || strong::VGen:: || strong::comments::
-## link::Classes/SinOsc:: || link::Classes/ScinOsc:: || Sinusoidal oscillator.
+## link::Classes/SinOsc:: || link::Classes/VSinOsc:: || Sinusoidal oscillator.
 ## link::Classes/LFSaw:: || link::Classes/VSaw:: || Sawtooth oscillator.
 ## link::Classes/PlayBuf:: || link::Classes/Sampler:: || Image sampling VGen.
 ## link::Classes/BufFrames:: || link::Classes/TextureSize:: || Dimensions of image buffer in pixels.

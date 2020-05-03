@@ -1,21 +1,3 @@
-name: ScinOsc
-inputs:
-    - freq
-    - phase
-    - mul
-    - add
-outputs:
-    - out
-dimensions:
-    - inputs: 1
-      outputs: 1
-    - inputs: 2
-      outputs: 2
-    - inputs: 3
-      outputs: 3
-    - inputs: 4
-      outputs: 4
-shader: "@out = @add + (@mul * sin((@time * @freq * 2.0f * @pi) + @phase));"
 ---
 name: VSaw
 inputs:
@@ -33,4 +15,22 @@ dimensions:
     - inputs: 4
       outputs: 4
 shader: "@out = fract((@time + @phase) * @freq);"
-
+---
+name: VSinOsc
+inputs:
+    - freq
+    - phase
+    - mul
+    - add
+outputs:
+    - out
+dimensions:
+    - inputs: 1
+      outputs: 1
+    - inputs: 2
+      outputs: 2
+    - inputs: 3
+      outputs: 3
+    - inputs: 4
+      outputs: 4
+shader: "@out = @add + (@mul * sin((@time * @freq * 2.0f * @pi) + @phase));"

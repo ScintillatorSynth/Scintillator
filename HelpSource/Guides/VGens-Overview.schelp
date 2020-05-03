@@ -8,7 +8,7 @@ section::Video Oscillators
 There are only a few test oscillators implemented for now, with plans to add many more. One key conceptual difference between SuperCollider audio oscillators and Scintillator video oscillators to bear in mind is that video signals are constrained to values between code::[0, 1]::, unlike audio signals, which operate normally between code::[-1, 1]::.
 
 table::
-## link::Classes/ScinOsc::code::.fr(freq, phas, mul, add):: || table::
+## link::Classes/VSinOsc::code::.fr(freq, phas, mul, add):: || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1, 1 || 1
 ## 2, 2, 2, 2 || 2

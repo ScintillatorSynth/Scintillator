@@ -52,7 +52,7 @@ EXAMPLES::
 code::
 (
 ~t = ScinthDef.new(\t, { |g, b|
-	RGBOut.fr(ScinOsc.fr(VX.fr(NormPos.fr)), g, b);
+	RGBOut.fr(VSinOsc.fr(VX.fr(NormPos.fr)), g, b);
 }).add;
 )
 

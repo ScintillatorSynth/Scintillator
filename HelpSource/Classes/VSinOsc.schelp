@@ -1,10 +1,10 @@
-TITLE:: ScinOsc
+TITLE:: VSinOsc
 summary:: Multidimensional sinusoidal video oscillator
 categories:: Quarks>Scintillator>VGens>Video Oscillators
 related:: Classes/SinOsc
 
 DESCRIPTION::
-The ScinOsc, a play on the soft "s" in Scintillator and the link::Classes/SinOsc:: UGen, is a sinusoidal oscillator. It can process inputs of one to four dimensions and produces an output in the same dimension. The arguments parallel the arguments used by link::Classes/SinOsc::, with the only difference being that the default code::mul:: and code::add:: argument values are modified to support producing a sin output range within code::[0, 1]:: instead of the audio range code::[-1, 1]::.
+VSinOsc, just like the audio UGen link::Classes/SinOsc:: UGen, is a sinusoidal oscillator. It can process inputs of one to four dimensions and produces an output in the same dimension. The arguments parallel the arguments used by link::Classes/SinOsc::, with the only difference being that the default code::mul:: and code::add:: argument values are modified to support producing a sin output range within code::[0, 1]:: instead of the audio range code::[-1, 1]::.
 
 CLASSMETHODS::
 
@@ -39,15 +39,15 @@ EXAMPLES::
 code::
 (
 // This example demonstrates using the three-dimensional
-// ScinOsc to produce separate red, green, and blue
+// VSinOsc to produce separate red, green, and blue
 // channel outputs. Note that all arguments have to be
-// provided to the higher dimensional ScinOsc instances,
+// provided to the higher dimensional VSinOsc instances,
 // because the defaults are only 1-dimensional, and
 // Scintillator currently can't "autosplat" defaults to
 // higher-dimensional arguments.
 ~k = ScinthDef.new(\k, { |dot = 0.5|
 	var r = Length.fr(NormPos.fr);
-	var rgb = ScinOsc.fr(Vec3.fr(r, 2.0 * r, 3.0 * r),
+	var rgb = VSinOsc.fr(Vec3.fr(r, 2.0 * r, 3.0 * r),
 		Vec3.fr, Splat3.fr(0.5), Splat3.fr(0.5));
 	RGBOut.fr(VX.fr(rgb), VY.fr(rgb), VZ.fr(rgb));
 }).add;
@@ -58,4 +58,4 @@ code::
 )
 ::
 
-image::ScinOsc.png::
+image::VSinOsc.png::

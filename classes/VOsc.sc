@@ -1,4 +1,4 @@
-ScinOsc : VGen {
+VSinOsc : VGen {
 	*fr { |freq = 1.0, phase = 0.0, mul = 0.5, add = 0.5|
 		^this.multiNew(\fragment, freq, phase, mul, add);
 	}

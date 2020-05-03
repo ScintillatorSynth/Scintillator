@@ -95,14 +95,14 @@ image::empty-window.png::
 
 subsection::Time-Varying Video Synths
 
-The link::Classes/ScinOsc:: oscillator is similar to the similar class link::Classes/SinOsc::, with the soft emphasis::sc:: sound at the start intended to be a play on the name scintillator. There are some differences in a video synth from an audio one, however. The first consideration is that signals don't have to vary over time to impact the output. The first Scinth, code::\red::, should prove that. A similar constant output in an audio context would be inaudible, except for that it might damage certain audo setups, so caution is advised in testing that assertion!
+The link::Classes/VSinOsc:: oscillator is similar to the similar class link::Classes/SinOsc::, with the soft emphasis::sc:: sound at the start intended to be a play on the name scintillator. There are some differences in a video synth from an audio one, however. The first consideration is that signals don't have to vary over time to impact the output. The first Scinth, code::\red::, should prove that. A similar constant output in an audio context would be inaudible, except for that it might damage certain audo setups, so caution is advised in testing that assertion!
 
 Another point to note is that while audio signals normally operate in the domain from -1 to +1, with negative signals indicating a moment of underpressure in the sound wave, video signals only vary from 0 to 1. Light can only be present or absent in this video synthesizer, with 0 indicating no light and 1 indicating maximum brightness of light. Most video cards will clamp output between 0 and 1, but Scintillator doesn't take any special steps to limit signals, and video signals outside of the range are typically clamped. As a result of the different range, many of the default inputs on link::Classes/VGen::s with analogous link::Classes/UGen::s are  are adjusted so that instead of providing a signal input from -1 to +1 they output from 0 to 1. This can be seen, for example, in the defaults to link::Classes/SinOsc::, where the code::mul:: and code::add:: arguments are both code::0.5::, constraining the video signal between 0 and 1.
 
 code::
 (
 ~w = ScinthDef.new(\wave, { |f=1|
-	BWOut.fr(ScinOsc.fr(freq: f));
+	BWOut.fr(VSinOsc.fr(freq: f));
 }).add;
 )
 
