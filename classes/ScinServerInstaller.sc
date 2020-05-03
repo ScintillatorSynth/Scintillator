@@ -4,7 +4,26 @@ ScinServerInstaller {
 	classvar continue;
 
 	*initClass {
-		Class.initClassTree(ScinServerOptions);
+		if(ScinServerInstaller.autoInstallEnabled) {
+			"*** Scintillator: auto install enabled - to disable, run ScinServerInstaller.disableAutoInstall".postln;
+			ScinServerInstaller.setup;
+		};
+	}
+
+	*autoInstallEnabled {
+		^File.exists(Scintillator.binDir +/+ "disable_auto_install").not;
+	}
+
+	*enableAutoInstall {
+		if(this.autoInstallEnabled.not) {
+			File.delete(Scintillator.binDir+/+"disable_auto_install");
+		};
+	}
+
+	*disableAutoInstall {
+		if(this.autoInstallEnabled) {
+			File.use(Scintillator.binDir+/+"disable_auto_install", "w", {});
+		};
 	}
 
 	*setup { |cleanup=true, validate=true|

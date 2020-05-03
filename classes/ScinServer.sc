@@ -109,12 +109,6 @@ ScinServer {
 	*initClass {
 		Class.initClassTree(ScinServerOptions);
 
-		if(File.exists(Scintillator.binPath +/+ "disable_auto_install").not) {
-			"*** Scintillator: auto install enabled".postln;
-			"[info] to disable auto install, create an empty file: %".format(Scintillator.binPath+/+"disable_auto_install").postln;
-			ScinServerInstaller.setup;
-		};
-
 		try {
 			default = ScinServer();
 		} { | e |
