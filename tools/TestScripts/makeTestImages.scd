@@ -17,8 +17,8 @@ fork {
 	testImagesPath = thisProcess.argv[0] +/+ "sourceMedia";
 	c = Condition.new;
 	d = Condition.new;
-    imageOut = ScinServerOptions.quarkPath +/+ "build" +/+ "testing";
-	testDefs = (ScinServerOptions.quarkPath +/+ "tools" +/+ "TestScripts" +/+ "testManifest.yaml").parseYAMLFile;
+    imageOut = Scintillator.path +/+ "build" +/+ "testing";
+	testDefs = (Scintillator.path +/+ "tools" +/+ "TestScripts" +/+ "testManifest.yaml").parseYAMLFile;
 	options = ScinServerOptions.new;
 	options.logLevel = 2;
 	options.createWindow = false;
