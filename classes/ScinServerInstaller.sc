@@ -45,7 +45,7 @@ ScinServerInstaller {
 						version = Scintillator.version;
 						quarkBinPath = Scintillator.binDir;
 
-						"*** ScinServerInstaller: checking installation..".postln;
+						"*** ScinServerInstaller: checking installation [%]".format(Scintillator.path).postln;
 
 						if (quarkBinPath.isNil, {
 							"*** Unable to locate Scintillator Quark!".postln;
