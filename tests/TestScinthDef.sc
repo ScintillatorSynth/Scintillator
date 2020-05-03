@@ -99,14 +99,14 @@ TestScinthDef : UnitTest {
 
 	test_inputChainLinearBuild {
 		var def = ScinthDef.new(\inputChainLinearBuild, {
-			BWOut.fr(ScinOsc.fr.abs);
+			BWOut.fr(VSinOsc.fr.abs);
 		});
 
 		this.sanityCheckBuild(def);
 
 		this.assertEquals(def.name, \inputChainLinearBuild);
 		this.assertEquals(def.children.size, 3);
-		this.assertEquals(def.children[0].class, ScinOsc);
+		this.assertEquals(def.children[0].class, VSinOsc);
 		this.assertEquals(def.children[1].class, UnaryOpVGen);
 		this.assertEquals(def.children[1].name, 'VAbs');
 		this.assertEquals(def.children[1].inputs[0], def.children[0]);
@@ -127,7 +127,7 @@ TestScinthDef : UnitTest {
 	test_inputChainYaml {
 		var def = ScinthDef.new(\inputChainYaml, {
 			var pos = NormPos.fr;
-			BWOut.fr(ScinOsc.fr(freq: VY.fr(pos).neg, phase: VX.fr(pos), mul: 0.2, add: 0.5));
+			BWOut.fr(VSinOsc.fr(freq: VY.fr(pos).neg, phase: VX.fr(pos), mul: 0.2, add: 0.5));
 		});
 		var yaml = def.asYAML;
 
