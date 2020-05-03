@@ -24,7 +24,7 @@ ScinServerInstaller {
 					\init, {
 						// Extract Scintillator version from Quark metadata.
 						version = Scintillator.version;
-						quarkBinPath = Scintillator.binPath;
+						quarkBinPath = Scintillator.binDir;
 
 						"*** ScinServerInstaller: checking installation..".postln;
 

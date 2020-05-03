@@ -131,13 +131,13 @@ ScinServer {
 
 		Platform.case(
 			\osx, {
-				scinBinaryPath = Scintillator.binPath +/+ "scinsynth.app" +/+ "Contents" +/+ "MacOS" +/+ "scinsynth";
+				scinBinaryPath = Scintillator.binDir +/+ "scinsynth.app" +/+ "Contents" +/+ "MacOS" +/+ "scinsynth";
 				if (options.swiftshader and: { options.createWindow }, {
 					Error.new("Swiftshader only supports offscreen render contexts." +
 						"See https://github.com/ScintillatorSynth/Scintillator/issues/70.").throw;
 				});
 			},
-			\linux, { scinBinaryPath = Scintillator.binPath +/+ "scinsynth-x86_64.AppImage" },
+			\linux, { scinBinaryPath = Scintillator.binDir +/+ "scinsynth-x86_64.AppImage" },
 			\windows, { Error.new("Windows not (yet) supported!").throw }
 		);
 
