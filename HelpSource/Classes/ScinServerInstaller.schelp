@@ -6,6 +6,14 @@ related:: Classes/ScinServer
 DESCRIPTION::
 Scintillator is distributed in two parts, the Quark code and the server binary. The ScinServerInstaller class is distributed with the Scintillator quark and can be used to update or install the server binary.
 
+NOTE::
+By default, the installer is set to automatically install the server binary.
+
+When automatic installation is enabled ScinServerInstaller will check the binary every time SuperCollider starts.
+
+This behaviour can be disabled, see ScinServerInstaller.disableAutoInstall
+::
+
 CLASSMETHODS::
 
 METHOD:: setup
@@ -21,6 +29,16 @@ A boolean, default true. If true, the script will also compute a hash of the dow
 METHOD:: abort
 
 Call to cancel the installation script while it's in progress.
+
+METHOD:: autoInstallEnabled
+Returns true if automatic installation is enabled, otherwise false
+
+METHOD:: disableAutoInstall
+Disables automatic installation
+
+METHOD:: enableAutoInstall
+Enables automatic installation
+
 
 EXAMPLES::
 

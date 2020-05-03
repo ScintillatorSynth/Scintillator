@@ -33,7 +33,7 @@ options.height = 200;
 options.dumpOSC = true;
 options.swiftshader = true;
 options.vulkanValidation = true;
-binPath = ScinServerOptions.quarkPath +/+ "bin/scinsynth-x86_64.AppImage";
+binPath = Scintillator.path +/+ "bin/scinsynth-x86_64.AppImage";
 fork {
 	var commandLine, scinPid, udp, c, d, valid, response;
 	var gotFrameRate, numWarn, numError, gotWarn, gotError;
@@ -320,7 +320,7 @@ fork {
 	c.test = false;
 	d.test = false;
 	valid = false;
-	testDefPath = ScinServerOptions.quarkPath +/+ "tools" +/+ "TestScripts" +/+ "testDefs";
+	testDefPath = Scintillator.path +/+ "tools" +/+ "TestScripts" +/+ "testDefs";
 	callbackFunc = OSCFunc.new({ |msg|
 		if (msg[1] == 'xx', {
 			valid = true;

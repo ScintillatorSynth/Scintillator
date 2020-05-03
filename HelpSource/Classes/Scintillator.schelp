@@ -1,0 +1,20 @@
+TITLE:: Scintillator
+summary:: Scintillator utility class
+categories:: Quarks>Scintillator
+related:: Classes/ScinServer
+
+DESCRIPTION::
+This is a utility class to report information about the Scintillator installation.
+
+
+CLASSMETHODS::
+
+METHOD:: version
+Returns the version string for the Scintillator installation
+
+METHOD:: path
+Returns the path to the Scintillator quark
+
+
+METHOD:: binDir
+Returns the directory for the Scintillator server binary

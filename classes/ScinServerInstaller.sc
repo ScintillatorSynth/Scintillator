@@ -3,6 +3,29 @@ ScinServerInstaller {
 	classvar routine;
 	classvar continue;
 
+	*initClass {
+		if(ScinServerInstaller.autoInstallEnabled) {
+			"*** Scintillator: auto install enabled - to disable, run ScinServerInstaller.disableAutoInstall".postln;
+			ScinServerInstaller.setup;
+		};
+	}
+
+	*autoInstallEnabled {
+		^File.exists(Scintillator.binDir +/+ "disable_auto_install").not;
+	}
+
+	*enableAutoInstall {
+		if(this.autoInstallEnabled.not) {
+			File.delete(Scintillator.binDir+/+"disable_auto_install");
+		};
+	}
+
+	*disableAutoInstall {
+		if(this.autoInstallEnabled) {
+			File.use(Scintillator.binDir+/+"disable_auto_install", "w", {});
+		};
+	}
+
 	*setup { |cleanup=true, validate=true|
 		if (routine.notNil, {
 			"*** setup already running! Did you mean to call abort?".postln;
@@ -19,12 +42,10 @@ ScinServerInstaller {
 					// Entry point for state machine. Setup variables.
 					\init, {
 						// Extract Scintillator version from Quark metadata.
-						Quarks.installed.do({ |quark, index|
-							if (quark.name == "Scintillator", {
-								quarkBinPath = quark.localPath +/+ "bin";
-								version = quark.version;
-							});
-						});
+						version = Scintillator.version;
+						quarkBinPath = Scintillator.binDir;
+
+						"*** ScinServerInstaller: checking installation [%]".format(Scintillator.path).postln;
 
 						if (quarkBinPath.isNil, {
 							"*** Unable to locate Scintillator Quark!".postln;
