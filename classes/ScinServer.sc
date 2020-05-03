@@ -1,3 +1,9 @@
+Scintillator {
+	*version { ^Quarks.at("Scintillator").version; }
+	*path { ^PathName.new(Scintillator.class.filenameSymbol.asString.dirname).parentPath; }
+	*binPath { ^Scintillator.path +/+ "bin" }
+}
+
 ScinServerOptions {
 	classvar defaultValues;
 
@@ -40,10 +46,6 @@ ScinServerOptions {
 		^super.new.init;
 	}
 
-	*quarkPath {
-		^PathName.new(ScinServerOptions.class.filenameSymbol.asString.dirname).parentPath;
-	}
-
 
 	init {
 		defaultValues.keysValuesDo({ |key, value| this.instVarPut(key, value); });
@@ -51,7 +53,7 @@ ScinServerOptions {
 	}
 
 	asOptionsString {
-		var o = "--quarkDir=" ++ ScinServerOptions.quarkPath.shellQuote;
+		var o = "--quarkDir=" ++ Scintillator.path.shellQuote;
 
 		if (portNumber != defaultValues[\portNumber], {
 			o = o + "--portNumber=" ++ portNumber;
@@ -119,16 +121,15 @@ ScinServer {
 
 		addr = NetAddr.new("127.0.0.1", options.portNumber);
 
-		scinBinaryPath = ScinServerOptions.quarkPath +/+ "bin";
 		Platform.case(
 			\osx, {
-				scinBinaryPath = scinBinaryPath +/+ "scinsynth.app" +/+ "Contents" +/+ "MacOS" +/+ "scinsynth";
+				scinBinaryPath = Scintillator.binPath +/+ "scinsynth.app" +/+ "Contents" +/+ "MacOS" +/+ "scinsynth";
 				if (options.swiftshader and: { options.createWindow }, {
 					Error.new("Swiftshader only supports offscreen render contexts." +
 						"See https://github.com/ScintillatorSynth/Scintillator/issues/70.").throw;
 				});
 			},
-			\linux, { scinBinaryPath = scinBinaryPath +/+ "scinsynth-x86_64.AppImage" },
+			\linux, { scinBinaryPath = Scintillator.binPath +/+ "scinsynth-x86_64.AppImage" },
 			\windows, { Error.new("Windows not (yet) supported!").throw }
 		);
 
