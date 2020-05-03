@@ -1,7 +1,7 @@
 Scintillator {
 	*version { ^Quarks.at("Scintillator").version; }
 	*path { ^PathName.new(Scintillator.class.filenameSymbol.asString.dirname).parentPath; }
-	*binPath { ^Scintillator.path +/+ "bin" }
+	*binDir { ^Scintillator.path +/+ "bin" }
 }
 
 ScinServerOptions {
