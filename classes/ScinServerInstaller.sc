@@ -3,6 +3,10 @@ ScinServerInstaller {
 	classvar routine;
 	classvar continue;
 
+	*initClass {
+		Class.initClassTree(ScinServerOptions);
+	}
+
 	*setup { |cleanup=true, validate=true|
 		if (routine.notNil, {
 			"*** setup already running! Did you mean to call abort?".postln;
@@ -19,12 +23,8 @@ ScinServerInstaller {
 					// Entry point for state machine. Setup variables.
 					\init, {
 						// Extract Scintillator version from Quark metadata.
-						Quarks.installed.do({ |quark, index|
-							if (quark.name == "Scintillator", {
-								quarkBinPath = quark.localPath +/+ "bin";
-								version = quark.version;
-							});
-						});
+						version = Scintillator.version;
+						quarkBinPath = Scintillator.binPath;
 
 						"*** ScinServerInstaller: checking installation..".postln;
 
