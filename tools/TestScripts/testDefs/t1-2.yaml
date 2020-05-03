@@ -42,7 +42,7 @@ vgens:
           dimension: 1
       outputs:
         - dimension: 1
-    - className: ScinOsc
+    - className: VSinOsc
       rate: fragment
       inputs:
         - type: vgen

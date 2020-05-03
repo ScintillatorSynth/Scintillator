@@ -4,11 +4,11 @@
   shortName: "firstFrame"
   scinthDef: ""
   captureTimes: [ 1 ]
-- name: "ScinOsc Bullseye"
+- name: "VSinOsc Bullseye"
   category: "VOsc"
-  comment: "ScinOsc frequency as a function of distance from center."
+  comment: "VSinOsc frequency as a function of distance from center."
   shortName: "scinOsc"
-  scinthDef: "{ BWOut.fg(ScinOsc.fg(Length.fg(NormPos.fg))); }"
+  scinthDef: "{ BWOut.fg(VSinOsc.fg(Length.fg(NormPos.fg))); }"
   captureTimes: [ 1, 1, 1, 1, 1 ]
 - name: "VSaw Checker"
   category: "VOsc"
