@@ -36,10 +36,13 @@ def main(argv):
     os.makedirs(install_ext, exist_ok=True)
 
     needed_deps = ['ffmpeg-ext', 'vulkan-ext', 'swiftshader-ext']
+
     if platform.system() == 'Linux':
         os_name = 'linux'
     elif platform.system() == 'Darwin':
         os_name = 'osx'
+    elif platform.system() == 'Windows':
+        os_name = 'windows'
     else:
         print('Unsupported operating system.')
         sys.exit(1)
@@ -80,16 +83,31 @@ def main(argv):
             print('skipping download of existing file ' + sha_path)
 
         # Check the hash of the downloaded file
-        hash_check = subprocess.run(['shasum', '-c', sha_file], cwd=binary_path, stdout=subprocess.PIPE)
-        hash_result = hash_check.stdout.decode('utf-8')
-        if hash_result[-3:-1] != 'OK':
-            print('file ' + file_path + ' failed hash!')
-            sys.exit(1)
+        if os_name == 'windows':
+            # Certutil doesn't seem like it can validate against an existing hash file, so we capture output
+            # and compare against the downloaded hash manually.
+            hash_check = subprocess.run(['certutil', '-hashfile', file_path, 'SHA256'], stdout=subprocess.PIPE);
+            hash_result = hash_check.stdout.decode('utf-8').split('\n')[1].strip();            
+            hash_expected = open(sha_path, 'r').read().strip()
+            if dep == 'ffmpeg-ext':
+                # ffmpeg on Windows is cross-compiled so the hash file is from the shasum output, strip off
+                # the filename at the end of the file.
+                hash_expected = hash_expected.split(' ')[0]
+            if hash_result != hash_expected:
+                print ('file ' + file_path + ' failed hash! Expecting "' + hash_expected
+                    + '" got "' + hash_result + '"')
+                sys.exit(1);
+            print(hash_result)            
+        else:
+            hash_check = subprocess.run(['shasum', '-c', sha_file], cwd=binary_path, stdout=subprocess.PIPE)
+            hash_result = hash_check.stdout.decode('utf-8')
+            if hash_result[-3:-1] != 'OK':
+                print('file ' + file_path + ' failed hash!')
+                sys.exit(1)
 
         # Extract file
         print('extracting ' + file_path + ' to ' + binary_path)
         extract_file = subprocess.run(['tar', 'xzf', file_path, '-C', install_ext ])
-
 
 if __name__ == "__main__":
     main(sys.argv[1:])
