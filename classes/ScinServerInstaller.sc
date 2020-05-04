@@ -5,7 +5,6 @@ ScinServerInstaller {
 
 	*initClass {
 		if(ScinServerInstaller.autoInstallEnabled) {
-			"*** Scintillator: auto install enabled - to disable, run ScinServerInstaller.disableAutoInstall".postln;
 			ScinServerInstaller.setup;
 		};
 	}
@@ -45,8 +44,6 @@ ScinServerInstaller {
 						version = Scintillator.version;
 						quarkBinPath = Scintillator.binDir;
 
-						"*** ScinServerInstaller: checking installation [%]".format(Scintillator.path).postln;
-
 						if (quarkBinPath.isNil, {
 							"*** Unable to locate Scintillator Quark!".postln;
 							"Something seems wrong with your Scintillator install. Try uninstalling the Quark "
@@ -79,10 +76,9 @@ ScinServerInstaller {
 					// Check if the scinserver binary already exists.
 					\checkIfBinaryExists, {
 						if (File.exists(binaryPath), {
-							"scin installer detects pre-existing scinserver binary, checking version.".postln;
 							state = \checkBinaryVersion;
 						}, {
-							"scin installer doesn't detect pre-existing scinserver binary, downloading.".postln;
+							"*** ScinServerInstaller: pre-existing scinserver binary not detected [%], downloading.".postln;
 							state = \checkIfDownloadExists;
 						});
 					},
@@ -148,7 +144,7 @@ ScinServerInstaller {
 						var c = Condition.new;
 						c.test = false;
 
-						"starting download of scinserver binary from % to %".format(downloadURL, downloadPath).postln;
+						"starting download of scinserver binary from % to %".format(downloadURL, downloadPath.shellQuote).postln;
 						Download.new(downloadURL, downloadPath, {
 							result = true;
 							c.test = true;
