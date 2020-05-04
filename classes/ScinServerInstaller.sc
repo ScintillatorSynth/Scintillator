@@ -5,7 +5,6 @@ ScinServerInstaller {
 
 	*initClass {
 		if(ScinServerInstaller.autoInstallEnabled) {
-			"*** Scintillator: auto install enabled - to disable, run ScinServerInstaller.disableAutoInstall".postln;
 			ScinServerInstaller.setup;
 		};
 	}
@@ -33,9 +32,12 @@ ScinServerInstaller {
 		});
 		routine = {
 			var version, quarkBinPath, binaryPath, downloadURL, downloadPath, runtime;
-			var oldVersion, oldBinPath;
+			var oldVersion, oldBinPath, noAction;
 			var state = \init;
 			continue = true;
+			// Turned false the minute installer has to take some action outside of just
+			// validating the existing server binary. Then we start to generate log messages.
+			noAction = true;
 
 			while ({ continue }, {
 				switch (state,
@@ -44,8 +46,6 @@ ScinServerInstaller {
 						// Extract Scintillator version from Quark metadata.
 						version = Scintillator.version;
 						quarkBinPath = Scintillator.binDir;
-
-						"*** ScinServerInstaller: checking installation [%]".format(Scintillator.path).postln;
 
 						if (quarkBinPath.isNil, {
 							"*** Unable to locate Scintillator Quark!".postln;
@@ -79,10 +79,10 @@ ScinServerInstaller {
 					// Check if the scinserver binary already exists.
 					\checkIfBinaryExists, {
 						if (File.exists(binaryPath), {
-							"scin installer detects pre-existing scinserver binary, checking version.".postln;
 							state = \checkBinaryVersion;
 						}, {
-							"scin installer doesn't detect pre-existing scinserver binary, downloading.".postln;
+							"*** ScinServerInstaller: pre-existing scinserver binary not detected [%], downloading.".postln;
+							noAction = false;
 							state = \checkIfDownloadExists;
 						});
 					},
@@ -96,7 +96,9 @@ ScinServerInstaller {
 							var split = scinOutput.split($ );
 							var scinVersion = split[2];
 							if (scinVersion == version, {
-								"scin installer detects version match % between Quark and binary.".format(version).postln;
+								if (noAction.not, {
+									"scin installer detects version match % between Quark and binary.".format(version).postln;
+								});
 								if (cleanup, {
 									if (downloadPath.notNil, {
 										File.delete(downloadPath);
@@ -106,7 +108,9 @@ ScinServerInstaller {
 										File.deleteAll(oldBinPath);
 									});
 								});
-								"*** You're all set, happy Scintillating!".postln;
+								if (noAction.not, {
+									"*** You're all set, happy Scintillating!".postln;
+								});
 								continue = false;
 							}, {
 								"version mismatch between Quark (%) and binary (%), downloading matching binary".format(
@@ -148,7 +152,7 @@ ScinServerInstaller {
 						var c = Condition.new;
 						c.test = false;
 
-						"starting download of scinserver binary from % to %".format(downloadURL, downloadPath).postln;
+						"starting download of scinserver binary from % to %".format(downloadURL, downloadPath.shellQuote).postln;
 						Download.new(downloadURL, downloadPath, {
 							result = true;
 							c.test = true;

@@ -1,5 +1,12 @@
 Scintillator {
-	*version { ^Quarks.at("Scintillator").version; }
+	*version {
+		Quarks.installed.do({ |quark, index|
+			if (quark.name == "Scintillator", {
+				^quark.version;
+			});
+		});
+		^nil;
+	}
 	*path { ^PathName.new(Scintillator.class.filenameSymbol.asString.dirname).parentPath; }
 	*binDir { ^Scintillator.path +/+ "bin" }
 }
@@ -135,11 +142,6 @@ ScinServer {
 			\windows, { Error.new("Windows not (yet) supported!").throw }
 		);
 
-		if (File.exists(scinBinaryPath).not, {
-			Error.new("Unable to find Scintillator Server binary. Please run ScinServerInstaller.setup first.").throw;
-			^nil;
-		});
-
 		statusPoller = ScinServerStatusPoller.new(this);
 	}
 
@@ -148,6 +150,11 @@ ScinServer {
 
 		if (statusPoller.serverBooting or: { statusPoller.serverRunning }, {
 			^this;
+		});
+
+		if (File.exists(scinBinaryPath).not, {
+			Error.new("Unable to find Scintillator Server binary. Please run ScinServerInstaller.setup first.").throw;
+			^nil;
 		});
 
 		statusPoller.serverBooting = true;
