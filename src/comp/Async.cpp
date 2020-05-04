@@ -11,6 +11,7 @@
 #include "fmt/core.h"
 #include "spdlog/spdlog.h"
 
+#include <algorithm>
 #include <chrono>
 
 namespace scin { namespace comp {
@@ -27,7 +28,7 @@ Async::Async(std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<Compo
 Async::~Async() { stop(); }
 
 void Async::run(size_t numberOfWorkerThreads) {
-    size_t workers = std::max(1ul, numberOfWorkerThreads);
+    size_t workers = std::max(static_cast<size_t>(1), numberOfWorkerThreads);
     spdlog::info("Async starting {} worker threads.", workers);
     for (auto i = 0; i < workers; ++i) {
         std::string threadName = fmt::format("async_{}", i);

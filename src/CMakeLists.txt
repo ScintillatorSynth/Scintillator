@@ -320,7 +320,6 @@ else()
 endif()
 
 target_link_libraries(scinsynth
-    "${SCIN_EXT_INSTALL_DIR}/lib/liblo.a"
     "${Vulkan_LIBRARY}"
     ${AVCODEC_LIBRARY}
     ${AVFORMAT_LIBRARY}
@@ -334,6 +333,16 @@ target_link_libraries(scinsynth
     scintillator_base
     spdlog
 )
+
+if (WIN32)
+	target_link_libraries(scinsynth
+		"${SCIN_EXT_INSTALL_DIR}/lib/liblo_static.lib"
+	)	
+else()
+	target_link_libraries(scinsynth
+		"${SCIN_EXT_INSTALL_DIR}/lib/liblo.a"
+	)	
+endif()
 
 target_include_directories(scinsynth PRIVATE
     ${AVCODEC_INCLUDE_DIR}

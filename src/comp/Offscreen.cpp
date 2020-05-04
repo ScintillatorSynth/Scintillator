@@ -46,7 +46,7 @@ Offscreen::Offscreen(std::shared_ptr<vk::Device> device, int width, int height, 
 Offscreen::~Offscreen() { destroy(); }
 
 bool Offscreen::create(size_t numberOfImages) {
-    m_numberOfImages = std::max(numberOfImages, 2ul);
+    m_numberOfImages = std::max(numberOfImages, static_cast<size_t>(2));
 
     spdlog::info("creating Offscreen renderer with {} images.", m_numberOfImages);
 
