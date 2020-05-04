@@ -257,37 +257,67 @@ else()
     )
 endif()
 
+
 # Force using the locally sourced libraries as opposed to system libs
-find_library(AVCODEC_LIBRARY
-    NAMES avcodec
-    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-    NO_DEFAULT_PATH
-)
-find_library(AVFORMAT_LIBRARY
-    NAMES avformat
-    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-    NO_DEFAULT_PATH
-)
-find_library(AVUTIL_LIBRARY
-    NAMES avutil
-    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-    NO_DEFAULT_PATH
-)
-find_library(SWSCALE_LIBRARY
-    NAMES swscale
-    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-    NO_DEFAULT_PATH
-)
-find_library(Vulkan_LIBRARY
-    NAMES vulkan
-    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-    NO_DEFAULT_PATH
-)
 find_library(SHADERC_LIBRARY
-    NAMES shaderc_combined
-    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-    NO_DEFAULT_PATH
+	NAMES shaderc_combined
+	PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+	NO_DEFAULT_PATH
 )
+
+if (WIN32)
+	find_library(AVCODEC_LIBRARY
+		NAMES avcodec
+		PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
+		NO_DEFAULT_PATH
+	)
+	find_library(AVFORMAT_LIBRARY
+		NAMES avformat
+		PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
+		NO_DEFAULT_PATH
+	)
+	find_library(AVUTIL_LIBRARY
+		NAMES avutil
+		PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
+		NO_DEFAULT_PATH
+	)
+	find_library(SWSCALE_LIBRARY
+		NAMES swscale
+		PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
+		NO_DEFAULT_PATH
+	)
+	find_library(Vulkan_LIBRARY
+		NAMES vulkan-1
+		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+		NO_DEFAULT_PATH
+	)
+else()
+	find_library(AVCODEC_LIBRARY
+		NAMES avcodec
+		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+		NO_DEFAULT_PATH
+	)
+	find_library(AVFORMAT_LIBRARY
+		NAMES avformat
+		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+		NO_DEFAULT_PATH
+	)
+	find_library(AVUTIL_LIBRARY
+		NAMES avutil
+		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+		NO_DEFAULT_PATH
+	)
+	find_library(SWSCALE_LIBRARY
+		NAMES swscale
+		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+		NO_DEFAULT_PATH
+	)
+	find_library(Vulkan_LIBRARY
+		NAMES vulkan
+		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+		NO_DEFAULT_PATH
+	)
+endif()
 
 target_link_libraries(scinsynth
     "${SCIN_EXT_INSTALL_DIR}/lib/liblo.a"

@@ -64,6 +64,9 @@ target_include_directories(VulkanMemoryAllocator PRIVATE "${SCIN_EXT_INSTALL_DIR
 
 #### googletest
 set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+if (WIN32)
+	set(gtest_force_shared_crt ON CACHE BOOL "Force googletest to link against shared crt" FORCE)
+endif()
 add_subdirectory(googletest)
 
 #### yaml-cpp
