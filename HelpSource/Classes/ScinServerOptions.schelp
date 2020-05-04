@@ -14,9 +14,6 @@ private::initClass
 METHOD:: new
 Creates a new ScinServerOptions instance with all default options.
 
-METHOD:: quarkPath
-A convenience method that exposes the path to the Scintillator Quark. Used by the link::Classes/ScinServerInstaller:: script, the Scintillator integration test suite and other internal tooling to quickly locate the Scintillator project files.
-
 INSTANCEMETHODS::
 private::init
 
