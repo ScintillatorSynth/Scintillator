@@ -25,23 +25,7 @@ Or you can use the Quarks GUI to pick out Scintillator and install it. See link:
 
 subsection::2. Recompile Class Library
 
-After any Quark installation you need to recompile the SuperCollider class library. In the IDE menu select Langage -> Recompile Class Library.
-
-subsection::3. Option A - Automatic Server Install
-
-The link::Classes/ScinServerInstaller:: class is an install script that can download the synth binary and automatically install it. To use it run the following code:
-
-code::
-(
-ScinServerInstaller.setup;
-)
-::
-
-The installer will report status to the log. Please report any issues with using it to the developers.
-
-subsection::3. Option B - Manual Server Install
-
-Use a web browser and go to the the link::https://github.com/ScintillatorSynth/Scintillator/releases##GitHub Releases Page:: at https://github.com/ScintillatorSynth/Scintillator/releases. Follow the instructions on the Releases page to finish the install process.
+After any Quark installation you need to recompile the SuperCollider class library. In the IDE menu select Langage -> Recompile Class Library. This should also kick off the automatic installation of the ScinServer binary.
 
 section::Tutorial
 

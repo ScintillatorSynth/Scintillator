@@ -32,9 +32,12 @@ ScinServerInstaller {
 		});
 		routine = {
 			var version, quarkBinPath, binaryPath, downloadURL, downloadPath, runtime;
-			var oldVersion, oldBinPath;
+			var oldVersion, oldBinPath, noAction;
 			var state = \init;
 			continue = true;
+			// Turned false the minute installer has to take some action outside of just
+			// validating the existing server binary. Then we start to generate log messages.
+			noAction = true;
 
 			while ({ continue }, {
 				switch (state,
@@ -79,6 +82,7 @@ ScinServerInstaller {
 							state = \checkBinaryVersion;
 						}, {
 							"*** ScinServerInstaller: pre-existing scinserver binary not detected [%], downloading.".postln;
+							noAction = false;
 							state = \checkIfDownloadExists;
 						});
 					},
@@ -92,7 +96,9 @@ ScinServerInstaller {
 							var split = scinOutput.split($ );
 							var scinVersion = split[2];
 							if (scinVersion == version, {
-								"scin installer detects version match % between Quark and binary.".format(version).postln;
+								if (noAction.not, {
+									"scin installer detects version match % between Quark and binary.".format(version).postln;
+								});
 								if (cleanup, {
 									if (downloadPath.notNil, {
 										File.delete(downloadPath);
@@ -102,7 +108,9 @@ ScinServerInstaller {
 										File.deleteAll(oldBinPath);
 									});
 								});
-								"*** You're all set, happy Scintillating!".postln;
+								if (noAction.not, {
+									"*** You're all set, happy Scintillating!".postln;
+								});
 								continue = false;
 							}, {
 								"version mismatch between Quark (%) and binary (%), downloading matching binary".format(

@@ -5,6 +5,19 @@ related:: Guides/Scintillator-User-Guide
 
 section:: Release Notes
 
+subsection:: 0.0.5 3 May 2020
+
+list::
+## Automatically install server binaries on Quark install [link::https://github.com/ScintillatorSynth/Scintillator/pull/103##103::]
+## Renamed VGen fragment-rate functions from code::.fg:: to code::.fr:: [link::https://github.com/ScintillatorSynth/Scintillator/pull/107##107::]
+## Support for installations with spaces in pathnames [link::https://github.com/ScintillatorSynth/Scintillator/pull/106##106::]
+## Initialize code::ScinServer.default:: [link::https://github.com/ScintillatorSynth/Scintillator/pull/104##104::]
+## Added an server installation script [link::https://github.com/ScintillatorSynth/Scintillator/pull/101##101::]
+## Separating code::ScinServer.boot:: and code::ScinServer.init:: [link::https://github.com/ScintillatorSynth/Scintillator/pull/97##97::]
+## Add some VGen input validation [link::https://github.com/ScintillatorSynth/Scintillator/pull/96##96::]
+## Fix for startup crash on MacOS when a Vulkan SDK is installed separately on the computer [link::https://github.com/ScintillatorSynth/Scintillator/pull/93##93::]
+::
+
 subsection:: 0.0.4 22 April 2020
 
 Adds the Linux scinsynth binary, distributed as an AppImage file.
