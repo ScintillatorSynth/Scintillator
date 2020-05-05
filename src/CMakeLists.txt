@@ -237,7 +237,7 @@ if (APPLE)
         MACOSX_BUNDLE_BUNDLE_NAME "scinsynth"
         MACOSX_BUNDLE_GUI_IDENTIFIER org.scintillatorsynth.scinsynth
     )
-else()
+elseif(UNIX)
     add_executable(scinsynth ${scintillator_synth_files})
     file(MAKE_DIRECTORY ${SCIN_EXT_INSTALL_DIR}/bin)
     ExternalProject_add(linuxdeploy
@@ -255,8 +255,9 @@ else()
     add_dependencies(scinsynth
         linuxdeploy-install
     )
+elseif(WIN32)
+	add_executable(scinsynth ${scintillator_synth_files})
 endif()
-
 
 # Force using the locally sourced libraries as opposed to system libs
 find_library(SHADERC_LIBRARY
@@ -336,7 +337,7 @@ target_link_libraries(scinsynth
 
 if (WIN32)
 	target_link_libraries(scinsynth
-		"${SCIN_EXT_INSTALL_DIR}/lib/liblo_static.lib"
+		"${SCIN_EXT_INSTALL_DIR}/lib/liblo.lib"
 	)	
 else()
 	target_link_libraries(scinsynth
@@ -408,7 +409,7 @@ if (APPLE)
 
     set(CPACK_GENERATOR "DRAGNDROP")
     include(CPack)
-else()
+elseif(UNIX)
     configure_file(linux/scinsynth.desktop.in "${CMAKE_CURRENT_BINARY_DIR}/scinsynth.desktop")
     set(SCIN_APPDIR "${PROJECT_BINARY_DIR}/AppDir")
     # Invoke linuxdeploy to build the AppDir directory structure. We remove any old cruft that may have existed there
