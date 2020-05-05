@@ -150,7 +150,7 @@ ScinServer {
 				});
 			},
 			\linux, { scinBinaryPath = Scintillator.binDir +/+ "scinsynth-x86_64.AppImage" },
-			\windows, { scinBinaryPath = Scintillator.binDir +/+ "scinsynth.exe" }
+			\windows, { scinBinaryPath = Scintillator.binDir +/+ "scinsynth-w64" +/+ "scinsynth.exe" }
 		);
 
 		statusPoller = ScinServerStatusPoller.new(this);
