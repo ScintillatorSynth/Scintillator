@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 # Inspired by the SuperCollider script testsuite/sclang/launch_test.py
 
-import fcntl
 import sys
 import os
 import subprocess

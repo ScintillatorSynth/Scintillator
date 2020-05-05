@@ -108,21 +108,21 @@ int main(int argc, char* argv[]) {
     }
 
 #if (WIN32)
-	if (FLAGS_vulkanValidation) {
-		fs::path layerPath = quarkPath / "bin" / "scinsynth-w64" / "vulkan" / "explicit_layer.d";
-		if (!SetEnvironmentVariable(TEXT("VK_LAYER_PATH"), TEXT(layerPath.string().c_str()))) {
-			spdlog::error("Unable to set Vulkan Validation Layer environment variable.");
-			return EXIT_FAILURE;
-		}
-	}
-	
-	if (FLAGS_swiftshader) {
-		fs::path icdPath = quarkPath / "bin" / "scinsynth-w64" / "vulkan" / "icd.d" / "vk_swiftshader_icd.json";
-		if (!SetEnvironmentVariable(TEXT("VK_ICD_FILENAMES"), TEXT(icdPath.string().c_str()))) {
-			spdlog::error("Unable to set Swiftshader path environment variable.");
-			return EXIT_FAILURE;
-		}
-	}
+    if (FLAGS_vulkanValidation) {
+        fs::path layerPath = quarkPath / "bin" / "scinsynth-w64" / "vulkan" / "explicit_layer.d";
+        if (!SetEnvironmentVariable(TEXT("VK_LAYER_PATH"), TEXT(layerPath.string().c_str()))) {
+            spdlog::error("Unable to set Vulkan Validation Layer environment variable.");
+            return EXIT_FAILURE;
+        }
+    }
+
+    if (FLAGS_swiftshader) {
+        fs::path icdPath = quarkPath / "bin" / "scinsynth-w64" / "vulkan" / "icd.d" / "vk_swiftshader_icd.json";
+        if (!SetEnvironmentVariable(TEXT("VK_ICD_FILENAMES"), TEXT(icdPath.string().c_str()))) {
+            spdlog::error("Unable to set Swiftshader path environment variable.");
+            return EXIT_FAILURE;
+        }
+    }
 #endif
 
     spdlog::info(version);
