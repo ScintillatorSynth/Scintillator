@@ -456,12 +456,13 @@ elseif(WIN32)
 		include(InstallRequiredSystemLibraries)
 		install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION "${PROJECT_SOURCE_DIR}/bin")
 		install(TARGETS scinsynth RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/bin")
+		## TODO: can replace with ${_LIBRARY} variables, so versions aren't so hard-coded?
 		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/avcodec-58.dll" DESTINATION "${PROJECT_SOURCE_DIR}/bin")
 		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/avformat-58.dll" DESTINATION "${PROJECT_SOURCE_DIR}/bin")
 		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/avutil-56.dll" DESTINATION "${PROJECT_SOURCE_DIR}/bin")		
 		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/swscale-5.dll" DESTINATION "${PROJECT_SOURCE_DIR}/bin")		
-		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/liblo.dll" DESTINATION "${PROJECT_SOURCE_DIR}/bin")		
 		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/swresample-3.dll" DESTINATION "${PROJECT_SOURCE_DIR}/bin")		
+		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/liblo.dll" DESTINATION "${PROJECT_SOURCE_DIR}/bin")		
 endif()
 
 #### Automatic Code Formatting and Linting
