@@ -164,10 +164,10 @@ TEST(ArchetypesTest, ParseAbstractVGenFromFile) {
 
     Archetypes parser;
     // Nonexistent file should not parse.
-    EXPECT_EQ(0, parser.loadAbstractVGensFromFile(tempFile));
+    EXPECT_EQ(0, parser.loadAbstractVGensFromFile(tempFile.string()));
 
     clobberFileWithString(tempFile, "'f#oo: '%>^'|");
-    EXPECT_EQ(0, parser.loadAbstractVGensFromFile(tempFile));
+    EXPECT_EQ(0, parser.loadAbstractVGensFromFile(tempFile.string()));
 
     clobberFileWithString(tempFile,
                           "---\n"
@@ -176,7 +176,7 @@ TEST(ArchetypesTest, ParseAbstractVGenFromFile) {
                           "dimensions:\n"
                           "  - outputs: [ 1 ]\n"
                           "shader: \"@out = 0.0f\"\n");
-    EXPECT_EQ(1, parser.loadAbstractVGensFromFile(tempFile));
+    EXPECT_EQ(1, parser.loadAbstractVGensFromFile(tempFile.string()));
 
     // Remove temp file.
     ASSERT_TRUE(fs::remove(tempFile));

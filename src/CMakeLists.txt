@@ -237,7 +237,7 @@ if (APPLE)
         MACOSX_BUNDLE_BUNDLE_NAME "scinsynth"
         MACOSX_BUNDLE_GUI_IDENTIFIER org.scintillatorsynth.scinsynth
     )
-else()
+elseif(UNIX)
     add_executable(scinsynth ${scintillator_synth_files})
     file(MAKE_DIRECTORY ${SCIN_EXT_INSTALL_DIR}/bin)
     ExternalProject_add(linuxdeploy
@@ -255,42 +255,72 @@ else()
     add_dependencies(scinsynth
         linuxdeploy-install
     )
+elseif(WIN32)
+	add_executable(scinsynth ${scintillator_synth_files})
 endif()
 
 # Force using the locally sourced libraries as opposed to system libs
-find_library(AVCODEC_LIBRARY
-    NAMES avcodec
-    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-    NO_DEFAULT_PATH
-)
-find_library(AVFORMAT_LIBRARY
-    NAMES avformat
-    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-    NO_DEFAULT_PATH
-)
-find_library(AVUTIL_LIBRARY
-    NAMES avutil
-    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-    NO_DEFAULT_PATH
-)
-find_library(SWSCALE_LIBRARY
-    NAMES swscale
-    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-    NO_DEFAULT_PATH
-)
-find_library(Vulkan_LIBRARY
-    NAMES vulkan
-    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-    NO_DEFAULT_PATH
-)
 find_library(SHADERC_LIBRARY
-    NAMES shaderc_combined
-    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-    NO_DEFAULT_PATH
+	NAMES shaderc_combined
+	PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+	NO_DEFAULT_PATH
 )
 
+if (WIN32)
+	find_library(AVCODEC_LIBRARY
+		NAMES avcodec
+		PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
+		NO_DEFAULT_PATH
+	)
+	find_library(AVFORMAT_LIBRARY
+		NAMES avformat
+		PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
+		NO_DEFAULT_PATH
+	)
+	find_library(AVUTIL_LIBRARY
+		NAMES avutil
+		PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
+		NO_DEFAULT_PATH
+	)
+	find_library(SWSCALE_LIBRARY
+		NAMES swscale
+		PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
+		NO_DEFAULT_PATH
+	)
+	find_library(Vulkan_LIBRARY
+		NAMES vulkan-1
+		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+		NO_DEFAULT_PATH
+	)
+else()
+	find_library(AVCODEC_LIBRARY
+		NAMES avcodec
+		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+		NO_DEFAULT_PATH
+	)
+	find_library(AVFORMAT_LIBRARY
+		NAMES avformat
+		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+		NO_DEFAULT_PATH
+	)
+	find_library(AVUTIL_LIBRARY
+		NAMES avutil
+		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+		NO_DEFAULT_PATH
+	)
+	find_library(SWSCALE_LIBRARY
+		NAMES swscale
+		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+		NO_DEFAULT_PATH
+	)
+	find_library(Vulkan_LIBRARY
+		NAMES vulkan
+		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+		NO_DEFAULT_PATH
+	)
+endif()
+
 target_link_libraries(scinsynth
-    "${SCIN_EXT_INSTALL_DIR}/lib/liblo.a"
     "${Vulkan_LIBRARY}"
     ${AVCODEC_LIBRARY}
     ${AVFORMAT_LIBRARY}
@@ -304,6 +334,16 @@ target_link_libraries(scinsynth
     scintillator_base
     spdlog
 )
+
+if (WIN32)
+	target_link_libraries(scinsynth
+		"${SCIN_EXT_INSTALL_DIR}/lib/liblo.lib"
+	)	
+else()
+	target_link_libraries(scinsynth
+		"${SCIN_EXT_INSTALL_DIR}/lib/liblo.a"
+	)	
+endif()
 
 target_include_directories(scinsynth PRIVATE
     ${AVCODEC_INCLUDE_DIR}
@@ -369,7 +409,7 @@ if (APPLE)
 
     set(CPACK_GENERATOR "DRAGNDROP")
     include(CPack)
-else()
+elseif(UNIX)
     configure_file(linux/scinsynth.desktop.in "${CMAKE_CURRENT_BINARY_DIR}/scinsynth.desktop")
     set(SCIN_APPDIR "${PROJECT_BINARY_DIR}/AppDir")
     # Invoke linuxdeploy to build the AppDir directory structure. We remove any old cruft that may have existed there
@@ -410,6 +450,19 @@ else()
     "
     VERBATIM
     )
+elseif(WIN32)
+		set(CMAKE_INSTALL_UCRT_LIBRARIES ON)
+		set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION "${PROJECT_SOURCE_DIR}/bin")
+		include(InstallRequiredSystemLibraries)
+		install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION "${PROJECT_SOURCE_DIR}/bin")
+		install(TARGETS scinsynth RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/bin")
+		## TODO: can replace with ${_LIBRARY} variables, so versions aren't so hard-coded?
+		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/avcodec-58.dll" DESTINATION "${PROJECT_SOURCE_DIR}/bin")
+		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/avformat-58.dll" DESTINATION "${PROJECT_SOURCE_DIR}/bin")
+		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/avutil-56.dll" DESTINATION "${PROJECT_SOURCE_DIR}/bin")		
+		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/swscale-5.dll" DESTINATION "${PROJECT_SOURCE_DIR}/bin")		
+		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/swresample-3.dll" DESTINATION "${PROJECT_SOURCE_DIR}/bin")		
+		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/liblo.dll" DESTINATION "${PROJECT_SOURCE_DIR}/bin")		
 endif()
 
 #### Automatic Code Formatting and Linting

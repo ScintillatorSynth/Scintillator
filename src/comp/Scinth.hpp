@@ -4,6 +4,7 @@
 #include "vulkan/Vulkan.hpp"
 
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace scin {

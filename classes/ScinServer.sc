@@ -7,7 +7,13 @@ Scintillator {
 		});
 		^nil;
 	}
-	*path { ^PathName.new(Scintillator.class.filenameSymbol.asString.dirname).parentPath; }
+	*path {
+		var p = PathName.new(Scintillator.class.filenameSymbol.asString.dirname).parentPath;
+		if (thisProcess.platform.name === 'windows', {
+			p = p.tr($/, $\\);
+		});
+		^p;
+	}
 	*binDir { ^Scintillator.path +/+ "bin" }
 }
 
@@ -60,7 +66,12 @@ ScinServerOptions {
 	}
 
 	asOptionsString {
-		var o = "--quarkDir=" ++ Scintillator.path.shellQuote;
+		var o = "--quarkDir=";
+		if (thisProcess.platform.name === 'windows', {
+			o = o ++ Scintillator.path;
+		}, {
+			o = o ++ Scintillator.path.shellQuote;
+		});
 
 		if (portNumber != defaultValues[\portNumber], {
 			o = o + "--portNumber=" ++ portNumber;
@@ -139,7 +150,7 @@ ScinServer {
 				});
 			},
 			\linux, { scinBinaryPath = Scintillator.binDir +/+ "scinsynth-x86_64.AppImage" },
-			\windows, { Error.new("Windows not (yet) supported!").throw }
+			\windows, { scinBinaryPath = Scintillator.binDir +/+ "scinsynth.exe" }
 		);
 
 		statusPoller = ScinServerStatusPoller.new(this);
@@ -158,7 +169,13 @@ ScinServer {
 		});
 
 		statusPoller.serverBooting = true;
-		commandLine = scinBinaryPath.shellQuote + options.asOptionsString();
+		if (thisProcess.platform.name === 'windows', {
+			commandLine = scinBinaryPath + options.asOptionsString();
+		}, {
+			commandLine = scinBinaryPath.shellQuote + options.asOptionsString();
+		});
+
+		commandLine.postln;
 
 		scinPid = commandLine.unixCmd({ |exitCode, exitPid|
 			if (exitCode == 0, {
