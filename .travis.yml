@@ -2,20 +2,20 @@ language: cpp
 
 matrix:
     include:
-        - os: linux
-          dist: bionic
-          compiler: clang
-          env:
-              - CC=clang-8 CXX=clang++-8
-              - DO_COVERAGE=true
-        - os: linux
-          dist: bionic
-          env:
-              - DO_COVERAGE=false
-        - os: osx
-          osx_image: xcode11
-          env:
-              - DO_COVERAGE=false
+#        - os: linux
+#          dist: bionic
+#          compiler: clang
+#          env:
+#              - CC=clang-8 CXX=clang++-8
+#              - DO_COVERAGE=true
+#        - os: linux
+#          dist: bionic
+#          env:
+#              - DO_COVERAGE=false
+#        - os: osx
+#          osx_image: xcode11
+#          env:
+#              - DO_COVERAGE=false
         - os: windows
 
 cache: ccache
