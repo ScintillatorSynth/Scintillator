@@ -1,3 +1,3 @@
 #!/bin/bash
 
-choco install python3 doxygen.install gperf
+choco install python3 gperf

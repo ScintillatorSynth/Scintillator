@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # cmake -DPYTHON_EXECUTABLE=/c/Python38/python.exe ..
-mkdir $TRAVIS_BUILD_DIR/build
 cd $TRAVIS_BUILD_DIR/build
-cmake ..
+python tools/fetch-binary-deps
+cd $TRAVIS_BUILD_DIR/build
+cmake -DSCIN_BUILD_DOCS=OFF ..
 
