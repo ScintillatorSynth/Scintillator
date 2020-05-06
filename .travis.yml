@@ -18,7 +18,7 @@ matrix:
 #              - DO_COVERAGE=false
         - os: windows
 
-cache: ccache
+#cache: ccache
 
 before_install:
     - $TRAVIS_BUILD_DIR/.travis/before-install-$TRAVIS_OS_NAME.sh
