@@ -2,23 +2,24 @@ language: cpp
 
 matrix:
     include:
-#        - os: linux
-#          dist: bionic
-#          compiler: clang
-#          env:
-#              - CC=clang-8 CXX=clang++-8
-#              - DO_COVERAGE=true
-#        - os: linux
-#          dist: bionic
-#          env:
-#              - DO_COVERAGE=false
-#        - os: osx
-#          osx_image: xcode11
-#          env:
-#              - DO_COVERAGE=false
+        - os: linux
+          dist: bionic
+          compiler: clang
+          cache: ccache
+          env:
+              - CC=clang-8 CXX=clang++-8
+              - DO_COVERAGE=true
+        - os: linux
+          dist: bionic
+          ccache: ccache
+          env:
+              - DO_COVERAGE=false
+        - os: osx
+          osx_image: xcode11
+          ccache: ccache
+          env:
+              - DO_COVERAGE=false
         - os: windows
-
-#cache: ccache
 
 before_install:
     - $TRAVIS_BUILD_DIR/.travis/before-install-$TRAVIS_OS_NAME.sh
