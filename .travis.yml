@@ -16,6 +16,7 @@ matrix:
           osx_image: xcode11
           env:
               - DO_COVERAGE=false
+        - os: windows
 
 cache: ccache
 
