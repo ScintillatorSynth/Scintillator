@@ -451,28 +451,24 @@ elseif(UNIX)
     VERBATIM
     )
 elseif(WIN32)
-		set(SCIN_WIN64_DIR "${PROJECT_SOURCE_DIR}/bin/scinsynth-w64")
-		file(MAKE_DIRECTORY "${SCIN_WIN64_DIR}")
-		set(CMAKE_INSTALL_UCRT_LIBRARIES ON)
-		set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION "${SCIN_WIN64_DIR}")
-		include(InstallRequiredSystemLibraries)
-		install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION "${SCIN_WIN64_DIR}")
-		install(TARGETS scinsynth RUNTIME DESTINATION "${SCIN_WIN64_DIR}")
-		## TODO: can replace with ${_LIBRARY} variables, so versions aren't so hard-coded?
-		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/avcodec-58.dll" DESTINATION "${SCIN_WIN64_DIR}")
-		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/avformat-58.dll" DESTINATION "${SCIN_WIN64_DIR}")
-		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/avutil-56.dll" DESTINATION "${SCIN_WIN64_DIR}")		
-		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/swscale-5.dll" DESTINATION "${SCIN_WIN64_DIR}")		
-		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/swresample-3.dll" DESTINATION "${SCIN_WIN64_DIR}")		
-		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/liblo.dll" DESTINATION "${SCIN_WIN64_DIR}")
-		install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/windows/vulkan" DESTINATION "${SCIN_WIN64_DIR}")
-		install(FILES "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d/vk_swiftshader.dll"
-			DESTINATION "${SCIN_WIN64_DIR}/vulkan/icd.d")
-		install(FILES
-			"${SCIN_EXT_INSTALL_DIR}/lib/VkLayer_khronos_validation.dll"
-			"${SCIN_EXT_INSTALL_DIR}/lib/VkLayer_khronos_validation.json"
-			DESTINATION "${SCIN_WIN64_DIR}/vulkan/explicit_layer.d"
-		)
+    set(SCIN_WIN64_DIR "${PROJECT_SOURCE_DIR}/bin/scinsynth-w64")
+    file(MAKE_DIRECTORY "${SCIN_WIN64_DIR}")
+    install(TARGETS scinsynth RUNTIME DESTINATION "${SCIN_WIN64_DIR}")
+    ## TODO: can replace with ${_LIBRARY} variables, so versions aren't so hard-coded?
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/avcodec-58.dll" DESTINATION "${SCIN_WIN64_DIR}")
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/avformat-58.dll" DESTINATION "${SCIN_WIN64_DIR}")
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/avutil-56.dll" DESTINATION "${SCIN_WIN64_DIR}")
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/swscale-5.dll" DESTINATION "${SCIN_WIN64_DIR}")
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/swresample-3.dll" DESTINATION "${SCIN_WIN64_DIR}")
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/liblo.dll" DESTINATION "${SCIN_WIN64_DIR}")
+    install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/windows/vulkan" DESTINATION "${SCIN_WIN64_DIR}")
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d/vk_swiftshader.dll"
+        DESTINATION "${SCIN_WIN64_DIR}/vulkan/icd.d")
+    install(FILES
+        "${SCIN_EXT_INSTALL_DIR}/lib/VkLayer_khronos_validation.dll"
+        "${SCIN_EXT_INSTALL_DIR}/lib/VkLayer_khronos_validation.json"
+        DESTINATION "${SCIN_WIN64_DIR}/vulkan/explicit_layer.d"
+    )
 endif()
 
 #### Automatic Code Formatting and Linting
