@@ -96,8 +96,7 @@ def main(argv):
             if hash_result != hash_expected:
                 print ('file ' + file_path + ' failed hash! Expecting "' + hash_expected
                     + '" got "' + hash_result + '"')
-                sys.exit(1);
-            print(hash_result)            
+                sys.exit(1)
         else:
             hash_check = subprocess.run(['shasum', '-c', sha_file], cwd=binary_path, stdout=subprocess.PIPE)
             hash_result = hash_check.stdout.decode('utf-8')

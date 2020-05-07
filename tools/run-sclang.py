@@ -30,7 +30,7 @@ def main(argv):
         if time.time() > (start_time + timeout):
             output = error_string
             break
-        output = proc.stdout.read(1024).decode('utf-8')
+        output = proc.stdout.read(1024).decode('utf-8').replace('\r', '')
         print(output, end="")
         if proc.poll() == None:
             time.sleep(0.1)

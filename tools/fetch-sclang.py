@@ -25,6 +25,8 @@ def main(argv):
         os_name = 'linux'
     elif platform.system() == 'Darwin':
         os_name = 'osx'
+    elif platform.system() == 'Windows':
+        os_name = 'windows'
     else:
         print('Unsupported operating system.')
         sys.exit(1)
@@ -54,11 +56,20 @@ def main(argv):
         shutil.copyfileobj(response, out_file)
 
     # Check the hash of the downloaded file
-    hash_check = subprocess.run(['shasum', '-c', sha_file], cwd=sclang_path, stdout=subprocess.PIPE)
-    hash_result = hash_check.stdout.decode('utf-8')
-    if hash_result[-3:-1] != 'OK':
-        print('file ' + file_path + ' failed hash!')
-        sys.exit(1)
+    if os_name == 'windows':
+        hash_check = subprocess.run(['certutil', '-hashfile', file_path, 'SHA256'], stdout=subprocess.PIPE);
+        hash_result = hash_check.stdout.decode('utf-8').split('\n')[1].strip();            
+        hash_expected = open(sha_path, 'r').read().strip()
+        if hash_result != hash_expected:
+            print ('file ' + file_path + ' failed hash! Expecting "' + hash_expected
+                + '" got "' + hash_result + '"')
+            sys.exit(1)
+    else:
+        hash_check = subprocess.run(['shasum', '-c', sha_file], cwd=sclang_path, stdout=subprocess.PIPE)
+        hash_result = hash_check.stdout.decode('utf-8')
+        if hash_result[-3:-1] != 'OK':
+            print('file ' + file_path + ' failed hash!')
+            sys.exit(1)
 
     # Extract file
     print('extracting ' + file_path + ' to ' + sclang_path)
