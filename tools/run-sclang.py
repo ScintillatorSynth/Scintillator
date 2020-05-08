@@ -30,12 +30,8 @@ def main(argv):
         if time.time() > (start_time + timeout):
             output = error_string
             break
-        output = proc.stdout.read(1024).decode('utf-8').replace('\r', '')
+        output = proc.stdout.read(4096).decode('utf-8').replace('\r', '')
         print(output, end="")
-        if proc.poll() == None:
-            time.sleep(0.1)
-        else:
-            break
 
     if xvfb:
         xvfb.terminate()
