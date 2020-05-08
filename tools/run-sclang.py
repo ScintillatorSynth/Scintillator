@@ -30,7 +30,7 @@ def main(argv):
         if time.time() > (start_time + timeout):
             output = error_string
             break
-        output = proc.stdout.read(4096).decode('utf-8').replace('\r', '')
+        output = proc.stdout.readline().decode('utf-8').replace('\r', '')
         print(output, end="")
 
     if xvfb:
