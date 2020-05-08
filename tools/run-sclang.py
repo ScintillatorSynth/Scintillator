@@ -33,10 +33,14 @@ def main(argv):
         output = proc.stdout.readline().decode('utf-8').replace('\r', '')
         print(output, end="")
 
+
     if xvfb:
         xvfb.terminate()
     if error_string in output:
+        print('script failure caught, exiting.')
         sys.exit(-1)
+
+    print('script success caught, exiting.')
     sys.exit(0)
 
 if __name__ == "__main__":
