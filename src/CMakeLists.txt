@@ -566,8 +566,9 @@ ExternalProject_Add(reference_images
 
 set(SCIN_REF_IMAGES_PATH "${CMAKE_CURRENT_BINARY_DIR}/ref/src/reference_images")
 
+# We do need the reference images to generate the test images, as they use the sourceMedia images for texture map tests.
 add_custom_target(test_images
-    DEPENDS sclang_language_config scinsynth
+    DEPENDS sclang_language_config scinsynth reference_images-update
     COMMAND  ${SCIN_RUN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/makeTestImages.scd" ${SCIN_REF_IMAGES_PATH} ${SCIN_TEST_IMAGES_ENV}
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     COMMENT "generating test images using swiftshader"
