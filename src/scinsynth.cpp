@@ -113,6 +113,8 @@ int main(int argc, char* argv[]) {
         if (!SetEnvironmentVariable(TEXT("VK_LAYER_PATH"), TEXT(layerPath.string().c_str()))) {
             spdlog::error("Unable to set Vulkan Validation Layer environment variable.");
             return EXIT_FAILURE;
+        } else {
+            spdlog::info("Setting VK_LAYER_PATH to {}", quarkPath.string());
         }
     }
 
@@ -121,6 +123,8 @@ int main(int argc, char* argv[]) {
         if (!SetEnvironmentVariable(TEXT("VK_ICD_FILENAMES"), TEXT(icdPath.string().c_str()))) {
             spdlog::error("Unable to set Swiftshader path environment variable.");
             return EXIT_FAILURE;
+        } else {
+            spdlog::info("Setting VK_ICD_FILENAMES to {}", icdPath.string());
         }
     }
 #endif
