@@ -38,9 +38,11 @@ def main(argv):
     if error_string in output:
         print('script failure caught, exiting.')
         sys.exit(-1)
+        return -1
 
     print('script success caught, exiting.')
     sys.exit(0)
+    return 0
 
 if __name__ == "__main__":
     main(sys.argv[1:])
