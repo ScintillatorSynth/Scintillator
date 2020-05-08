@@ -265,12 +265,6 @@ find_library(SHADERC_LIBRARY
     PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
     NO_DEFAULT_PATH
 )
-find_library(Vulkan_LIBRARY
-    NAMES vulkan-1
-    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-    NO_DEFAULT_PATH
-)
-
 if (WIN32)
     find_library(AVCODEC_LIBRARY
         NAMES avcodec
@@ -292,6 +286,11 @@ if (WIN32)
         PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
         NO_DEFAULT_PATH
     )
+    find_library(Vulkan_LIBRARY
+        NAMES vulkan-1
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
 else()
     find_library(AVCODEC_LIBRARY
         NAMES avcodec
@@ -310,6 +309,11 @@ else()
     )
     find_library(SWSCALE_LIBRARY
         NAMES swscale
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
+    find_library(Vulkan_LIBRARY
+        NAMES vulkan
         PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
         NO_DEFAULT_PATH
     )
