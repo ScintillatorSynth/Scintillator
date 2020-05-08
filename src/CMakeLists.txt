@@ -565,6 +565,7 @@ add_custom_target(test_images
     DEPENDS ${SCLANG_SCIN_CONFIG} scinsynth
     COMMAND  ${SCIN_RUN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/makeTestImages.scd" ${SCIN_REF_IMAGES_PATH} ${SCIN_TEST_IMAGES_ENV}
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    COMMENT "generating test images using swiftshader"
     VERBATIM
 )
 
@@ -572,6 +573,7 @@ add_custom_target(sclang_unit_tests
     DEPENDS ${SCLANG_SCIN_CONFIG}
     COMMAND ${SCIN_RUN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/runUnitTests.scd"
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    COMMENT "running sclang unit tests"
     VERBATIM
 )
 
@@ -579,6 +581,7 @@ add_custom_target(compare_images
     DEPENDS test_images reference_images-update
     COMMAND ${PYTHON_EXECUTABLE} ../tools/compare-test-images.py "${PROJECT_SOURCE_DIR}" ${SCIN_REF_IMAGES_PATH} ${GIT_COMMIT_HASH} ${SCIN_TEST_IMAGE_HASH} "${PROJECT_BINARY_DIR}/report"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+    COMMENT "running image comparison script"
     VERBATIM
 )
 
