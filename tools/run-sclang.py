@@ -33,7 +33,6 @@ def main(argv):
         output = proc.stdout.readline().decode('utf-8').replace('\r', '')
         print(output, end="")
 
-
     if xvfb:
         xvfb.terminate()
     if error_string in output:

@@ -256,68 +256,63 @@ elseif(UNIX)
         linuxdeploy-install
     )
 elseif(WIN32)
-	add_executable(scinsynth ${scintillator_synth_files})
+    add_executable(scinsynth ${scintillator_synth_files})
 endif()
 
 # Force using the locally sourced libraries as opposed to system libs
 find_library(SHADERC_LIBRARY
-	NAMES shaderc_combined
-	PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-	NO_DEFAULT_PATH
+    NAMES shaderc_combined
+    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+    NO_DEFAULT_PATH
+)
+find_library(Vulkan_LIBRARY
+    NAMES vulkan-1
+    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+    NO_DEFAULT_PATH
 )
 
 if (WIN32)
-	find_library(AVCODEC_LIBRARY
-		NAMES avcodec
-		PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
-		NO_DEFAULT_PATH
-	)
-	find_library(AVFORMAT_LIBRARY
-		NAMES avformat
-		PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
-		NO_DEFAULT_PATH
-	)
-	find_library(AVUTIL_LIBRARY
-		NAMES avutil
-		PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
-		NO_DEFAULT_PATH
-	)
-	find_library(SWSCALE_LIBRARY
-		NAMES swscale
-		PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
-		NO_DEFAULT_PATH
-	)
-	find_library(Vulkan_LIBRARY
-		NAMES vulkan-1
-		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-		NO_DEFAULT_PATH
-	)
+    find_library(AVCODEC_LIBRARY
+        NAMES avcodec
+        PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
+        NO_DEFAULT_PATH
+    )
+    find_library(AVFORMAT_LIBRARY
+        NAMES avformat
+        PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
+        NO_DEFAULT_PATH
+    )
+    find_library(AVUTIL_LIBRARY
+        NAMES avutil
+        PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
+        NO_DEFAULT_PATH
+    )
+    find_library(SWSCALE_LIBRARY
+        NAMES swscale
+        PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
+        NO_DEFAULT_PATH
+    )
 else()
-	find_library(AVCODEC_LIBRARY
-		NAMES avcodec
-		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-		NO_DEFAULT_PATH
-	)
-	find_library(AVFORMAT_LIBRARY
-		NAMES avformat
-		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-		NO_DEFAULT_PATH
-	)
-	find_library(AVUTIL_LIBRARY
-		NAMES avutil
-		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-		NO_DEFAULT_PATH
-	)
-	find_library(SWSCALE_LIBRARY
-		NAMES swscale
-		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-		NO_DEFAULT_PATH
-	)
-	find_library(Vulkan_LIBRARY
-		NAMES vulkan
-		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-		NO_DEFAULT_PATH
-	)
+    find_library(AVCODEC_LIBRARY
+        NAMES avcodec
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
+    find_library(AVFORMAT_LIBRARY
+        NAMES avformat
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
+    find_library(AVUTIL_LIBRARY
+        NAMES avutil
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
+    find_library(SWSCALE_LIBRARY
+        NAMES swscale
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
 endif()
 
 target_link_libraries(scinsynth
@@ -336,13 +331,13 @@ target_link_libraries(scinsynth
 )
 
 if (WIN32)
-	target_link_libraries(scinsynth
-		"${SCIN_EXT_INSTALL_DIR}/lib/liblo.lib"
-	)	
+    target_link_libraries(scinsynth
+        "${SCIN_EXT_INSTALL_DIR}/lib/liblo.lib"
+    )
 else()
-	target_link_libraries(scinsynth
-		"${SCIN_EXT_INSTALL_DIR}/lib/liblo.a"
-	)	
+    target_link_libraries(scinsynth
+        "${SCIN_EXT_INSTALL_DIR}/lib/liblo.a"
+    )
 endif()
 
 target_include_directories(scinsynth PRIVATE
@@ -563,7 +558,7 @@ ExternalProject_Add(reference_images
 set(SCIN_REF_IMAGES_PATH "${CMAKE_CURRENT_BINARY_DIR}/ref/src/reference_images")
 
 add_custom_target(test_images
-    DEPENDS ${SCLANG_SCIN_CONFIG} scinsynth reference_images-update
+    DEPENDS ${SCLANG_SCIN_CONFIG} scinsynth
     COMMAND  ${SCIN_RUN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/makeTestImages.scd" ${SCIN_REF_IMAGES_PATH} ${SCIN_TEST_IMAGES_ENV}
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     VERBATIM
