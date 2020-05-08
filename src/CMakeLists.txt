@@ -547,6 +547,9 @@ add_custom_command(OUTPUT ${SCLANG_SCIN_CONFIG}
     COMMENT "configuring sclang to include Scintillator classes."
     VERBATIM
 )
+add_custom_target(sclang_language_config
+    DEPENDS ${SCLANG_SCIN_CONFIG}
+)
 
 # Reference source and test images. We always use a specific git hash, to control which images we compare against.
 set(SCIN_TEST_IMAGE_HASH "d329aafc7aca154d24cb93206988e0f37fbc8ef6")
@@ -562,7 +565,7 @@ ExternalProject_Add(reference_images
 set(SCIN_REF_IMAGES_PATH "${CMAKE_CURRENT_BINARY_DIR}/ref/src/reference_images")
 
 add_custom_target(test_images
-    DEPENDS ${SCLANG_SCIN_CONFIG} scinsynth
+    DEPENDS sclang_language_config scinsynth
     COMMAND  ${SCIN_RUN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/makeTestImages.scd" ${SCIN_REF_IMAGES_PATH} ${SCIN_TEST_IMAGES_ENV}
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     COMMENT "generating test images using swiftshader"
@@ -570,7 +573,7 @@ add_custom_target(test_images
 )
 
 add_custom_target(sclang_unit_tests
-    DEPENDS ${SCLANG_SCIN_CONFIG}
+    DEPENDS sclang_language_config
     COMMAND ${SCIN_RUN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/runUnitTests.scd"
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     COMMENT "running sclang unit tests"
