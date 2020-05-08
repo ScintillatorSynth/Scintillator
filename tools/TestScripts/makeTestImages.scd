@@ -20,15 +20,15 @@ fork {
     imageOut = Scintillator.path +/+ "build" +/+ "testing";
 	testDefs = (Scintillator.path +/+ "tools" +/+ "TestScripts" +/+ "testManifest.yaml").parseYAMLFile;
 	options = ScinServerOptions.new;
-	options.logLevel = 1;
+	options.logLevel = 0;
 	options.createWindow = false;
 	options.frameRate = 0;
 	options.width = 400;
 	options.height = 400;
 	options.swiftshader = true;
-	if (thisProcess.platform.name !== 'windows', {
+//	if (thisProcess.platform.name !== 'windows', {
 		options.vulkanValidation = true;
-	});
+//	});
 	options.onServerError = { |exitCode|
 		"*** nonzero exit code % on server, exiting.".format(exitCode).postln;
         "*** SCRIPT FAILED ***".postln;
