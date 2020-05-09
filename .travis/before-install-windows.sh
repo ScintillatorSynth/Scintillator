@@ -17,4 +17,3 @@ cd $TRAVIS_BUILD_DIR
 /c/Python38/python.exe tools/fetch-binary-deps.py
 /c/Python38/python.exe tools/fetch-sclang.py $TRAVIS_HOME/sclang
 
-
