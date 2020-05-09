@@ -7,6 +7,11 @@ git clone https://github.com/yaml/pyyaml.git pyyaml
 cd pyyaml
 /c/Python38/python.exe setup.py install
 
+echo "*** installing Vulkan SDK"
+cd $HOME
+curl https://scintillator-synth-coverage.s3-us-west-1.amazonaws.com/dependencies/windows/VulkanSDK-1.2.135.0-Installer.exe --output vulkan-sdk.exe
+./vulkan-sdk.exe /S
+
 echo "*** installing build binary deps"
 cd $TRAVIS_BUILD_DIR
 /c/Python38/python.exe tools/fetch-binary-deps.py
