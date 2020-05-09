@@ -10,7 +10,7 @@ cd pyyaml
 echo "*** installing Vulkan SDK"
 cd $HOME
 curl https://scintillator-synth-coverage.s3-us-west-1.amazonaws.com/dependencies/windows/VulkanSDK-1.2.135.0-Installer.exe --output vulkan-sdk.exe
-./vulkan-sdk.exe /S
+powershell "./vulkan-sdk.exe /S"
 
 echo "*** installing build binary deps"
 cd $TRAVIS_BUILD_DIR
