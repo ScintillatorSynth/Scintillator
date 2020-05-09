@@ -114,7 +114,7 @@ int main(int argc, char* argv[]) {
             spdlog::error("Unable to set Vulkan Validation Layer environment variable.");
             return EXIT_FAILURE;
         } else {
-            spdlog::info("Setting VK_LAYER_PATH to {}", quarkPath.string());
+            spdlog::info("Setting VK_LAYER_PATH to {}", layerPath.string());
         }
     }
 

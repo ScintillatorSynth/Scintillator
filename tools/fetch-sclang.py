@@ -58,7 +58,7 @@ def main(argv):
     # Check the hash of the downloaded file
     if os_name == 'windows':
         hash_check = subprocess.run(['certutil', '-hashfile', file_path, 'SHA256'], stdout=subprocess.PIPE);
-        hash_result = hash_check.stdout.decode('utf-8').split('\n')[1].strip();            
+        hash_result = hash_check.stdout.decode('utf-8').split('\n')[1].strip();
         hash_expected = open(sha_path, 'r').read().strip()
         if hash_result != hash_expected:
             print ('file ' + file_path + ' failed hash! Expecting "' + hash_expected
