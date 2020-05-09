@@ -120,8 +120,7 @@ bool Instance::create() {
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
     std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-    extensions.push_back("VK_KHR_get_physical_device_properties2");
-
+//    extensions.push_back("VK_KHR_get_physical_device_properties2");
 
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {};
     if (m_enableValidation) {
