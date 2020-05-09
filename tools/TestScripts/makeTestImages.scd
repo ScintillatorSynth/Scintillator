@@ -26,9 +26,7 @@ fork {
 	options.width = 400;
 	options.height = 400;
 	options.swiftshader = true;
-	if (thisProcess.platform.name !== 'windows', {
-		options.vulkanValidation = true;
-	});
+	options.vulkanValidation = true;
 	options.onServerError = { |exitCode|
 		"*** nonzero exit code % on server, exiting.".format(exitCode).postln;
         "*** SCRIPT FAILED ***".postln;
