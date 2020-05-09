@@ -8,14 +8,13 @@ cd pyyaml
 /c/Python38/python.exe setup.py install
 
 echo "*** installing vulkan runtime"
-cd $HOME
-mkdir vulkan
-cd vulkan
-curl https://scintillator-synth-coverage.s3-us-west-1.amazonaws.com/dependencies/windows/vulkan-runtime-components.zip --output vulkan-runtime-components.zip
-unzip vulkan-runtime-components.zip
-cd Vulkan*
-./x86/vulkaninfo.exe
-
+#cd $HOME
+#mkdir vulkan
+#cd vulkan
+#curl https://scintillator-synth-coverage.s3-us-west-1.amazonaws.com/dependencies/windows/vulkan-runtime-components.zip --output vulkan-runtime-components.zip
+#unzip vulkan-runtime-components.zip
+#cd Vulkan*
+#./x86/vulkaninfo.exe
 
 # curl https://scintillator-synth-coverage.s3-us-west-1.amazonaws.com/dependencies/windows/vulkan-runtime.exe --output vulkan-runtime.exe
 #./vulkan-runtime.exe /S

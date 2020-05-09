@@ -127,6 +127,9 @@ int main(int argc, char* argv[]) {
             spdlog::info("Setting VK_ICD_FILENAMES to {}", icdPath.string());
         }
     }
+
+    spdlog::info("turning on VK_LOADER_DEBUG");
+    SetEnvironmentVariable(TEXT("VK_LOADER_DEBUG"), TEXT("all"));
 #endif
 
     spdlog::info(version);

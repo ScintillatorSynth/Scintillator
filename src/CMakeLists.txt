@@ -460,7 +460,7 @@ elseif(WIN32)
     install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/swscale-5.dll" DESTINATION "${SCIN_WIN64_DIR}")
     install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/swresample-3.dll" DESTINATION "${SCIN_WIN64_DIR}")
     install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/liblo.dll" DESTINATION "${SCIN_WIN64_DIR}")
-#    install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/vulkan-1.dll" DESTINATION "${SCIN_WIN64_DIR}")
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/vulkan-1.dll" DESTINATION "${SCIN_WIN64_DIR}")
     install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/windows/vulkan" DESTINATION "${SCIN_WIN64_DIR}")
     install(FILES "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d/vk_swiftshader.dll"
         DESTINATION "${SCIN_WIN64_DIR}/vulkan/icd.d")
