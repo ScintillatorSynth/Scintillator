@@ -17,6 +17,8 @@ matrix:
           env:
               - DO_COVERAGE=false
         - os: windows
+          env:
+              - DO_COVERAGE=false
 
 before_install:
     - $TRAVIS_BUILD_DIR/.travis/before-install-$TRAVIS_OS_NAME.sh
