@@ -9,8 +9,8 @@ if [[ -z $TRAVIS_TAG ]]; then
     echo $FWD_HTML > $HOME/builds/scinsynth-w64-latest.html
 else
     mkdir -p $HOME/releases/$TRAVIS_TAG
-    export $SCIN_BIN_PATH=`cygpath -d $TRAVIS_BUILD_DIR/bin/scinsynth-w64`
-    export $SCIN_ZIP_PATH=`cygpath -d $HOME/releases/$TRAVIS_TAG/scinsynth-w64.zip`
+    export SCIN_BIN_PATH=`cygpath -d $TRAVIS_BUILD_DIR/bin/scinsynth-w64`
+    export SCIN_ZIP_PATH=`cygpath -d $HOME/releases/$TRAVIS_TAG/scinsynth-w64.zip`
     powershell 'compress-archive '$SCIN_BIN_PATH' '$SCIN_ZIP_PATH
     certutil -hashfile $HOME/releases/$TRAVIS_TAG/scinsynth-w64.zip SHA256 | sed -n '2,2p;2q' > $HOME/releases/$TRAVIS_TAG/scinsynth-w64.zip.sha256
 fi
