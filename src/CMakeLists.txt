@@ -540,7 +540,6 @@ if (NOT DEFINED SCIN_SCLANG)
 endif()
 
 set(SCIN_RUN_SCLANG ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/tools/run-sclang.py" ${SCIN_SCLANG})
-#set(SCIN_RUN_SCLANG ${SCIN_SCLANG})
 
 set(SCLANG_SCIN_CONFIG "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml")
 add_custom_command(OUTPUT ${SCLANG_SCIN_CONFIG}

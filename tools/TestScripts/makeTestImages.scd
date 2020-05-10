@@ -20,7 +20,7 @@ fork {
     imageOut = Scintillator.path +/+ "build" +/+ "testing";
 	testDefs = (Scintillator.path +/+ "tools" +/+ "TestScripts" +/+ "testManifest.yaml").parseYAMLFile;
 	options = ScinServerOptions.new;
-	options.logLevel = 0;
+	options.logLevel = 2;
 	options.createWindow = false;
 	options.frameRate = 0;
 	options.width = 400;

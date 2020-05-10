@@ -13,12 +13,10 @@ powershell 'New-ItemProperty -PATH "HKLM:\SOFTWARE\Khronos\Vulkan\Drivers" -Name
 
 echo "building language config"
 cmake --build . --config Release --target sclang_language_config
-ps
 
 echo "building test images"
 cmake --build . --config Release --target test_images
-ps
 
 echo "comparing images"
 cmake --build . --config Release --target compare_images
-ps
+
