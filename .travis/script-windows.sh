@@ -10,12 +10,5 @@ export SWSHADER_PATH=`cygpath -d $TRAVIS_BUILD_DIR`'\bin\scinsynth-w64\vulkan\ic
 echo "Setting Swiftshader path to $SWSHADER_PATH"
 powershell 'New-ItemProperty -PATH "HKLM:\SOFTWARE\Khronos\Vulkan\Drivers" -Name "'$SWSHADER_PATH'" -Value "0" -PropertyType "DWORD"'
 
-echo "building language config"
-cmake --build . --config Release --target sclang_language_config
-
-echo "building test images"
-cmake --build . --config Release --target test_images
-
-echo "comparing images"
 cmake --build . --config Release --target compare_images
 
