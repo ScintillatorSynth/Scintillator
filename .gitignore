@@ -8,3 +8,6 @@ build
 bin
 !bin/README.md
 
+# ignore vim/gvim swap cruft
+.*.swp
+

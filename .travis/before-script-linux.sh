@@ -1,5 +1,6 @@
 #!/bin/bash
 
+touch $TRAVIS_BUILD_DIR/bin/disable_auto_install
 cd $TRAVIS_BUILD_DIR/build
 
 if [ $DO_COVERAGE = true ]; then

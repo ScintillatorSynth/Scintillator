@@ -85,7 +85,7 @@ def main(argv):
                 encoding="utf-8", stderr=subprocess.PIPE)
             status = 'OK'
             # some versions of compare are returning inf and some return zero for identical images so we check for both.
-            if results.stderr != 'inf' and results.stderr != '0':
+            if results.stderr != 'inf' and results.stderr != '0' and results.stderr != '1.#INF':
                 status = '<strong>DIFERENT</strong>'
                 diffCount += 1
                 print("difference detected in {category}/{filename}".format(category=category, filename=imageFileName))

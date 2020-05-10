@@ -256,68 +256,67 @@ elseif(UNIX)
         linuxdeploy-install
     )
 elseif(WIN32)
-	add_executable(scinsynth ${scintillator_synth_files})
+    add_executable(scinsynth ${scintillator_synth_files})
 endif()
 
 # Force using the locally sourced libraries as opposed to system libs
 find_library(SHADERC_LIBRARY
-	NAMES shaderc_combined
-	PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-	NO_DEFAULT_PATH
+    NAMES shaderc_combined
+    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+    NO_DEFAULT_PATH
 )
-
 if (WIN32)
-	find_library(AVCODEC_LIBRARY
-		NAMES avcodec
-		PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
-		NO_DEFAULT_PATH
-	)
-	find_library(AVFORMAT_LIBRARY
-		NAMES avformat
-		PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
-		NO_DEFAULT_PATH
-	)
-	find_library(AVUTIL_LIBRARY
-		NAMES avutil
-		PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
-		NO_DEFAULT_PATH
-	)
-	find_library(SWSCALE_LIBRARY
-		NAMES swscale
-		PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
-		NO_DEFAULT_PATH
-	)
-	find_library(Vulkan_LIBRARY
-		NAMES vulkan-1
-		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-		NO_DEFAULT_PATH
-	)
+    find_library(AVCODEC_LIBRARY
+        NAMES avcodec
+        PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
+        NO_DEFAULT_PATH
+    )
+    find_library(AVFORMAT_LIBRARY
+        NAMES avformat
+        PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
+        NO_DEFAULT_PATH
+    )
+    find_library(AVUTIL_LIBRARY
+        NAMES avutil
+        PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
+        NO_DEFAULT_PATH
+    )
+    find_library(SWSCALE_LIBRARY
+        NAMES swscale
+        PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
+        NO_DEFAULT_PATH
+    )
+    find_library(Vulkan_LIBRARY
+        NAMES vulkan-1
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
 else()
-	find_library(AVCODEC_LIBRARY
-		NAMES avcodec
-		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-		NO_DEFAULT_PATH
-	)
-	find_library(AVFORMAT_LIBRARY
-		NAMES avformat
-		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-		NO_DEFAULT_PATH
-	)
-	find_library(AVUTIL_LIBRARY
-		NAMES avutil
-		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-		NO_DEFAULT_PATH
-	)
-	find_library(SWSCALE_LIBRARY
-		NAMES swscale
-		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-		NO_DEFAULT_PATH
-	)
-	find_library(Vulkan_LIBRARY
-		NAMES vulkan
-		PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-		NO_DEFAULT_PATH
-	)
+    find_library(AVCODEC_LIBRARY
+        NAMES avcodec
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
+    find_library(AVFORMAT_LIBRARY
+        NAMES avformat
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
+    find_library(AVUTIL_LIBRARY
+        NAMES avutil
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
+    find_library(SWSCALE_LIBRARY
+        NAMES swscale
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
+    find_library(Vulkan_LIBRARY
+        NAMES vulkan
+        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
 endif()
 
 target_link_libraries(scinsynth
@@ -336,13 +335,13 @@ target_link_libraries(scinsynth
 )
 
 if (WIN32)
-	target_link_libraries(scinsynth
-		"${SCIN_EXT_INSTALL_DIR}/lib/liblo.lib"
-	)	
+    target_link_libraries(scinsynth
+        "${SCIN_EXT_INSTALL_DIR}/lib/liblo.lib"
+    )
 else()
-	target_link_libraries(scinsynth
-		"${SCIN_EXT_INSTALL_DIR}/lib/liblo.a"
-	)	
+    target_link_libraries(scinsynth
+        "${SCIN_EXT_INSTALL_DIR}/lib/liblo.a"
+    )
 endif()
 
 target_include_directories(scinsynth PRIVATE
@@ -451,28 +450,25 @@ elseif(UNIX)
     VERBATIM
     )
 elseif(WIN32)
-		set(SCIN_WIN64_DIR "${PROJECT_SOURCE_DIR}/bin/scinsynth-w64")
-		file(MAKE_DIRECTORY "${SCIN_WIN64_DIR}")
-		set(CMAKE_INSTALL_UCRT_LIBRARIES ON)
-		set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION "${SCIN_WIN64_DIR}")
-		include(InstallRequiredSystemLibraries)
-		install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION "${SCIN_WIN64_DIR}")
-		install(TARGETS scinsynth RUNTIME DESTINATION "${SCIN_WIN64_DIR}")
-		## TODO: can replace with ${_LIBRARY} variables, so versions aren't so hard-coded?
-		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/avcodec-58.dll" DESTINATION "${SCIN_WIN64_DIR}")
-		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/avformat-58.dll" DESTINATION "${SCIN_WIN64_DIR}")
-		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/avutil-56.dll" DESTINATION "${SCIN_WIN64_DIR}")		
-		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/swscale-5.dll" DESTINATION "${SCIN_WIN64_DIR}")		
-		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/swresample-3.dll" DESTINATION "${SCIN_WIN64_DIR}")		
-		install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/liblo.dll" DESTINATION "${SCIN_WIN64_DIR}")
-		install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/windows/vulkan" DESTINATION "${SCIN_WIN64_DIR}")
-		install(FILES "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d/vk_swiftshader.dll"
-			DESTINATION "${SCIN_WIN64_DIR}/vulkan/icd.d")
-		install(FILES
-			"${SCIN_EXT_INSTALL_DIR}/lib/VkLayer_khronos_validation.dll"
-			"${SCIN_EXT_INSTALL_DIR}/lib/VkLayer_khronos_validation.json"
-			DESTINATION "${SCIN_WIN64_DIR}/vulkan/explicit_layer.d"
-		)
+    set(SCIN_WIN64_DIR "${PROJECT_SOURCE_DIR}/bin/scinsynth-w64")
+    file(MAKE_DIRECTORY "${SCIN_WIN64_DIR}")
+    install(TARGETS scinsynth RUNTIME DESTINATION "${SCIN_WIN64_DIR}")
+    ## TODO: can replace with ${_LIBRARY} variables, so versions aren't so hard-coded?
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/avcodec-58.dll" DESTINATION "${SCIN_WIN64_DIR}")
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/avformat-58.dll" DESTINATION "${SCIN_WIN64_DIR}")
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/avutil-56.dll" DESTINATION "${SCIN_WIN64_DIR}")
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/swscale-5.dll" DESTINATION "${SCIN_WIN64_DIR}")
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/swresample-3.dll" DESTINATION "${SCIN_WIN64_DIR}")
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/liblo.dll" DESTINATION "${SCIN_WIN64_DIR}")
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/bin/vulkan-1.dll" DESTINATION "${SCIN_WIN64_DIR}")
+    install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/windows/vulkan" DESTINATION "${SCIN_WIN64_DIR}")
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d/vk_swiftshader.dll"
+        DESTINATION "${SCIN_WIN64_DIR}/vulkan/icd.d")
+    install(FILES
+        "${SCIN_EXT_INSTALL_DIR}/lib/VkLayer_khronos_validation.dll"
+        "${SCIN_EXT_INSTALL_DIR}/lib/VkLayer_khronos_validation.json"
+        DESTINATION "${SCIN_WIN64_DIR}/vulkan/explicit_layer.d"
+    )
 endif()
 
 #### Automatic Code Formatting and Linting
@@ -552,6 +548,9 @@ add_custom_command(OUTPUT ${SCLANG_SCIN_CONFIG}
     COMMENT "configuring sclang to include Scintillator classes."
     VERBATIM
 )
+add_custom_target(sclang_language_config
+    DEPENDS ${SCLANG_SCIN_CONFIG}
+)
 
 # Reference source and test images. We always use a specific git hash, to control which images we compare against.
 set(SCIN_TEST_IMAGE_HASH "d329aafc7aca154d24cb93206988e0f37fbc8ef6")
@@ -566,17 +565,20 @@ ExternalProject_Add(reference_images
 
 set(SCIN_REF_IMAGES_PATH "${CMAKE_CURRENT_BINARY_DIR}/ref/src/reference_images")
 
+# We do need the reference images to generate the test images, as they use the sourceMedia images for texture map tests.
 add_custom_target(test_images
-    DEPENDS ${SCLANG_SCIN_CONFIG} scinsynth reference_images-update
+    DEPENDS sclang_language_config scinsynth reference_images-update
     COMMAND  ${SCIN_RUN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/makeTestImages.scd" ${SCIN_REF_IMAGES_PATH} ${SCIN_TEST_IMAGES_ENV}
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    COMMENT "generating test images using swiftshader"
     VERBATIM
 )
 
 add_custom_target(sclang_unit_tests
-    DEPENDS ${SCLANG_SCIN_CONFIG}
+    DEPENDS sclang_language_config
     COMMAND ${SCIN_RUN_SCLANG} -l "${PROJECT_BINARY_DIR}/testing/sclang_config.yaml" "${PROJECT_SOURCE_DIR}/tools/TestScripts/runUnitTests.scd"
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    COMMENT "running sclang unit tests"
     VERBATIM
 )
 
@@ -584,6 +586,7 @@ add_custom_target(compare_images
     DEPENDS test_images reference_images-update
     COMMAND ${PYTHON_EXECUTABLE} ../tools/compare-test-images.py "${PROJECT_SOURCE_DIR}" ${SCIN_REF_IMAGES_PATH} ${GIT_COMMIT_HASH} ${SCIN_TEST_IMAGE_HASH} "${PROJECT_BINARY_DIR}/report"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+    COMMENT "running image comparison script"
     VERBATIM
 )
 

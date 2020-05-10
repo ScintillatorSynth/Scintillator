@@ -183,6 +183,9 @@ ScinServer {
 			}, {
 				statusPoller.serverBooting = false;
 				"*** scinsynth fatal error, code: %".format(exitCode).postln;
+				if (options.onServerError.notNil, {
+					options.onServerError.value();
+				});
 			});
 		});
 
