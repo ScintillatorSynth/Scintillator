@@ -16,6 +16,9 @@ VkFilter filterForAbstract(scin::base::AbstractSampler::FilterMode filterMode) {
     case scin::base::AbstractSampler::FilterMode::kNearest:
         return VK_FILTER_NEAREST;
     }
+
+    spdlog::error("Unknown FilterMode; defaulting to linear");
+    return VK_FILTER_LINEAR;
 }
 
 VkSamplerAddressMode addressModeForAbstract(scin::base::AbstractSampler::AddressMode addressMode) {
@@ -32,6 +35,9 @@ VkSamplerAddressMode addressModeForAbstract(scin::base::AbstractSampler::Address
     case scin::base::AbstractSampler::AddressMode::kMirroredRepeat:
         return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
     }
+
+    spdlog::error("Unknown AddressMode; defaulting to repeat");
+    return VK_SAMPLER_ADDRESS_MODE_REPEAT;
 }
 
 VkBorderColor borderColorForAbstract(scin::base::AbstractSampler::ClampBorderColor borderColor) {
@@ -45,6 +51,9 @@ VkBorderColor borderColorForAbstract(scin::base::AbstractSampler::ClampBorderCol
     case scin::base::AbstractSampler::ClampBorderColor::kWhite:
         return VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
     }
+
+    spdlog::error("Unknown ClampBorderColor; defaulting to transparent black");
+    return VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
 }
 
 } // namespace
