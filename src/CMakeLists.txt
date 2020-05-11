@@ -331,6 +331,7 @@ target_link_libraries(scinsynth
     ${AVUTIL_LIBRARY}
     ${SHADERC_LIBRARY}
     ${SWSCALE_LIBRARY}
+    ${SCIN_EXT_INSTALL_DIR}/lib/liblo.${SCIN_LIBLO_LIBRARY_SUFFIX}
     VulkanMemoryAllocator
     gflags
     glfw
@@ -338,16 +339,6 @@ target_link_libraries(scinsynth
     scintillator_base
     spdlog
 )
-
-if (WIN32)
-    target_link_libraries(scinsynth
-        "${SCIN_EXT_INSTALL_DIR}/lib/liblo.lib"
-    )
-else()
-    target_link_libraries(scinsynth
-        "${SCIN_EXT_INSTALL_DIR}/lib/liblo.a"
-    )
-endif()
 
 target_include_directories(scinsynth PRIVATE
     ${AVCODEC_INCLUDE_DIR}

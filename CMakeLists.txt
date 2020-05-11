@@ -59,6 +59,12 @@ set(CMAKE_C_FLAGS_COVERAGE
     "${CMAKE_C_FLAGS_DEBUG} -fprofile-instr-generate -fcoverage-mapping"
     CACHE STRING "C coverage compile flags" FORCE)
 
+if(WIN32)
+    set(SCIN_LIBLO_LIBRARY_SUFFIX lib)
+else()
+    set(SCIN_LIBLO_LIBRARY_SUFFIX a)
+endif()
+
 add_subdirectory(third_party)
 add_subdirectory(src)
 
