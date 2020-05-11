@@ -17,8 +17,13 @@ endif()
 #### "Core" files (without external dependencies)
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/base")
 
+find_program(gperf_program gperf)
+if (NOT gperf_program)
+    message(FATAL_ERROR "Could not find gperf")
+endif()
+
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/base/Intrinsic.cpp"
-    COMMAND gperf --output-file=${CMAKE_CURRENT_BINARY_DIR}/base/Intrinsic.cpp ${CMAKE_CURRENT_SOURCE_DIR}/base/Intrinsic.cpp.in
+    COMMAND ${gperf_program} --output-file=${CMAKE_CURRENT_BINARY_DIR}/base/Intrinsic.cpp ${CMAKE_CURRENT_SOURCE_DIR}/base/Intrinsic.cpp.in
     MAIN_DEPENDENCY base/Intrinsic.cpp.in
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/base"
     VERBATIM
@@ -91,7 +96,7 @@ endif()
 configure_file(infra/Version.hpp.in "${CMAKE_CURRENT_BINARY_DIR}/infra/Version.hpp")
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/osc/commands")
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp"
-    COMMAND gperf --output-file=${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp ${CMAKE_CURRENT_SOURCE_DIR}/osc/commands/Command.cpp.in
+    COMMAND ${gperf_program} --output-file=${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp ${CMAKE_CURRENT_SOURCE_DIR}/osc/commands/Command.cpp.in
     MAIN_DEPENDENCY osc/commands/Command.cpp.in
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/osc/commands"
     VERBATIM
