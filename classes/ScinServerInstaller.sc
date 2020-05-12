@@ -1,5 +1,6 @@
 ScinServerInstaller {
 	const releasesURL = "https://scintillator-synth-coverage.s3-us-west-1.amazonaws.com/releases/";
+
 	classvar routine;
 	classvar continue;
 
@@ -276,12 +277,19 @@ ScinServerInstaller {
 					},
 
 					\moveOldBinary, {
+						var moveCmd = "mv";
+
+						Platform.case(\windows) {
+							moveCmd = "move";
+						};
+
 						if (oldVersion.isNil, {
 							"*** unable to determine version of old binary, using \"unknown\"".postln;
 							oldVersion = ".unknown";
 						});
 						oldBinPath = binaryPath ++ "." ++ oldVersion ++ ".bak";
-						"mv \"%\" \"%\"".format(binaryPath, oldBinPath).unixCmdGetStdOut;
+
+						"% \"%\" \"%\"".format(moveCmd, binaryPath, oldBinPath).unixCmdGetStdOut;
 						state = \extractBinary;
 					},
 				); // switch
