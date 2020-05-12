@@ -44,7 +44,7 @@ function(DownloadBinaryDep dep_name)
 
     # Download xyz-latest.html and parse it to find the real ZIP URL
     set(dep_latest_file_name ${dep_name}-${dep_os_name}-latest.html)
-    set(dep_latest_url http://scintillator-synth-coverage.s3-website-us-west-1.amazonaws.com/binaries/${dep_name}/${dep_latest_file_name})
+    set(dep_latest_url http://scintillator-synth-coverage.s3.amazonaws.com/binaries/${dep_name}/${dep_latest_file_name})
     set(dep_latest_file ${dep_dir}/${dep_latest_file_name})
     message(VERBOSE "Download latest-redirect from ${dep_latest_url}")
     file(DOWNLOAD ${dep_latest_url} ${dep_latest_file})
