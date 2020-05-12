@@ -65,7 +65,7 @@ add_subdirectory(glm)
 #### VulkanMemoryAllocator
 add_library(VulkanMemoryAllocator STATIC "VulkanMemoryAllocatorBuild.cpp")
 target_include_directories(VulkanMemoryAllocator PUBLIC VulkanMemoryAllocator/src)
-target_include_directories(VulkanMemoryAllocator PRIVATE binary-deps/vulkan-ext/include)
+target_link_libraries(VulkanMemoryAllocator PUBLIC vulkan)
 
 #### googletest
 set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
