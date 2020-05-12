@@ -11,3 +11,7 @@ bin
 # ignore vim/gvim swap cruft
 .*.swp
 
+# third party binary dependencies
+third_party/binary-deps/ffmpeg-ext
+third_party/binary-deps/vulkan-ext
+third_party/binary-deps/swiftshader-ext

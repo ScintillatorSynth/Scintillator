@@ -264,73 +264,13 @@ elseif(WIN32)
     add_executable(scinsynth ${scintillator_synth_files})
 endif()
 
-# Force using the locally sourced libraries as opposed to system libs
-find_library(SHADERC_LIBRARY
-    NAMES shaderc_combined
-    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-    NO_DEFAULT_PATH
-)
-if (WIN32)
-    find_library(AVCODEC_LIBRARY
-        NAMES avcodec
-        PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
-        NO_DEFAULT_PATH
-    )
-    find_library(AVFORMAT_LIBRARY
-        NAMES avformat
-        PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
-        NO_DEFAULT_PATH
-    )
-    find_library(AVUTIL_LIBRARY
-        NAMES avutil
-        PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
-        NO_DEFAULT_PATH
-    )
-    find_library(SWSCALE_LIBRARY
-        NAMES swscale
-        PATHS "${SCIN_EXT_INSTALL_DIR}/bin"
-        NO_DEFAULT_PATH
-    )
-    find_library(Vulkan_LIBRARY
-        NAMES vulkan-1
-        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-        NO_DEFAULT_PATH
-    )
-else()
-    find_library(AVCODEC_LIBRARY
-        NAMES avcodec
-        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-        NO_DEFAULT_PATH
-    )
-    find_library(AVFORMAT_LIBRARY
-        NAMES avformat
-        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-        NO_DEFAULT_PATH
-    )
-    find_library(AVUTIL_LIBRARY
-        NAMES avutil
-        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-        NO_DEFAULT_PATH
-    )
-    find_library(SWSCALE_LIBRARY
-        NAMES swscale
-        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-        NO_DEFAULT_PATH
-    )
-    find_library(Vulkan_LIBRARY
-        NAMES vulkan
-        PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-        NO_DEFAULT_PATH
-    )
-endif()
-
 target_link_libraries(scinsynth
-    "${Vulkan_LIBRARY}"
-    ${AVCODEC_LIBRARY}
-    ${AVFORMAT_LIBRARY}
-    ${AVUTIL_LIBRARY}
-    ${SHADERC_LIBRARY}
-    ${SWSCALE_LIBRARY}
+    shaderc_combined
+    vulkan
+    avcodec
+    avformat
+    avutil
+    swscale
     ${SCIN_EXT_INSTALL_DIR}/lib/liblo.${SCIN_LIBLO_LIBRARY_SUFFIX}
     VulkanMemoryAllocator
     gflags
@@ -338,14 +278,6 @@ target_link_libraries(scinsynth
     glm
     scintillator_base
     spdlog
-)
-
-target_include_directories(scinsynth PRIVATE
-    ${AVCODEC_INCLUDE_DIR}
-    ${AVFORMAT_INCLUDE_DIR}
-    ${AVUTIL_INCLUDE_DIR}
-    ${Vulkan_INCLUDE_DIRS}
-    ${SWSCALE_INCLUDE_DIR}
 )
 
 if(UNIX AND NOT APPLE)

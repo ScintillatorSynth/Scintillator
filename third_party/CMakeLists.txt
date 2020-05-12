@@ -63,11 +63,9 @@ add_subdirectory(glfw)
 add_subdirectory(glm)
 
 #### VulkanMemoryAllocator
-include_directories(VulkanMemoryAllocator/src)
-include_directories(${Vulkan_INCLUDE_DIRS})
 add_library(VulkanMemoryAllocator STATIC "VulkanMemoryAllocatorBuild.cpp")
-target_include_directories(VulkanMemoryAllocator INTERFACE VulkanMemoryAllocator/src)
-target_include_directories(VulkanMemoryAllocator PRIVATE "${SCIN_EXT_INSTALL_DIR}/include")
+target_include_directories(VulkanMemoryAllocator PUBLIC VulkanMemoryAllocator/src)
+target_include_directories(VulkanMemoryAllocator PRIVATE binary-deps/vulkan-ext/include)
 
 #### googletest
 set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
@@ -78,3 +76,5 @@ add_subdirectory(googletest)
 
 #### yaml-cpp
 add_subdirectory(yaml-cpp)
+
+add_subdirectory(binary-deps)
