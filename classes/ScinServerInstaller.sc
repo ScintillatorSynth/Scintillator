@@ -68,8 +68,10 @@ ScinServerInstaller {
 								runtime = binaryPath;
 							},
 							\windows, {
-								"*** Windows not (yet) supported!".postln;
-								continue = false;
+								binaryPath = quarkBinPath +/+ "scinsynth-w64/scinsynth.exe";
+								downloadURL = releasesURL.replace("https", "http") ++ version ++ "/scinsynth-w64.zip";
+								downloadPath = quarkBinPath +/+ "scinsynth-w64." ++ version ++ ".zip";
+								runtime = binaryPath;
 							}
 						);
 
