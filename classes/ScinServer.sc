@@ -175,8 +175,6 @@ ScinServer {
 			commandLine = scinBinaryPath.shellQuote + options.asOptionsString();
 		});
 
-		commandLine.postln;
-
 		scinPid = commandLine.unixCmd({ |exitCode, exitPid|
 			if (exitCode == 0, {
 				"*** scinsynth exited normally.".postln;
