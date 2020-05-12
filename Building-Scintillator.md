@@ -1,20 +1,15 @@
+```sh
 sudo apt-get install libxrandr libxinerama-dev libxcursor-dev libxi-dev gperf
 
-(if you wanna build docs)
+# (if you wanna build docs)
 sudo apt-get install doxygen graphviz
 
 git submodule update --init --recursive
 
-install python3 if needed
+# install python3 if needed
 
-fetch binary deps:
-
-```
-python3 tools/fetch-binary-deps.py
-```
-
+mkdir build
 cd build
-cmake ..
+cmake .. # will download and unpack binary dependencies
 make
-
-
+```
