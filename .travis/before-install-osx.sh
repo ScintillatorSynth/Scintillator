@@ -14,6 +14,4 @@ export PATH="/usr/local/opt/ccache/libexec:$PATH"
 gem install xcpretty
 
 cd $TRAVIS_BUILD_DIR
-python3 tools/fetch-binary-deps.py
 python3 tools/fetch-sclang.py $TRAVIS_HOME/sclang
-

@@ -12,8 +12,5 @@ cd $HOME
 curl https://scintillator-synth-coverage.s3-us-west-1.amazonaws.com/dependencies/windows/VulkanSDK-1.2.135.0-Installer.exe --output vulkan-sdk.exe
 powershell "./vulkan-sdk.exe /S"
 
-echo "*** installing build binary deps"
 cd $TRAVIS_BUILD_DIR
-/c/Python38/python.exe tools/fetch-binary-deps.py
 /c/Python38/python.exe tools/fetch-sclang.py $TRAVIS_HOME/sclang
-

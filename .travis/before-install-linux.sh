@@ -13,7 +13,3 @@ sudo apt-get install --yes build-essential  cmake doxygen gperf imagemagick libw
 if [ $DO_COVERAGE = true ]; then
     sudo apt-get install --yes clang-8 clang-format-8 libc++-8-dev libc++abi-8-dev llvm-8-dev libc++abi-8-dev llvm-8-dev
 fi
-
-cd $TRAVIS_BUILD_DIR
-python3 tools/fetch-binary-deps.py
-

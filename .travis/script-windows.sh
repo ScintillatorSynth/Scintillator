@@ -1,5 +1,6 @@
 #!/bin/bash
 
+mkdir $TRAVIS_BUILD_DIR/build
 cd $TRAVIS_BUILD_DIR/build
 cmake --build . --config Release
 cmake --install . --config Release
@@ -11,4 +12,3 @@ echo "Setting Swiftshader path to $SWSHADER_PATH"
 powershell 'New-ItemProperty -PATH "HKLM:\SOFTWARE\Khronos\Vulkan\Drivers" -Name "'$SWSHADER_PATH'" -Value "0" -PropertyType "DWORD"'
 
 cmake --build . --config Release --target compare_images
-
