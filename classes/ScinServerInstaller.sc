@@ -222,7 +222,6 @@ ScinServerInstaller {
 					},
 
 					\checkHash, {
-						// TODO: windows has a different command for hashing
 						var hashOutput;
 						var targetHash = File.readAllString(downloadPath ++ ".sha256").split($ )[0];
 
