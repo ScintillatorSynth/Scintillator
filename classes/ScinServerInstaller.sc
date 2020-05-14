@@ -1,5 +1,6 @@
 ScinServerInstaller {
 	const releasesURL = "https://scintillator-synth-coverage.s3-us-west-1.amazonaws.com/releases/";
+
 	classvar routine;
 	classvar continue;
 
@@ -68,8 +69,10 @@ ScinServerInstaller {
 								runtime = binaryPath;
 							},
 							\windows, {
-								"*** Windows not (yet) supported!".postln;
-								continue = false;
+								binaryPath = quarkBinPath +/+ "scinsynth-w64/scinsynth.exe";
+								downloadURL = releasesURL.replace("https", "http") ++ version ++ "/scinsynth-w64.zip";
+								downloadPath = quarkBinPath +/+ "scinsynth-w64." ++ version ++ ".zip";
+								runtime = binaryPath;
 							}
 						);
 
@@ -219,15 +222,21 @@ ScinServerInstaller {
 					},
 
 					\checkHash, {
-						// TODO: windows has a different command for hashing
-						var hashOutput = "shasum -a 256 -b \"%\"".format(downloadPath).unixCmdGetStdOut.split($ );
-						var targetHash = File.readAllString(downloadPath ++ ".sha256").split($ );
-						if (hashOutput[0] == targetHash[0], {
+						var hashOutput;
+						var targetHash = File.readAllString(downloadPath ++ ".sha256").split($ )[0];
+
+						Platform.case(\windows) {
+							hashOutput = "PowerShell (Get-FileHash -Path % -Algorithm SHA256).Hash".format(downloadPath).unixCmdGetStdOut.toLower;
+						} {
+							hashOutput = "shasum -a 256 -b \"%\"".format(downloadPath).unixCmdGetStdOut.split($ )[0];
+						};
+
+						if (hashOutput == targetHash, {
 							"downloaded file validated, extracting.".postln;
 							state = \extractBinary;
 						}, {
 							"*** hash mishmatch on downloaded file %. Expected '%', got '%'.".format(downloadPath,
-								targetHash[0], hashOutput[0]).postln;
+								targetHash, hashOutput).postln;
 							if (cleanup, {
 								"deleting bad hash file % and aborting. Please try again.".format(downloadPath).postln;
 								File.delete(downloadPath);
@@ -257,7 +266,9 @@ ScinServerInstaller {
 									state = \checkIfBinaryExists;
 								},
 								\windows, {
-									continue = false;
+									"PowerShell Expand-Archive -Path % -DestinationPath %".format(
+										downloadPath, quarkBinPath).unixCmdGetStdOut.postln;
+                                    state = \checkIfBinaryExists;
 								}
 							);
 
@@ -265,12 +276,19 @@ ScinServerInstaller {
 					},
 
 					\moveOldBinary, {
+						var moveCmd = "mv";
+
+						Platform.case(\windows) {
+							moveCmd = "move";
+						};
+
 						if (oldVersion.isNil, {
 							"*** unable to determine version of old binary, using \"unknown\"".postln;
 							oldVersion = ".unknown";
 						});
 						oldBinPath = binaryPath ++ "." ++ oldVersion ++ ".bak";
-						"mv \"%\" \"%\"".format(binaryPath, oldBinPath).unixCmdGetStdOut;
+
+						"% \"%\" \"%\"".format(moveCmd, binaryPath, oldBinPath).unixCmdGetStdOut;
 						state = \extractBinary;
 					},
 				); // switch
