@@ -268,7 +268,7 @@ ScinServerInstaller {
 								\windows, {
 									"PowerShell Expand-Archive -Path % -DestinationPath %".format(
 										downloadPath, quarkBinPath).unixCmdGetStdOut.postln;
-                                    state = \checkIfBinaryExists;
+									state = \checkIfBinaryExists;
 								}
 							);
 
