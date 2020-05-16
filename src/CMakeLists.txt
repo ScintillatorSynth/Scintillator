@@ -107,6 +107,9 @@ set(scintillator_synth_files
     "${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp"
     scinsynth.cpp
 
+    audio/PortAudio.cpp
+    audio/PortAudio.hpp
+
     av/AVIncludes.hpp
     av/Buffer.cpp
     av/Buffer.hpp
@@ -336,6 +339,7 @@ target_link_libraries(scinsynth
     gflags
     glfw
     glm
+    portaudio
     scintillator_base
     spdlog
 )

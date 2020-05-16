@@ -7,9 +7,9 @@ set(SCIN_EXT_INSTALL_DIR "${PROJECT_BINARY_DIR}/install-ext" CACHE PATH "Scintal
 file(MAKE_DIRECTORY "${SCIN_EXT_INSTALL_DIR}")
 
 if(WIN32)
-	set(SCIN_WIN_X64 -DCMAKE_GENERATOR_PLATFORM=x64)
+    set(SCIN_WIN_X64 -DCMAKE_GENERATOR_PLATFORM=x64)
 else()
-	set(SCIN_WIN_X64 "")
+    set(SCIN_WIN_X64 "")
 endif()
 
 #### liblo
@@ -72,9 +72,20 @@ target_include_directories(VulkanMemoryAllocator PRIVATE "${SCIN_EXT_INSTALL_DIR
 #### googletest
 set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
 if (WIN32)
-	set(gtest_force_shared_crt ON CACHE BOOL "Force googletest to link against shared crt" FORCE)
+    set(gtest_force_shared_crt ON CACHE BOOL "Force googletest to link against shared crt" FORCE)
 endif()
 add_subdirectory(googletest)
 
 #### yaml-cpp
 add_subdirectory(yaml-cpp)
+
+### portaudio
+set(PA_BUILD_STATIC OFF CACHE BOOL "don't build PortAudio static libs" FORCE)
+set(PA_BUILD_SHARED ON CACHE BOOL "build shared PortAudio libs" FORCE)
+set(PA_DISABLE_INSTALL ON CACHE BOOL "don't run the PortAudio installer" FORCE)
+if(UNIX AND NOT APPLE)
+    set(PA_USE_JACK ON CACHE BOOL "force use of JACK on linux" FORCE)
+    set(PA_USE_ALSA OFF CACHE BOOL "disable use of ALSA on linux" FORCE)
+endif()
+add_subdirectory(portaudio)
+
