@@ -68,11 +68,6 @@ DEFINE_bool(swiftshader, false,
 
 DEFINE_int32(audioInputChannels, 0, "If non-zero, defines the number of input channels to create via portaudio.");
 DEFINE_int32(audioOutputChannels, 0, "If non-zero, defines the number of output channels to create via portaudio.");
-DEFINE_string(audioInDeviceName, "", "A pattern to match against the audio input device name. If empty will choose "
-        "the default device");
-DEFINE_string(audioOutDeviceName, "", "A pattern to match against the audio output device name. If empty will choose "
-        "the default device");
-DEFINE_int32(audioSampleRate, 44100, "Sample rate to use for input and output audio channels.");
 
 #if (__APPLE__)
 void envCheckAndUnset(const char* name) {
@@ -276,7 +271,7 @@ int main(int argc, char* argv[]) {
 
     // ========== PortAudio setup
     std::shared_ptr<scin::audio::PortAudio> portAudio(new scin::audio::PortAudio(FLAGS_audioInputChannels,
-        FLAGS_audioOutputChannels, FLAGS_audioInDeviceName, FLAGS_audioOutDeviceName, FLAGS_audioSampleRate));
+        FLAGS_audioOutputChannels));
     if (!portAudio->create()) {
         spdlog::error("Failed creating PortAudio subsystem.");
         return EXIT_FAILURE;

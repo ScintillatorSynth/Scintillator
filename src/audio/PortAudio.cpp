@@ -7,22 +7,23 @@
 #include "pa_jack.h"
 #endif
 
+namespace {
+int portAudioCallback(const void* input, void* output, unsigned long frameCount,
+        const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void* userData) {
+    return 0;
+}
+}
+
 namespace scin { namespace audio {
 
-PortAudio::PortAudio(int inputChannels, int outputChannels, const std::string& inDeviceName,
-    const std::string& outDeviceName, int sampleRate): m_inputChannels(inputChannels), m_outputChannels(outputChannels),
-    m_inDeviceName(inDeviceName), m_outDeviceName(outDeviceName), m_sampleRate(sampleRate), m_init(false) {}
+PortAudio::PortAudio(int inputChannels, int outputChannels): m_inputChannels(inputChannels),
+    m_outputChannels(outputChannels), m_init(false) {}
 
 PortAudio::~PortAudio() { destroy(); }
 
 bool PortAudio::create() {
     if (m_inputChannels <= 0 && m_outputChannels <= 0) {
         spdlog::info("No input or output audio channels selected, skipping PortAudio initialization");
-        return true;
-    }
-
-    if (m_sampleRate == 0) {
-        spdlog::info("Sample rate of 0 selected for audio system, skipping PortAudio initialization");
         return true;
     }
 
@@ -67,6 +68,8 @@ bool PortAudio::create() {
         return false;
     }
 
+    double sampleRate = 0.0;
+
     PaStreamParameters inputStream;
     if (m_inputChannels > 0) {
         inputStream.channelCount = m_inputChannels;
@@ -93,6 +96,7 @@ bool PortAudio::create() {
             spdlog::error("Requested {} input channels, but JACK input configured to support maximum of {} channels.");
             return false;
         }
+        sampleRate = deviceInfo->defaultSampleRate;
 #endif
     }
 
@@ -122,9 +126,19 @@ bool PortAudio::create() {
             spdlog::error("Requested {} output channels, but JACK output configured to support maximum of {} channels.");
             return false;
         }
+        sampleRate = deviceInfo->defaultSampleRate;
 #endif
     }
 
+    PaStream* stream = nullptr;
+    const PaStreamParameters* inputParams = m_inputChannels > 0 ? &inputStream : nullptr;
+    const PaStreamParameters* outputParams = m_outputChannels > 0 ? &outputStream : nullptr;
+    result = Pa_OpenStream(&stream, inputParams, outputParams, sampleRate, paFramesPerBufferUnspecified, paNoFlag,
+        portAudioCallback, this);
+    if (result != paNoError) {
+        spdlog::error("PortAudio failed to open stream: {}", Pa_GetErrorText(result));
+        return false;
+    }
 
     return true;
 }
