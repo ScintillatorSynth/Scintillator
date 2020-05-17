@@ -80,13 +80,14 @@ add_subdirectory(googletest)
 add_subdirectory(yaml-cpp)
 
 ### portaudio
-set(PA_BUILD_STATIC OFF CACHE BOOL "don't build PortAudio static libs" FORCE)
-set(PA_BUILD_SHARED ON CACHE BOOL "build shared PortAudio libs" FORCE)
+set(PA_BUILD_SHARED OFF CACHE BOOL "don't build shared PortAudio libs" FORCE)
+set(PA_BUILD_STATIC ON CACHE BOOL "build PortAudio static libs" FORCE)
 set(PA_DISABLE_INSTALL ON CACHE BOOL "don't run the PortAudio installer" FORCE)
 if(UNIX AND NOT APPLE)
     set(PA_USE_JACK ON CACHE BOOL "force use of JACK on linux" FORCE)
     set(PA_USE_ALSA OFF CACHE BOOL "disable use of ALSA on linux" FORCE)
+elseif(WIN32)
+    set(PA_DLL_LINK_WITH_STATIC_RUNTIME OFF CACHE BOOL "force portaudio to use shared CRT" FORCE)
 endif()
 add_subdirectory(portaudio)
 
-### portaudio ringbuffer not distributed with library

@@ -341,7 +341,7 @@ target_link_libraries(scinsynth
     gflags
     glfw
     glm
-    portaudio
+    portaudio_static
     scintillator_base
     spdlog
 )
@@ -386,9 +386,6 @@ if (APPLE)
     )
     install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/macos/Resources/vulkan"
         DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Resources"
-    )
-    install(TARGETS portaudio LIBRARY
-        DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Frameworks"
     )
     list(APPEND SCIN_MACOS_LIBS "${SCIN_EXT_INSTALL_DIR}/lib")
     list(APPEND SCIN_MACOS_LIBS "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Frameworks")

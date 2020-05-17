@@ -74,6 +74,9 @@ bool PortAudio::create() {
         spdlog::error("PortAudio failed to find CoreAudio: {}.", Pa_GetErrorText(apiIndex));
         return false;
     }
+#elif (WIN32)
+    // TODO: settle on preferred Windows audio API. (ASIO?)
+    auto apiIndex = 0;
 #endif
 
     const PaHostApiInfo* apiInfo = Pa_GetHostApiInfo(apiIndex);
