@@ -68,6 +68,12 @@ bool PortAudio::create() {
         spdlog::error("PortAudio failed to find JACK, is it running? {}.", Pa_GetErrorText(apiIndex));
         return false;
     }
+#elif (__APPLE__)
+    auto apiIndex = Pa_HostApiTypeIdToHostApiIndex(PaHostApiTypeId::paCoreAudio);
+    if (apiIndex < 0) {
+        spdlog::error("PortAudio failed to find CoreAudio: {}.", Pa_GetErrorText(apiIndex));
+        return false;
+    }
 #endif
 
     const PaHostApiInfo* apiInfo = Pa_GetHostApiInfo(apiIndex);
