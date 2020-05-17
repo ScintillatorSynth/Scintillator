@@ -89,3 +89,4 @@ if(UNIX AND NOT APPLE)
 endif()
 add_subdirectory(portaudio)
 
+### portaudio ringbuffer not distributed with library

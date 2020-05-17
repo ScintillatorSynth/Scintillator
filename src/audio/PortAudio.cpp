@@ -1,6 +1,9 @@
 #include "audio/PortAudio.hpp"
 
+#include "audio/Ingress.hpp"
+
 #include "portaudio.h"
+#include "../src/common/pa_ringbuffer.h"
 #include "spdlog/spdlog.h"
 
 #ifdef __linux__
@@ -10,7 +13,12 @@
 namespace {
 int portAudioCallback(const void* input, void* output, unsigned long frameCount,
         const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void* userData) {
-    return 0;
+    scin::audio::PortAudio* audio = static_cast<scin::audio::PortAudio*>(userData);
+    if (input && audio->inputChannels()) {
+        audio->ingress()->ingestSamples(static_cast<const float*>(input), frameCount);
+    }
+
+    return PaStreamCallbackResult::paContinue;
 }
 }
 
@@ -96,6 +104,11 @@ bool PortAudio::create() {
             spdlog::error("Requested {} input channels, but JACK input configured to support maximum of {} channels.");
             return false;
         }
+        m_ingress.reset(new Ingress(m_inputChannels));
+        if (!m_ingress->create()) {
+            spdlog::error("PortAudio failed to create Ingress object.");
+            return false;
+        }
         sampleRate = deviceInfo->defaultSampleRate;
 #endif
     }
@@ -137,6 +150,12 @@ bool PortAudio::create() {
         portAudioCallback, this);
     if (result != paNoError) {
         spdlog::error("PortAudio failed to open stream: {}", Pa_GetErrorText(result));
+        return false;
+    }
+
+    result = Pa_StartStream(stream);
+    if (result != paNoError) {
+        spdlog::error("PortAudio failed to start stream: {}", Pa_GetErrorText(result));
         return false;
     }
 

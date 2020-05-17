@@ -107,6 +107,8 @@ set(scintillator_synth_files
     "${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp"
     scinsynth.cpp
 
+    audio/Ingress.cpp
+    audio/Ingress.hpp
     audio/PortAudio.cpp
     audio/PortAudio.hpp
 
