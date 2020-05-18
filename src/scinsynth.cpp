@@ -142,6 +142,17 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    // ========== PortAudio setup
+    std::shared_ptr<scin::audio::PortAudio> portAudio(new scin::audio::PortAudio(FLAGS_audioInputChannels,
+        FLAGS_audioOutputChannels));
+    // Realtime audio only supported on realtime framerates
+    if (FLAGS_createWindow && FLAGS_frameRate < 0) {
+        if (!portAudio->create()) {
+            spdlog::error("Failed creating PortAudio subsystem.");
+            return EXIT_FAILURE;
+        }
+    }
+
     // ========== Vulkan setup.
     std::shared_ptr<scin::vk::Instance> instance(new scin::vk::Instance(FLAGS_vulkanValidation));
     if (!instance->create()) {
@@ -269,14 +280,6 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    // ========== PortAudio setup
-    std::shared_ptr<scin::audio::PortAudio> portAudio(new scin::audio::PortAudio(FLAGS_audioInputChannels,
-        FLAGS_audioOutputChannels));
-    if (!portAudio->create()) {
-        spdlog::error("Failed creating PortAudio subsystem.");
-        return EXIT_FAILURE;
-    }
-
     // ========== Main loop.
     if (FLAGS_createWindow) {
         window->run(compositor);
@@ -288,9 +291,6 @@ int main(int argc, char* argv[]) {
     dispatcher.stop();
     dispatcher.destroy();
 
-    // ========== PortAudio cleanup
-    portAudio->destroy();
-
     // ========== Vulkan cleanup.
     async->stop();
     compositor->destroy();
@@ -301,6 +301,9 @@ int main(int argc, char* argv[]) {
     }
     device->destroy();
     instance->destroy();
+
+    // ========== PortAudio cleanup
+    portAudio->destroy();
 
     // ========== glfw cleanup.
     glfwTerminate();
