@@ -143,8 +143,8 @@ int main(int argc, char* argv[]) {
     }
 
     // ========== PortAudio setup
-    std::shared_ptr<scin::audio::PortAudio> portAudio(new scin::audio::PortAudio(FLAGS_audioInputChannels,
-        FLAGS_audioOutputChannels));
+    std::shared_ptr<scin::audio::PortAudio> portAudio(
+        new scin::audio::PortAudio(FLAGS_audioInputChannels, FLAGS_audioOutputChannels));
     // Realtime audio only supported on realtime framerates
     if (FLAGS_createWindow && FLAGS_frameRate < 0) {
         if (!portAudio->create()) {

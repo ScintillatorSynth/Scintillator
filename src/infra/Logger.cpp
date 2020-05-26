@@ -2,6 +2,8 @@
 
 #include "av/AVIncludes.hpp"
 
+#include <pthread.h>
+
 #include <array>
 #include <mutex>
 
@@ -140,6 +142,13 @@ void Logger::setConsoleLogLevel(int level) {
 }
 
 void Logger::getCounts(size_t& warningsOut, size_t& errorsOut) { m_errorSink->getCounts(warningsOut, errorsOut); }
+
+
+// static
+void Logger::logVulkanThreadID(const std::string& threadName) {
+    int64_t vulkanThreadID = static_cast<int64_t>(pthread_self());
+    spdlog::info("Thread name: {}, Vulkan thread ID: 0x{:x}", threadName, vulkanThreadID);
+}
 
 } // namespace infra
 

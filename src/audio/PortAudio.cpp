@@ -7,12 +7,12 @@
 #include "spdlog/spdlog.h"
 
 #ifdef __linux__
-#include "pa_jack.h"
+#    include "pa_jack.h"
 #endif
 
 namespace {
 int portAudioCallback(const void* input, void* output, unsigned long frameCount,
-        const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void* userData) {
+                      const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void* userData) {
     scin::audio::PortAudio* audio = static_cast<scin::audio::PortAudio*>(userData);
     if (input && audio->inputChannels()) {
         audio->ingress()->ingestSamples(static_cast<const float*>(input), frameCount);
@@ -24,8 +24,10 @@ int portAudioCallback(const void* input, void* output, unsigned long frameCount,
 
 namespace scin { namespace audio {
 
-PortAudio::PortAudio(int inputChannels, int outputChannels): m_inputChannels(inputChannels),
-    m_outputChannels(outputChannels), m_init(false) {}
+PortAudio::PortAudio(int inputChannels, int outputChannels):
+    m_inputChannels(inputChannels),
+    m_outputChannels(outputChannels),
+    m_init(false) {}
 
 PortAudio::~PortAudio() { destroy(); }
 
@@ -105,8 +107,8 @@ bool PortAudio::create() {
             return false;
         }
         spdlog::info("JACK audio input max channels: {}, low latency: {}s, high latency: {}s, default sample rate: {}",
-            deviceInfo->maxInputChannels, deviceInfo->defaultLowInputLatency, deviceInfo->defaultHighInputLatency,
-            deviceInfo->defaultSampleRate);
+                     deviceInfo->maxInputChannels, deviceInfo->defaultLowInputLatency,
+                     deviceInfo->defaultHighInputLatency, deviceInfo->defaultSampleRate);
         inputStream.suggestedLatency = deviceInfo->defaultLowInputLatency;
         inputStream.device = deviceIndex;
         if (m_inputChannels > deviceInfo->maxInputChannels) {
@@ -140,12 +142,13 @@ bool PortAudio::create() {
             return false;
         }
         spdlog::info("JACK audio output max channels: {}, low latency: {}s, high latency: {}s, default sample rate: {}",
-            deviceInfo->maxOutputChannels, deviceInfo->defaultLowInputLatency, deviceInfo->defaultHighInputLatency,
-            deviceInfo->defaultSampleRate);
+                     deviceInfo->maxOutputChannels, deviceInfo->defaultLowInputLatency,
+                     deviceInfo->defaultHighInputLatency, deviceInfo->defaultSampleRate);
         inputStream.suggestedLatency = deviceInfo->defaultLowInputLatency;
         inputStream.device = deviceIndex;
         if (m_outputChannels > deviceInfo->maxOutputChannels) {
-            spdlog::error("Requested {} output channels, but JACK output configured to support maximum of {} channels.");
+            spdlog::error(
+                "Requested {} output channels, but JACK output configured to support maximum of {} channels.");
             return false;
         }
         sampleRate = deviceInfo->defaultSampleRate;
@@ -156,7 +159,7 @@ bool PortAudio::create() {
     const PaStreamParameters* inputParams = m_inputChannels > 0 ? &inputStream : nullptr;
     const PaStreamParameters* outputParams = m_outputChannels > 0 ? &outputStream : nullptr;
     result = Pa_OpenStream(&stream, inputParams, outputParams, sampleRate, paFramesPerBufferUnspecified, paNoFlag,
-        portAudioCallback, this);
+                           portAudioCallback, this);
     if (result != paNoError) {
         spdlog::error("PortAudio failed to open stream: {}", Pa_GetErrorText(result));
         return false;

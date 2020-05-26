@@ -1,5 +1,6 @@
 #include "comp/StageManager.hpp"
 
+#include "infra/Logger.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/CommandBuffer.hpp"
@@ -179,8 +180,15 @@ bool StageManager::submitTransferCommands(VkQueue queue) {
 }
 
 void StageManager::callbackThreadMain() {
+    infra::Logger::logVulkanThreadID("StageManager");
+
+    // We get a threading error, likely brought by the premature destruction of the CommandBuffer while it is still in
+    // use by the submitting thread, if this Wait lives inside while loop. This also seems to happen on main command
+    // buffer submission. By hanging on to the command buffer until it is replaced with another one this breaks the
+    // race and solves the threading error.
+    Wait wait;
+
     while (!m_quit) {
-        Wait wait;
         bool hasWait = false;
         {
             std::unique_lock<std::mutex> lock(m_waitMutex);
@@ -200,6 +208,7 @@ void StageManager::callbackThreadMain() {
         while (!m_quit && hasWait) {
             vkWaitForFences(m_device->get(), 1, &m_fences[wait.fenceIndex], VK_TRUE,
                             std::numeric_limits<uint64_t>::max());
+
             if (m_quit) {
                 break;
             }

@@ -11,13 +11,13 @@ Ingress::Ingress(int channels, int sampleRate):
     m_channels(channels),
     m_sampleRate(sampleRate),
     m_ringBuffer(new PaUtilRingBuffer),
-    m_buffer(new float[kSamplesPerChannel * channels]) { }
+    m_buffer(new float[kSamplesPerChannel * channels]) {}
 
-Ingress::~Ingress() { }
+Ingress::~Ingress() {}
 
 bool Ingress::create() {
-    ring_buffer_size_t size = PaUtil_InitializeRingBuffer(m_ringBuffer.get(), 4, kSamplesPerChannel * m_channels,
-        m_buffer.get());
+    ring_buffer_size_t size =
+        PaUtil_InitializeRingBuffer(m_ringBuffer.get(), 4, kSamplesPerChannel * m_channels, m_buffer.get());
     if (size < 0) {
         spdlog::error("Ingress failed to create ring buffer.");
         return false;
@@ -25,9 +25,7 @@ bool Ingress::create() {
     return true;
 }
 
-void Ingress::destroy() {
-
-}
+void Ingress::destroy() {}
 
 void Ingress::ingestSamples(const float* input, unsigned long frameCount) {
     unsigned long writeAvailable = PaUtil_GetRingBufferWriteAvailable(m_ringBuffer.get());
@@ -36,9 +34,7 @@ void Ingress::ingestSamples(const float* input, unsigned long frameCount) {
     unsigned long framesWritten = PaUtil_WriteRingBuffer(m_ringBuffer.get(), input, elementCount);
 }
 
-unsigned long Ingress::availableFrames() {
-    return PaUtil_GetRingBufferReadAvailable(m_ringBuffer.get()) / m_channels;
-}
+unsigned long Ingress::availableFrames() { return PaUtil_GetRingBufferReadAvailable(m_ringBuffer.get()) / m_channels; }
 
 void Ingress::dropSamples(unsigned long frameCount) {
     PaUtil_AdvanceRingBufferReadIndex(m_ringBuffer.get(), frameCount * m_channels);

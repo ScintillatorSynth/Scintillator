@@ -10,7 +10,7 @@
 
 namespace scin { namespace comp {
 
-AudioStager::AudioStager(std::shared_ptr<audio::Ingress> ingress): m_ingress(ingress) { }
+AudioStager::AudioStager(std::shared_ptr<audio::Ingress> ingress): m_ingress(ingress) {}
 
 AudioStager::~AudioStager() {}
 
@@ -49,7 +49,7 @@ void AudioStager::stageAudio(std::shared_ptr<StageManager> stageManager) {
     }
     if (framesAvailable > m_bufferFrameSize) {
         m_ingress->extractSamples(static_cast<float*>(m_buffer->mappedAddress()), m_bufferFrameSize);
-        stageManager->stageImage(m_buffer, m_image, []{});
+        stageManager->stageImage(m_buffer, m_image, [] {});
     }
 }
 

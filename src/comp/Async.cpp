@@ -4,6 +4,7 @@
 #include "base/Archetypes.hpp"
 #include "comp/Compositor.hpp"
 #include "comp/ScinthDef.hpp"
+#include "infra/Logger.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Image.hpp"
@@ -114,7 +115,7 @@ void Async::readImageIntoNewBuffer(int bufferID, std::string filePath, int width
 }
 
 void Async::workerThreadMain(std::string threadName) {
-    spdlog::debug("Async worker {} starting up.", threadName);
+    infra::Logger::logVulkanThreadID(threadName);
 
     while (!m_quit) {
         std::function<void()> workFunction;
@@ -160,7 +161,7 @@ void Async::workerThreadMain(std::string threadName) {
 }
 
 void Async::syncThreadMain() {
-    spdlog::debug("Async sync watcher thread starting.");
+    infra::Logger::logVulkanThreadID("Async sync watcher");
 
     while (!m_quit) {
         // First we wait for there to be something in the sync callback queue, meaning a sync is requested.
