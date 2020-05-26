@@ -53,10 +53,10 @@ subsection::@sampler
 
 In sampling VGens, represents the currently bound Vulkan sampler object and image within the shader.
 
-subsection::@time
-
-The VGen will receive a upated value every frame which contains the elapsed time in seconds from when the Scinth instance started. The time intrinsic is always 1 dimensional.
-
 subsection::@texPos
 
 Texture coordinates are typically constrained within [0, 1] inclusive, with Samplers configured to do different things outside of the texture coordinate region. The synth will configure a shape to include texture coordinate information with the vertex and fragment shaders if this intrinsic is present. Texture coordinates are currently always assumed to be 2 dimensional.
+
+subsection::@time
+
+The VGen will receive a upated value every frame which contains the elapsed time in seconds from when the Scinth instance started. The time intrinsic is always 1 dimensional.
