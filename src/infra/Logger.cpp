@@ -3,7 +3,7 @@
 #include "av/AVIncludes.hpp"
 
 #if !(WIN32)
-#include <pthread.h>
+#    include <pthread.h>
 #endif
 
 #include <array>
