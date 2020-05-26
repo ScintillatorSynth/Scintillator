@@ -113,7 +113,7 @@ bool PortAudio::create() {
             spdlog::error("Requested {} input channels, but JACK input configured to support maximum of {} channels.");
             return false;
         }
-        m_ingress.reset(new Ingress(m_inputChannels));
+        m_ingress.reset(new Ingress(m_inputChannels, deviceInfo->defaultSampleRate));
         if (!m_ingress->create()) {
             spdlog::error("PortAudio failed to create Ingress object.");
             return false;

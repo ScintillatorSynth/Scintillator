@@ -3,6 +3,7 @@
 #include "base/AbstractSampler.hpp"
 #include "base/AbstractScinthDef.hpp"
 #include "base/VGen.hpp"
+#include "comp/AudioStager.hpp"
 #include "comp/Canvas.hpp"
 #include "comp/ImageMap.hpp"
 #include "comp/SamplerFactory.hpp"
@@ -62,7 +63,7 @@ bool Compositor::create() {
     }
     std::memset(emptyImageBuffer->mappedAddress(), 0, 4);
 
-    std::shared_ptr<vk::DeviceImage> emptyImage(new vk::DeviceImage(m_device));
+    std::shared_ptr<vk::DeviceImage> emptyImage(new vk::DeviceImage(m_device, VK_FORMAT_R8G8B8A8_UNORM));
     if (!emptyImage->create(1, 1)) {
         spdlog::error("Compositor failed to create empty device image.");
         return false;
@@ -227,6 +228,10 @@ std::shared_ptr<vk::CommandBuffer> Compositor::prepareFrame(uint32_t imageIndex,
 
     {
         std::lock_guard<std::mutex> lock(m_scinthMutex);
+        for (auto stager : m_audioStagers) {
+            stager->stageAudio(m_stageManager);
+        }
+
         for (auto scinth : m_scinths) {
             if (scinth->running()) {
                 scinth->prepareFrame(imageIndex, frameTime);
@@ -256,6 +261,7 @@ void Compositor::destroy() {
             scinth->destroy();
         }
         m_scinths.clear();
+        m_audioStagers.clear();
     }
     // TODO: as a last resort, could call destroy on each of these
     m_primaryCommands.reset();
@@ -278,7 +284,6 @@ void Compositor::destroy() {
     }
 }
 
-
 int Compositor::numberOfRunningScinths() {
     std::lock_guard<std::mutex> lock(m_scinthMutex);
     return m_scinths.size();
@@ -290,7 +295,7 @@ bool Compositor::getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudg
 
 void Compositor::stageImage(int imageID, int width, int height, std::shared_ptr<vk::HostBuffer> imageBuffer,
                             std::function<void()> completion) {
-    std::shared_ptr<vk::DeviceImage> targetImage(new vk::DeviceImage(m_device));
+    std::shared_ptr<vk::DeviceImage> targetImage(new vk::DeviceImage(m_device, VK_FORMAT_R8G8B8A8_UNORM));
     if (!targetImage->create(width, height)) {
         spdlog::error("Compositor failed to create staging target image {}.", imageID);
         completion();
@@ -320,6 +325,21 @@ bool Compositor::queryImage(int imageID, int& sizeOut, int& widthOut, int& heigh
     sizeOut = image->size();
     widthOut = image->width();
     heightOut = image->height();
+    return true;
+}
+
+bool Compositor::addAudioIngress(std::shared_ptr<audio::Ingress> ingress, int imageID) {
+    std::shared_ptr<AudioStager> stager(new AudioStager(ingress));
+    if (!stager->createBuffers(m_device)) {
+        spdlog::error("Compositor failed to create AudioStager buffers.");
+        return false;
+    }
+    m_imageMap->addImage(imageID, stager->image());
+
+    {
+        std::lock_guard<std::mutex> lock(m_scinthMutex);
+        m_audioStagers.push_back(stager);
+    }
     return true;
 }
 

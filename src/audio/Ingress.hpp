@@ -12,7 +12,7 @@ namespace scin { namespace audio {
 // system when there's new data available and what that data might be.
 class Ingress {
 public:
-    Ingress(int channels);
+    Ingress(int channels, int sampleRate);
     ~Ingress();
 
     bool create();
@@ -21,8 +21,21 @@ public:
     // Called on realtime audio loop. Needs to always be called by same thread.
     void ingestSamples(const float* input, unsigned long frameCount);
 
+    // something to get samples available for reading count
+    unsigned long availableFrames();
+
+    // advance read pointer without copying (just drop)
+    void dropSamples(unsigned long frameCount);
+
+    // extract samples
+    unsigned long extractSamples(float* output, unsigned long frameCount);
+
+    int channels() const { return m_channels; }
+    int sampleRate() const { return m_sampleRate; }
+
 private:
     int m_channels;
+    int m_sampleRate;
 
     std::unique_ptr<PaUtilRingBuffer> m_ringBuffer;
     std::unique_ptr<float[]> m_buffer;

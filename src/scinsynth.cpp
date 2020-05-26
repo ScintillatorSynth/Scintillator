@@ -280,6 +280,11 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    // Connect audio ingress to compositor if available.
+    if (portAudio->ingress()) {
+        compositor->addAudioIngress(portAudio->ingress(), 1);
+    }
+
     // ========== Main loop.
     if (FLAGS_createWindow) {
         window->run(compositor);

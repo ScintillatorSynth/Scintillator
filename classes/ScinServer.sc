@@ -31,6 +31,7 @@ ScinServerOptions {
 	var <>swiftshader;
 	var <>deviceName;
 	var <>vulkanValidation;
+	var <>audioInputChannels;
 
 	// Can install a function to call if server exits with a non-zero error code.
 	var <>onServerError;
@@ -50,7 +51,8 @@ ScinServerOptions {
 				alwaysOnTop: true,
 				swiftshader: false,
 				deviceName: nil,
-				vulkanValidation: false
+				vulkanValidation: false,
+				audioInputChannels: 0
 			)
 		);
 	}
@@ -105,6 +107,9 @@ ScinServerOptions {
 		});
 		if (vulkanValidation != defaultValues[\vulkanValidation], {
 			o = o + "--vulkanValidation";
+		});
+		if (audioInputChannels != defaultValues[\audioInputChannels], {
+			o = o + "--audioInputChannels=" ++ audioInputChannels;
 		});
 		^o;
 	}

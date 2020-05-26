@@ -58,7 +58,7 @@ public:
  */
 class AllocatedImage : public Image {
 public:
-    explicit AllocatedImage(std::shared_ptr<Device> device);
+    explicit AllocatedImage(std::shared_ptr<Device> device, VkFormat format);
     virtual ~AllocatedImage();
     AllocatedImage(const AllocatedImage&) = delete;
     AllocatedImage& operator=(const AllocatedImage&) = delete;
@@ -78,7 +78,7 @@ protected:
  */
 class DeviceImage : public AllocatedImage {
 public:
-    explicit DeviceImage(std::shared_ptr<Device> device);
+    explicit DeviceImage(std::shared_ptr<Device> device, VkFormat format);
     virtual ~DeviceImage();
     DeviceImage(const DeviceImage&) = delete;
     DeviceImage& operator=(const DeviceImage&) = delete;

@@ -132,6 +132,8 @@ set(scintillator_synth_files
 
     comp/Async.cpp
     comp/Async.hpp
+    comp/AudioStager.cpp
+    comp/AudioStager.hpp
     comp/Canvas.cpp
     comp/Canvas.hpp
     comp/Compositor.cpp
