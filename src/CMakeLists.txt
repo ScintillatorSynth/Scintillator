@@ -107,6 +107,11 @@ set(scintillator_synth_files
     "${CMAKE_CURRENT_BINARY_DIR}/osc/commands/Command.cpp"
     scinsynth.cpp
 
+    audio/Ingress.cpp
+    audio/Ingress.hpp
+    audio/PortAudio.cpp
+    audio/PortAudio.hpp
+
     av/AVIncludes.hpp
     av/Buffer.cpp
     av/Buffer.hpp
@@ -127,6 +132,8 @@ set(scintillator_synth_files
 
     comp/Async.cpp
     comp/Async.hpp
+    comp/AudioStager.cpp
+    comp/AudioStager.hpp
     comp/Canvas.cpp
     comp/Canvas.hpp
     comp/Compositor.cpp
@@ -336,6 +343,7 @@ target_link_libraries(scinsynth
     gflags
     glfw
     glm
+    portaudio_static
     scintillator_base
     spdlog
 )
@@ -382,6 +390,7 @@ if (APPLE)
         DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Resources"
     )
     list(APPEND SCIN_MACOS_LIBS "${SCIN_EXT_INSTALL_DIR}/lib")
+    list(APPEND SCIN_MACOS_LIBS "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Frameworks")
     install(CODE "
         include(BundleUtilities)
         fixup_bundle(

@@ -14,6 +14,14 @@
 
 namespace scin {
 
+namespace audio {
+class Ingress;
+}
+
+namespace base {
+class AbstractScinthDef;
+}
+
 namespace vk {
 class CommandBuffer;
 class CommandPool;
@@ -22,12 +30,9 @@ class DeviceImage;
 class HostBuffer;
 }
 
-namespace base {
-class AbstractScinthDef;
-}
-
 namespace comp {
 
+class AudioStager;
 class Canvas;
 class ImageMap;
 class SamplerFactory;
@@ -143,12 +148,22 @@ public:
      */
     bool queryImage(int imageID, int& sizeOut, int& widthOut, int& heightOut);
 
+    /*! Adds an audio Ingress object for provision of audio data to the GPU.
+     *
+     * \param ingress The ingress object to consume audio from. Compositor will attempt to extract audio data from the
+     *        source on every call to prepareFrame().
+     * \param imageID The image ID to associate with this audio stream, for sampling.
+     * \return true on success, false on failure.
+     */
+    bool addAudioIngress(std::shared_ptr<audio::Ingress> ingress, int imageID);
+
     std::shared_ptr<StageManager> stageManager() { return m_stageManager; }
 
 private:
     typedef std::list<std::shared_ptr<Scinth>> ScinthList;
     typedef std::unordered_map<int, ScinthList::iterator> ScinthMap;
     typedef std::vector<std::shared_ptr<vk::CommandBuffer>> Commands;
+    typedef std::list<std::shared_ptr<AudioStager>> AudioStagerList;
 
     bool rebuildCommandBuffer();
 
@@ -173,12 +188,14 @@ private:
     std::mutex m_scinthDefMutex;
     std::unordered_map<std::string, std::shared_ptr<ScinthDef>> m_scinthDefs;
 
-    // Protects m_scinths, m_scinthMap.
+    // Protects m_scinths, m_scinthMap, m_audioStagers
     std::mutex m_scinthMutex;
     // A list, in order of evaluation, of all currently running Scinths.
     ScinthList m_scinths;
     // A map from Scinth instance names to elements in the running instance list.
     ScinthMap m_scinthMap;
+    // A list of the audio stage objects to update each frame.
+    AudioStagerList m_audioStagers;
 
     // Following should only be accessed from the same thread that calls prepareFrame.
     std::shared_ptr<vk::CommandBuffer> m_primaryCommands;

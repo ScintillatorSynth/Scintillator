@@ -2,6 +2,10 @@
 
 #include "av/AVIncludes.hpp"
 
+#if !(WIN32)
+#    include <pthread.h>
+#endif
+
 #include <array>
 #include <mutex>
 
@@ -140,6 +144,17 @@ void Logger::setConsoleLogLevel(int level) {
 }
 
 void Logger::getCounts(size_t& warningsOut, size_t& errorsOut) { m_errorSink->getCounts(warningsOut, errorsOut); }
+
+// static
+void Logger::logVulkanThreadID(const std::string& threadName) {
+#if (WIN32)
+    int64_t vulkanThreadID = (int64_t)GetCurrentThreadId();
+#else
+    // C-style cast required on MacOS to pass compiler.
+    int64_t vulkanThreadID = (int64_t)pthread_self();
+#endif
+    spdlog::info("Thread name: {}, Vulkan thread ID: 0x{:x}", threadName, vulkanThreadID);
+}
 
 } // namespace infra
 

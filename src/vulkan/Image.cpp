@@ -54,8 +54,8 @@ SwapchainImage::SwapchainImage(std::shared_ptr<Device> device, VkImage image, Vk
 
 SwapchainImage::~SwapchainImage() {}
 
-AllocatedImage::AllocatedImage(std::shared_ptr<Device> device):
-    Image(device, VK_NULL_HANDLE, VK_FORMAT_R8G8B8A8_UNORM, {}),
+AllocatedImage::AllocatedImage(std::shared_ptr<Device> device, VkFormat format):
+    Image(device, VK_NULL_HANDLE, format, {}),
     m_allocation(VK_NULL_HANDLE) {}
 
 AllocatedImage::~AllocatedImage() { destroy(); }
@@ -73,7 +73,7 @@ void AllocatedImage::destroy() {
     }
 }
 
-DeviceImage::DeviceImage(std::shared_ptr<Device> device): AllocatedImage(device) {}
+DeviceImage::DeviceImage(std::shared_ptr<Device> device, VkFormat format): AllocatedImage(device, format) {}
 
 DeviceImage::~DeviceImage() {}
 
@@ -115,13 +115,13 @@ bool DeviceImage::createDeviceImage(uint32_t width, uint32_t height, bool isFram
     return true;
 }
 
-FramebufferImage::FramebufferImage(std::shared_ptr<Device> device): DeviceImage(device) {}
+FramebufferImage::FramebufferImage(std::shared_ptr<Device> device): DeviceImage(device, VK_FORMAT_R8G8B8A8_UNORM) {}
 
 FramebufferImage::~FramebufferImage() {}
 
 bool FramebufferImage::create(uint32_t width, uint32_t height) { return createDeviceImage(width, height, true); }
 
-HostImage::HostImage(std::shared_ptr<Device> device): AllocatedImage(device) {}
+HostImage::HostImage(std::shared_ptr<Device> device): AllocatedImage(device, VK_FORMAT_R8G8B8A8_UNORM) {}
 
 HostImage::~HostImage() {}
 

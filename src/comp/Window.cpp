@@ -7,6 +7,7 @@
 #include "comp/RenderSync.hpp"
 #include "comp/StageManager.hpp"
 #include "comp/Swapchain.hpp"
+#include "infra/Logger.hpp"
 #include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
@@ -113,7 +114,7 @@ std::shared_ptr<const FrameTimer> Window::frameTimer() {
 }
 
 void Window::runDirectRendering(std::shared_ptr<comp::Compositor> compositor) {
-    spdlog::info("Window starting direct rendering loop.");
+    infra::Logger::logVulkanThreadID("Windows direct rendering loop");
     m_frameTimer->start();
 
     while (!m_stop && !glfwWindowShouldClose(m_window)) {

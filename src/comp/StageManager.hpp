@@ -68,6 +68,7 @@ private:
     struct Wait {
         Wait(): fenceIndex(0) {}
         ~Wait() = default;
+        Wait& operator=(const Wait&) = default;
         int fenceIndex;
         std::shared_ptr<vk::CommandBuffer> commands;
         std::vector<std::shared_ptr<vk::HostBuffer>> hostBuffers;

@@ -1,3 +1,4 @@
+#include "audio/PortAudio.hpp"
 #include "av/AVIncludes.hpp"
 #include "base/Archetypes.hpp"
 #include "base/FileSystem.hpp"
@@ -65,6 +66,9 @@ DEFINE_string(deviceName, "",
 DEFINE_bool(swiftshader, false,
             "If true, ignores --deviceName and will always match the swiftshader device, if present.");
 
+DEFINE_int32(audioInputChannels, 0, "If non-zero, defines the number of input channels to create via portaudio.");
+DEFINE_int32(audioOutputChannels, 0, "If non-zero, defines the number of output channels to create via portaudio.");
+
 #if (__APPLE__)
 void envCheckAndUnset(const char* name) {
     const char* value = nullptr;
@@ -131,16 +135,22 @@ int main(int argc, char* argv[]) {
 
     spdlog::info(version);
 
-    // ========== Ask libavcodec to register encoders and decoders, required for older libavcodecs.
-#if LIBAVCODEC_VERSION_MAJOR < 58
-    av_register_all();
-#endif
-
     // ========== glfw setup, this also loads Vulkan for us via the Vulkan-Loader.
     glfwInit();
     if (FLAGS_createWindow && (glfwVulkanSupported() != GLFW_TRUE)) {
         spdlog::error("This platform does not support Vulkan!");
         return EXIT_FAILURE;
+    }
+
+    // ========== PortAudio setup
+    std::shared_ptr<scin::audio::PortAudio> portAudio(
+        new scin::audio::PortAudio(FLAGS_audioInputChannels, FLAGS_audioOutputChannels));
+    // Realtime audio only supported on realtime framerates
+    if (FLAGS_createWindow && FLAGS_frameRate < 0) {
+        if (!portAudio->create()) {
+            spdlog::error("Failed creating PortAudio subsystem.");
+            return EXIT_FAILURE;
+        }
     }
 
     // ========== Vulkan setup.
@@ -270,6 +280,11 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    // Connect audio ingress to compositor if available.
+    if (portAudio->ingress()) {
+        compositor->addAudioIngress(portAudio->ingress(), 1);
+    }
+
     // ========== Main loop.
     if (FLAGS_createWindow) {
         window->run(compositor);
@@ -277,6 +292,7 @@ int main(int argc, char* argv[]) {
         offscreen->run(compositor);
     }
 
+    // ========== OSC cleanup
     dispatcher.stop();
     dispatcher.destroy();
 
@@ -290,6 +306,9 @@ int main(int argc, char* argv[]) {
     }
     device->destroy();
     instance->destroy();
+
+    // ========== PortAudio cleanup
+    portAudio->destroy();
 
     // ========== glfw cleanup.
     glfwTerminate();
