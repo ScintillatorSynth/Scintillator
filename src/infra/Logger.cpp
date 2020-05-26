@@ -143,7 +143,6 @@ void Logger::setConsoleLogLevel(int level) {
 
 void Logger::getCounts(size_t& warningsOut, size_t& errorsOut) { m_errorSink->getCounts(warningsOut, errorsOut); }
 
-
 // static
 void Logger::logVulkanThreadID(const std::string& threadName) {
     // C-style cast required on MacOS to pass compiler.

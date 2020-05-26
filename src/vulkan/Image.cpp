@@ -115,13 +115,13 @@ bool DeviceImage::createDeviceImage(uint32_t width, uint32_t height, bool isFram
     return true;
 }
 
-FramebufferImage::FramebufferImage(std::shared_ptr<Device> device): DeviceImage(device, VK_FORMAT_R8G8B8_UNORM) {}
+FramebufferImage::FramebufferImage(std::shared_ptr<Device> device): DeviceImage(device, VK_FORMAT_R8G8B8A8_UNORM) {}
 
 FramebufferImage::~FramebufferImage() {}
 
 bool FramebufferImage::create(uint32_t width, uint32_t height) { return createDeviceImage(width, height, true); }
 
-HostImage::HostImage(std::shared_ptr<Device> device): AllocatedImage(device, VK_FORMAT_R8G8B8_UNORM) {}
+HostImage::HostImage(std::shared_ptr<Device> device): AllocatedImage(device, VK_FORMAT_R8G8B8A8_UNORM) {}
 
 HostImage::~HostImage() {}
 
