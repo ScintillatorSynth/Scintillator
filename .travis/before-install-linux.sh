@@ -33,7 +33,7 @@ if [ $DO_COVERAGE = true ]; then
         libc++-8-dev            \
         libc++abi-8-dev         \
         libc++abi-8-dev         \
-        llvm-8-dev              \
+        llvm-8-dev
 fi
 
 cd $TRAVIS_BUILD_DIR

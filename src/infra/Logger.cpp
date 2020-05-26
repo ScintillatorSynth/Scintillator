@@ -146,7 +146,8 @@ void Logger::getCounts(size_t& warningsOut, size_t& errorsOut) { m_errorSink->ge
 
 // static
 void Logger::logVulkanThreadID(const std::string& threadName) {
-    int64_t vulkanThreadID = static_cast<int64_t>(pthread_self());
+    // C-style cast required on MacOS to pass compiler.
+    int64_t vulkanThreadID = (int64_t)(pthread_self());
     spdlog::info("Thread name: {}, Vulkan thread ID: 0x{:x}", threadName, vulkanThreadID);
 }
 
