@@ -63,6 +63,7 @@ private:
     std::shared_ptr<vk::Device> m_device;
     std::shared_ptr<vk::CommandPool> m_commandPool;
     std::vector<VkFence> m_fences;
+    std::vector<std::shared_ptr<vk::CommandBuffer>> m_commands;
     std::function<void()> m_stagingRequested;
 
     struct Wait {

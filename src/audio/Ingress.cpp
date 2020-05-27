@@ -28,9 +28,12 @@ bool Ingress::create() {
 void Ingress::destroy() {}
 
 void Ingress::ingestSamples(const float* input, unsigned long frameCount) {
+    unsigned long elementCount = frameCount * m_channels;
     unsigned long writeAvailable = PaUtil_GetRingBufferWriteAvailable(m_ringBuffer.get());
-    // TODO: logging on buffer oflow, maybe atomically increment a counter?
-    unsigned long elementCount = std::min(frameCount * m_channels, writeAvailable);
+    if (elementCount > writeAvailable) {
+        // Clobber oldest elements if needed.
+        dropSamples(elementCount - writeAvailable);
+    }
     unsigned long framesWritten = PaUtil_WriteRingBuffer(m_ringBuffer.get(), input, elementCount);
 }
 
