@@ -194,8 +194,11 @@ int PortAudio::pickApiIndex() {
 }
 #elif (WIN32)
 int PortAudio::pickApiIndex() {
-    spdlog::error("PortAudio Windows not yet supported.");
-    return -1;
+    auto apiIndex = Pa_HostApiTypeIdToHostApiIndex(PaHostApiTypeId::paMME);
+    if (apiIndex < 0) {
+        spdlog::error("PortAudio failed to find MME: {}.", Pa_GetErrorText(apiIndex));
+    }
+    return apiIndex;
 }
 #endif
 
