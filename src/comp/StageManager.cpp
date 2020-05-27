@@ -38,6 +38,7 @@ bool StageManager::create(size_t numberOfImages) {
             return false;
         }
         m_fences.emplace_back(fence);
+        m_commands.emplace_back(nullptr);
     }
 
     m_callbackThread = std::thread(&StageManager::callbackThreadMain, this);
@@ -59,6 +60,7 @@ void StageManager::destroy() {
         vkDestroyFence(m_device->get(), fence, nullptr);
     }
     m_fences.clear();
+    m_commands.clear();
 }
 
 void StageManager::setStagingRequested(std::function<void()> requestFunction) { m_stagingRequested = requestFunction; }
@@ -153,6 +155,7 @@ bool StageManager::submitTransferCommands(VkQueue queue) {
         m_pendingWait = Wait();
         m_hasCommands = false;
         vkEndCommandBuffer(wait.commands->buffer(0));
+        m_commands[wait.fenceIndex] = wait.commands;
         m_pendingWait.fenceIndex = (wait.fenceIndex + 1) % m_fences.size();
     }
 
@@ -182,13 +185,8 @@ bool StageManager::submitTransferCommands(VkQueue queue) {
 void StageManager::callbackThreadMain() {
     infra::Logger::logVulkanThreadID("StageManager");
 
-    // We get a threading error, likely brought by the premature destruction of the CommandBuffer while it is still in
-    // use by the submitting thread, if this Wait lives inside while loop. This also seems to happen on main command
-    // buffer submission. By hanging on to the command buffer until it is replaced with another one this breaks the
-    // race and solves the threading error.
-    Wait wait;
-
     while (!m_quit) {
+        Wait wait;
         bool hasWait = false;
         {
             std::unique_lock<std::mutex> lock(m_waitMutex);
