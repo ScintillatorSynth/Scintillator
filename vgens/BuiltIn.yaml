@@ -1,6 +1,7 @@
 # VGens that wrap GLSL built-in functions or variables. This is not an exhaustive list, adding things as needed.
 ---
 name: Distance
+rates: [ frame, shape, pixel ]
 inputs: [ x, y ]
 outputs: [ out ]
 dimensions:
@@ -15,6 +16,7 @@ dimensions:
 shader: "@out = distance(@x, @y);"
 ---
 name: Dot
+rates: [ frame, shape, pixel ]
 inputs: [ x, y ]
 outputs: [ out ]
 dimensions:
@@ -29,6 +31,7 @@ dimensions:
 shader: "@out = dot(@x, @y);"
 ---
 name: Clamp
+rates: [ frame, shape, pixel ]
 inputs: [ x, min, max ]
 outputs: [ out ]
 dimensions:
@@ -43,6 +46,7 @@ dimensions:
 shader: "@out = clamp(@x, @min, @max);"
 ---
 name: Cross
+rates: [ frame, shape, pixel ]
 inputs: [ x, y ]
 outputs: [ out ]
 dimensions:
@@ -51,12 +55,14 @@ dimensions:
 shader: "@out = cross(@x, @y);"
 ---
 name: FragCoord
+rates: [ frame, shape, pixel ]
 outputs: [ out ]
 dimensions:
     - outputs: 2
 shader: "@out = vec2(@fragCoord.x, @fragCoord.y);"
 ---
 name: Length
+rates: [ frame, shape, pixel ]
 inputs: [ in ]
 outputs: [ out ]
 dimensions:
@@ -71,6 +77,7 @@ dimensions:
 shader: "@out = length(@in);"
 ---
 name: Step
+rates: [ frame, shape, pixel ]
 inputs: [ edge, x ]
 outputs: [ out ]
 dimensions:
@@ -85,6 +92,7 @@ dimensions:
 shader: "@out = step(@edge, @x);"
 ---
 name: TextureSize
+rates: [ frame, shape, pixel ]
 sampler: true
 outputs: [ out ]
 dimensions:
@@ -92,6 +100,7 @@ dimensions:
 shader: "@out = vec2(textureSize(@sampler, 0));"
 ---
 name: VecMix
+rates: [ frame, shape, pixel ]
 inputs: [ x, y, a ]
 outputs: [ out ]
 dimensions:
@@ -112,6 +121,7 @@ dimensions:
 shader: "@out = mix(@x, @y, @a);"
 ---
 name: VNorm
+rates: [ frame, shape, pixel ]
 inputs: [ x ]
 outputs: [ out ]
 dimensions:

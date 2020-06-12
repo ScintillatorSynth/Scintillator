@@ -1,5 +1,6 @@
 ---
 name: VSaw
+rates: [ frame, shape, pixel ]
 inputs:
     - freq
     - phase
@@ -17,6 +18,7 @@ dimensions:
 shader: "@out = fract((@time + @phase) * @freq);"
 ---
 name: VSinOsc
+rates: [ frame, shape, pixel ]
 inputs:
     - freq
     - phase

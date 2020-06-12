@@ -1,12 +1,14 @@
 # Direct access to some of the Intrinsics within Scintillator.
 ---
 name: NormPos
+rates: [ shape, pixel ]
 outputs: [ out ]
 dimensions:
     - outputs: 2
 shader: "@out = @normPos;"
 ---
 name: TexPos
+rates: [ shape, pixel ]
 outputs: [ out ]
 dimensions:
     - outputs: 2

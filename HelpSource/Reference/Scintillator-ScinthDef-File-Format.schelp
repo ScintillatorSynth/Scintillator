@@ -38,7 +38,7 @@ Individual VGens are specified as YAML dictionaries and have the following keys:
 table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
 ## code::className:: || string || name of the VGen class, must match the name of a VGen configured on the server
-## code::rate:: || string || currently either code::fragment:: or code::vertex::
+## code::rate:: || string || one of code::frame::, code::shape::, or code::pixel::
 ## code::sampler:: || dictionary || Only required for sampling VGens. Specifies sampler parameters.
 ## code::inputs:: || list || input YAML dictionaries in an ordered list. May be absent if VGen has no inputs.
 ## code::outputs:: || list || output YAML dictionaries in an ordered list

@@ -3,13 +3,14 @@ summary:: Description of VGen yaml file format used by Scintillator synth server
 categories:: Quarks>Scintillator>Developer Documentation
 related:: Classes/VGen, Classes/ScinthDef, Reference/Scintillator-ScinthDef-File-Format
 
-section::File Format
+section::Top-Level Format
 
 A VGen file may contain multiple VGen definitions. Each definition at top level is a yaml dictionary with required and optional keys.
 
 table::
 ## strong::key name:: || strong::type:: || strong::required or optional:: || strong::description::
 ## code::name:: || string || strong::required:: || The name of the VGen, must be unique. Used to identify this VGen in ScinthDef descriptions.
+## code::rates:: || list || strong::required:: || A list of strings identifying the rates the VGen supports, at least one of code::frame::, code::shape::, code::pixel::.
 ## code::sampler:: || boolean || optional || If present, specifies if this VGen is a sampling VGen that will take an image input. If not present, the value is assumed to be false.
 ## code::inputs:: || list || optional || A list identifying input names in the shader program. The ordering of inputs here must match the ordering of inputs on the ScinthDef, as those inputs can be supplied unnamed.
 ## code::outputs:: || list || strong::required:: || A list of strings identifying names of output parameters. At least one element must exist in this list.
@@ -17,7 +18,7 @@ table::
 ## code::shader:: || string || strong::required:: || The GLSL shader program, with inputs, intrinsics, and intermediates, as well as exactly one instance of the keyword "@out" prefixed with @ symbols.
 ::
 
-subsection::dimensions list
+subsection::Input and Output Dimensions List
 
 The dimensions list enumerates the valid dimensions of input to, and output from, the VGen. As shader programs rely heavily on SIMD this means that many different configurations of output and input dimensions are typically supported by the built-in functions. The code::dimension:: key must be present in a valid VGen and contain a list with one or more dictionary elements with the following keys:
 
@@ -29,11 +30,7 @@ table::
 
 note::If a list, must have the same number of integer elements as there are number of inputs or outputs, each integer describing the dimensionality of inputs or outputs in order. If a single integer, all inputs or outputs are assumed to have that dimensionality.::
 
-section::Input and Output Dimensions
-
-Current VGen design assumes zero or more inputs, and exactly one output from each VGen. VGen inputs and outputs each have a emphasis::dimension:: value from 1 to 4.
-
-section::Intrinsics
+subsection::Shader Intrinsics
 
 Some @names are reserved and will be automatically supplied to the VGen at compilation or runtime. They are described in short table form, with detailed descriptions below.
 

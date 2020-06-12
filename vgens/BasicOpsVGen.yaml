@@ -1,6 +1,7 @@
 # Simple arithmetic VGens
 ---    ##### Unary Operations
 name: VNeg
+rates: [ frame, shape, pixel ]
 inputs: [ a ]
 outputs: [ out ]
 dimensions:
@@ -15,6 +16,7 @@ dimensions:
 shader: "@out = -1.0f * @a;"
 ---
 name: VAbs
+rates: [ frame, shape, pixel ]
 inputs: [ a ]
 outputs: [ out ]
 dimensions:
@@ -29,6 +31,7 @@ dimensions:
 shader: "@out = abs(@a);"
 ---
 name: VCeil
+rates: [ frame, shape, pixel ]
 inputs: [ a ]
 outputs: [ out ]
 dimensions:
@@ -43,6 +46,7 @@ dimensions:
 shader: "@out = ceil(@a);"
 ---
 name: VFloor
+rates: [ frame, shape, pixel ]
 inputs: [ a ]
 outputs: [ out ]
 dimensions:
@@ -57,6 +61,7 @@ dimensions:
 shader: "@out = floor(@a);"
 ---
 name: VFract
+rates: [ frame, shape, pixel ]
 inputs: [ a ]
 outputs: [ out ]
 dimensions:
@@ -71,6 +76,7 @@ dimensions:
 shader: "@out = fract(@a);"
 ---
 name: VSign
+rates: [ frame, shape, pixel ]
 inputs: [ a ]
 outputs: [ out ]
 dimensions:
@@ -85,6 +91,7 @@ dimensions:
 shader: "@out = sign(@a);"
 ---
 name: VSqrt
+rates: [ frame, shape, pixel ]
 inputs: [ a ]
 outputs: [ out ]
 dimensions:
@@ -99,6 +106,7 @@ dimensions:
 shader: "@out = sqrt(@a);"
 ---
 name: VExp
+rates: [ frame, shape, pixel ]
 inputs: [ a ]
 outputs: [ out ]
 dimensions:
@@ -113,6 +121,7 @@ dimensions:
 shader: "@out = exp(@a);"
 ---
 name: VLog
+rates: [ frame, shape, pixel ]
 inputs: [ a ]
 outputs: [ out ]
 dimensions:
@@ -127,6 +136,7 @@ dimensions:
 shader: "@out = log(@a);"
 ---
 name: VLog2
+rates: [ frame, shape, pixel ]
 inputs: [ a ]
 outputs: [ out ]
 dimensions:
@@ -141,6 +151,7 @@ dimensions:
 shader: "@out = log2(@a);"
 ---
 name: VSin
+rates: [ frame, shape, pixel ]
 inputs: [ a ]
 outputs: [ out ]
 dimensions:
@@ -155,6 +166,7 @@ dimensions:
 shader: "@out = sin(@a);"
 ---
 name: VCos
+rates: [ frame, shape, pixel ]
 inputs: [ a ]
 outputs: [ out ]
 dimensions:
@@ -169,6 +181,7 @@ dimensions:
 shader: "@out = cos(@a);"
 ---
 name: VTan
+rates: [ frame, shape, pixel ]
 inputs: [ a ]
 outputs: [ out ]
 dimensions:
@@ -183,6 +196,7 @@ dimensions:
 shader: "@out = tan(@a);"
 ---
 name: VASin
+rates: [ frame, shape, pixel ]
 inputs: [ a ]
 outputs: [ out ]
 dimensions:
@@ -197,6 +211,7 @@ dimensions:
 shader: "@out = asin(@a);"
 ---
 name: VACos
+rates: [ frame, shape, pixel ]
 inputs: [ a ]
 outputs: [ out ]
 dimensions:
@@ -211,6 +226,7 @@ dimensions:
 shader: "@out = acos(@a);"
 ---
 name: VATan
+rates: [ frame, shape, pixel ]
 inputs: [ a ]
 outputs: [ out ]
 dimensions:
@@ -225,6 +241,7 @@ dimensions:
 shader: "@out = atan(@a);"
 ---    #### Binary Operations
 name: VAdd
+rates: [ frame, shape, pixel ]
 inputs: [ a, b ]
 outputs: [ out ]
 dimensions:
@@ -239,6 +256,7 @@ dimensions:
 shader: "@out = @a + @b;"
 ---
 name: VSub
+rates: [ frame, shape, pixel ]
 inputs: [ a, b ]
 outputs: [ out ]
 dimensions:
@@ -253,6 +271,7 @@ dimensions:
 shader: "@out = @a - @b;"
 ---
 name: VMul
+rates: [ frame, shape, pixel ]
 inputs: [ a, b ]
 outputs: [ out ]
 dimensions:
@@ -267,6 +286,7 @@ dimensions:
 shader: "@out = @a * @b;"
 ---
 name: VDiv
+rates: [ frame, shape, pixel ]
 inputs: [ a, b ]
 outputs: [ out ]
 dimensions:
@@ -281,6 +301,7 @@ dimensions:
 shader: "@out = @a / @b;"
 ---
 name: VMod
+rates: [ frame, shape, pixel ]
 inputs: [ a, b ]
 outputs: [ out ]
 dimensions:
@@ -295,6 +316,7 @@ dimensions:
 shader: "@out = mod(@a, @b);"
 ---
 name: VPow
+rates: [ frame, shape, pixel ]
 inputs: [ a, b ]
 outputs: [ out ]
 dimensions:
@@ -309,6 +331,7 @@ dimensions:
 shader: "@out = pow(@a, @b);"
 ---
 name: VMin
+rates: [ frame, shape, pixel ]
 inputs: [ a, b ]
 outputs: [ out ]
 dimensions:
@@ -323,6 +346,7 @@ dimensions:
 shader: "@out = min(@a, @b);"
 ---
 name: VMax
+rates: [ frame, shape, pixel ]
 inputs: [ a, b ]
 outputs: [ out ]
 dimensions:
@@ -337,6 +361,7 @@ dimensions:
 shader: "@out = max(@a, @b);"
 ---
 name: VATan2
+rates: [ frame, shape, pixel ]
 inputs: [ a, b ]
 outputs: [ out ]
 dimensions:
