@@ -1,6 +1,7 @@
 # Image and Video Buffer Input and Output
 ---
 name: Sampler
+rates: [ frame, shape, pixel ]
 sampler: true
 inputs:
     - pos

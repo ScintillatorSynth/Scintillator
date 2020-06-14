@@ -1,6 +1,10 @@
 NormPos : VGen {
-	*fr {
-		^this.multiNew(\fragment);
+	*sr {
+		^this.multiNew(\shape);
+	}
+
+	*pr {
+		^this.multiNew(\pixel);
 	}
 
 	inputDimensions {
@@ -13,8 +17,12 @@ NormPos : VGen {
 }
 
 TexPos : VGen {
-	*fr {
-		^this.multiNew(\fragment);
+	*sr {
+		^this.multiNew(\shape);
+	}
+
+	*pr {
+		^this.multiNew(\pixel);
 	}
 
 	inputDimensions {

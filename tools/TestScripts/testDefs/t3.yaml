@@ -1,11 +1,11 @@
 name: t3
 vgens:
     - className: NormPos
-      rate: fragment
+      rate: pixel
       outputs:
         - dimension: 2
     - className: Length
-      rate: fragment
+      rate: pixel
       inputs:
         - type: vgen
           vgenIndex: 0
@@ -14,7 +14,7 @@ vgens:
       outputs:
         - dimension: 1
     - className: BWOut
-      rate: fragment
+      rate: pixel
       inputs:
         - type: vgen
           vgenIndex: 1

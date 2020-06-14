@@ -197,9 +197,27 @@ Archetypes::extractFromNodes(const std::vector<YAML::Node>& nodes) {
                 break;
             }
 
-            // TODO: parse rate key
+            AbstractVGen::Rates rate = AbstractVGen::Rates::kNone;
+            if (!vgen["rate"] || !vgen["rate"].IsScalar()) {
+                spdlog::error("ScinthDef {} has VGen with className {} absent or malformed rate key.", name, className);
+                parseError = true;
+                break;
+            }
+            std::string rateName = vgen["rate"].as<std::string>();
+            if (rateName == "pixel") {
+                rate = AbstractVGen::Rates::kPixel;
+            } else if (rateName == "shape") {
+                rate = AbstractVGen::Rates::kShape;
+            } else if (rateName == "frame") {
+                rate = AbstractVGen::Rates::kFrame;
+            } else {
+                spdlog::error("ScinthDef {} has VGen with className {} with unsupported rate value {}.", name,
+                              className, rateName);
+                parseError = true;
+                break;
+            }
 
-            VGen instance(vgenClass);
+            VGen instance(vgenClass, rate);
 
             if (vgen["sampler"] && vgen["sampler"].IsMap()) {
                 if (!vgenClass->isSampler()) {
@@ -443,6 +461,30 @@ int Archetypes::extractAbstractVGensFromNodes(const std::vector<YAML::Node>& nod
         }
         std::string name = node["name"].as<std::string>();
 
+        unsigned supportedRates = 0;
+        if (!node["rates"] || !node["rates"].IsSequence()) {
+            spdlog::error("VGen rates tag either absent or not a list.");
+            continue;
+        }
+        for (auto rateNode : node["rates"]) {
+            std::string rate = rateNode.as<std::string>();
+            if (rate == "frame") {
+                supportedRates |= AbstractVGen::Rates::kFrame;
+            } else if (rate == "shape") {
+                supportedRates |= AbstractVGen::Rates::kShape;
+            } else if (rate == "pixel") {
+                supportedRates |= AbstractVGen::Rates::kPixel;
+            } else {
+                spdlog::error("VGen {} has unsupported rate tag {}.", name, rate);
+                supportedRates = 0;
+                break;
+            }
+        }
+        if (supportedRates == 0) {
+            spdlog::error("VGen {} has problem with rate configuration.", name);
+            continue;
+        }
+
         bool isSampler = false;
         if (node["sampler"] && node["sampler"].IsScalar()) {
             isSampler = node["sampler"].as<bool>();
@@ -547,8 +589,8 @@ int Archetypes::extractAbstractVGensFromNodes(const std::vector<YAML::Node>& nod
             continue;
         }
 
-        std::shared_ptr<AbstractVGen> vgen(
-            new AbstractVGen(name, isSampler, inputs, outputs, inputDimensions, outputDimensions, shader));
+        std::shared_ptr<AbstractVGen> vgen(new AbstractVGen(name, supportedRates, isSampler, inputs, outputs,
+                                                            inputDimensions, outputDimensions, shader));
         if (!vgen->prepareTemplate()) {
             spdlog::error("VGen {} failed template preparation.", name);
             continue;

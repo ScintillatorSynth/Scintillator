@@ -83,7 +83,7 @@ TestScinthDef : UnitTest {
 
 	test_singleVgenBuild {
 		var def = ScinthDef.new(\singleVgenBuild, {
-			BWOut.fr(1.0);
+			BWOut.pr(1.0);
 		});
 
 		this.sanityCheckBuild(def);
@@ -99,7 +99,7 @@ TestScinthDef : UnitTest {
 
 	test_inputChainLinearBuild {
 		var def = ScinthDef.new(\inputChainLinearBuild, {
-			BWOut.fr(VSinOsc.fr.abs);
+			BWOut.pr(VSinOsc.pr.abs);
 		});
 
 		this.sanityCheckBuild(def);
@@ -116,7 +116,7 @@ TestScinthDef : UnitTest {
 
 	test_singleVgenYaml {
 		var def = ScinthDef.new(\singleVgenYaml, {
-			BWOut.fr(1.0.neg);
+			BWOut.pr(1.0.neg);
 		});
 		var yaml = def.asYAML;
 
@@ -126,8 +126,8 @@ TestScinthDef : UnitTest {
 
 	test_inputChainYaml {
 		var def = ScinthDef.new(\inputChainYaml, {
-			var pos = NormPos.fr;
-			BWOut.fr(VSinOsc.fr(freq: VY.fr(pos).neg, phase: VX.fr(pos), mul: 0.2, add: 0.5));
+			var pos = NormPos.pr;
+			BWOut.pr(VSinOsc.pr(freq: VY.pr(pos).neg, phase: VX.pr(pos), mul: 0.2, add: 0.5));
 		});
 		var yaml = def.asYAML;
 
@@ -137,8 +137,8 @@ TestScinthDef : UnitTest {
 
 	test_paramsNoValues {
 		var def = ScinthDef.new(\paramsNoValues, { |a, b, c|
-			var sin3 = Vec3.fr(a, b, c).sin;
-			RGBOut.fr(VX.fr(sin3), VY.fr(sin3), VZ.fr(sin3));
+			var sin3 = Vec3.pr(a, b, c).sin;
+			RGBOut.pr(VX.pr(sin3), VY.pr(sin3), VZ.pr(sin3));
 		});
 		// Make sure names are in correct order and all represented.
 		this.assertEquals(3, def.controlNames.size);
@@ -158,7 +158,7 @@ TestScinthDef : UnitTest {
 	test_paramsMixedValues {
 		var def = ScinthDef.new(\paramsValues, { |quick = 10.0, slow = 0.001, x = -17|
 			var average = quick + slow / 2;
-			BWOut.fr(average - x);
+			BWOut.pr(average - x);
 		});
 		this.assertEquals(3, def.controlNames.size);
 		this.assertEquals('quick', def.controlNames[0]);
@@ -179,7 +179,7 @@ TestScinthDef : UnitTest {
 
 		try {
 			ScinthDef(\vgen_nilIsInvalid, {
-				BWOut.fr(nil);
+				BWOut.pr(nil);
 			});
 		} { | e |
 			err = e;
@@ -195,7 +195,7 @@ TestScinthDef : UnitTest {
 
 		try {
 			ScinthDef(\vgen_nilIsInvalid, {
-				BWOut.fr(SinOsc.ar());
+				BWOut.pr(SinOsc.ar());
 			});
 		} { | e |
 			err = e;

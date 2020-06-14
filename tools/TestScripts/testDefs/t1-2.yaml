@@ -1,7 +1,7 @@
 name: t1
 vgens:
     - className: RGBOut
-      rate: fragment
+      rate: pixel
       inputs:
         - type: constant
           dimension: 1
@@ -18,11 +18,11 @@ vgens:
 name: t2
 vgens:
     - className: NormPos
-      rate: fragment
+      rate: pixel
       outputs:
         - dimension: 2
     - className: Length
-      rate: fragment
+      rate: pixel
       inputs:
         - type: vgen
           vgenIndex: 0
@@ -31,7 +31,7 @@ vgens:
       outputs:
         - dimension: 1
     - className: VSaw
-      rate: fragment
+      rate: pixel
       inputs:
         - type: constant
           dimension: 1
@@ -43,7 +43,7 @@ vgens:
       outputs:
         - dimension: 1
     - className: VSinOsc
-      rate: fragment
+      rate: pixel
       inputs:
         - type: vgen
           vgenIndex: 1
@@ -62,7 +62,7 @@ vgens:
       outputs:
         - dimension: 1
     - className: RGBOut
-      rate: fragment
+      rate: pixel
       inputs:
         - type: vgen
           vgenIndex: 1

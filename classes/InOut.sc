@@ -1,6 +1,6 @@
 RGBOut : VGen {
-	*fr { |r, g, b|
-		^this.multiNew(\fragment, r, g, b);
+	*pr { |r, g, b|
+		^this.multiNew(\pixel, r, g, b);
 	}
 
 	inputDimensions {
@@ -13,8 +13,8 @@ RGBOut : VGen {
 }
 
 BWOut : VGen {
-	*fr { |v|
-		^this.multiNew(\fragment, v);
+	*pr { |v|
+		^this.multiNew(\pixel, v);
 	}
 
 	inputDimensions {
@@ -27,8 +27,8 @@ BWOut : VGen {
 }
 
 RGBAOut : VGen {
-	*fr { |r, g, b, a|
-		^this.multiNew(\fragment, r, g, b, a);
+	*pr { |r, g, b, a|
+		^this.multiNew(\pixel, r, g, b, a);
 	}
 
 	inputDimensions {
@@ -43,9 +43,9 @@ RGBAOut : VGen {
 VControl : MultiOutVGen {
 	var <>values;
 
-	// TODO: it is not accurate to call these fragment rate.
-	*fr { |values|
-		^this.multiNewList([\fragment] ++ values.asArray);
+	*new { |values|
+		// Rate is ignored in the ScinthDef construction.
+		^this.multiNewList([\param] ++ values.asArray);
 	}
 
 	init { |...argValues|

@@ -14,12 +14,14 @@ namespace {
 void populateAbstractVGens(std::shared_ptr<scin::base::Archetypes> parser) {
     parser->parseAbstractVGensFromString("---\n"
                                          "name: NoInput\n"
+                                         "rates: [ pixel ]\n"
                                          "outputs: [ out ]\n"
                                          "dimensions:\n"
                                          "  - outputs: 1\n"
                                          "shader: \"@out = 1.0f;\"\n"
                                          "---\n"
                                          "name: OneInput\n"
+                                         "rates: [ pixel ]\n"
                                          "inputs:\n"
                                          "  - a\n"
                                          "outputs:\n"
@@ -30,6 +32,7 @@ void populateAbstractVGens(std::shared_ptr<scin::base::Archetypes> parser) {
                                          "shader: \"@out = @a;\"\n"
                                          "---\n"
                                          "name: TwoInput\n"
+                                         "rates: [ pixel ]\n"
                                          "inputs:\n"
                                          "  - a\n"
                                          "  - b\n"
@@ -41,6 +44,7 @@ void populateAbstractVGens(std::shared_ptr<scin::base::Archetypes> parser) {
                                          "shader: \"@out = @a * @b;\"\n"
                                          "---\n"
                                          "name: ThreeInput\n"
+                                         "rates: [ pixel ]\n"
                                          "inputs: [a, b, c]\n"
                                          "outputs: [ out ]\n"
                                          "dimensions:\n"
@@ -73,11 +77,13 @@ TEST(ArchetypesTest, InvalidAbstractVGenYamlStrings) {
     EXPECT_EQ(0,
               parser.parseAbstractVGensFromString("---\n"
                                                   "name: TestBadVGen\n"
+                                                  "rates: [ pixel ]\n"
                                                   "inputs:\n"
                                                   "  - a\n"
                                                   "  - b\n"));
     EXPECT_EQ(0,
               parser.parseAbstractVGensFromString("---\n"
+                                                  "rates: [ pixel ]\n"
                                                   "outputs:\n"
                                                   "  - out\n"
                                                   "shader: \"@out = 1.0;\"\n"));
@@ -89,12 +95,14 @@ TEST(ArchetypesTest, ValidAbstractVGenYamlStrings) {
     EXPECT_EQ(3,
               parser.parseAbstractVGensFromString("---\n"
                                                   "name: JustNameAndFragment\n"
+                                                  "rates: [ pixel ]\n"
                                                   "outputs: [ out ]\n"
                                                   "dimensions:\n"
                                                   "  - outputs: 1\n"
                                                   "shader: \"@out = 1.0;\"\n"
                                                   "---\n"
                                                   "name: AddInput\n"
+                                                  "rates: [ pixel ]\n"
                                                   "inputs: [ a ]\n"
                                                   "outputs: [ out ]\n"
                                                   "dimensions:\n"
@@ -103,6 +111,7 @@ TEST(ArchetypesTest, ValidAbstractVGenYamlStrings) {
                                                   "shader: \"@out = @a;\"\n"
                                                   "---\n"
                                                   "name: Overwrite\n"
+                                                  "rates: [ pixel ]\n"
                                                   "outputs: [ out ]\n"
                                                   "dimensions:\n"
                                                   "  - outputs: 1\n"
@@ -128,6 +137,7 @@ TEST(ArchetypesTest, ValidAbstractVGenYamlStrings) {
     EXPECT_EQ(1,
               parser.parseAbstractVGensFromString("---\n"
                                                   "name: Overwrite\n"
+                                                  "rates: [ pixel ]\n"
                                                   "outputs:\n"
                                                   "  - out\n"
                                                   "dimensions:\n"
@@ -144,6 +154,7 @@ TEST(ArchetypesTest, ValidAbstractVGenYamlStrings) {
     EXPECT_EQ(1,
               parser.parseAbstractVGensFromString("---\n"
                                                   "name: Overwrite\n"
+                                                  "rates: [ frame, shape, pixel ]\n"
                                                   "outputs: [ out ]\n"
                                                   "dimensions:\n"
                                                   "  - outputs: [ 1 ]\n"
@@ -152,6 +163,8 @@ TEST(ArchetypesTest, ValidAbstractVGenYamlStrings) {
     overwrite = parser.getAbstractVGenNamed("Overwrite");
     ASSERT_TRUE(overwrite);
     EXPECT_EQ("Overwrite", overwrite->name());
+    EXPECT_EQ(AbstractVGen::Rates::kFrame | AbstractVGen::Rates::kShape | AbstractVGen::Rates::kPixel,
+              overwrite->supportedRates());
     EXPECT_EQ(0, overwrite->intrinsics().size());
     EXPECT_EQ("float fl = 2.0; @out = fl;", overwrite->shader());
 }
@@ -172,6 +185,7 @@ TEST(ArchetypesTest, ParseAbstractVGenFromFile) {
     clobberFileWithString(tempFile,
                           "---\n"
                           "name: FileVGen\n"
+                          "rates: [ pixel ]\n"
                           "outputs: [ out ]\n"
                           "dimensions:\n"
                           "  - outputs: [ 1 ]\n"
@@ -196,7 +210,7 @@ TEST(ArchetypesTest, InvalidYAMLStrings) {
               parser
                   ->parseFromString("vgens:\n"
                                     "  - className: NoInput\n"
-                                    "    rate: fragment\n")
+                                    "    rate: pixel\n")
                   .size());
     // The vgens key has to be a sequence.
     EXPECT_EQ(0,
@@ -212,7 +226,7 @@ TEST(ArchetypesTest, InvalidYAMLStrings) {
                                     "name: missingVGen\n"
                                     "vgens:\n"
                                     "  - className: NotFound\n"
-                                    "    rate: fragment\n")
+                                    "    rate: pixel\n")
                   .size());
 
     // The vgen must have the correct number of inputs.
@@ -221,7 +235,7 @@ TEST(ArchetypesTest, InvalidYAMLStrings) {
                   ->parseFromString("name: wrongInputsVGen\n"
                                     "vgens:\n"
                                     "  - className: NoInput\n"
-                                    "    rate: fragment\n"
+                                    "    rate: pixel\n"
                                     "    inputs:\n"
                                     "      - type: constant\n"
                                     "        value: 200.0\n")
@@ -233,7 +247,7 @@ TEST(ArchetypesTest, InvalidYAMLStrings) {
                   ->parseFromString("name: badVGenInputsOrder\n"
                                     "vgens:\n"
                                     "  - className: OneInput\n"
-                                    "    rate: fragment\n"
+                                    "    rate: pixel\n"
                                     "    inputs:\n"
                                     "      - type: vgen\n"
                                     "        vgenIndex: 1\n")
@@ -252,7 +266,7 @@ TEST(ArchetypesTest, ValidYAMLStrings) {
                                     "name: firstScinth\n"
                                     "vgens:\n"
                                     "  - className: NoInput\n"
-                                    "    rate: fragment\n"
+                                    "    rate: pixel\n"
                                     "    outputs:\n"
                                     "      - dimension: 1\n")
                   .size());
@@ -268,7 +282,7 @@ TEST(ArchetypesTest, ValidYAMLStrings) {
                                     "name: firstScinth\n"
                                     "vgens:\n"
                                     "  - className: OneInput\n"
-                                    "    rate: fragment\n"
+                                    "    rate: pixel\n"
                                     "    inputs:\n"
                                     "      - type: constant\n"
                                     "        dimension: 1\n"
@@ -276,7 +290,7 @@ TEST(ArchetypesTest, ValidYAMLStrings) {
                                     "    outputs:\n"
                                     "      - dimension: 1\n"
                                     "  - className: TwoInput\n"
-                                    "    rate: fragment\n"
+                                    "    rate: pixel\n"
                                     "    inputs:\n"
                                     "      - type: vgen\n"
                                     "        dimension: 1\n"
@@ -291,7 +305,7 @@ TEST(ArchetypesTest, ValidYAMLStrings) {
                                     "name: secondScinth\n"
                                     "vgens: \n"
                                     "  - className: ThreeInput\n"
-                                    "    rate: fragment\n"
+                                    "    rate: pixel\n"
                                     "    inputs: \n"
                                     "      - type: constant\n"
                                     "        dimension: 1\n"

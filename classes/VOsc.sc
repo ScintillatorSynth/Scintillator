@@ -1,6 +1,14 @@
 VSinOsc : VGen {
 	*fr { |freq = 1.0, phase = 0.0, mul = 0.5, add = 0.5|
-		^this.multiNew(\fragment, freq, phase, mul, add);
+		^this.multiNew(\frame, freq, phase, mul, add);
+	}
+
+	*sr { |freq = 1.0, phase = 0.0, mul = 0.5, add = 0.5|
+		^this.multiNew(\shape, freq, phase, mul, add);
+	}
+
+	*pr { |freq = 1.0, phase = 0.0, mul = 0.5, add = 0.5|
+		^this.multiNew(\pixel, freq, phase, mul, add);
 	}
 
 	inputDimensions {
@@ -14,7 +22,15 @@ VSinOsc : VGen {
 
 VSaw : VGen {
 	*fr { |freq = 1.0, phase = 0.0|
-		^this.multiNew(\fragment, freq, phase);
+		^this.multiNew(\frame, freq, phase);
+	}
+
+	*sr { |freq = 1.0, phase = 0.0|
+		^this.multiNew(\shape, freq, phase);
+	}
+
+	*pr { |freq = 1.0, phase = 0.0|
+		^this.multiNew(\pixel, freq, phase);
 	}
 
 	inputDimensions {
