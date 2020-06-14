@@ -43,7 +43,7 @@ RGBAOut : VGen {
 VControl : MultiOutVGen {
 	var <>values;
 
-	new { |values|
+	*new { |values|
 		// Rate is ignored in the ScinthDef construction.
 		^this.multiNewList([\param] ++ values.asArray);
 	}

@@ -96,7 +96,7 @@ VY : VGen {
 	}
 
 	*pr { |vec|
-		^this.multiNew(\pizel, vec);
+		^this.multiNew(\pixel, vec);
 	}
 
 	inputDimensions {

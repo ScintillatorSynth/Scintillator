@@ -9,8 +9,8 @@ VGen : AbstractFunction {
 
 	*singleNew { | rate ... args |
 		if (rate.isKindOf(Symbol).not or:
-			{ rate != \pixel and: { rate != \shape } and: { rate != \frame } }, {
-				Error("rate must be one of 'frame', 'shape', or 'vertex'").throw;
+			{ rate != \pixel and: { rate != \shape } and: { rate != \frame } and: { rate != \param } }, {
+				Error("Unknown VGen rate %, must be one of 'frame', 'shape', or 'pixel'".format(rate)).throw;
 		});
 		^super.new.rate_(rate).addToScinth.init(*args);
 	}
