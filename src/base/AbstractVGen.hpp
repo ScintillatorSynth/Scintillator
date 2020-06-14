@@ -18,12 +18,16 @@ namespace scin { namespace base {
  */
 class AbstractVGen {
 public:
+    /*! Bitflags to indicate supported rates for this VGen.
+     */
+    enum Rates : unsigned { kFrame = 1, kShape = 2, kPixel = 4 };
+
     /*! Construct an AbstractVGen with all required and optional data.
      *
      * \param name The name to use for this VGen, must be unique.
      * \param isSampler If true indicates this is a sampling VGen
      * \param inputs A list of input names, can be empty.
-     * \param ouptuts A list of output names, must be at least one.
+     * \param outputs A list of output names, must be at least one.
      * \param inputDimensions Each subarray describes the allowable dimensions of the input at that index, and so should
      *        have the same number of entries as the number of inputs to the VGen. There should be the same number of
      *        subarrays in inputDimensions as there are in outputDimensions, and the values at each index of both arrays
@@ -33,8 +37,9 @@ public:
      *        with inputDimesion.
      * \param shader The template shader code.
      */
-    AbstractVGen(const std::string& name, bool isSampler, const std::vector<std::string>& inputs,
-                 const std::vector<std::string>& outputs, const std::vector<std::vector<int>> inputDimensions,
+    AbstractVGen(const std::string& name, unsigned supportedRates, bool isSampler,
+                 const std::vector<std::string>& inputs, const std::vector<std::string>& outputs,
+                 const std::vector<std::vector<int>> inputDimensions,
                  const std::vector<std::vector<int>> outputDimensions, const std::string& shader);
     ~AbstractVGen();
 
@@ -61,6 +66,7 @@ public:
                              const std::unordered_set<std::string>& alreadyDefined) const;
 
     const std::string& name() const { return m_name; }
+    unsigned supportedRates() const { return m_supportedRates; }
     bool isSampler() const { return m_isSampler; }
     const std::vector<std::string>& inputs() const { return m_inputs; }
     const std::unordered_set<Intrinsic>& intrinsics() const { return m_intrinsics; }
@@ -84,6 +90,7 @@ private:
     };
 
     std::string m_name;
+    unsigned m_supportedRates;
     bool m_isSampler;
     std::vector<std::string> m_inputs;
     std::vector<std::string> m_outputs;

@@ -4,10 +4,12 @@
 
 namespace scin { namespace base {
 
-AbstractVGen::AbstractVGen(const std::string& name, bool isSampler, const std::vector<std::string>& inputs,
-                           const std::vector<std::string>& outputs, const std::vector<std::vector<int>> inputDimensions,
+AbstractVGen::AbstractVGen(const std::string& name, unsigned supportedRates, bool isSampler,
+                           const std::vector<std::string>& inputs, const std::vector<std::string>& outputs,
+                           const std::vector<std::vector<int>> inputDimensions,
                            const std::vector<std::vector<int>> outputDimensions, const std::string& shader):
     m_name(name),
+    m_supportedRates(supportedRates),
     m_isSampler(isSampler),
     m_inputs(inputs),
     m_outputs(outputs),
