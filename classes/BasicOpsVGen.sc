@@ -94,7 +94,7 @@ UnaryOpVGen : BasicOpVGen {
 
 BinaryOpVGen : BasicOpVGen {
 	*new { |selector, a, b|
-		var binaryName;
+		var binaryName, rate;
 		switch (selector,
 			'rotate', { ^thisMethod.notYetImplemented },
 			'dist', { ^thisMethod.notYetImplemented },
@@ -152,12 +152,23 @@ BinaryOpVGen : BasicOpVGen {
 			'nand', { ^thisMethod.notYetImplemented },
 			{ "Unknown VGen binary operation: %".format(selector).error; ^nil; }
 		);
-		^this.multiNew(\fragment, binaryName, a, b);
+		// Rate is implied from argument operators. If they have the same rate
+		if (a.rate === b.rate, {
+			rate = a.rate;
+		}, {
+			// Pick fastest rate between the relevant VGens.
+			if (a.rate === \pixel or: { b.rate === \pixel }, {
+				rate = \pixel;
+			}, {
+				// Rates are unequal and not pixel so the fastest rate must be shape.
+				rate = \shape;
+			});
+		});
+		^this.multiNew(rate, binaryName, a, b);
 	}
 
 	init { |binaryName, a, b|
 		vgenName = binaryName;
-		rate = \fragment;
 		inputs = [a, b];
 	}
 

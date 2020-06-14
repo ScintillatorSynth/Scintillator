@@ -17,8 +17,8 @@ Sampler : VGen {
 	// one of \transparentBlack, \black, \white, only used if addressMode is set to \clampToBorder.
 	var <>clampBorderColor = \transparentBlack;
 
-	*fr { |image, pos|
-		^this.multiNew(\fragment, pos).prSetupImageInput(image);
+	*pr { |image, pos|
+		^this.multiNew(\pixel, pos).prSetupImageInput(image);
 	}
 
 	// Sets both U and V address modes at the same time.
@@ -56,7 +56,15 @@ Sampler : VGen {
 
 TextureSize : Sampler {
 	*fr { |image|
-		^this.multiNew(\fragment).prSetupImageInput(image);
+		^this.multiNew(\frame).prSetupImageInput(image);
+	}
+
+	*sr { |image|
+		^this.multiNew(\shape).prSetupImageInput(image);
+	}
+
+	*pr { |image|
+		^this.multiNew(\pixel).prSetupImageInput(image);
 	}
 
 	inputDimensions {

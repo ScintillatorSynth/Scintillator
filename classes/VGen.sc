@@ -2,15 +2,15 @@ VGen : AbstractFunction {
 	classvar <>buildScinthDef;
 	var <>scinthDef;
 	var <>inputs;
-	var <>rate = \fragment;
+	var <>rate = \pixel;
 	var <>scinthIndex;
 	var <>inDims;
 	var <>outDims;
 
 	*singleNew { | rate ... args |
 		if (rate.isKindOf(Symbol).not or:
-			{ rate != \fragment and: { rate != \vertex } }, {
-				Error("rate must be one of 'fragment' or 'vertex'").throw;
+			{ rate != \pixel and: { rate != \shape } and: { rate != \frame } }, {
+				Error("rate must be one of 'frame', 'shape', or 'vertex'").throw;
 		});
 		^super.new.rate_(rate).addToScinth.init(*args);
 	}
@@ -134,7 +134,9 @@ VGen : AbstractFunction {
 
 	methodSelectorForRate {
 		^switch(rate)
-		{\fragment} { \fr }
+		{ \frame } { \fr }
+		{ \shape } { \sr }
+		{ \pixel } { \pr }
 		{nil}
 	}
 }

@@ -1,6 +1,14 @@
 Vec2 : VGen {
 	*fr { |x = 0.0, y = 0.0|
-		^this.multiNew(\fragment, x, y);
+		^this.multiNew(\frame, x, y);
+	}
+
+	*sr { |x = 0.0, y = 0.0|
+		^this.multiNew(\shape, x, y);
+	}
+
+	*pr { |x = 0.0, y = 0.0|
+		^this.multiNew(\pixel, x, y);
 	}
 
 	inputDimensions {
@@ -14,7 +22,15 @@ Vec2 : VGen {
 
 Vec3 : VGen {
 	*fr { |x = 0.0, y = 0.0, z = 0.0|
-		^this.multiNew(\fragment, x, y, z);
+		^this.multiNew(\frame, x, y, z);
+	}
+
+	*sr { |x = 0.0, y = 0.0, z = 0.0|
+		^this.multiNew(\shape, x, y, z);
+	}
+
+	*pr { |x = 0.0, y = 0.0, z = 0.0|
+		^this.multiNew(\pixel, x, y, z);
 	}
 
 	inputDimensions {
@@ -28,7 +44,15 @@ Vec3 : VGen {
 
 Vec4 : VGen {
 	*fr { |x = 0.0, y = 0.0, z = 0.0, w = 0.0|
-		^this.multiNew(\fragment, x, y, z, w);
+		^this.multiNew(\frame, x, y, z, w);
+	}
+
+	*sr { |x = 0.0, y = 0.0, z = 0.0, w = 0.0|
+		^this.multiNew(\shape, x, y, z, w);
+	}
+
+	*pr { |x = 0.0, y = 0.0, z = 0.0, w = 0.0|
+		^this.multiNew(\pixel, x, y, z, w);
 	}
 
 	inputDimensions {
@@ -42,7 +66,15 @@ Vec4 : VGen {
 
 VX : VGen {
 	*fr { |vec|
-		^this.multiNew(\fragment, vec);
+		^this.multiNew(\frame, vec);
+	}
+
+	*sr { |vec|
+		^this.multiNew(\shape, vec);
+	}
+
+	*pr { |vec|
+		^this.multiNew(\pixel, vec);
 	}
 
 	inputDimensions {
@@ -56,7 +88,15 @@ VX : VGen {
 
 VY : VGen {
 	*fr { |vec|
-		^this.multiNew(\fragment, vec);
+		^this.multiNew(\frame, vec);
+	}
+
+	*sr { |vec|
+		^this.multiNew(\shape, vec);
+	}
+
+	*pr { |vec|
+		^this.multiNew(\pizel, vec);
 	}
 
 	inputDimensions {
@@ -70,7 +110,15 @@ VY : VGen {
 
 VZ : VGen {
 	*fr { |vec|
-		^this.multiNew(\fragment, vec);
+		^this.multiNew(\frame, vec);
+	}
+
+	*sr { |vec|
+		^this.multiNew(\shape, vec);
+	}
+
+	*pr { |vec|
+		^this.multiNew(\pixel, vec);
 	}
 
 	inputDimensions {
@@ -85,7 +133,15 @@ VZ : VGen {
 
 VW : VGen {
 	*fr { |vec|
-		^this.multiNew(\fragment, vec);
+		^this.multiNew(\frame, vec);
+	}
+
+	*sr { |vec|
+		^this.multiNew(\shape, vec);
+	}
+
+	*pr { |vec|
+		^this.multiNew(\pixel, vec);
 	}
 
 	inputDimensions {
@@ -99,7 +155,15 @@ VW : VGen {
 
 Splat2 : VGen {
 	*fr { |x|
-		^this.multiNew(\fragment, x);
+		^this.multiNew(\frame, x);
+	}
+
+	*sr { |x|
+		^this.multiNew(\shape, x);
+	}
+
+	*pr { |x|
+		^this.multiNew(\pixel, x);
 	}
 
 	inputDimensions {
@@ -113,7 +177,15 @@ Splat2 : VGen {
 
 Splat3 : VGen {
 	*fr { |x|
-		^this.multiNew(\fragment, x);
+		^this.multiNew(\frame, x);
+	}
+
+	*sr { |x|
+		^this.multiNew(\shape, x);
+	}
+
+	*pr { |x|
+		^this.multiNew(\pixel, x);
 	}
 
 	inputDimensions {
@@ -127,7 +199,15 @@ Splat3 : VGen {
 
 Splat4 : VGen {
 	*fr { |x|
-		^this.multiNew(\fragment, x);
+		^this.multiNew(\frame, x);
+	}
+
+	*sr { |x|
+		^this.multiNew(\shape, x);
+	}
+
+	*pr { |x|
+		^this.multiNew(\pixel, x);
 	}
 
 	inputDimensions {
@@ -138,5 +218,3 @@ Splat4 : VGen {
 		^[[4]];
 	}
 }
-
-

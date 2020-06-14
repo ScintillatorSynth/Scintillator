@@ -18,17 +18,16 @@ ScinthDef {
 		protect {
 			this.checkInputs;
 			children.do({ |vgen, index| this.prFitDimensions(vgen) });
+			this.prCheckRates(children.wrapAt(-1), \pixel);
 		} {
 			VGen.buildScinthDef = nil;
 		}
 	}
 
-	// All controls right now are at the fragment rate, so no grouping or sorting is needed, and we only
-	// create at most one element in the controls member Array
 	prBuildControls {
 		controlNames = func.def.argNames;
 		if (controlNames.size >= 32, {
-			Error.new("Scintillator ScinthDes support a maximum of 32 arguments.").throw;
+			Error.new("Scintillator ScinthDef supports a maximum of 32 arguments.").throw;
 		});
 		if (controlNames.isNil, {
 			controls = [];
@@ -36,7 +35,7 @@ ScinthDef {
 		}, {
 			controls = func.def.prototypeFrame.extend(controlNames.size);
 			controls = controls.collect({ |value| value ? 0.0 });
-			^VControl.fr(controls)
+			^VControl.new(controls)
 		});
 	}
 
@@ -61,7 +60,30 @@ ScinthDef {
 		if (dimIndex >= 0, {
 			vgen.outDims = vgen.outputDimensions[dimIndex];
 		}, {
-			"dimension mismatch on vgen % in ScinthDef %".format(vgen.name, name).postln;
+			Error.new("Dimension mismatch on vgen % in ScinthDef %".format(vgen.name, name)).throw;
+		});
+	}
+
+	// Starting from output VGen and recursing back to inputs check that rate only decreases or stays the same, meaning
+	// that in opposite direction, from input to output, rate only increases or stays the same.
+	prCheckRates { |vgen, rate|
+		switch (rate,
+			\frame, {
+				if (vgen.rate !== \frame, {
+					Error.new("Frame rate VGen can only accept other frame rate VGens as input").throw;
+				});
+			},
+			\shape, {
+				if (vgen.rate === \pixel, {
+					Error.new("Shape rate VGen can only accept input from shape or frame rate VGens.").throw;
+				});
+			},
+			// Pixel rate VGens accept input from any rate VGen.
+			{});
+		vgen.inputs.do({ |input|
+			if (input.isVGen, {
+				this.prCheckRates(input, vgen.rate);
+			});
 		});
 	}
 
@@ -83,7 +105,7 @@ ScinthDef {
 		yaml = yaml ++ indent ++ "vgens:\n";
 		children.do({ | vgen, index |
 			yaml = yaml ++ depthIndent ++ "- className:"  + vgen.name ++ "\n";
-			yaml = yaml ++ depthIndent ++ "  rate: fragment\n";
+			yaml = yaml ++ depthIndent ++ "  rate:" + vgen.rate ++ "\n";
 			if (vgen.isSamplerVGen, {
 				yaml = yaml ++ depthIndent ++ "  sampler:\n";
 				yaml = yaml ++ secondDepth ++ "  image:" + vgen.image ++ "\n";
