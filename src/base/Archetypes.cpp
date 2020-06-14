@@ -197,9 +197,27 @@ Archetypes::extractFromNodes(const std::vector<YAML::Node>& nodes) {
                 break;
             }
 
-            // TODO: parse rate key
+            AbstractVGen::Rates rate = AbstractVGen::Rates::kNone;
+            if (!vgen["rate"] || !vgen["rate"].IsScalar()) {
+                spdlog::error("ScinthDef {} has VGen with className {} absent or malformed rate key.", name, className);
+                parseError = true;
+                break;
+            }
+            std::string rateName = vgen["rate"].as<std::string>();
+            if (rateName == "pixel") {
+                rate = AbstractVGen::Rates::kPixel;
+            } else if (rateName == "shape") {
+                rate = AbstractVGen::Rates::kShape;
+            } else if (rateName == "frame") {
+                rate = AbstractVGen::Rates::kFrame;
+            } else {
+                spdlog::error("ScinthDef {} has VGen with className {} with unsupported rate value {}.", name,
+                              className, rateName);
+                parseError = true;
+                break;
+            }
 
-            VGen instance(vgenClass);
+            VGen instance(vgenClass, rate);
 
             if (vgen["sampler"] && vgen["sampler"].IsMap()) {
                 if (!vgenClass->isSampler()) {

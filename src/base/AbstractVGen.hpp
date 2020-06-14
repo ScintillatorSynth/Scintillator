@@ -20,7 +20,7 @@ class AbstractVGen {
 public:
     /*! Bitflags to indicate supported rates for this VGen.
      */
-    enum Rates : unsigned { kFrame = 1, kShape = 2, kPixel = 4 };
+    enum Rates : unsigned { kNone = 0, kFrame = 1, kShape = 2, kPixel = 4 };
 
     /*! Construct an AbstractVGen with all required and optional data.
      *

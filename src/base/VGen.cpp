@@ -1,12 +1,12 @@
 #include "base/VGen.hpp"
 
-#include "base/AbstractVGen.hpp"
-
 #include "spdlog/spdlog.h"
 
 namespace scin { namespace base {
 
-VGen::VGen(std::shared_ptr<const AbstractVGen> abstractVGen): m_abstractVGen(abstractVGen) {}
+VGen::VGen(std::shared_ptr<const AbstractVGen> abstractVGen, AbstractVGen::Rates rate):
+    m_abstractVGen(abstractVGen),
+    m_rate(rate) {}
 
 VGen::~VGen() {}
 
@@ -33,6 +33,11 @@ bool VGen::validate() const {
     if (m_inputs.size() != m_abstractVGen->inputs().size()) {
         spdlog::error("input size mismatch for VGen {}, expected {}, got {}", m_abstractVGen->name(),
                       m_abstractVGen->inputs().size(), m_inputs.size());
+        return false;
+    }
+
+    if ((m_rate & m_abstractVGen->supportedRates()) == 0) {
+        spdlog::error("Unsupported rate for VGen {}", m_abstractVGen->name());
         return false;
     }
 

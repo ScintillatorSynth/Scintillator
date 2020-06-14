@@ -2,6 +2,7 @@
 #define SRC_CORE_VGEN_HPP_
 
 #include "base/AbstractSampler.hpp"
+#include "base/AbstractVGen.hpp"
 
 #include <memory>
 #include <vector>
@@ -10,13 +11,11 @@
 
 namespace scin { namespace base {
 
-class AbstractVGen;
-
 /*! Represents a single node in the signal flow graph of a ScinthDef. Combines an AbstractVGen and inputs.
  */
 class VGen {
 public:
-    VGen(std::shared_ptr<const AbstractVGen> abstractVGen);
+    VGen(std::shared_ptr<const AbstractVGen> abstractVGen, AbstractVGen::Rates rate);
     ~VGen();
 
     enum InputType { kConstant, kVGen, kParameter, kInvalid };
@@ -104,6 +103,7 @@ public:
     int outputDimension(int index) const { return m_outputDimensions[index]; }
 
     std::shared_ptr<const AbstractVGen> abstractVGen() const { return m_abstractVGen; }
+    AbstractVGen::Rates rate() const { return m_rate; }
 
     int imageIndex() const { return m_imageIndex; }
     InputType imageArgType() const { return m_imageArgType; }
@@ -134,6 +134,7 @@ private:
     };
 
     std::shared_ptr<const AbstractVGen> m_abstractVGen;
+    AbstractVGen::Rates m_rate;
     int m_imageIndex;
     InputType m_imageArgType;
     AbstractSampler m_abstractSampler;
