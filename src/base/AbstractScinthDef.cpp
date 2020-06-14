@@ -10,6 +10,20 @@
 
 #include <random>
 
+/*!
+ * Information flow within a ScinthDef
+ * -----------------------------------
+ *
+ * Compute shaders, if there are any, are scheduled separately and issued in their own consolidated command buffer.
+ * Their output needs to go to a uniform buffer, with one maintained for each pipelined frame. This can be the same
+ * uniform that holds intrinsics like @time, it can also hold outputs from the compute uniform. The uniform will need
+ * to be adjusted for vertex and fragment access.
+ *
+ * Vertex computations are per-vertex, and output will always flow to the fragment shader. So inputs to vertex shader
+ * come from uniform, outputs must be reserved per vertex instance, so they can be provided to the fragment.
+ *
+ */
+
 namespace scin { namespace base {
 
 AbstractScinthDef::AbstractScinthDef(const std::string& name, const std::vector<Parameter>& parameters,

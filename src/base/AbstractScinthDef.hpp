@@ -78,6 +78,7 @@ private:
     bool buildInputs();
     bool buildNames();
     bool buildManifests();
+    bool buildComputeShader();
     bool buildVertexShader();
     bool buildFragmentShader();
 
@@ -98,8 +99,10 @@ private:
     std::vector<std::vector<std::string>> m_inputs;
     std::vector<std::vector<std::string>> m_outputs;
     std::vector<std::vector<int>> m_outputDimensions;
+    std::string m_computeShader;
     std::string m_vertexShader;
     std::string m_fragmentShader;
+    Manifest m_computeManifest;
     Manifest m_vertexManifest;
     Manifest m_uniformManifest;
 };
