@@ -22,6 +22,12 @@
  * Vertex computations are per-vertex, and output will always flow to the fragment shader. So inputs to vertex shader
  * come from uniform, outputs must be reserved per vertex instance, so they can be provided to the fragment.
  *
+ * Outputs from AbstractScinthDef processing are compute, vertex, fragment shaders. Manifests for compute input via
+ * uniform buffer and manifest for vertex/fragment uniform buffer. Manifest for vertex input, and a manifest for vertex
+ * output which is also part of fragment input.
+ *
+ * There also unified samplers and push constants.
+ *
  */
 
 namespace scin { namespace base {
