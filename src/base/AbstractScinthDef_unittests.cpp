@@ -5,6 +5,10 @@
 
 namespace scin { namespace base {
 
+TEST(AbstractScinthDefTest, SmallGroupName) {
+
+}
+
 } // namespace base
 
 } // namesapce base

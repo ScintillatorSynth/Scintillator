@@ -74,6 +74,24 @@ public:
     const Manifest& vertexManifest() const { return m_vertexManifest; }
     const Manifest& uniformManifest() const { return m_uniformManifest; }
 
+    /*! Largely private methods for AbstractScinthDef construction, made public for unit test accessibility.
+     *
+     * Overall algorithm is to traverse graph from output back to inputs. For each vgen input it can come in the form
+     * of a push constant as a param, which means it will need to be provided to the shader via command buffers, or
+     * it will be a regular constant, it can be hard-coded into the shader code, or it's the output of another VGen.
+     * If it's another VGen output if it's coming from the same rate it can be stored in a temp variable. If it's
+     * the output of a shader in a slower rate then some kind of intermediate storage is required.
+     *
+     *
+     *
+     */
+
+
+    /*! Traverse the VGens list from output back to inputs, grouping them into compute, vertex, and fragment shaders.
+     * \return true if successful, false on error.
+     */
+    bool groupVGens();
+
 private:
     bool buildInputs();
     bool buildNames();
