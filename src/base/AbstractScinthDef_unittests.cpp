@@ -5,7 +5,7 @@
 
 namespace scin { namespace base {
 
-TEST(AbstractScinthDefTest, SmallGroupName) {
+TEST(AbstractScinthDefTest, InvalidRatesFailBuild) {
 
 }
 

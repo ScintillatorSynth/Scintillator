@@ -1,6 +1,7 @@
 #ifndef SRC_CORE_ABSTRACT_SCINTHDEF_HPP_
 #define SRC_CORE_ABSTRACT_SCINTHDEF_HPP_
 
+#include "base/AbstractVGen.hpp"
 #include "base/Intrinsic.hpp"
 #include "base/Manifest.hpp"
 #include "base/Parameter.hpp"
@@ -19,6 +20,26 @@ class VGen;
 
 /*! Maintains a topologically sorted signal graph of VGens and constructs shaders and requirements for the graphical
  * ScinthDef instances.
+ *
+ * The AbstractScinthDef takes as input the VGen graph with named parameters, and produces a plain data (meaning no
+ * Vulkan-specific data structures) representation of a series of data structures and render commands needed to
+ * configure the Vulkan graphics pipeline to draw a Scinth instance of the declared ScinthDef. Specifically it
+ * produces as output:
+ *
+ * a) An optional compute shader, if there are any frame-rate VGens in the graph.
+ * b) An input uniform buffer manifest for the compute shader if it exists
+ * c) A uniform buffer manifest shared by the vertex and fragment programs
+ * d) A vertex shader input manifest
+ * e) A vertex shader containing both any shape-rate VGens as well as necessary pass-through data to the fragment shader
+ * f) A vertex shader output manifest, one of the sources of input to the fragment shader
+ * g) Lists of unified Samplers both constant and parameterized
+ * h) Lists of parameters provided as push constants to all shaders
+ * i) A fragment shader with the pixel-rate VGens
+ *
+ * Overall approach is to take a first pass through the graph from output back to inputs, validating the rate flow and
+ * bucketing the VGens into one of compute, vertex, or fragment shader groups. Then we take a forward pass through each
+ * group of VGens to generate manifests and shaders.
+ *
  */
 class AbstractScinthDef {
 public:
@@ -76,21 +97,22 @@ public:
 
     /*! Largely private methods for AbstractScinthDef construction, made public for unit test accessibility.
      *
-     * Overall algorithm is to traverse graph from output back to inputs. For each vgen input it can come in the form
-     * of a push constant as a param, which means it will need to be provided to the shader via command buffers, or
-     * it will be a regular constant, it can be hard-coded into the shader code, or it's the output of another VGen.
-     * If it's another VGen output if it's coming from the same rate it can be stored in a temp variable. If it's
-     * the output of a shader in a slower rate then some kind of intermediate storage is required.
-     *
-     *
-     *
      */
 
-
-    /*! Traverse the VGens list from output back to inputs, grouping them into compute, vertex, and fragment shaders.
+    /*! Recursively traverses the VGens list from output back to inputs, grouping them into compute, vertex, and
+     *  fragment shaders. Also checks the progression of rates as valid.
+     *
+     * \param index The index in m_instances of the node to check in this recursive call. Starts at the end of the
+     *        vector and descends to zero.
+     * \param maxRate The maximum rate to accept, to validate against rate decreases only from output to input.
+     * \param computeVGens A reference to a set in which to store the indices of any frame-rate VGens in the graph.
+     * \param vertexVGens A reference to a set in which to store the indices of any shape-rate VGens in the graph.
+     * \param fragmentVGens A reference to a set in which to store the indices of any fragment-rate VGens in the
+     *        graph.
      * \return true if successful, false on error.
      */
-    bool groupVGens();
+    bool groupVGens(int index, AbstractVGen::Rates rate, std::unordered_set<int>& computeVGens,
+            std::unordered_set<int>& vertexVGens, std::unordered_set<int>& fragmentVGens);
 
 private:
     bool buildInputs();

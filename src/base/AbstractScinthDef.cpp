@@ -1,6 +1,5 @@
 #include "base/AbstractScinthDef.hpp"
 
-#include "base/AbstractVGen.hpp"
 #include "base/Shape.hpp"
 #include "base/VGen.hpp"
 
@@ -42,6 +41,26 @@ AbstractScinthDef::AbstractScinthDef(const std::string& name, const std::vector<
 AbstractScinthDef::~AbstractScinthDef() { spdlog::debug("AbstractScinthDef '{}' destructor", m_name); }
 
 bool AbstractScinthDef::build() {
+    std::unordered_set<int> computeVGens;
+    std::unordered_set<int> vertexVGens;
+    std::unordered_set<int> fragmentVGens;
+
+    if (!groupVGens(m_instances.size() - 1, AbstractVGen::Rates::kPixel, computeVGens, vertexVGens, fragmentVGens)) {
+        return false;
+    }
+/*
+    if (!buildComputeShader()) {
+        return false;
+    }
+    if (!buildVertexShader()) {
+        return false;
+    }
+    if (!buildFragmentShader()) {
+        return false;
+    }
+*/
+
+/*
     if (!buildInputs()) {
         return false;
     }
@@ -57,6 +76,51 @@ bool AbstractScinthDef::build() {
     if (!buildFragmentShader()) {
         return false;
     }
+*/
+    return true;
+}
+
+bool AbstractScinthDef::groupVGens(int index, AbstractVGen::Rates maxRate, std::unordered_set<int>& computeVGens,
+        std::unordered_set<int>& vertexVGens, std::unordered_set<int>& fragmentVGens)  {
+    AbstractVGen::Rates vgenRate = m_instances[index].rate();
+
+    // Bucket VGen index and validate rate is supported value.
+    switch (vgenRate) {
+        case AbstractVGen::Rates::kFrame:
+            computeVGens.insert(index);
+            break;
+
+        case AbstractVGen::Rates::kShape:
+            vertexVGens.insert(index);
+            break;
+
+        case AbstractVGen::Rates::kPixel:
+            fragmentVGens.insert(index);
+            break;
+
+        default:
+            spdlog::error("Invalid or absent VGen rate on ScinthDef {} at index {}.", m_name, index);
+            return false;
+    }
+
+    // Validate rate of this VGen against the rate of the downstream VGen, to ensure rate progression.
+    if (vgenRate > maxRate) {
+        spdlog::error("Invalid rate change on ScinthDef {} at VGen index {}.", m_name, index);
+        return false;
+    }
+
+    // Recurse up the graph, propagating any errors encountered.
+    for (auto i = 0; i < m_instances[index].numberOfInputs(); ++i) {
+        if (m_instances[index].getInputType(i) == VGen::InputType::kVGen) {
+            int vgenIndex;
+            int vgenOutput;
+            m_instances[index].getInputVGenIndex(i, vgenIndex, vgenOutput);
+            if (!groupVGens(vgenIndex, vgenRate, computeVGens, vertexVGens, fragmentVGens)) {
+                return false;
+            }
+        }
+    }
+
     return true;
 }
 
