@@ -46,6 +46,9 @@ bool AbstractScinthDef::build() {
     std::set<int> vertexVGens;
     std::set<int> fragmentVGens;
 
+    std::random_device randomDevice;
+    m_prefix = fmt::format("{}_{:08x}", m_name, randomDevice());
+
     if (!groupVGens(m_instances.size() - 1, AbstractVGen::Rates::kPixel, computeVGens, vertexVGens, fragmentVGens)) {
         return false;
     }
@@ -59,23 +62,6 @@ bool AbstractScinthDef::build() {
         return false;
     }
 
-/*
-    if (!buildInputs()) {
-        return false;
-    }
-    if (!buildNames()) {
-        return false;
-    }
-    if (!buildManifests()) {
-        return false;
-    }
-    if (!buildVertexShader()) {
-        return false;
-    }
-    if (!buildFragmentShader()) {
-        return false;
-    }
-*/
     return true;
 }
 
@@ -151,7 +137,43 @@ bool AbstractScinthDef::buildFragmentStage(const std::set<int>& indices) {
     std::string shaderMain = "void main() {\n";
 
     for (auto index : indices) {
+        // Build input names and add to relevant manifests as needed.
         std::vector<string> inputs;
+        for (auto j = 0; j < m_instances[index].numberOfInputs(); ++j) {
+            VGen::InputType type = m_instances[index].getInputType(j);
+            switch (type) {
+                // TODO: support for higher-dimensional constants? VGen has it, but we drop it here.
+            case VGen::InputType::kConstant: {
+                float constantValue;
+                m_instances[index].getInputConstantValue(j, constantValue);
+                inputs.emplace_back(fmt::format("{}f", constantValue));
+            } break;
+
+            case VGen::InputType::kParameter: {
+                int parameterIndex;
+                m_instances[i].getInputParameterIndex(j, parameterIndex);
+                inputs.emplace_back(fmt::format("{}_parameters.{}", m_prefix, m_parameters[parameterIndex].name()));
+            } break;
+
+            case VGen::InputType::kVGen: {
+                int vgenIndex;
+                int vgenOutput;
+                // If a VGen index we use the output name of the VGen at that index.
+                m_instances[index].getInputVGenIndex(j, vgenIndex, vgenOutput);
+                if (m_instances[vgenIndex].rate() == AbstractVGen::Rates::kPixel) {
+                    inputs.emplace_back(fmt::format("{}_out_{}_{}", m_prefix, vgenIndex, vgenOutput));
+                } else {
+                    spdlog::error("FIXME: non-pixel rate vgen input");
+                    return false;
+                }
+            } break;
+
+            case VGen::InputType::kInvalid:
+                spdlog::error("AbstractScinthDesc {} VGen at index {} has unknown input type at index {}.", m_name,
+                              index, j);
+                return false;
+            }
+        }
 
         // Update instance-specific intrinsics.
         // TODO: consider providing a separate map or an alternate way of providing global and local intrinsic names.
@@ -168,7 +190,7 @@ bool AbstractScinthDef::buildFragmentStage(const std::set<int>& indices) {
         }
         m_fragmentShader += "\n    // --- " + m_instances[index].abstractVGen()->name() + "\n";
         m_fragmentShader += "    "
-            + m_instances[index].abstractVGen()->parameterize(m_inputs[index], intrinsicNames, m_outputs[index],
+            + m_instances[index].abstractVGen()->parameterize(inputs, intrinsicNames, m_outputs[index],
                                                               m_outputDimensions[index], alreadyDefined)
             + "\n";
     }

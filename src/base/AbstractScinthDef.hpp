@@ -136,12 +136,10 @@ private:
     std::set<std::pair<uint32_t, int>> m_drawFixedImages;
     std::set<std::pair<uint32_t, int>> m_drawParameterizedImages;
 
-    bool m_hasComputeStage;
+    Manifest m_drawUniform;
 
     Manifest m_computeUniform;
-    std::unordered_set<Intrinsic> m_computeIntrinsics;
-
-    Manifest m_drawUniform;
+    bool m_hasComputeStage;
 
     // pre-refactor
 
