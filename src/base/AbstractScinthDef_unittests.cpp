@@ -46,7 +46,8 @@ protected:
 };
 
 TEST_F(AbstractScinthDefTest, InvalidRatesFailBuild) {
-    std::vector<std::shared_ptr<const AbstractScinthDef>> defs = m_arch.parseFromString(
+    // Rate flow pixel => frame => pixel invalid.
+    std::shared_ptr<AbstractScinthDef> def = m_arch.parseOnly(
         "name: a\n"
         "vgens:\n"
         "    - className: Double\n"
@@ -76,7 +77,42 @@ TEST_F(AbstractScinthDefTest, InvalidRatesFailBuild) {
         "      outputs:\n"
         "          - dimension: 4\n"
     );
-    ASSERT_EQ(1, defs.size());
+    ASSERT_NE(nullptr, def);
+    EXPECT_FALSE(def->build());
+
+    // Rate flow shape => frame => pixel invalid.
+    def = m_arch.parseOnly(
+        "name: a\n"
+        "vgens:\n"
+        "    - className: Double\n"
+        "      rate: shape\n"
+        "      inputs:\n"
+        "          - type: constant\n"
+        "            dimension: 1\n"
+        "            value: 1.0\n"
+        "      outputs:\n"
+        "          - dimension: 1\n"
+        "    - className: Double\n"
+        "      rate: frame\n"
+        "      inputs:\n"
+        "          - type: vgen\n"
+        "            dimension: 1\n"
+        "            vgenIndex: 0\n"
+        "            outputIndex: 0\n"
+        "      outputs:\n"
+        "          - dimension: 1\n"
+        "    - className: FragOut\n"
+        "      rate: pixel\n"
+        "      inputs:\n"
+        "          - type: vgen\n"
+        "            dimension: 1\n"
+        "            vgenIndex: 1\n"
+        "            outputIndex: 0\n"
+        "      outputs:\n"
+        "          - dimension: 4\n"
+    );
+    ASSERT_NE(nullptr, def);
+    EXPECT_FALSE(def->build());
 }
 
 } // namespace

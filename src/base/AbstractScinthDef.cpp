@@ -36,29 +36,28 @@ AbstractScinthDef::AbstractScinthDef(const std::string& name, const std::vector<
     m_name(name),
     m_parameters(parameters),
     m_instances(instances),
-    m_shape(new Quad()) {}
+    m_shape(new Quad()),
+    m_hasComputeStage(false) {}
 
 AbstractScinthDef::~AbstractScinthDef() { spdlog::debug("AbstractScinthDef '{}' destructor", m_name); }
 
 bool AbstractScinthDef::build() {
-    std::unordered_set<int> computeVGens;
-    std::unordered_set<int> vertexVGens;
-    std::unordered_set<int> fragmentVGens;
+    std::set<int> computeVGens;
+    std::set<int> vertexVGens;
+    std::set<int> fragmentVGens;
 
     if (!groupVGens(m_instances.size() - 1, AbstractVGen::Rates::kPixel, computeVGens, vertexVGens, fragmentVGens)) {
         return false;
     }
-/*
-    if (!buildComputeShader()) {
+    if (!buildFragmentStage(fragmentVGens)) {
         return false;
     }
-    if (!buildVertexShader()) {
+    if (!buildVertexStage(vertexVGens)) {
         return false;
     }
-    if (!buildFragmentShader()) {
+    if (!buildComputeStage(computeVGens)) {
         return false;
     }
-*/
 
 /*
     if (!buildInputs()) {
@@ -80,8 +79,8 @@ bool AbstractScinthDef::build() {
     return true;
 }
 
-bool AbstractScinthDef::groupVGens(int index, AbstractVGen::Rates maxRate, std::unordered_set<int>& computeVGens,
-        std::unordered_set<int>& vertexVGens, std::unordered_set<int>& fragmentVGens)  {
+bool AbstractScinthDef::groupVGens(int index, AbstractVGen::Rates maxRate, std::set<int>& computeVGens,
+        std::set<int>& vertexVGens, std::set<int>& fragmentVGens)  {
     AbstractVGen::Rates vgenRate = m_instances[index].rate();
 
     // Bucket VGen index and validate rate is supported value.
@@ -109,6 +108,30 @@ bool AbstractScinthDef::groupVGens(int index, AbstractVGen::Rates maxRate, std::
         return false;
     }
 
+    // Extract image parameters if this is a sampling VGen.
+    if (m_instances[index].abstractVGen()->isSampler()) {
+        if (m_instances[index].imageIndex() < 0) {
+            spdlog::error("AbstractScinthDef {} has VGen {} with bad image index.", m_name, index);
+            return false;
+        }
+        if (m_instances[index].imageArgType() == VGen::InputType::kConstant) {
+            if (vgenRate == AbstractVGen::Rates::kFrame) {
+                m_computeFixedImages.insert({ m_instances[index].sampler().key(), m_instances[index].imageIndex() });
+            } else {
+                m_drawFixedImages.insert({ m_instances[index].sampler().key(), m_instances[index].imageIndex() });
+            }
+        } else if (m_instances[index].imageArgType() == VGen::InputType::kParameter) {
+            if (vgenRate == AbstractVGen::Rates::kFrame) {
+                m_computeParameterizedImages.insert({ m_instances[index].sampler().key(), m_instances[index].imageIndex() });
+            } else {
+                m_drawParameterizedImages.insert({ m_instances[index].sampler().key(), m_instances[index].imageIndex() });
+            }
+        } else {
+            spdlog::error("AbstractScinthDef {} has unknown VGen {} with sampler image argument type.", m_name, index);
+            return false;
+        }
+    }
+
     // Recurse up the graph, propagating any errors encountered.
     for (auto i = 0; i < m_instances[index].numberOfInputs(); ++i) {
         if (m_instances[index].getInputType(i) == VGen::InputType::kVGen) {
@@ -118,6 +141,82 @@ bool AbstractScinthDef::groupVGens(int index, AbstractVGen::Rates maxRate, std::
             if (!groupVGens(vgenIndex, vgenRate, computeVGens, vertexVGens, fragmentVGens)) {
                 return false;
             }
+        }
+    }
+
+    return true;
+}
+
+bool AbstractScinthDef::buildFragmentStage(const std::set<int>& indices) {
+    std::string shaderMain = "void main() {\n";
+
+    for (auto index : indices) {
+        std::vector<string> inputs;
+
+        // Update instance-specific intrinsics.
+        // TODO: consider providing a separate map or an alternate way of providing global and local intrinsic names.
+        if (m_instances[index].abstractVGen()->isSampler()) {
+            if (m_instances[index].imageArgType() == VGen::InputType::kConstant) {
+                intrinsicNames[Intrinsic::kSampler] =
+                    fmt::format("{}_sampler_{:08x}_fixed_{}", m_prefix, m_instances[index].sampler().key(),
+                                m_instances[index].imageIndex());
+            } else {
+                intrinsicNames[Intrinsic::kSampler] =
+                    fmt::format("{}_sampler_{:08x}_param_{}", m_prefix, m_instances[index].sampler().key(),
+                                m_instances[index].imageIndex());
+            }
+        }
+        m_fragmentShader += "\n    // --- " + m_instances[index].abstractVGen()->name() + "\n";
+        m_fragmentShader += "    "
+            + m_instances[index].abstractVGen()->parameterize(m_inputs[index], intrinsicNames, m_outputs[index],
+                                                              m_outputDimensions[index], alreadyDefined)
+            + "\n";
+    }
+
+    return true;
+}
+
+bool AbstractScinthDef::buildVertexStage(const std::set<int>& indices) {
+    return true;
+}
+
+bool AbstractScinthDef::buildComputeStage(const std::set<int>& indices) {
+    // It's possible we have no frame-rate VGens, in which case we can elide the compute stage entirely.
+    m_hasComputeStage = indices.size() > 0;
+    if (!m_hasComputeStage) {
+        return true;
+    }
+
+    std::string shaderMain = "void main() {\n";
+
+    // Traverse set of compute VGens, adding to input and output manifest as needed.
+    for (auto index : indices) {
+
+        for (auto intrinsic : m_instances[index].abstractVGen()->intrinsics()) {
+            m_computeIntrinsics.insert(intrinsic);
+
+            switch (intrinsic) {
+            case kNotFound:
+                spdlog::error("ScinthDef {} has unknown intrinsic.", m_name);
+                return false;
+
+            case kNormPos:
+                break;
+
+            case kPi:
+                break;
+
+            case kSampler:
+                break;
+
+            case kTime:
+                m_computeIntrinsics.addElement("time", Manifest::ElementType::kFloat, Intrinsic::kTime);
+                break;
+
+            case kTexPos:
+                break;
+            }
+
         }
     }
 
@@ -141,28 +240,6 @@ int AbstractScinthDef::indexForParameterName(const std::string& name) const {
         return -1;
     }
     return it->second;
-}
-
-bool AbstractScinthDef::buildInputs() {
-    // Group shader keys and image IDs to de-duplicate their values, to compute the combined image dependencies of the
-    // ScinthDef.
-    for (auto i = 0; i < m_instances.size(); ++i) {
-        if (m_instances[i].abstractVGen()->isSampler()) {
-            if (m_instances[i].imageIndex() < 0) {
-                spdlog::error("AbstractScinthDef {} has VGen {} with bad image index.", m_name, i);
-                return false;
-            }
-            if (m_instances[i].imageArgType() == VGen::InputType::kConstant) {
-                m_fixedImages.insert({ m_instances[i].sampler().key(), m_instances[i].imageIndex() });
-            } else if (m_instances[i].imageArgType() == VGen::InputType::kParameter) {
-                m_parameterizedImages.insert({ m_instances[i].sampler().key(), m_instances[i].imageIndex() });
-            } else {
-                spdlog::error("AbstractScinthDef {} has unknown VGen {} with sampler image argument type.", m_name, i);
-                return false;
-            }
-        }
-    }
-    return true;
 }
 
 bool AbstractScinthDef::buildNames() {
