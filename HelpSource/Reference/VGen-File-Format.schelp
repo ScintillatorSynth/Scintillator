@@ -32,14 +32,14 @@ note::If a list, must have the same number of integer elements as there are numb
 
 subsection::Shader Intrinsics
 
-Some @names are reserved and will be automatically supplied to the VGen at compilation or runtime. They are described in short table form, with detailed descriptions below.
+Some @names are reserved and will be automatically supplied to the VGen at compilation or runtime. They are described in short table form, with detailed descriptions below. Intrinsics have a rate, just like VGens, which describe their scope in terms of computation, meaning that it is not valid to use a shape-rate Intrinsic, for example, in a frame-rate VGen.
 
 table::
-## strong::name:: || strong::dimensons:: || strong::brief description::
-## code::@normPos:: || 2 || Position of vertex or fragment in normalized space.
-## code::@sampler:: || 1 || The curently configured and bound sampler and image. Only usable in sampling VGens.
-## code::@time:: || 1 || The runtime of the Scinth instance in seconds.
-## code::@texPos:: || 2 || Position of the fragment in texture coordinates space.
+## strong::name:: || strong::dimenson:: || strong::rate:: || strong::brief description::
+## code::@normPos:: || 2 || shape || Position of vertex or fragment in normalized space.
+## code::@sampler:: || 1 || frame || The curently configured and bound sampler and image. Only usable in sampling VGens.
+## code::@time:: || 1 || frame || The runtime of the Scinth instance in seconds.
+## code::@texPos:: || 2 || shape || Position of the fragment in texture coordinates space.
 ::
 
 subsection::@normPos

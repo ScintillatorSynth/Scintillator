@@ -238,8 +238,8 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
         } else if (rateName == "frame") {
             rate = AbstractVGen::Rates::kFrame;
         } else {
-            spdlog::error("ScinthDef {} has VGen with className {} with unsupported rate value {}.", name,
-                          className, rateName);
+            spdlog::error("ScinthDef {} has VGen with className {} with unsupported rate value {}.", name, className,
+                          rateName);
             return nullptr;
         }
 
@@ -254,8 +254,7 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
             auto sampler = vgen["sampler"];
             // Two required keys "image" and "imageArgType".
             if (!sampler["image"] || !sampler["imageArgType"]) {
-                spdlog::error("ScinthDef {} has sampler VGen {} missing image or imageArgType keys.", name,
-                              className);
+                spdlog::error("ScinthDef {} has sampler VGen {} missing image or imageArgType keys.", name, className);
                 return nullptr;
             }
 
@@ -278,8 +277,8 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
             if (sampler["minFilterMode"]) {
                 auto it = m_samplerFilterModes.find(sampler["minFilterMode"].as<std::string>());
                 if (it == m_samplerFilterModes.end()) {
-                    spdlog::error("ScinthDef {} has sampler VGen {} with unsupported minFilterMode {}", name,
-                                  className, sampler["minFilterMode"].as<std::string>());
+                    spdlog::error("ScinthDef {} has sampler VGen {} with unsupported minFilterMode {}", name, className,
+                                  sampler["minFilterMode"].as<std::string>());
                     return nullptr;
                 }
                 samplerConfig.setMinFilterMode(it->second);
@@ -288,8 +287,8 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
             if (sampler["magFilterMode"]) {
                 auto it = m_samplerFilterModes.find(sampler["magFilterMode"].as<std::string>());
                 if (it == m_samplerFilterModes.end()) {
-                    spdlog::error("ScinthDef {} has sampler VGen {} with unsupported magFilterMode {}", name,
-                                  className, sampler["magFilterMode"].as<std::string>());
+                    spdlog::error("ScinthDef {} has sampler VGen {} with unsupported magFilterMode {}", name, className,
+                                  sampler["magFilterMode"].as<std::string>());
                     return nullptr;
                 }
                 samplerConfig.setMagFilterMode(it->second);
@@ -302,8 +301,8 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
             if (sampler["addressModeU"]) {
                 auto it = m_samplerAddressModes.find(sampler["addressModeU"].as<std::string>());
                 if (it == m_samplerAddressModes.end()) {
-                    spdlog::error("ScinthDef {} has sampler VGen {} with unsupported addressModeU {}", name,
-                                  className, sampler["addressModeU"].as<std::string>());
+                    spdlog::error("ScinthDef {} has sampler VGen {} with unsupported addressModeU {}", name, className,
+                                  sampler["addressModeU"].as<std::string>());
                     return nullptr;
                 }
                 samplerConfig.setAddressModeU(it->second);
@@ -312,8 +311,8 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
             if (sampler["addressModeV"]) {
                 auto it = m_samplerAddressModes.find(sampler["addressModeV"].as<std::string>());
                 if (it == m_samplerAddressModes.end()) {
-                    spdlog::error("ScinthDef {} has sampler VGen {} with unsupported addressModeV {}", name,
-                                  className, sampler["addressModeV"].as<std::string>());
+                    spdlog::error("ScinthDef {} has sampler VGen {} with unsupported addressModeV {}", name, className,
+                                  sampler["addressModeV"].as<std::string>());
                     return nullptr;
                 }
                 samplerConfig.setAddressModeV(it->second);
@@ -361,8 +360,7 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
                     return nullptr;
                 }
                 if (!input["type"] || !input["type"].IsScalar()) {
-                    spdlog::error("ScinthDef {} has VGen {} input with absent or malformed type key.", name,
-                                  className);
+                    spdlog::error("ScinthDef {} has VGen {} input with absent or malformed type key.", name, className);
                     return nullptr;
                 }
 
@@ -383,8 +381,7 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
                 int dimension = input["dimension"].as<int>();
                 if (inputType == VGen::InputType::kConstant) {
                     if (!input["value"]) {
-                        spdlog::error("ScinthDef {} has VGen {} constant input with no value key.", name,
-                                      className);
+                        spdlog::error("ScinthDef {} has VGen {} constant input with no value key.", name, className);
                         return nullptr;
                     }
                     // TODO: higher-dimensional constants.
@@ -392,8 +389,8 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
                     instance.addConstantInput(constantValue);
                 } else if (inputType == VGen::InputType::kVGen) {
                     if (!input["vgenIndex"] || !input["outputIndex"]) {
-                        spdlog::error("ScinthDef {} has VGen {} vgen input with no vgenIndex or outputIndex key.",
-                                      name, className);
+                        spdlog::error("ScinthDef {} has VGen {} vgen input with no vgenIndex or outputIndex key.", name,
+                                      className);
                         return nullptr;
                     }
                     int vgenIndex = input["vgenIndex"].as<int>();
@@ -411,8 +408,7 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
                     instance.addVGenInput(vgenIndex, outputIndex, dimension);
                 } else if (inputType == VGen::InputType::kParameter) {
                     if (!input["index"]) {
-                        spdlog::error("ScinthDef {} has VGen {} parameter input with no index key.", name,
-                                      className);
+                        spdlog::error("ScinthDef {} has VGen {} parameter input with no index key.", name, className);
                         return nullptr;
                     }
                     int parameterIndex = input["index"].as<int>();

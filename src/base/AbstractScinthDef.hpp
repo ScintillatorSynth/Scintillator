@@ -88,7 +88,9 @@ public:
     const std::set<std::pair<uint32_t, int>>& computeFixedImages() const { return m_computeFixedImages; }
     const std::set<std::pair<uint32_t, int>>& drawFixedImages() const { return m_drawFixedImages; }
     // First element in pair is sampler key, second is parameter index.
-    const std::set<std::pair<uint32_t, int>>& computeParameterizedImages() const { return m_computeParameterizedImages; }
+    const std::set<std::pair<uint32_t, int>>& computeParameterizedImages() const {
+        return m_computeParameterizedImages;
+    }
     const std::set<std::pair<uint32_t, int>>& drawParameterizedImages() const { return m_drawParameterizedImages; }
 
     bool hasComputeStage() const { return m_hasComputeStage; }
@@ -119,7 +121,7 @@ private:
      * \return true if successful, false on error.
      */
     bool groupVGens(int index, AbstractVGen::Rates rate, std::set<int>& computeVGens, std::set<int>& vertexVGens,
-            std::set<int>& fragmentVGens);
+                    std::set<int>& fragmentVGens);
 
     bool buildComputeStage(const std::set<int>& indices);
     bool buildVertexStage(const std::set<int>& indices);
@@ -127,7 +129,7 @@ private:
 
     std::string m_name;
     std::vector<Parameter> m_parameters;
-    std::vector<VGen> m_instances;
+    std::vector<VGen> ces;
     std::unique_ptr<Shape> m_shape;
 
     // These are pairs of sampler config, image or parameter index, grouped into sets to de-dupe the pairs.
@@ -136,7 +138,14 @@ private:
     std::set<std::pair<uint32_t, int>> m_drawFixedImages;
     std::set<std::pair<uint32_t, int>> m_drawParameterizedImages;
 
-    Manifest m_drawUniform;
+    // Outputs from the vertex shader that are supplied as inputs to the fragment shader.
+    Manifest m_drawUniformManifest;
+    Manifest m_fragmentManifest;
+    std::string m_fragmentShader;
+
+    // uncertain elements
+    Manifest m_vertexManifest;
+
 
     Manifest m_computeUniform;
     bool m_hasComputeStage;
@@ -160,7 +169,6 @@ private:
     std::vector<std::vector<int>> m_outputDimensions;
     std::string m_computeShader;
     std::string m_vertexShader;
-    std::string m_fragmentShader;
     Manifest m_computeManifest;
     Manifest m_vertexManifest;
     Manifest m_uniformManifest;
