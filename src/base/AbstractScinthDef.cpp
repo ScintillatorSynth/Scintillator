@@ -136,15 +136,14 @@ bool AbstractScinthDef::groupVGens(int index, AbstractVGen::Rates maxRate, std::
 
 bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const std::set<int>& fragmentVGens) {
     m_fragmentShader = "";
-    m_vertexShader = "";
-
     for (auto index : fragmentVGens) {
         // Build input names (for parameterization) and add to relevant manifests as needed.
-        std::vector<string> inputs;
+        std::vector<std::string> inputs;
         for (auto j = 0; j < m_instances[index].numberOfInputs(); ++j) {
             VGen::InputType type = m_instances[index].getInputType(j);
             switch (type) {
                 // TODO: support for higher-dimensional constants? VGen has it, but we drop it here.
+                // TODO: constants and parameters are going to be common across fragment, vertex, and compute shaders.
             case VGen::InputType::kConstant: {
                 float constantValue;
                 m_instances[index].getInputConstantValue(j, constantValue);
@@ -232,7 +231,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
             case kTexPos: {
                 std::string name = fmt::format("{}_in_texPos", m_prefix);
                 m_fragmentManifest.addElement(name, Manifest::ElementType::kVec2, Intrinsic::kTexPos);
-                intrinsics[Intrinsic::kNormPos] = name;
+                intrinsics[Intrinsic::kTexPos] = name;
             }    break;
 
             }
@@ -249,33 +248,111 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
                                                               m_outputDimensions[index], alreadyDefined));
     }
 
-    // The fragment manifest should now be final, pack it.
-    m_fragmentManifest.pack();
+    m_vertexShader = "";
+    for (auto index : vertexVGens) {
+        std::vector<std::string> inputs;
+        for (auto j = 0; j < m_instances[index].numberOfInputs(); ++j) {
+            VGen::InputType type = m_instances[index].getInputType(j);
+            switch (type) {
+            // same as fragment-rate
+            case VGen::InputType::kConstant: {
+                float constantValue;
+                m_instances[index].getInputConstantValue(j, constantValue);
+                inputs.emplace_back(fmt::format("{}", constantValue);
+            } break;
 
-    m_fragmentShader = "#version 450\n"
-                       "#extension GL_ARB_separate_shader_objects : enable\n"
-                       "\n"
-                       "// --- fragment shader inputs from vertex shader\n";
+            // same as fragment rate
+            case VGen::InputType::kParameter: {
+                int parameterIndex;
+                m_instances[i].getInputParameterIndex(j, parameterIndex);
+                inputs.emplace_back(fmt::format("{}_parameters.{}", m_prefix, m_parameters[parameterIndex].name()));
+            } break;
 
-    // Now we add vertex shader outputs as described in the fragment Manifest, which will be both shape-rate VGen
-    // outputs and pass-through intrinsics, as inputs to the fragment shader.
+            case VGen::InputType::kVGen: {
+                int vgenIndex, vgenOutput;
+                m_instances[index].getInputVGenIndex(j, vgenIndex, vgenOutput);
+                switch (m_instances[vgenIndex].rate()) {
+                case AbstractVGen::Rates::kPixel:
+                    spdlog::error("Shape-rate VGen index {} with fragment-rate input index {}", index, vgenIndex);
+                    return false;
 
-    // Uniform buffer description comes next, if one is present, containing frame-rate VGen outputs and intrinsics.
+                case AbstractVGen::Rates::kShape: {
+                    inputs.push_back(fmt::format("{}_out_{}_{}", m_prefix, vgenIndex, vgenOutput));
+                } break;
 
-    // Fixed image samplers, followed by parameterized image samplers are declared here.
+                // same as fragment rate
+                case AbstractVGen::Rates::kFrame: {
+                    std::string name = fmt::format("out_{}_{}", vgenIndex, vgenOutput);
+                    m_drawUniformManifest.addElement(name, m_instances[vgenIndex].outputDimension(vgenOutput));
+                    inputs.emplace_back(fmt::format("{}_ubo.{}", m_prefix, name));
+                } break;
 
-    // The push constant block for parameters is next.
+                default:
+                    spdlog::error("Unsupported rate encountered in fragment stage of ScinthDef {}", m_name);
+                    return false;
+                }
+            } break;
 
-    // Hard-coded single output which is color.
-    m_fragmentShader += fmt::format("\nlayout(location = 0) out vec4 {};\n", m_fragmentOutputName);
+            case VGen::InputType::kInvalid:
+                spdlog::error("AbstractScinthDesc {} VGen at index {} has unknown input type at index {}.", m_name,
+                              index, j);
+                return false;
+            }
+        }
 
-    // Lastly the main fragment program.
-    m_fragmentShader += "\n"
-                        "void main() {"
-                            + shaderMain +
-                        "}\n";
+        // Build intrinsics.
+        std::unordered_map<Intrinsic, std::string> intrinsics;
+        for (auto intrinsic : m_instances[index].abstractVGen()->intrinsics()) {
+            switch (intrinsic) {
+            case kFragCoord:
+                spdlog::error("@fragCoord intrinsic not supported in shape-rate VGen index {}", index);
+                break;
 
-    spdlog::info("{} fragment shader:\n{}", m_name, m_fragmentShader);
+            case kNotFound:
+                spdlog::error("ScinthDef {} has unknown intrinsic.", m_name);
+                return false;
+
+            case kNormPos: {
+                std::string name = fmt::format("{}_in_normPos", m_prefix);
+                m_vertexManifest.addElement(name, Manifest::ElementType::kVec2, Intrinsic::kNormPos);
+                intrinsics[Intrinsic::kNormPos] = name;
+            }   break;
+
+            // same as fragment rate
+            case kPi:
+                intrinsics[Intrinsic::kPi] = "3.1415926535897932384626433832795f";
+                break;
+
+            // same as fragment rate
+            case kSampler:
+                if (m_instances[index].imageArgType() == VGen::InputType::kConstant) {
+                    intrinsics[Intrinsic::kSampler] =
+                        fmt::format("{}_sampler_{:08x}_fixed_{}", m_prefix, m_instances[index].sampler().key(),
+                                    m_instances[index].imageIndex());
+                } else {
+                    intrinsics[Intrinsic::kSampler] =
+                        fmt::format("{}_sampler_{:08x}_param_{}", m_prefix, m_instances[index].sampler().key(),
+                                    m_instances[index].imageIndex());
+                }
+                break;
+
+            // same as fragment rate
+            case kTime:
+                m_drawUniformManifest.addElement("time", Manifest::ElementType::kFloat, Intrinsic::kTime);
+                instrinsics[Intrinsic::kTime] = fmt::format("{}_ubo.time", m_prefix);
+                break;
+
+            case kTexPos: {
+                std::string name = fmt::format("{}_in_texPos", m_prefix);
+                m_vertexManifest.addElement(name, Manifest::ElementType::kVec2, Intrinsic::kTexPos);
+                intrinsics[Intrinsic::kTexPos] = name;
+            }    break;
+
+            }
+        }
+
+    }
+
     return true;
 }
 
@@ -322,7 +399,34 @@ bool AbstractScinthDef::buildComputeStage(const std::set<int>& computeVGens) {
 
 bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const std::set<int>& vertexVGens,
         const std::set<int>& fragmentVGens) {
-    
+    // The fragment manifest should now be final, pack it.
+    m_fragmentManifest.pack();
+
+    m_fragmentShader = "#version 450\n"
+                       "#extension GL_ARB_separate_shader_objects : enable\n"
+                       "\n"
+                       "// --- fragment shader inputs from vertex shader\n";
+
+    // Now we add vertex shader outputs as described in the fragment Manifest, which will be both shape-rate VGen
+    // outputs and pass-through intrinsics, as inputs to the fragment shader.
+
+    // Uniform buffer description comes next, if one is present, containing frame-rate VGen outputs and intrinsics.
+
+    // Fixed image samplers, followed by parameterized image samplers are declared here.
+
+    // The push constant block for parameters is next.
+
+    // Hard-coded single output which is color.
+    m_fragmentShader += fmt::format("\nlayout(location = 0) out vec4 {};\n", m_fragmentOutputName);
+
+    // Lastly the main fragment program.
+    m_fragmentShader += "\n"
+                        "void main() {"
+                            + shaderMain +
+                        "}\n";
+
+    spdlog::info("{} fragment shader:\n{}", m_name, m_fragmentShader);
+    return true;
 }
 
 std::string AbstractScinthDef::nameForVGenOutput(int vgenIndex, int outputIndex) const {
