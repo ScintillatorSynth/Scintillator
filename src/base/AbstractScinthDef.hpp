@@ -123,9 +123,10 @@ private:
     bool groupVGens(int index, AbstractVGen::Rates rate, std::set<int>& computeVGens, std::set<int>& vertexVGens,
                     std::set<int>& fragmentVGens);
 
-    bool buildComputeStage(const std::set<int>& indices);
-    bool buildVertexStage(const std::set<int>& indices);
-    bool buildFragmentStage(const std::set<int>& indices);
+    bool buildComputeStage(const std::set<int>& computeVGens);
+    bool buildDrawStage(const std::set<int>& vertexVGens, const std::set<int>& fragmentVGens);
+    bool finalizeShaders(const std::set<int>& computeVGens, const std::set<int>& vertexVGens,
+            const std::set<int>& fragmentVGens);
 
     std::string m_name;
     std::vector<Parameter> m_parameters;

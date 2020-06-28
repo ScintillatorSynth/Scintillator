@@ -52,13 +52,13 @@ bool AbstractScinthDef::build() {
     if (!groupVGens(m_instances.size() - 1, AbstractVGen::Rates::kPixel, computeVGens, vertexVGens, fragmentVGens)) {
         return false;
     }
-    if (!buildFragmentStage(fragmentVGens)) {
-        return false;
-    }
-    if (!buildVertexStage(vertexVGens)) {
+    if (!buildDrawStage(vertexVGens, fragmentVGens)) {
         return false;
     }
     if (!buildComputeStage(computeVGens)) {
+        return false;
+    }
+    if (!finalizeShaders(computeVGens, vertexVGens, fragmentVGens)) {
         return false;
     }
 
@@ -134,10 +134,11 @@ bool AbstractScinthDef::groupVGens(int index, AbstractVGen::Rates maxRate, std::
     return true;
 }
 
-bool AbstractScinthDef::buildFragmentStage(const std::set<int>& indices) {
-    std::string shaderMain;
+bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const std::set<int>& fragmentVGens) {
+    m_fragmentShader = "";
+    m_vertexShader = "";
 
-    for (auto index : indices) {
+    for (auto index : fragmentVGens) {
         // Build input names (for parameterization) and add to relevant manifests as needed.
         std::vector<string> inputs;
         for (auto j = 0; j < m_instances[index].numberOfInputs(); ++j) {
@@ -242,8 +243,8 @@ bool AbstractScinthDef::buildFragmentStage(const std::set<int>& indices) {
             outputs.emplace_back(fmt::format("{}_out_{}_{}", m_prefix, index, j);
         }
 
-        shaderMain += fmt::format("\n    // --- {}\n", m_instances[index].abstractVGen()->name());
-        shaderMain += fmt::format("    \n{}\n",
+        m_fragmentShader += fmt::format("\n    // --- {}\n", m_instances[index].abstractVGen()->name());
+        m_fragmentShader += fmt::format("    \n{}\n",
             m_instances[index].abstractVGen()->parameterize(inputs, intrinsics, outputs,
                                                               m_outputDimensions[index], alreadyDefined));
     }
@@ -278,9 +279,7 @@ bool AbstractScinthDef::buildFragmentStage(const std::set<int>& indices) {
     return true;
 }
 
-bool AbstractScinthDef::buildVertexStage(const std::set<int>& indices) { return true; }
-
-bool AbstractScinthDef::buildComputeStage(const std::set<int>& indices) {
+bool AbstractScinthDef::buildComputeStage(const std::set<int>& computeVGens) {
     // It's possible we have no frame-rate VGens, in which case we can elide the compute stage entirely.
     m_hasComputeStage = indices.size() > 0;
     if (!m_hasComputeStage) {
@@ -319,6 +318,11 @@ bool AbstractScinthDef::buildComputeStage(const std::set<int>& indices) {
     }
 
     return true;
+}
+
+bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const std::set<int>& vertexVGens,
+        const std::set<int>& fragmentVGens) {
+    
 }
 
 std::string AbstractScinthDef::nameForVGenOutput(int vgenIndex, int outputIndex) const {
