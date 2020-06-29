@@ -103,6 +103,7 @@ public:
     const std::unordered_set<Intrinsic> intrinsics() const { return m_intrinsics; }
     const std::string& vertexShader() const { return m_vertexShader; }
     const std::string& fragmentShader() const { return m_fragmentShader; }
+    const Manifest& fragmentManifest() const { return m_fragmentManifest; }
     const Manifest& vertexManifest() const { return m_vertexManifest; }
     const Manifest& uniformManifest() const { return m_uniformManifest; }
 
@@ -130,7 +131,7 @@ private:
 
     std::string m_name;
     std::vector<Parameter> m_parameters;
-    std::vector<VGen> ces;
+    std::vector<VGen> m_instances;
     std::unique_ptr<Shape> m_shape;
 
     // These are pairs of sampler config, image or parameter index, grouped into sets to de-dupe the pairs.
@@ -139,13 +140,29 @@ private:
     std::set<std::pair<uint32_t, int>> m_drawFixedImages;
     std::set<std::pair<uint32_t, int>> m_drawParameterizedImages;
 
-    // Outputs from the vertex shader that are supplied as inputs to the fragment shader.
-    Manifest m_drawUniformManifest;
-    Manifest m_fragmentManifest;
-    std::string m_fragmentShader;
+    // To avoid collision with any VGen code we attach a ScinthDef name and random number prefix to most global names.
+    std::string m_prefix;
+    // Hard-coded Shape input name to the vertex shader.
+    std::string m_vertexPositionElementName;
+    // Hard-coded single output from fragment shader is color.
+    std::string m_fragmentOutputName;
 
-    // uncertain elements
+    // Outputs from the vertex shader that are supplied as inputs to the fragment shader.
+    Manifest m_fragmentManifest;
+
+    // Outputs from compute shader and any intrinsics are supplied as a uniform to both vertex and fragment shaders.
+    Manifest m_drawUniformManifest;
+
+
+
+    // Intrinsic and Shape inputs to the vertex shader.
     Manifest m_vertexManifest;
+
+
+    std::string m_fragmentShader;
+    std::string m_vertexShader;
+    std::string m_computeShader;
+
 
 
     Manifest m_computeUniform;
@@ -159,19 +176,13 @@ private:
     bool buildVertexShader();
     bool buildFragmentShader();
 
-    std::string m_prefix;
-    std::string m_vertexPositionElementName;
-    std::string m_fragmentOutputName;
     std::string m_parametersStructName;
     std::unordered_map<std::string, int> m_parameterIndices;
     std::unordered_set<Intrinsic> m_intrinsics;
     std::vector<std::vector<std::string>> m_inputs;
     std::vector<std::vector<std::string>> m_outputs;
     std::vector<std::vector<int>> m_outputDimensions;
-    std::string m_computeShader;
-    std::string m_vertexShader;
     Manifest m_computeManifest;
-    Manifest m_vertexManifest;
     Manifest m_uniformManifest;
 };
 

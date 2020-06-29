@@ -48,6 +48,8 @@ bool AbstractScinthDef::build() {
 
     std::random_device randomDevice;
     m_prefix = fmt::format("{}_{:08x}", m_name, randomDevice());
+    m_vertexPositionElementName = m_prefix + "_inPosition";
+    m_fragmentOutputName = m_prefix + "_outColor";
 
     if (!groupVGens(m_instances.size() - 1, AbstractVGen::Rates::kPixel, computeVGens, vertexVGens, fragmentVGens)) {
         return false;
@@ -152,7 +154,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
 
             case VGen::InputType::kParameter: {
                 int parameterIndex;
-                m_instances[i].getInputParameterIndex(j, parameterIndex);
+                m_instances[index].getInputParameterIndex(j, parameterIndex);
                 inputs.emplace_back(fmt::format("{}_parameters.{}", m_prefix, m_parameters[parameterIndex].name()));
             } break;
 
@@ -166,13 +168,15 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
 
                 case AbstractVGen::Rates::kShape: {
                     std::string name = fmt::format("{}_out_{}_{}", m_prefix, vgenIndex, vgenOutput);
-                    m_fragmentManifest.addElement(name, m_instances[vgenIndex].outputDimension(vgenOutput));
+                    m_fragmentManifest.addElement(name, static_cast<Manifest::ElementType>(
+                                m_instances[vgenIndex].outputDimension(vgenOutput)));
                     inputs.push_back(name);
                 } break;
 
                 case AbstractVGen::Rates::kFrame: {
                     std::string name = fmt::format("out_{}_{}", vgenIndex, vgenOutput);
-                    m_drawUniformManifest.addElement(name, m_instances[vgenIndex].outputDimension(vgenOutput));
+                    m_drawUniformManifest.addElement(name, static_cast<Manifest::ElementType>(
+                                m_instances[vgenIndex].outputDimension(vgenOutput)));
                     inputs.emplace_back(fmt::format("{}_ubo.{}", m_prefix, name));
                 } break;
 
@@ -189,7 +193,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
             }
         }
 
-        // Build intrinsics.
+        // Build fragment intrinsics.
         std::unordered_map<Intrinsic, std::string> intrinsics;
         for (auto intrinsic : m_instances[index].abstractVGen()->intrinsics()) {
             switch (intrinsic) {
@@ -211,7 +215,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
                 intrinsics[Intrinsic::kPi] = "3.1415926535897932384626433832795f";
                 break;
 
-            case kSampler:
+            case kSampler: {
                 if (m_instances[index].imageArgType() == VGen::InputType::kConstant) {
                     intrinsics[Intrinsic::kSampler] =
                         fmt::format("{}_sampler_{:08x}_fixed_{}", m_prefix, m_instances[index].sampler().key(),
@@ -221,11 +225,11 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
                         fmt::format("{}_sampler_{:08x}_param_{}", m_prefix, m_instances[index].sampler().key(),
                                     m_instances[index].imageIndex());
                 }
-                break;
+            }   break;
 
             case kTime:
                 m_drawUniformManifest.addElement("time", Manifest::ElementType::kFloat, Intrinsic::kTime);
-                instrinsics[Intrinsic::kTime] = fmt::format("{}_ubo.time", m_prefix);
+                intrinsics[Intrinsic::kTime] = fmt::format("{}_ubo.time", m_prefix);
                 break;
 
             case kTexPos: {
@@ -239,13 +243,15 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
 
         std::vector<std::string> outputs;
         for (auto j = 0; j < m_instances[index].abstractVGen()->outputs().size(); ++j) {
-            outputs.emplace_back(fmt::format("{}_out_{}_{}", m_prefix, index, j);
+            outputs.emplace_back(fmt::format("{}_out_{}_{}", m_prefix, index, j));
         }
+
+        std::unordered_set<std::string> alreadyDefined({ m_fragmentOutputName });
 
         m_fragmentShader += fmt::format("\n    // --- {}\n", m_instances[index].abstractVGen()->name());
         m_fragmentShader += fmt::format("    \n{}\n",
             m_instances[index].abstractVGen()->parameterize(inputs, intrinsics, outputs,
-                                                              m_outputDimensions[index], alreadyDefined));
+                                                            m_outputDimensions[index], alreadyDefined));
     }
 
     m_vertexShader = "";
@@ -258,13 +264,13 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
             case VGen::InputType::kConstant: {
                 float constantValue;
                 m_instances[index].getInputConstantValue(j, constantValue);
-                inputs.emplace_back(fmt::format("{}", constantValue);
+                inputs.emplace_back(fmt::format("{}", constantValue));
             } break;
 
             // same as fragment rate
             case VGen::InputType::kParameter: {
                 int parameterIndex;
-                m_instances[i].getInputParameterIndex(j, parameterIndex);
+                m_instances[index].getInputParameterIndex(j, parameterIndex);
                 inputs.emplace_back(fmt::format("{}_parameters.{}", m_prefix, m_parameters[parameterIndex].name()));
             } break;
 
@@ -283,12 +289,13 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
                 // same as fragment rate
                 case AbstractVGen::Rates::kFrame: {
                     std::string name = fmt::format("out_{}_{}", vgenIndex, vgenOutput);
-                    m_drawUniformManifest.addElement(name, m_instances[vgenIndex].outputDimension(vgenOutput));
+                    m_drawUniformManifest.addElement(name, static_cast<Manifest::ElementType>(
+                                m_instances[vgenIndex].outputDimension(vgenOutput)));
                     inputs.emplace_back(fmt::format("{}_ubo.{}", m_prefix, name));
                 } break;
 
                 default:
-                    spdlog::error("Unsupported rate encountered in fragment stage of ScinthDef {}", m_name);
+                    spdlog::error("Unsupported rate encountered in vertex stage of ScinthDef {}", m_name);
                     return false;
                 }
             } break;
@@ -300,7 +307,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
             }
         }
 
-        // Build intrinsics.
+        // Build vertex intrinsics.
         std::unordered_map<Intrinsic, std::string> intrinsics;
         for (auto intrinsic : m_instances[index].abstractVGen()->intrinsics()) {
             switch (intrinsic) {
@@ -339,7 +346,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
             // same as fragment rate
             case kTime:
                 m_drawUniformManifest.addElement("time", Manifest::ElementType::kFloat, Intrinsic::kTime);
-                instrinsics[Intrinsic::kTime] = fmt::format("{}_ubo.time", m_prefix);
+                intrinsics[Intrinsic::kTime] = fmt::format("{}_ubo.time", m_prefix);
                 break;
 
             case kTexPos: {
@@ -351,6 +358,17 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
             }
         }
 
+        std::vector<std::string> outputs;
+        for (auto j = 0; j < m_instances[index].abstractVGen()->outputs().size(); ++j) {
+            outputs.emplace_back(fmt::format("{}_out_{}_{}", m_prefix, index, j));
+        }
+
+        std::unordered_set<std::string> alreadyDefined;
+
+        m_vertexShader += fmt::format("\n    // --- {}\n", m_instances[index].abstractVGen()->name());
+        m_vertexShader += fmt::format("    \n{}\n",
+            m_instances[index].abstractVGen()->parameterize(inputs, intrinsics, outputs,
+                                                              m_outputDimensions[index], alreadyDefined));
     }
 
     return true;
@@ -358,40 +376,9 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
 
 bool AbstractScinthDef::buildComputeStage(const std::set<int>& computeVGens) {
     // It's possible we have no frame-rate VGens, in which case we can elide the compute stage entirely.
-    m_hasComputeStage = indices.size() > 0;
+    m_hasComputeStage = computeVGens.size() > 0;
     if (!m_hasComputeStage) {
         return true;
-    }
-
-    std::string shaderMain = "void main() {\n";
-
-    // Traverse set of compute VGens, adding to input and output manifest as needed.
-    for (auto index : indices) {
-        for (auto intrinsic : m_instances[index].abstractVGen()->intrinsics()) {
-            m_computeIntrinsics.insert(intrinsic);
-
-            switch (intrinsic) {
-            case kNotFound:
-                spdlog::error("ScinthDef {} has unknown intrinsic.", m_name);
-                return false;
-
-            case kNormPos:
-                break;
-
-            case kPi:
-                break;
-
-            case kSampler:
-                break;
-
-            case kTime:
-                m_computeIntrinsics.addElement("time", Manifest::ElementType::kFloat, Intrinsic::kTime);
-                break;
-
-            case kTexPos:
-                break;
-            }
-        }
     }
 
     return true;
@@ -399,13 +386,13 @@ bool AbstractScinthDef::buildComputeStage(const std::set<int>& computeVGens) {
 
 bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const std::set<int>& vertexVGens,
         const std::set<int>& fragmentVGens) {
-    // The fragment manifest should now be final, pack it.
+    // Pack all the manifests as we have analyzed all VGens so they should all be final now.
     m_fragmentManifest.pack();
 
-    m_fragmentShader = "#version 450\n"
-                       "#extension GL_ARB_separate_shader_objects : enable\n"
-                       "\n"
-                       "// --- fragment shader inputs from vertex shader\n";
+    std::string fragmentHeader = "#version 450\n"
+                                 "#extension GL_ARB_separate_shader_objects : enable\n"
+                                 "\n"
+                                 "// --- fragment shader inputs from vertex shader\n";
 
     // Now we add vertex shader outputs as described in the fragment Manifest, which will be both shape-rate VGen
     // outputs and pass-through intrinsics, as inputs to the fragment shader.
@@ -417,12 +404,13 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
     // The push constant block for parameters is next.
 
     // Hard-coded single output which is color.
-    m_fragmentShader += fmt::format("\nlayout(location = 0) out vec4 {};\n", m_fragmentOutputName);
+    fragmentHeader += fmt::format("\nlayout(location = 0) out vec4 {};\n", m_fragmentOutputName);
 
     // Lastly the main fragment program.
-    m_fragmentShader += "\n"
+    m_fragmentShader = fragmentHeader +
+                        "\n"
                         "void main() {"
-                            + shaderMain +
+                            + m_fragmentShader +
                         "}\n";
 
     spdlog::info("{} fragment shader:\n{}", m_name, m_fragmentShader);
@@ -692,20 +680,20 @@ bool AbstractScinthDef::buildFragmentShader() {
 
     // Constant and parameterized Sampler inputs come next, using the combined sampler/image binding which may be faster
     // on some Vulkan implementations.
-    if (m_fixedImages.size()) {
+    if (m_drawFixedImages.size()) {
         m_fragmentShader += "\n"
                             "// --- fixed image sampler inputs\n";
-        for (auto pair : m_fixedImages) {
+        for (auto pair : m_drawFixedImages) {
             m_fragmentShader += fmt::format("layout(binding = {}) uniform sampler2D {}_sampler_{:08x}_fixed_{};\n",
                                             binding, m_prefix, pair.first, pair.second);
             ++binding;
         }
     }
 
-    if (m_parameterizedImages.size()) {
+    if (m_drawParameterizedImages.size()) {
         m_fragmentShader += "\n"
                             "// --- parammeterized image sampler inputs\n";
-        for (auto pair : m_parameterizedImages) {
+        for (auto pair : m_drawParameterizedImages) {
             m_fragmentShader += fmt::format("layout(binding = {}) uniform sampler2D {}_sampler_{:08x}_param_{};\n",
                                             binding, m_prefix, pair.first, pair.second);
             ++binding;
