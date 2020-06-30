@@ -388,31 +388,114 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
         const std::set<int>& fragmentVGens) {
     // Pack all the manifests as we have analyzed all VGens so they should all be final now.
     m_fragmentManifest.pack();
+    m_drawUniformManifest.pack();
+    m_vertexManifest.pack();
+    m_computeUniformManifest.pack();
 
-    std::string fragmentHeader = "#version 450\n"
-                                 "#extension GL_ARB_separate_shader_objects : enable\n"
-                                 "\n"
-                                 "// --- fragment shader inputs from vertex shader\n";
+    // Fragment and Vertex headers share many similar inputs so we build them together.
+    std::string vertexHeader = "#version 450\n"
+                               "#extension GL_ARB_separate_shader_objects : enable\n"
+                               "\n";
+    std::string fragmentHeader = vertexHeader;
+
+    vertexHeader += "// --- vertex shader inputs from vertex format\n";
+    // Describe all inputs to the vertex shader via vertex data.
+    for (auto i = 0; i < m_vertexManifest.numberOfElements(); ++i) {
+        // note that hard-coded assumption that all inputs take 1 slot likely won't work for matrices
+        vertexHeader += fmt::format("layout(location = {}) in {} in_{};\n", i, m_vertexManifest.typeNameForElement(i),
+                                    m_vertexManifest.nameForElement(i));
+    }
 
     // Now we add vertex shader outputs as described in the fragment Manifest, which will be both shape-rate VGen
     // outputs and pass-through intrinsics, as inputs to the fragment shader.
+    fragmentHeader += "// --- fragment shader inputs from vertex shader\n";
+    for (auto i = 0; i < m_fragmentManifest.numberOfElements(); ++i) {
+        if (m_vertexManifest.nameForElement(i) != m_vertexPositionElementName) {
+            fragmentHeader += fmt::format("layout(location = {}) in {} in_{};\n", i,
+                    m_fragmentManifest.typeNameForElement(i), m_fragmentManifest.nameForElement(i));
+        }
+    }
 
     // Uniform buffer description comes next, if one is present, containing frame-rate VGen outputs and intrinsics.
+    int binding = 0;
+    if (m_drawUniformManifest.numberOfElements()) {
+        std::string uboBody;
+        for (auto i = 0; i < m_drawUniformManifest.numberOfElements(); ++i) {
+            uboBody += fmt::format("    {} {};\n", m_drawUniformManifest.typeNameForElement(i),
+                                   m_drawUniformManifest.nameForElement(i));
+        }
+        vertexHeader += fmt::format("\n"
+                                    "// -- vertex shader uniform buffer\n"
+                                    "layout(binding = {}) uniform UBO {{\n",
+                                    "{}"
+                                    "}} {}_ubo;\n",
+                                    binding, uboBody, m_prefix);
+        fragmentHeader += fmt::format("\n"
+                                      "// --- fragment shader uniform buffer\n"
+                                      "layout(binding = {}) uniform UBO {{\n",
+                                      "{}"
+                                      "}} {}_ubo;\n",
+                                      binding, uboBody, m_prefix);
+        ++binding;
+    }
 
     // Fixed image samplers, followed by parameterized image samplers are declared here.
+    if (m_drawFixedImages.size()) {
+        std::string samplerBody;
+        for (auto pair : m_drawFixedImages) {
+            samplerBody += fmt::format("layout(binding = {}) uniform sampler2D {}_sampler_{:08x}_fixed_{};\n",
+                                          binding, m_prefix, pair.first, pair.second);
+            ++binding;
+        }
+        vertexHeader += "\n"
+                        "// -- fixed image sampler inputs\n" + samplerBody;
+        fragmentHeader += "\n"
+                          "// --- fixed image sampler inputs\n" + samplerBody;
+    }
 
-    // The push constant block for parameters is next.
+    if (m_drawParameterizedImages.size()) {
+        std::string samplerBody;
+        for (auto pair : m_drawParameterizedImages) {
+            samplerBody += fmt::format("layout(binding = {}) uniform sampler2D {}_sampler_{:08x}_param_{};\n",
+                                        binding, m_prefix, pair.first, pair.second);
+            ++binding;
+        }
+        vertexHeader += "\n"
+                        "// --- parammeterized image sampler inputs\n" + sampleBody;
+        fragmentHeader += "\n"
+                           "// --- parammeterized image sampler inputs\n" + sampleBody;
+    }
 
-    // Hard-coded single output which is color.
+    // We pack the parameters into a push constant structure.
+    if (m_parameters.size()) {
+        std::string paramBody;
+        for (const auto& param : m_parameters) {
+            paramBody += fmt::format("  float {};\n", param.name());
+        }
+        vertexHeader += fmt::format("\n"
+                                    "// --- fragment shader parameter push constants\n"
+                                    "layout(push_constant) uniform parametersBlock {\n";
+                                    "{}"
+                                    "}} {};\n", paramBody, m_parametersStructName);
+
+        fragmentHeader += fmt::format("\n"
+                                      "// --- fragment shader parameter push constants\n"
+                                      "layout(push_constant) uniform parametersBlock {\n";
+                                      "{}"
+                                      "}} {};\n", paramBody, m_parametersStructName);
+    }
+
+    // Hard-coded single fragment output which is color.
     fragmentHeader += fmt::format("\nlayout(location = 0) out vec4 {};\n", m_fragmentOutputName);
 
-    // Lastly the main fragment program.
+    // Now we can build the entire fragment and vertex programs.
     m_fragmentShader = fragmentHeader +
                         "\n"
                         "void main() {"
                             + m_fragmentShader +
                         "}\n";
 
+    spdlog::info("{} vertex shader:\n{}", m_name, m_vertexShader);
     spdlog::info("{} fragment shader:\n{}", m_name, m_fragmentShader);
     return true;
 }

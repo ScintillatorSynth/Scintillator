@@ -153,19 +153,14 @@ private:
     // Outputs from compute shader and any intrinsics are supplied as a uniform to both vertex and fragment shaders.
     Manifest m_drawUniformManifest;
 
-
-
     // Intrinsic and Shape inputs to the vertex shader.
     Manifest m_vertexManifest;
-
 
     std::string m_fragmentShader;
     std::string m_vertexShader;
     std::string m_computeShader;
 
-
-
-    Manifest m_computeUniform;
+    Manifest m_computeUniformManifest;
     bool m_hasComputeStage;
 
     // pre-refactor
@@ -179,9 +174,6 @@ private:
     std::string m_parametersStructName;
     std::unordered_map<std::string, int> m_parameterIndices;
     std::unordered_set<Intrinsic> m_intrinsics;
-    std::vector<std::vector<std::string>> m_inputs;
-    std::vector<std::vector<std::string>> m_outputs;
-    std::vector<std::vector<int>> m_outputDimensions;
     Manifest m_computeManifest;
     Manifest m_uniformManifest;
 };
