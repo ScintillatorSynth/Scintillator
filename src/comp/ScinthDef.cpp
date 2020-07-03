@@ -174,7 +174,7 @@ bool ScinthDef::buildDescriptorLayout() {
         bindings.emplace_back(uniformBinding);
     }
 
-    auto totalSamplers = m_abstract->fixedImages().size() + m_abstract->parameterizedImages().size();
+    auto totalSamplers = m_abstract->drawFixedImages().size() + m_abstract->drawParameterizedImages().size();
     for (auto i = 0; i < totalSamplers; ++i) {
         VkDescriptorSetLayoutBinding imageBinding = {};
         imageBinding.binding = bindings.size();
@@ -198,7 +198,7 @@ bool ScinthDef::buildDescriptorLayout() {
 }
 
 bool ScinthDef::buildSamplers() {
-    for (auto pair : m_abstract->fixedImages()) {
+    for (auto pair : m_abstract->drawFixedImages()) {
         std::shared_ptr<vk::Sampler> sampler = m_samplerFactory->getSampler(pair.first);
         if (!sampler) {
             spdlog::error("ScinthDef {} did not find fixed Sampler with key {:08x}", m_abstract->name(), pair.first);
@@ -208,7 +208,7 @@ bool ScinthDef::buildSamplers() {
         m_fixedSamplers.emplace_back(sampler);
     }
 
-    for (auto pair : m_abstract->parameterizedImages()) {
+    for (auto pair : m_abstract->drawParameterizedImages()) {
         std::shared_ptr<vk::Sampler> sampler = m_samplerFactory->getSampler(pair.first);
         if (!sampler) {
             spdlog::error("ScinthDef {} did not find parameterized Sampler with key {:08x}", m_abstract->name(),

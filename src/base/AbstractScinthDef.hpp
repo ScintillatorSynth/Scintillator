@@ -63,15 +63,6 @@ public:
      */
     bool build();
 
-    /*! Returns the standardized name for the output of the VGen at the supplied index.
-     *
-     * \note An internal method, exposed mostly for testing.
-     * \param vgenIndex The index of the VGen in this AbstractScinthDef.
-     * \param outputIndex The index of the VGen output to reference.
-     * \return The standardized name of the VGen, or empty string on error.
-     */
-    std::string nameForVGenOutput(int vgenIndex, int outputIndex) const;
-
     /*! Returns the index for a given parameter name, or -1 if name not found.
      *
      * \name The name of the parameter to look up.

@@ -146,7 +146,7 @@ bool Scinth::allocateDescriptors() {
     }
 
     auto totalSamplers =
-        m_scinthDef->abstract()->fixedImages().size() + m_scinthDef->abstract()->parameterizedImages().size();
+        m_scinthDef->abstract()->drawFixedImages().size() + m_scinthDef->abstract()->drawParameterizedImages().size();
     if (totalSamplers) {
         VkDescriptorPoolSize samplerPoolSize = {};
         samplerPoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -203,7 +203,7 @@ bool Scinth::allocateDescriptors() {
         std::vector<VkDescriptorImageInfo> imageInfos(totalSamplers);
         auto samplerIndex = 0;
         auto imageInfoIndex = 0;
-        for (const auto pair : m_scinthDef->abstract()->fixedImages()) {
+        for (const auto pair : m_scinthDef->abstract()->drawFixedImages()) {
             std::shared_ptr<vk::DeviceImage> image = m_imageMap->getImage(pair.second);
             if (!image) {
                 spdlog::error("Scinth {} failed to find constant image ID {}.", m_nodeID, pair.second);
@@ -233,7 +233,7 @@ bool Scinth::allocateDescriptors() {
         }
 
         samplerIndex = 0;
-        for (const auto pair : m_scinthDef->abstract()->parameterizedImages()) {
+        for (const auto pair : m_scinthDef->abstract()->drawParameterizedImages()) {
             // Look up default value of parameter using parameter index, provided as second value in the pair.
             int parameterIndex = pair.second;
             int imageID = static_cast<int>(m_scinthDef->abstract()->parameters()[parameterIndex].defaultValue());
@@ -298,7 +298,7 @@ bool Scinth::updateDescriptors() {
 
     // Compute index where parameterized images binding starts.
     int32_t bindingStart = m_scinthDef->abstract()->uniformManifest().sizeInBytes() ? 1 : 0;
-    bindingStart += m_scinthDef->abstract()->fixedImages().size();
+    bindingStart += m_scinthDef->abstract()->drawFixedImages().size();
 
     for (auto i = 0; i < m_scinthDef->canvas()->numberOfImages(); ++i) {
         std::vector<VkWriteDescriptorSet> descriptorWrites;
