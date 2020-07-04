@@ -207,6 +207,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
             case kNormPos: {
                 std::string name = fmt::format("{}_in_normPos", m_prefix);
                 m_fragmentManifest.addElement(name, Manifest::ElementType::kVec2, Intrinsic::kNormPos);
+                m_vertexManifest.addElement(name, Manifest::ElementType::kVec2, Intrinsic::kNormPos);
                 intrinsics[Intrinsic::kNormPos] = name;
             }   break;
 
@@ -234,6 +235,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
             case kTexPos: {
                 std::string name = fmt::format("{}_in_texPos", m_prefix);
                 m_fragmentManifest.addElement(name, Manifest::ElementType::kVec2, Intrinsic::kTexPos);
+                m_vertexManifest.addElement(name, Manifest::ElementType::kVec2, Intrinsic::kTexPos);
                 intrinsics[Intrinsic::kTexPos] = name;
             }    break;
 
@@ -243,19 +245,27 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
         std::vector<std::string> outputs;
         std::vector<int> outputDimensions;
         for (auto j = 0; j < m_instances[index].numberOfOutputs(); ++j) {
-            outputs.emplace_back(fmt::format("{}_out_{}_{}", m_prefix, index, j));
+            if (index < m_instances.size() - 1 || j > 0) {
+                outputs.emplace_back(fmt::format("{}_out_{}_{}", m_prefix, index, j));
+            } else {
+                outputs.emplace_back(m_fragmentOutputName);
+            }
             outputDimensions.push_back(m_instances[index].outputDimension(j));
         }
 
         std::unordered_set<std::string> alreadyDefined({ m_fragmentOutputName });
 
         m_fragmentShader += fmt::format("\n    // --- {}\n", m_instances[index].abstractVGen()->name());
-        m_fragmentShader += fmt::format("    \n{}\n",
+        m_fragmentShader += fmt::format("    {}\n",
             m_instances[index].abstractVGen()->parameterize(inputs, intrinsics, outputs,
                                                             outputDimensions, alreadyDefined));
     }
 
     m_vertexShader = "";
+
+    // Add position element to vertex manifest.
+    m_vertexManifest.addElement(m_vertexPositionElementName, m_shape->elementType());
+
     for (auto index : vertexVGens) {
         std::vector<std::string> inputs;
         for (auto j = 0; j < m_instances[index].numberOfInputs(); ++j) {
@@ -359,7 +369,6 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
             }
         }
 
-        // same as fragment rate
         std::vector<std::string> outputs;
         std::vector<int> outputDimensions;
         for (auto j = 0; j < m_instances[index].numberOfOutputs(); ++j) {
@@ -370,7 +379,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
         std::unordered_set<std::string> alreadyDefined;
 
         m_vertexShader += fmt::format("\n    // --- {}\n", m_instances[index].abstractVGen()->name());
-        m_vertexShader += fmt::format("    \n{}\n",
+        m_vertexShader += fmt::format("    {}\n",
             m_instances[index].abstractVGen()->parameterize(inputs, intrinsics, outputs,
                                                             outputDimensions, alreadyDefined));
     }
@@ -398,11 +407,10 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
 
     // Fragment and Vertex headers share many similar inputs so we build them together.
     std::string vertexHeader = "#version 450\n"
-                               "#extension GL_ARB_separate_shader_objects : enable\n"
-                               "\n";
+                               "#extension GL_ARB_separate_shader_objects : enable\n";
     std::string fragmentHeader = vertexHeader;
 
-    vertexHeader += "// --- vertex shader inputs from vertex format\n";
+    vertexHeader += "\n// --- vertex shader inputs from vertex format\n";
     // Describe all inputs to the vertex shader via vertex data.
     for (auto i = 0; i < m_vertexManifest.numberOfElements(); ++i) {
         // note that hard-coded assumption that all inputs take 1 slot likely won't work for matrices
@@ -410,13 +418,28 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
                                     m_vertexManifest.nameForElement(i));
     }
 
-    // Now we add vertex shader outputs as described in the fragment Manifest, which will be both shape-rate VGen
-    // outputs and pass-through intrinsics, as inputs to the fragment shader.
-    fragmentHeader += "// --- fragment shader inputs from vertex shader\n";
-    for (auto i = 0; i < m_fragmentManifest.numberOfElements(); ++i) {
-        if (m_vertexManifest.nameForElement(i) != m_vertexPositionElementName) {
-            fragmentHeader += fmt::format("layout(location = {}) in {} in_{};\n", i,
-                    m_fragmentManifest.typeNameForElement(i), m_fragmentManifest.nameForElement(i));
+    if (m_fragmentManifest.numberOfElements()) {
+        // Now we add vertex shader outputs as described in the fragment Manifest, which will be both shape-rate VGen
+        // outputs and pass-through intrinsics, as inputs to the fragment shader.
+        vertexHeader += "\n// -- vertex shader outputs to fragment shader\n";
+        fragmentHeader += "\n// --- fragment shader inputs from vertex shader\n";
+        for (auto i = 0; i < m_fragmentManifest.numberOfElements(); ++i) {
+            if (m_fragmentManifest.nameForElement(i) != m_vertexPositionElementName) {
+                fragmentHeader += fmt::format("layout(location = {}) in {} in_{};\n", i,
+                        m_fragmentManifest.typeNameForElement(i), m_fragmentManifest.nameForElement(i));
+                vertexHeader += fmt::format("layout(location = {}) out {} out_{};\n", i,
+                        m_fragmentManifest.typeNameForElement(i), m_fragmentManifest.nameForElement(i));
+                // We add the copy commands to the vertex shader now, if these are intrinsics that need to be copied.
+                switch (m_fragmentManifest.intrinsicForElement(i)) {
+                case Intrinsic::kNormPos:
+                    m_vertexShader += fmt::format("    out_{}
+                    break;
+                case Intrinsic::kTexPos:
+                    break;
+                default:
+                    break;
+                }
+            }
         }
     }
 
@@ -489,10 +512,38 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
                                       "}} {};\n", paramBody, m_parametersStructName);
     }
 
-    // Hard-coded single fragment output which is color.
-    fragmentHeader += fmt::format("\nlayout(location = 0) out vec4 {};\n", m_fragmentOutputName);
+    // Finally set the gl_Position vertex output based on input type.
+    m_vertexShader += "\n    // --- hard-coded vertex position output.\n";
+    switch (m_shape->elementType()) {
+    case Manifest::ElementType::kFloat:
+        m_vertexShader +=
+            fmt::format("    gl_Position = vec4(in_{}, 0.0f, 0.0f, 1.0f);\n", m_vertexPositionElementName);
+        break;
 
-    // Now we can build the entire fragment and vertex programs.
+    case Manifest::ElementType::kVec2:
+        m_vertexShader +=
+            fmt::format("    gl_Position = vec4(in_{}, 0.0f, 1.0f);\n", m_vertexPositionElementName);
+        break;
+
+    case Manifest::ElementType::kVec3:
+        m_vertexShader += fmt::format("    gl_Position = vec4(in_{}, 1.0f);\n", m_vertexPositionElementName);
+        break;
+
+    case Manifest::ElementType::kVec4:
+        m_vertexShader += fmt::format("    gl_Position = in_{};\n", m_vertexPositionElementName);
+        break;
+    }
+
+    m_vertexShader = vertexHeader +
+                     "\n"
+                     "void main() {"
+                        + m_vertexShader +
+                    "}\n";
+
+    // Hard-coded single fragment output which is color.
+    fragmentHeader += "\n// --- fragment output color\n";
+    fragmentHeader += fmt::format("layout(location = 0) out vec4 {};\n", m_fragmentOutputName);
+
     m_fragmentShader = fragmentHeader +
                         "\n"
                         "void main() {"
