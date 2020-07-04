@@ -115,7 +115,7 @@ private:
     bool buildComputeStage(const std::set<int>& computeVGens);
     bool buildDrawStage(const std::set<int>& vertexVGens, const std::set<int>& fragmentVGens);
     bool finalizeShaders(const std::set<int>& computeVGens, const std::set<int>& vertexVGens,
-            const std::set<int>& fragmentVGens);
+                         const std::set<int>& fragmentVGens);
 
     std::string m_name;
     std::vector<Parameter> m_parameters;

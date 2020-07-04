@@ -366,7 +366,6 @@ TEST_F(AbstractScinthDefTest, BuildPixelRateParams) {
     // Vertex manifest should contain a single element, the position.
     ASSERT_EQ(1, def->vertexManifest().numberOfElements());
     EXPECT_EQ(Intrinsic::kPosition, def->vertexManifest().intrinsicForElement(0));
-
 }
 
 } // namespace

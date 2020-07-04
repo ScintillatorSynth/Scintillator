@@ -171,8 +171,8 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
 
                 case AbstractVGen::Rates::kShape: {
                     std::string name = fmt::format("{}_out_{}_{}", m_prefix, vgenIndex, vgenOutput);
-                    m_fragmentManifest.addElement(name, static_cast<Manifest::ElementType>(
-                                m_instances[vgenIndex].outputDimension(vgenOutput)));
+                    m_fragmentManifest.addElement(
+                        name, static_cast<Manifest::ElementType>(m_instances[vgenIndex].outputDimension(vgenOutput)));
 
                     // We prepend an addition prefix and "_in_" to shape-rate inputs to show how they are exported
                     // from the vertex shader and imported to the fragment shader.
@@ -181,8 +181,8 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
 
                 case AbstractVGen::Rates::kFrame: {
                     std::string name = fmt::format("out_{}_{}", vgenIndex, vgenOutput);
-                    m_drawUniformManifest.addElement(name, static_cast<Manifest::ElementType>(
-                                m_instances[vgenIndex].outputDimension(vgenOutput)));
+                    m_drawUniformManifest.addElement(
+                        name, static_cast<Manifest::ElementType>(m_instances[vgenIndex].outputDimension(vgenOutput)));
                     inputs.emplace_back(fmt::format("{}_ubo.{}", m_prefix, name));
                 } break;
 
@@ -216,7 +216,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
                 m_fragmentManifest.addElement(name, Manifest::ElementType::kVec2, Intrinsic::kNormPos);
                 m_vertexManifest.addElement(name, Manifest::ElementType::kVec2, Intrinsic::kNormPos);
                 intrinsics[Intrinsic::kNormPos] = fmt::format("{}_in_normPos", m_prefix);
-            }   break;
+            } break;
 
             case kPi:
                 intrinsics[Intrinsic::kPi] = "3.1415926535897932384626433832795f";
@@ -232,7 +232,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
                         fmt::format("{}_sampler_{:08x}_param_{}", m_prefix, m_instances[index].sampler().key(),
                                     m_instances[index].imageIndex());
                 }
-            }   break;
+            } break;
 
             case kTime:
                 m_drawUniformManifest.addElement("time", Manifest::ElementType::kFloat, Intrinsic::kTime);
@@ -244,8 +244,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
                 m_fragmentManifest.addElement(name, Manifest::ElementType::kVec2, Intrinsic::kTexPos);
                 m_vertexManifest.addElement(name, Manifest::ElementType::kVec2, Intrinsic::kTexPos);
                 intrinsics[Intrinsic::kTexPos] = fmt::format("{}_in_texPos", m_prefix);
-            }    break;
-
+            } break;
             }
         }
 
@@ -264,8 +263,8 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
 
         m_fragmentShader += fmt::format("\n    // --- {}\n", m_instances[index].abstractVGen()->name());
         m_fragmentShader += fmt::format("    {}\n",
-            m_instances[index].abstractVGen()->parameterize(inputs, intrinsics, outputs,
-                                                            outputDimensions, alreadyDefined));
+                                        m_instances[index].abstractVGen()->parameterize(
+                                            inputs, intrinsics, outputs, outputDimensions, alreadyDefined));
     }
 
     m_vertexShader = "";
@@ -307,8 +306,8 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
                 // same as fragment rate
                 case AbstractVGen::Rates::kFrame: {
                     std::string name = fmt::format("out_{}_{}", vgenIndex, vgenOutput);
-                    m_drawUniformManifest.addElement(name, static_cast<Manifest::ElementType>(
-                                m_instances[vgenIndex].outputDimension(vgenOutput)));
+                    m_drawUniformManifest.addElement(
+                        name, static_cast<Manifest::ElementType>(m_instances[vgenIndex].outputDimension(vgenOutput)));
                     inputs.emplace_back(fmt::format("{}_ubo.{}", m_prefix, name));
                 } break;
 
@@ -340,7 +339,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
             case kNormPos: {
                 m_vertexManifest.addElement("normPos", Manifest::ElementType::kVec2, Intrinsic::kNormPos);
                 intrinsics[Intrinsic::kNormPos] = fmt::format("{}_in_normPos", m_prefix);
-            }   break;
+            } break;
 
             // same as fragment rate
             case kPi:
@@ -369,8 +368,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
             case kTexPos: {
                 m_vertexManifest.addElement("texPos", Manifest::ElementType::kVec2, Intrinsic::kTexPos);
                 intrinsics[Intrinsic::kTexPos] = fmt::format("{}_in_texPos", m_prefix);
-            }    break;
-
+            } break;
             }
         }
 
@@ -385,8 +383,8 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
 
         m_vertexShader += fmt::format("\n    // --- {}\n", m_instances[index].abstractVGen()->name());
         m_vertexShader += fmt::format("    {}\n",
-            m_instances[index].abstractVGen()->parameterize(inputs, intrinsics, outputs,
-                                                            outputDimensions, alreadyDefined));
+                                      m_instances[index].abstractVGen()->parameterize(
+                                          inputs, intrinsics, outputs, outputDimensions, alreadyDefined));
     }
 
     return true;
@@ -403,7 +401,7 @@ bool AbstractScinthDef::buildComputeStage(const std::set<int>& computeVGens) {
 }
 
 bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const std::set<int>& vertexVGens,
-        const std::set<int>& fragmentVGens) {
+                                        const std::set<int>& fragmentVGens) {
     // Pack all the manifests as we have analyzed all VGens so they should all be final now.
     m_fragmentManifest.pack();
     m_drawUniformManifest.pack();
@@ -419,9 +417,9 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
     // Describe all inputs to the vertex shader via vertex data.
     for (auto i = 0; i < m_vertexManifest.numberOfElements(); ++i) {
         // NOTE: hard-coded assumption that all inputs take 1 slot likely won't work for matrices
-        vertexHeader += fmt::format("layout(location = {}) in {} {}_in_{};\n", i,
-                                    m_vertexManifest.typeNameForElement(i), m_prefix,
-                                    m_vertexManifest.nameForElement(i));
+        vertexHeader +=
+            fmt::format("layout(location = {}) in {} {}_in_{};\n", i, m_vertexManifest.typeNameForElement(i), m_prefix,
+                        m_vertexManifest.nameForElement(i));
     }
 
     if (m_fragmentManifest.numberOfElements()) {
@@ -431,10 +429,12 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
         fragmentHeader += "\n// --- fragment shader inputs from vertex shader\n";
         for (auto i = 0; i < m_fragmentManifest.numberOfElements(); ++i) {
             if (m_fragmentManifest.intrinsicForElement(i) != Intrinsic::kPosition) {
-                fragmentHeader += fmt::format("layout(location = {}) in {} {}_in_{};\n", i,
-                        m_fragmentManifest.typeNameForElement(i), m_prefix, m_fragmentManifest.nameForElement(i));
+                fragmentHeader +=
+                    fmt::format("layout(location = {}) in {} {}_in_{};\n", i, m_fragmentManifest.typeNameForElement(i),
+                                m_prefix, m_fragmentManifest.nameForElement(i));
                 vertexHeader += fmt::format("layout(location = {}) out {} {}_out_{};\n", i,
-                        m_fragmentManifest.typeNameForElement(i), m_prefix, m_fragmentManifest.nameForElement(i));
+                                            m_fragmentManifest.typeNameForElement(i), m_prefix,
+                                            m_fragmentManifest.nameForElement(i));
 
                 // We add the copy commands to the vertex shader now, if these are intrinsics or outputs that need to be
                 // copied.
@@ -442,16 +442,18 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
                 case Intrinsic::kTexPos:
                 case Intrinsic::kNormPos:
                     m_vertexShader += fmt::format("\n    // --- copy vertex format element to fragment shader"
-                                                  "\n    {}_out_{} = {}_in_{};\n", m_prefix,
-                            m_fragmentManifest.nameForElement(i), m_prefix, m_fragmentManifest.nameForElement(i));
+                                                  "\n    {}_out_{} = {}_in_{};\n",
+                                                  m_prefix, m_fragmentManifest.nameForElement(i), m_prefix,
+                                                  m_fragmentManifest.nameForElement(i));
                     break;
 
                 case Intrinsic::kNotFound:
                     // NOTE: assumption here that values that aren't associated with an intrinsic are shape-rate VGen
                     // outputs to the fragment shader.
                     m_vertexShader += fmt::format("\n    // --- export VGen output to fragment shader"
-                                                  "\n    {}_out_{} = {};\n", m_prefix,
-                            m_fragmentManifest.nameForElement(i), m_fragmentManifest.nameForElement(i));
+                                                  "\n    {}_out_{} = {};\n",
+                                                  m_prefix, m_fragmentManifest.nameForElement(i),
+                                                  m_fragmentManifest.nameForElement(i));
                     break;
 
                 default:
@@ -488,27 +490,31 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
     if (m_drawFixedImages.size()) {
         std::string samplerBody;
         for (auto pair : m_drawFixedImages) {
-            samplerBody += fmt::format("layout(binding = {}) uniform sampler2D {}_sampler_{:08x}_fixed_{};\n",
-                                          binding, m_prefix, pair.first, pair.second);
+            samplerBody += fmt::format("layout(binding = {}) uniform sampler2D {}_sampler_{:08x}_fixed_{};\n", binding,
+                                       m_prefix, pair.first, pair.second);
             ++binding;
         }
         vertexHeader += "\n"
-                        "// -- fixed image sampler inputs\n" + samplerBody;
+                        "// -- fixed image sampler inputs\n"
+            + samplerBody;
         fragmentHeader += "\n"
-                          "// --- fixed image sampler inputs\n" + samplerBody;
+                          "// --- fixed image sampler inputs\n"
+            + samplerBody;
     }
 
     if (m_drawParameterizedImages.size()) {
         std::string samplerBody;
         for (auto pair : m_drawParameterizedImages) {
-            samplerBody += fmt::format("layout(binding = {}) uniform sampler2D {}_sampler_{:08x}_param_{};\n",
-                                        binding, m_prefix, pair.first, pair.second);
+            samplerBody += fmt::format("layout(binding = {}) uniform sampler2D {}_sampler_{:08x}_param_{};\n", binding,
+                                       m_prefix, pair.first, pair.second);
             ++binding;
         }
         vertexHeader += "\n"
-                        "// --- parammeterized image sampler inputs\n" + samplerBody;
+                        "// --- parammeterized image sampler inputs\n"
+            + samplerBody;
         fragmentHeader += "\n"
-                           "// --- parammeterized image sampler inputs\n" + samplerBody;
+                          "// --- parammeterized image sampler inputs\n"
+            + samplerBody;
     }
 
     // We pack the parameters into a push constant structure, supplied to both vertex and fragment shaders.
@@ -521,26 +527,26 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
                                     "// --- fragment shader parameter push constants\n"
                                     "layout(push_constant) uniform parametersBlock {{\n"
                                     "{}"
-                                    "}} {}_parameters;\n", paramBody, m_prefix);
+                                    "}} {}_parameters;\n",
+                                    paramBody, m_prefix);
 
         fragmentHeader += fmt::format("\n"
                                       "// --- fragment shader parameter push constants\n"
                                       "layout(push_constant) uniform parametersBlock {{\n"
                                       "{}"
-                                      "}} {}_parameters;\n", paramBody, m_prefix);
+                                      "}} {}_parameters;\n",
+                                      paramBody, m_prefix);
     }
 
     // Finally set the gl_Position vertex output based on input type.
     m_vertexShader += "\n    // --- hard-coded vertex position output.\n";
     switch (m_shape->elementType()) {
     case Manifest::ElementType::kFloat:
-        m_vertexShader +=
-            fmt::format("    gl_Position = vec4({}_in_position, 0.0f, 0.0f, 1.0f);\n", m_prefix);
+        m_vertexShader += fmt::format("    gl_Position = vec4({}_in_position, 0.0f, 0.0f, 1.0f);\n", m_prefix);
         break;
 
     case Manifest::ElementType::kVec2:
-        m_vertexShader +=
-            fmt::format("    gl_Position = vec4({}_in_position, 0.0f, 1.0f);\n", m_prefix);
+        m_vertexShader += fmt::format("    gl_Position = vec4({}_in_position, 0.0f, 1.0f);\n", m_prefix);
         break;
 
     case Manifest::ElementType::kVec3:
@@ -552,21 +558,19 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
         break;
     }
 
-    m_vertexShader = vertexHeader +
-                     "\n"
-                     "void main() {"
-                        + m_vertexShader +
-                    "}\n";
+    m_vertexShader = vertexHeader
+        + "\n"
+          "void main() {"
+        + m_vertexShader + "}\n";
 
     // Hard-coded single fragment output which is color.
     fragmentHeader += "\n// --- fragment output color\n";
     fragmentHeader += fmt::format("layout(location = 0) out vec4 {};\n", m_fragmentOutputName);
 
-    m_fragmentShader = fragmentHeader +
-                        "\n"
-                        "void main() {"
-                            + m_fragmentShader +
-                        "}\n";
+    m_fragmentShader = fragmentHeader
+        + "\n"
+          "void main() {"
+        + m_fragmentShader + "}\n";
 
     spdlog::info("{} vertex shader:\n{}", m_name, m_vertexShader);
     spdlog::info("{} fragment shader:\n{}", m_name, m_fragmentShader);
