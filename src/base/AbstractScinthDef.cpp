@@ -173,7 +173,10 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
                     std::string name = fmt::format("{}_out_{}_{}", m_prefix, vgenIndex, vgenOutput);
                     m_fragmentManifest.addElement(name, static_cast<Manifest::ElementType>(
                                 m_instances[vgenIndex].outputDimension(vgenOutput)));
-                    inputs.push_back(name);
+
+                    // We prepend an addition prefix and "_in_" to shape-rate inputs to show how they are exported
+                    // from the vertex shader and imported to the fragment shader.
+                    inputs.push_back(fmt::format("{}_in_{}", m_prefix, name));
                 } break;
 
                 case AbstractVGen::Rates::kFrame: {
@@ -335,9 +338,8 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
                 return false;
 
             case kNormPos: {
-                std::string name = fmt::format("{}_in_normPos", m_prefix);
-                m_vertexManifest.addElement(name, Manifest::ElementType::kVec2, Intrinsic::kNormPos);
-                intrinsics[Intrinsic::kNormPos] = name;
+                m_vertexManifest.addElement("normPos", Manifest::ElementType::kVec2, Intrinsic::kNormPos);
+                intrinsics[Intrinsic::kNormPos] = fmt::format("{}_in_normPos", m_prefix);
             }   break;
 
             // same as fragment rate
@@ -365,9 +367,8 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
                 break;
 
             case kTexPos: {
-                std::string name = fmt::format("{}_in_texPos", m_prefix);
-                m_vertexManifest.addElement(name, Manifest::ElementType::kVec2, Intrinsic::kTexPos);
-                intrinsics[Intrinsic::kTexPos] = name;
+                m_vertexManifest.addElement("texPos", Manifest::ElementType::kVec2, Intrinsic::kTexPos);
+                intrinsics[Intrinsic::kTexPos] = fmt::format("{}_in_texPos", m_prefix);
             }    break;
 
             }
@@ -434,13 +435,25 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
                         m_fragmentManifest.typeNameForElement(i), m_prefix, m_fragmentManifest.nameForElement(i));
                 vertexHeader += fmt::format("layout(location = {}) out {} {}_out_{};\n", i,
                         m_fragmentManifest.typeNameForElement(i), m_prefix, m_fragmentManifest.nameForElement(i));
-                // We add the copy commands to the vertex shader now, if these are intrinsics that need to be copied.
+
+                // We add the copy commands to the vertex shader now, if these are intrinsics or outputs that need to be
+                // copied.
                 switch (m_fragmentManifest.intrinsicForElement(i)) {
                 case Intrinsic::kTexPos:
                 case Intrinsic::kNormPos:
-                    m_vertexShader += fmt::format("\n    {}_out_{} = {}_in_{};\n", m_prefix,
+                    m_vertexShader += fmt::format("\n    // --- copy vertex format element to fragment shader"
+                                                  "\n    {}_out_{} = {}_in_{};\n", m_prefix,
                             m_fragmentManifest.nameForElement(i), m_prefix, m_fragmentManifest.nameForElement(i));
                     break;
+
+                case Intrinsic::kNotFound:
+                    // NOTE: assumption here that values that aren't associated with an intrinsic are shape-rate VGen
+                    // outputs to the fragment shader.
+                    m_vertexShader += fmt::format("\n    // --- export VGen output to fragment shader"
+                                                  "\n    {}_out_{} = {};\n", m_prefix,
+                            m_fragmentManifest.nameForElement(i), m_fragmentManifest.nameForElement(i));
+                    break;
+
                 default:
                     break;
                 }
