@@ -204,10 +204,10 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
                 return false;
 
             case kNormPos: {
-                std::string name = fmt::format("{}_in_normPos", m_prefix);
+                std::string name = "normPos";
                 m_fragmentManifest.addElement(name, Manifest::ElementType::kVec2, Intrinsic::kNormPos);
                 m_vertexManifest.addElement(name, Manifest::ElementType::kVec2, Intrinsic::kNormPos);
-                intrinsics[Intrinsic::kNormPos] = name;
+                intrinsics[Intrinsic::kNormPos] = fmt::format("{}_in_normPos", m_prefix);
             }   break;
 
             case kPi:
@@ -232,10 +232,10 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
                 break;
 
             case kTexPos: {
-                std::string name = fmt::format("{}_in_texPos", m_prefix);
+                std::string name = "texPos";
                 m_fragmentManifest.addElement(name, Manifest::ElementType::kVec2, Intrinsic::kTexPos);
                 m_vertexManifest.addElement(name, Manifest::ElementType::kVec2, Intrinsic::kTexPos);
-                intrinsics[Intrinsic::kTexPos] = name;
+                intrinsics[Intrinsic::kTexPos] = fmt::format("{}_in_texPos", m_prefix);
             }    break;
 
             }
@@ -412,8 +412,9 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
     vertexHeader += "\n// --- vertex shader inputs from vertex format\n";
     // Describe all inputs to the vertex shader via vertex data.
     for (auto i = 0; i < m_vertexManifest.numberOfElements(); ++i) {
-        // note that hard-coded assumption that all inputs take 1 slot likely won't work for matrices
-        vertexHeader += fmt::format("layout(location = {}) in {} in_{};\n", i, m_vertexManifest.typeNameForElement(i),
+        // NOTE: hard-coded assumption that all inputs take 1 slot likely won't work for matrices
+        vertexHeader += fmt::format("layout(location = {}) in {} {}_in_{};\n", i,
+                                    m_vertexManifest.typeNameForElement(i), m_prefix,
                                     m_vertexManifest.nameForElement(i));
     }
 
@@ -424,16 +425,16 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
         fragmentHeader += "\n// --- fragment shader inputs from vertex shader\n";
         for (auto i = 0; i < m_fragmentManifest.numberOfElements(); ++i) {
             if (m_fragmentManifest.intrinsicForElement(i) != Intrinsic::kPosition) {
-                fragmentHeader += fmt::format("layout(location = {}) in {} in_{};\n", i,
-                        m_fragmentManifest.typeNameForElement(i), m_fragmentManifest.nameForElement(i));
-                vertexHeader += fmt::format("layout(location = {}) out {} out_{};\n", i,
-                        m_fragmentManifest.typeNameForElement(i), m_fragmentManifest.nameForElement(i));
+                fragmentHeader += fmt::format("layout(location = {}) in {} {}_in_{};\n", i,
+                        m_fragmentManifest.typeNameForElement(i), m_prefix, m_fragmentManifest.nameForElement(i));
+                vertexHeader += fmt::format("layout(location = {}) out {} {}_out_{};\n", i,
+                        m_fragmentManifest.typeNameForElement(i), m_prefix, m_fragmentManifest.nameForElement(i));
                 // We add the copy commands to the vertex shader now, if these are intrinsics that need to be copied.
                 switch (m_fragmentManifest.intrinsicForElement(i)) {
-                case Intrinsic::kNormPos:
-                    m_vertexShader += fmt::format("    out_{}");
-                    break;
                 case Intrinsic::kTexPos:
+                case Intrinsic::kNormPos:
+                    m_vertexShader += fmt::format("\n    {}_out_{} = {}_in_{};\n", m_prefix,
+                            m_fragmentManifest.nameForElement(i), m_prefix, m_fragmentManifest.nameForElement(i));
                     break;
                 default:
                     break;
