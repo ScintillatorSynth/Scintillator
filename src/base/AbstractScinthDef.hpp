@@ -150,8 +150,10 @@ private:
     Manifest m_computeUniformManifest;
     bool m_hasComputeStage;
 
+    // TODO: define me
     std::string m_parametersStructName;
     std::unordered_map<std::string, int> m_parameterIndices;
+
     Manifest m_computeManifest;
     Manifest m_uniformManifest;
 };

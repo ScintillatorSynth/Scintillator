@@ -44,7 +44,6 @@ AbstractScinthDef::~AbstractScinthDef() { spdlog::debug("AbstractScinthDef '{}' 
 bool AbstractScinthDef::build() {
     std::random_device randomDevice;
     m_prefix = fmt::format("{}_{:08x}", m_name, randomDevice());
-    m_vertexPositionElementName = m_prefix + "_inPosition";
     m_fragmentOutputName = m_prefix + "_outColor";
 
     std::set<int> computeVGens;
@@ -264,7 +263,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
     m_vertexShader = "";
 
     // Add position element to vertex manifest.
-    m_vertexManifest.addElement(m_vertexPositionElementName, m_shape->elementType());
+    m_vertexManifest.addElement("position", m_shape->elementType(), Intrinsic::kPosition);
 
     for (auto index : vertexVGens) {
         std::vector<std::string> inputs;
@@ -324,7 +323,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
             switch (intrinsic) {
             case kFragCoord:
                 spdlog::error("@fragCoord intrinsic not supported in shape-rate VGen index {}", index);
-                break;
+                return false;
 
             case kNotFound:
                 spdlog::error("ScinthDef {} has unknown intrinsic.", m_name);
@@ -424,7 +423,7 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
         vertexHeader += "\n// -- vertex shader outputs to fragment shader\n";
         fragmentHeader += "\n// --- fragment shader inputs from vertex shader\n";
         for (auto i = 0; i < m_fragmentManifest.numberOfElements(); ++i) {
-            if (m_fragmentManifest.nameForElement(i) != m_vertexPositionElementName) {
+            if (m_fragmentManifest.intrinsicForElement(i) != Intrinsic::kPosition) {
                 fragmentHeader += fmt::format("layout(location = {}) in {} in_{};\n", i,
                         m_fragmentManifest.typeNameForElement(i), m_fragmentManifest.nameForElement(i));
                 vertexHeader += fmt::format("layout(location = {}) out {} out_{};\n", i,
@@ -432,7 +431,7 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
                 // We add the copy commands to the vertex shader now, if these are intrinsics that need to be copied.
                 switch (m_fragmentManifest.intrinsicForElement(i)) {
                 case Intrinsic::kNormPos:
-                    m_vertexShader += fmt::format("    out_{}
+                    m_vertexShader += fmt::format("    out_{}");
                     break;
                 case Intrinsic::kTexPos:
                     break;
@@ -517,20 +516,20 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
     switch (m_shape->elementType()) {
     case Manifest::ElementType::kFloat:
         m_vertexShader +=
-            fmt::format("    gl_Position = vec4(in_{}, 0.0f, 0.0f, 1.0f);\n", m_vertexPositionElementName);
+            fmt::format("    gl_Position = vec4({}_in_position, 0.0f, 0.0f, 1.0f);\n", m_prefix);
         break;
 
     case Manifest::ElementType::kVec2:
         m_vertexShader +=
-            fmt::format("    gl_Position = vec4(in_{}, 0.0f, 1.0f);\n", m_vertexPositionElementName);
+            fmt::format("    gl_Position = vec4({}_in_position, 0.0f, 1.0f);\n", m_prefix);
         break;
 
     case Manifest::ElementType::kVec3:
-        m_vertexShader += fmt::format("    gl_Position = vec4(in_{}, 1.0f);\n", m_vertexPositionElementName);
+        m_vertexShader += fmt::format("    gl_Position = vec4({}_in_position, 1.0f);\n", m_prefix);
         break;
 
     case Manifest::ElementType::kVec4:
-        m_vertexShader += fmt::format("    gl_Position = in_{};\n", m_vertexPositionElementName);
+        m_vertexShader += fmt::format("    gl_Position = {}_in_position;\n", m_prefix);
         break;
     }
 
