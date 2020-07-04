@@ -94,6 +94,22 @@ size_t Archetypes::numberOfAbstractVGens() {
     return m_abstractVGens.size();
 }
 
+std::shared_ptr<AbstractScinthDef> Archetypes::parseOnly(const std::string& yaml) {
+    std::vector<YAML::Node> nodes;
+    try {
+        nodes = YAML::LoadAll(yaml);
+    } catch (const YAML::ParserException& e) {
+        spdlog::error("error parsing yaml string {}: {}", yaml, e.what());
+        return nullptr;
+    }
+    if (nodes.size() != 1) {
+        spdlog::error("expected 1 node in AbstractScinthDef yaml, got {}", nodes.size());
+        return nullptr;
+    }
+
+    return extractSingleNode(nodes[0]);
+}
+
 std::vector<YAML::Node> Archetypes::parseYAMLFile(const std::string& fileName) {
     std::vector<YAML::Node> nodes;
     try {
@@ -125,325 +141,292 @@ std::vector<YAML::Node> Archetypes::parseYAMLString(const std::string& yaml) {
 std::vector<std::shared_ptr<const AbstractScinthDef>>
 Archetypes::extractFromNodes(const std::vector<YAML::Node>& nodes) {
     std::vector<std::shared_ptr<const AbstractScinthDef>> scinthDefs;
-    for (auto node : nodes) {
-        if (!node.IsMap()) {
-            spdlog::error("Top-level yaml node is not a map.");
+    for (const auto& node : nodes) {
+        std::shared_ptr<AbstractScinthDef> scinthDef = extractSingleNode(node);
+        if (!scinthDef) {
             continue;
         }
 
-        // Parse name of ScinthDef.
-        if (!node["name"]) {
-            spdlog::error("Missing ScinthDef name tag.");
-            continue;
-        }
-
-        std::string name = node["name"].as<std::string>();
-
-        // Parse parameter list if present.
-        bool parseError = false;
-        std::vector<Parameter> parameters;
-        if (node["parameters"]) {
-            if (!node["parameters"].IsSequence()) {
-                spdlog::error("ScinthDef named {} got non-sequence parameters key", name);
-                continue;
-            }
-
-            for (auto param : node["parameters"]) {
-                // Expecting a dictionary with two keys per entry, "name" and "defaultValue".
-                if (!param.IsMap()) {
-                    spdlog::error("ScinthDef {} got non-dictionary parameters entry.", name);
-                    parseError = true;
-                    break;
-                }
-
-                if (!param["name"] || !param["defaultValue"]) {
-                    spdlog::error("ScinthDef {} has parameters entry missing requires key.", name);
-                    parseError = true;
-                    break;
-                }
-
-                parameters.emplace_back(Parameter(param["name"].as<std::string>(), param["defaultValue"].as<float>()));
-            }
-
-            if (parseError) {
-                continue;
-            }
-        }
-
-        // Parse VGen list.
-        if (!node["vgens"] || !node["vgens"].IsSequence()) {
-            spdlog::error("ScinthDef named {} missing or not sequence vgens key", name);
-            continue;
-        }
-
-        std::vector<VGen> instances;
-        for (auto vgen : node["vgens"]) {
-            // className, rate, outputs, inputs (can be optional)
-            if (!vgen.IsMap()) {
-                spdlog::error("ScinthDef {} has vgen that is not a map.", name);
-                parseError = true;
-                break;
-            }
-            if (!vgen["className"]) {
-                spdlog::error("ScinthDef {} has vgen with no className key.", name);
-                parseError = true;
-                break;
-            }
-            std::string className = vgen["className"].as<std::string>();
-            std::shared_ptr<const AbstractVGen> vgenClass = getAbstractVGenNamed(className);
-            if (!vgenClass) {
-                spdlog::error("ScinthDef {} has vgen with className {} not defined.", name, className);
-                parseError = true;
-                break;
-            }
-
-            AbstractVGen::Rates rate = AbstractVGen::Rates::kNone;
-            if (!vgen["rate"] || !vgen["rate"].IsScalar()) {
-                spdlog::error("ScinthDef {} has VGen with className {} absent or malformed rate key.", name, className);
-                parseError = true;
-                break;
-            }
-            std::string rateName = vgen["rate"].as<std::string>();
-            if (rateName == "pixel") {
-                rate = AbstractVGen::Rates::kPixel;
-            } else if (rateName == "shape") {
-                rate = AbstractVGen::Rates::kShape;
-            } else if (rateName == "frame") {
-                rate = AbstractVGen::Rates::kFrame;
-            } else {
-                spdlog::error("ScinthDef {} has VGen with className {} with unsupported rate value {}.", name,
-                              className, rateName);
-                parseError = true;
-                break;
-            }
-
-            VGen instance(vgenClass, rate);
-
-            if (vgen["sampler"] && vgen["sampler"].IsMap()) {
-                if (!vgenClass->isSampler()) {
-                    spdlog::error("ScinthDef {} has non-sampler VGen {} with sampler dictionary", name, className);
-                    parseError = true;
-                    break;
-                }
-
-                auto sampler = vgen["sampler"];
-                // Two required keys "image" and "imageArgType".
-                if (!sampler["image"] || !sampler["imageArgType"]) {
-                    spdlog::error("ScinthDef {} has sampler VGen {} missing image or imageArgType keys.", name,
-                                  className);
-                    parseError = true;
-                    break;
-                }
-
-                int imageIndex = sampler["image"].as<int>();
-                std::string imageArgTypeString = sampler["imageArgType"].as<std::string>();
-                auto imageArgIt = m_vgenInputTypes.find(imageArgTypeString);
-                if (imageArgIt == m_vgenInputTypes.end()) {
-                    spdlog::error("ScinthDef {} has sampler VGen {} with invalid image arg type string {}.", name,
-                                  className, imageArgTypeString);
-                    parseError = true;
-                    break;
-                }
-
-                VGen::InputType imageArgType = imageArgIt->second;
-                if (imageArgType == VGen::InputType::kVGen) {
-                    spdlog::error("ScinthDef {} has sampler VGen {} with VGen input type.", name, className);
-                    parseError = true;
-                    break;
-                }
-
-                AbstractSampler samplerConfig;
-                if (sampler["minFilterMode"]) {
-                    auto it = m_samplerFilterModes.find(sampler["minFilterMode"].as<std::string>());
-                    if (it == m_samplerFilterModes.end()) {
-                        spdlog::error("ScinthDef {} has sampler VGen {} with unsupported minFilterMode {}", name,
-                                      className, sampler["minFilterMode"].as<std::string>());
-                        parseError = true;
-                        break;
-                    }
-                    samplerConfig.setMinFilterMode(it->second);
-                }
-
-                if (sampler["magFilterMode"]) {
-                    auto it = m_samplerFilterModes.find(sampler["magFilterMode"].as<std::string>());
-                    if (it == m_samplerFilterModes.end()) {
-                        spdlog::error("ScinthDef {} has sampler VGen {} with unsupported magFilterMode {}", name,
-                                      className, sampler["magFilterMode"].as<std::string>());
-                        parseError = true;
-                        break;
-                    }
-                    samplerConfig.setMagFilterMode(it->second);
-                }
-
-                if (sampler["enableAnisotropicFiltering"]) {
-                    samplerConfig.enableAnisotropicFiltering(sampler["enableAnisotropicFiltering"].as<bool>());
-                }
-
-                if (sampler["addressModeU"]) {
-                    auto it = m_samplerAddressModes.find(sampler["addressModeU"].as<std::string>());
-                    if (it == m_samplerAddressModes.end()) {
-                        spdlog::error("ScinthDef {} has sampler VGen {} with unsupported addressModeU {}", name,
-                                      className, sampler["addressModeU"].as<std::string>());
-                        parseError = true;
-                        break;
-                    }
-                    samplerConfig.setAddressModeU(it->second);
-                }
-
-                if (sampler["addressModeV"]) {
-                    auto it = m_samplerAddressModes.find(sampler["addressModeV"].as<std::string>());
-                    if (it == m_samplerAddressModes.end()) {
-                        spdlog::error("ScinthDef {} has sampler VGen {} with unsupported addressModeV {}", name,
-                                      className, sampler["addressModeV"].as<std::string>());
-                        parseError = true;
-                        break;
-                    }
-                    samplerConfig.setAddressModeV(it->second);
-                }
-
-                if (sampler["clampBorderColor"]) {
-                    auto it = m_samplerBorderColors.find(sampler["clampBorderColor"].as<std::string>());
-                    if (it == m_samplerBorderColors.end()) {
-                        spdlog::error("ScinthDef {} has sampler VGen {} with unsupported clampBorderColor {}", name,
-                                      className, sampler["clampBorderColor"].as<std::string>());
-                        parseError = true;
-                        break;
-                    }
-                    samplerConfig.setClampBorderColor(it->second);
-                }
-
-                instance.setSamplerConfig(imageIndex, imageArgType, samplerConfig);
-            } else {
-                if (vgenClass->isSampler()) {
-                    spdlog::error("ScinthDef {} has sampler VGen {} with no sampler dictionary", name, className);
-                    parseError = true;
-                    break;
-                }
-            }
-
-            if (!vgen["outputs"] || !vgen["outputs"].IsSequence()) {
-                spdlog::error("ScinthDef {} has vgen with className {} with absent or malformed outputs key", name,
-                              className);
-                parseError = true;
-                break;
-            }
-            for (auto output : vgen["outputs"]) {
-                if (!output.IsMap()) {
-                    spdlog::error("ScinthDef {} has VGen {} with non-map output.", name, className);
-                    parseError = true;
-                    break;
-                }
-                if (!output["dimension"] || !output["dimension"].IsScalar()) {
-                    spdlog::error("ScinthDef {} has VGen {} with absent or malformed dimension key.", name, className);
-                    parseError = true;
-                    break;
-                }
-                instance.addOutput(output["dimension"].as<int>());
-            }
-
-            if (!parseError && vgen["inputs"]) {
-                for (auto input : vgen["inputs"]) {
-                    if (!input.IsMap()) {
-                        spdlog::error("ScinthDef {} has VGen {} with non-map input.", name, className);
-                        parseError = true;
-                        break;
-                    }
-                    if (!input["type"] || !input["type"].IsScalar()) {
-                        spdlog::error("ScinthDef {} has VGen {} input with absent or malformed type key.", name,
-                                      className);
-                        parseError = true;
-                        break;
-                    }
-
-                    std::string inputTypeString = input["type"].as<std::string>();
-                    auto typeIt = m_vgenInputTypes.find(inputTypeString);
-                    if (typeIt == m_vgenInputTypes.end()) {
-                        spdlog::error("ScinthDef {} has VGen {} with undefined input type {}.", name, className,
-                                      inputTypeString);
-                        parseError = true;
-                        break;
-                    }
-                    VGen::InputType inputType = typeIt->second;
-
-                    if (!input["dimension"] || !input["dimension"].IsScalar()) {
-                        spdlog::error("ScinthDef {} has VGen {} input with absent or malformed dimension key.", name,
-                                      className);
-                        parseError = true;
-                        break;
-                    }
-                    int dimension = input["dimension"].as<int>();
-                    if (inputType == VGen::InputType::kConstant) {
-                        if (!input["value"]) {
-                            spdlog::error("ScinthDef {} has VGen {} constant input with no value key.", name,
-                                          className);
-                            parseError = true;
-                            break;
-                        }
-                        // TODO: higher-dimensional constants.
-                        float constantValue = input["value"].as<float>();
-                        instance.addConstantInput(constantValue);
-                    } else if (inputType == VGen::InputType::kVGen) {
-                        if (!input["vgenIndex"] || !input["outputIndex"]) {
-                            spdlog::error("ScinthDef {} has VGen {} vgen input with no vgenIndex or outputIndex key.",
-                                          name, className);
-                            parseError = true;
-                            break;
-                        }
-                        int vgenIndex = input["vgenIndex"].as<int>();
-                        if (vgenIndex < 0 || vgenIndex > instances.size()) {
-                            spdlog::error("ScinthDef {} has VGen {} vgen input with invalid index {}.", name, className,
-                                          vgenIndex);
-                            parseError = true;
-                            break;
-                        }
-                        int outputIndex = input["outputIndex"].as<int>();
-                        if (outputIndex < 0 || outputIndex >= instances[vgenIndex].abstractVGen()->outputs().size()) {
-                            spdlog::error("ScinthDef {} has VGen {} vgen input with invalid output index {}.", name,
-                                          className, outputIndex);
-                            parseError = true;
-                            break;
-                        }
-                        instance.addVGenInput(vgenIndex, outputIndex, dimension);
-                    } else if (inputType == VGen::InputType::kParameter) {
-                        if (!input["index"]) {
-                            spdlog::error("ScinthDef {} has VGen {} parameter input with no index key.", name,
-                                          className);
-                            parseError = true;
-                            break;
-                        }
-                        int parameterIndex = input["index"].as<int>();
-                        instance.addParameterInput(parameterIndex);
-                    }
-                }
-            }
-
-            if (!instance.validate()) {
-                spdlog::error("ScinthDef {} has invalid VGen {}.", name, className);
-                parseError = true;
-                break;
-            }
-
-            instances.push_back(instance);
-        }
-
-        if (parseError)
-            continue;
-
-        std::shared_ptr<AbstractScinthDef> scinthDef(new AbstractScinthDef(name, parameters, instances));
         if (!scinthDef->build()) {
-            spdlog::error("ScinthDef {} failed to build shaders.", name);
+            spdlog::error("ScinthDef {} failed to build shaders.", scinthDef->name());
             continue;
         }
 
         {
             std::lock_guard<std::mutex> lock(m_mutex);
-            m_scinthDefs.insert_or_assign(name, scinthDef);
+            m_scinthDefs.insert_or_assign(scinthDef->name(), scinthDef);
         }
-        spdlog::info("ScinthDef {} parsed, validated, and added to Archetypes.", name);
+        spdlog::info("ScinthDef {} parsed, validated, and added to Archetypes.", scinthDef->name());
         scinthDefs.push_back(scinthDef);
     }
 
     return scinthDefs;
+}
+
+std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Node& node) {
+    if (!node.IsMap()) {
+        spdlog::error("Top-level yaml node is not a map.");
+        return nullptr;
+    }
+
+    // Parse name of ScinthDef.
+    if (!node["name"]) {
+        spdlog::error("Missing ScinthDef name tag.");
+        return nullptr;
+    }
+
+    std::string name = node["name"].as<std::string>();
+
+    // Parse parameter list if present.
+    std::vector<Parameter> parameters;
+    if (node["parameters"]) {
+        if (!node["parameters"].IsSequence()) {
+            spdlog::error("ScinthDef named {} got non-sequence parameters key", name);
+            return nullptr;
+        }
+
+        for (auto param : node["parameters"]) {
+            // Expecting a dictionary with two keys per entry, "name" and "defaultValue".
+            if (!param.IsMap()) {
+                spdlog::error("ScinthDef {} got non-dictionary parameters entry.", name);
+                return nullptr;
+            }
+
+            if (!param["name"] || !param["defaultValue"]) {
+                spdlog::error("ScinthDef {} has parameters entry missing requires key.", name);
+                return nullptr;
+            }
+
+            parameters.emplace_back(Parameter(param["name"].as<std::string>(), param["defaultValue"].as<float>()));
+        }
+    }
+
+    // Parse VGen list.
+    if (!node["vgens"] || !node["vgens"].IsSequence()) {
+        spdlog::error("ScinthDef named {} missing or not sequence vgens key", name);
+        return nullptr;
+    }
+
+    std::vector<VGen> instances;
+    for (auto vgen : node["vgens"]) {
+        // className, rate, outputs, inputs (can be optional)
+        if (!vgen.IsMap()) {
+            spdlog::error("ScinthDef {} has vgen that is not a map.", name);
+            return nullptr;
+        }
+        if (!vgen["className"]) {
+            spdlog::error("ScinthDef {} has vgen with no className key.", name);
+            return nullptr;
+        }
+        std::string className = vgen["className"].as<std::string>();
+        std::shared_ptr<const AbstractVGen> vgenClass = getAbstractVGenNamed(className);
+        if (!vgenClass) {
+            spdlog::error("ScinthDef {} has vgen with className {} not defined.", name, className);
+            return nullptr;
+        }
+
+        AbstractVGen::Rates rate = AbstractVGen::Rates::kNone;
+        if (!vgen["rate"] || !vgen["rate"].IsScalar()) {
+            spdlog::error("ScinthDef {} has VGen with className {} absent or malformed rate key.", name, className);
+            return nullptr;
+        }
+        std::string rateName = vgen["rate"].as<std::string>();
+        if (rateName == "pixel") {
+            rate = AbstractVGen::Rates::kPixel;
+        } else if (rateName == "shape") {
+            rate = AbstractVGen::Rates::kShape;
+        } else if (rateName == "frame") {
+            rate = AbstractVGen::Rates::kFrame;
+        } else {
+            spdlog::error("ScinthDef {} has VGen with className {} with unsupported rate value {}.", name, className,
+                          rateName);
+            return nullptr;
+        }
+
+        VGen instance(vgenClass, rate);
+
+        if (vgen["sampler"] && vgen["sampler"].IsMap()) {
+            if (!vgenClass->isSampler()) {
+                spdlog::error("ScinthDef {} has non-sampler VGen {} with sampler dictionary", name, className);
+                return nullptr;
+            }
+
+            auto sampler = vgen["sampler"];
+            // Two required keys "image" and "imageArgType".
+            if (!sampler["image"] || !sampler["imageArgType"]) {
+                spdlog::error("ScinthDef {} has sampler VGen {} missing image or imageArgType keys.", name, className);
+                return nullptr;
+            }
+
+            int imageIndex = sampler["image"].as<int>();
+            std::string imageArgTypeString = sampler["imageArgType"].as<std::string>();
+            auto imageArgIt = m_vgenInputTypes.find(imageArgTypeString);
+            if (imageArgIt == m_vgenInputTypes.end()) {
+                spdlog::error("ScinthDef {} has sampler VGen {} with invalid image arg type string {}.", name,
+                              className, imageArgTypeString);
+                return nullptr;
+            }
+
+            VGen::InputType imageArgType = imageArgIt->second;
+            if (imageArgType == VGen::InputType::kVGen) {
+                spdlog::error("ScinthDef {} has sampler VGen {} with VGen input type.", name, className);
+                return nullptr;
+            }
+
+            AbstractSampler samplerConfig;
+            if (sampler["minFilterMode"]) {
+                auto it = m_samplerFilterModes.find(sampler["minFilterMode"].as<std::string>());
+                if (it == m_samplerFilterModes.end()) {
+                    spdlog::error("ScinthDef {} has sampler VGen {} with unsupported minFilterMode {}", name, className,
+                                  sampler["minFilterMode"].as<std::string>());
+                    return nullptr;
+                }
+                samplerConfig.setMinFilterMode(it->second);
+            }
+
+            if (sampler["magFilterMode"]) {
+                auto it = m_samplerFilterModes.find(sampler["magFilterMode"].as<std::string>());
+                if (it == m_samplerFilterModes.end()) {
+                    spdlog::error("ScinthDef {} has sampler VGen {} with unsupported magFilterMode {}", name, className,
+                                  sampler["magFilterMode"].as<std::string>());
+                    return nullptr;
+                }
+                samplerConfig.setMagFilterMode(it->second);
+            }
+
+            if (sampler["enableAnisotropicFiltering"]) {
+                samplerConfig.enableAnisotropicFiltering(sampler["enableAnisotropicFiltering"].as<bool>());
+            }
+
+            if (sampler["addressModeU"]) {
+                auto it = m_samplerAddressModes.find(sampler["addressModeU"].as<std::string>());
+                if (it == m_samplerAddressModes.end()) {
+                    spdlog::error("ScinthDef {} has sampler VGen {} with unsupported addressModeU {}", name, className,
+                                  sampler["addressModeU"].as<std::string>());
+                    return nullptr;
+                }
+                samplerConfig.setAddressModeU(it->second);
+            }
+
+            if (sampler["addressModeV"]) {
+                auto it = m_samplerAddressModes.find(sampler["addressModeV"].as<std::string>());
+                if (it == m_samplerAddressModes.end()) {
+                    spdlog::error("ScinthDef {} has sampler VGen {} with unsupported addressModeV {}", name, className,
+                                  sampler["addressModeV"].as<std::string>());
+                    return nullptr;
+                }
+                samplerConfig.setAddressModeV(it->second);
+            }
+
+            if (sampler["clampBorderColor"]) {
+                auto it = m_samplerBorderColors.find(sampler["clampBorderColor"].as<std::string>());
+                if (it == m_samplerBorderColors.end()) {
+                    spdlog::error("ScinthDef {} has sampler VGen {} with unsupported clampBorderColor {}", name,
+                                  className, sampler["clampBorderColor"].as<std::string>());
+                    return nullptr;
+                }
+                samplerConfig.setClampBorderColor(it->second);
+            }
+
+            instance.setSamplerConfig(imageIndex, imageArgType, samplerConfig);
+        } else {
+            if (vgenClass->isSampler()) {
+                spdlog::error("ScinthDef {} has sampler VGen {} with no sampler dictionary", name, className);
+                return nullptr;
+            }
+        }
+
+        if (!vgen["outputs"] || !vgen["outputs"].IsSequence()) {
+            spdlog::error("ScinthDef {} has vgen with className {} with absent or malformed outputs key", name,
+                          className);
+            return nullptr;
+        }
+        for (auto output : vgen["outputs"]) {
+            if (!output.IsMap()) {
+                spdlog::error("ScinthDef {} has VGen {} with non-map output.", name, className);
+                return nullptr;
+            }
+            if (!output["dimension"] || !output["dimension"].IsScalar()) {
+                spdlog::error("ScinthDef {} has VGen {} with absent or malformed dimension key.", name, className);
+                return nullptr;
+            }
+            instance.addOutput(output["dimension"].as<int>());
+        }
+
+        if (vgen["inputs"]) {
+            for (auto input : vgen["inputs"]) {
+                if (!input.IsMap()) {
+                    spdlog::error("ScinthDef {} has VGen {} with non-map input.", name, className);
+                    return nullptr;
+                }
+                if (!input["type"] || !input["type"].IsScalar()) {
+                    spdlog::error("ScinthDef {} has VGen {} input with absent or malformed type key.", name, className);
+                    return nullptr;
+                }
+
+                std::string inputTypeString = input["type"].as<std::string>();
+                auto typeIt = m_vgenInputTypes.find(inputTypeString);
+                if (typeIt == m_vgenInputTypes.end()) {
+                    spdlog::error("ScinthDef {} has VGen {} with undefined input type {}.", name, className,
+                                  inputTypeString);
+                    return nullptr;
+                }
+                VGen::InputType inputType = typeIt->second;
+
+                if (!input["dimension"] || !input["dimension"].IsScalar()) {
+                    spdlog::error("ScinthDef {} has VGen {} input with absent or malformed dimension key.", name,
+                                  className);
+                    return nullptr;
+                }
+                int dimension = input["dimension"].as<int>();
+                if (inputType == VGen::InputType::kConstant) {
+                    if (!input["value"]) {
+                        spdlog::error("ScinthDef {} has VGen {} constant input with no value key.", name, className);
+                        return nullptr;
+                    }
+                    // TODO: higher-dimensional constants.
+                    float constantValue = input["value"].as<float>();
+                    instance.addConstantInput(constantValue);
+                } else if (inputType == VGen::InputType::kVGen) {
+                    if (!input["vgenIndex"] || !input["outputIndex"]) {
+                        spdlog::error("ScinthDef {} has VGen {} vgen input with no vgenIndex or outputIndex key.", name,
+                                      className);
+                        return nullptr;
+                    }
+                    int vgenIndex = input["vgenIndex"].as<int>();
+                    if (vgenIndex < 0 || vgenIndex > instances.size()) {
+                        spdlog::error("ScinthDef {} has VGen {} vgen input with invalid index {}.", name, className,
+                                      vgenIndex);
+                        return nullptr;
+                    }
+                    int outputIndex = input["outputIndex"].as<int>();
+                    if (outputIndex < 0 || outputIndex >= instances[vgenIndex].abstractVGen()->outputs().size()) {
+                        spdlog::error("ScinthDef {} has VGen {} vgen input with invalid output index {}.", name,
+                                      className, outputIndex);
+                        return nullptr;
+                    }
+                    instance.addVGenInput(vgenIndex, outputIndex, dimension);
+                } else if (inputType == VGen::InputType::kParameter) {
+                    if (!input["index"]) {
+                        spdlog::error("ScinthDef {} has VGen {} parameter input with no index key.", name, className);
+                        return nullptr;
+                    }
+                    int parameterIndex = input["index"].as<int>();
+                    instance.addParameterInput(parameterIndex);
+                }
+            }
+        }
+
+        if (!instance.validate()) {
+            spdlog::error("ScinthDef {} has invalid VGen {}.", name, className);
+            return nullptr;
+        }
+
+        instances.push_back(instance);
+    }
+
+    std::shared_ptr<AbstractScinthDef> scinthDef(new AbstractScinthDef(name, parameters, instances));
+    return scinthDef;
 }
 
 int Archetypes::extractAbstractVGensFromNodes(const std::vector<YAML::Node>& nodes) {

@@ -19,6 +19,7 @@ struct IntrinsicPair { const char* name; scin::base::Intrinsic intrinsic; };
 fragCoord,  scin::base::Intrinsic::kFragCoord
 normPos,    scin::base::Intrinsic::kNormPos
 pi,         scin::base::Intrinsic::kPi
+position,   scin::base::Intrinsic::kPosition
 sampler,    scin::base::Intrinsic::kSampler
 time,       scin::base::Intrinsic::kTime
 texPos,     scin::base::Intrinsic::kTexPos

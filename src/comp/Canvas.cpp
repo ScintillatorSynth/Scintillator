@@ -89,6 +89,14 @@ bool Canvas::create(const std::vector<std::shared_ptr<vk::Image>>& images) {
         }
     }
 
+    if (m_extent.width > m_extent.height) {
+        m_normPosScale.x = static_cast<float>(m_extent.width) / static_cast<float>(m_extent.height);
+        m_normPosScale.y = 1.0f;
+    } else {
+        m_normPosScale.x = 1.0f;
+        m_normPosScale.y = static_cast<float>(m_extent.height) / static_cast<float>(m_extent.width);
+    }
+
     return true;
 }
 

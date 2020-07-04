@@ -27,7 +27,7 @@ public:
      */
     ~Manifest();
 
-    enum ElementType { kFloat, kVec2, kVec3, kVec4 };
+    enum ElementType : int { kFloat = 1, kVec2 = 2, kVec3 = 3, kVec4 = 4 };
 
     /*! Add an element to Manifest, if name is unique.
      *

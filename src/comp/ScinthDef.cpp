@@ -90,22 +90,6 @@ bool ScinthDef::build(ShaderCompiler* compiler) {
 }
 
 bool ScinthDef::buildVertexData() {
-    // The kNormPos intrinsic applies a scale to the input vertices, but only makes sense for 2D verts.
-    glm::vec2 normPosScale;
-    if (m_abstract->intrinsics().count(base::Intrinsic::kNormPos)) {
-        if (m_abstract->shape()->elementType() != base::Manifest::ElementType::kVec2) {
-            spdlog::error("normpos intrinsic only supported for 2D vertices in ScinthDef {}.", m_abstract->name());
-            return false;
-        }
-        if (m_canvas->width() > m_canvas->height()) {
-            normPosScale.x = static_cast<float>(m_canvas->width()) / static_cast<float>(m_canvas->height());
-            normPosScale.y = 1.0f;
-        } else {
-            normPosScale.x = 1.0f;
-            normPosScale.y = static_cast<float>(m_canvas->height()) / static_cast<float>(m_canvas->width());
-        }
-    }
-
     // Build the vertex data based on the manifest and the shape.
     size_t numberOfFloats =
         m_abstract->shape()->numberOfVertices() * (m_abstract->vertexManifest().sizeInBytes() / sizeof(float));
@@ -118,32 +102,29 @@ bool ScinthDef::buildVertexData() {
     float* vertex = static_cast<float*>(m_vertexBuffer->mappedAddress());
     for (auto i = 0; i < m_abstract->shape()->numberOfVertices(); ++i) {
         for (auto j = 0; j < m_abstract->vertexManifest().numberOfElements(); ++j) {
-            // If this is the Shape position vertex data get from the Shape, otherwise build from Intrinsics.
-            if (m_abstract->vertexManifest().nameForElement(j) == m_abstract->vertexPositionElementName()) {
+            switch (m_abstract->vertexManifest().intrinsicForElement(j)) {
+            case base::Intrinsic::kNormPos: {
+                std::array<float, 2> verts;
+                m_abstract->shape()->storeVertexAtIndex(i, verts.data());
+                vertex[0] = verts[0] * m_canvas->normPosScale().x;
+                vertex[1] = verts[1] * m_canvas->normPosScale().y;
+            } break;
+
+            case base::Intrinsic::kPosition:
                 m_abstract->shape()->storeVertexAtIndex(i, vertex);
-            } else {
-                switch (m_abstract->vertexManifest().intrinsicForElement(j)) {
-                case base::Intrinsic::kNormPos: {
-                    // TODO: would it be faster/easier to just provide normPosScale in UBO and do this on
-                    // the vertex shader?
-                    std::array<float, 2> verts;
-                    m_abstract->shape()->storeVertexAtIndex(i, verts.data());
-                    vertex[0] = verts[0] * normPosScale.x;
-                    vertex[1] = verts[1] * normPosScale.y;
-                } break;
+                break;
 
-                case base::Intrinsic::kTexPos:
-                    m_abstract->shape()->storeTextureVertexAtIndex(i, vertex);
-                    break;
+            case base::Intrinsic::kTexPos:
+                m_abstract->shape()->storeTextureVertexAtIndex(i, vertex);
+                break;
 
-                case base::Intrinsic::kFragCoord:
-                case base::Intrinsic::kNotFound:
-                case base::Intrinsic::kPi:
-                case base::Intrinsic::kSampler:
-                case base::Intrinsic::kTime:
-                    spdlog::error("Invalid vertex intrinsic for ScinthDef {}", m_abstract->name());
-                    return false;
-                }
+            case base::Intrinsic::kFragCoord:
+            case base::Intrinsic::kNotFound:
+            case base::Intrinsic::kPi:
+            case base::Intrinsic::kSampler:
+            case base::Intrinsic::kTime:
+                spdlog::error("Invalid vertex intrinsic for ScinthDef {}", m_abstract->name());
+                return false;
             }
 
             // Advance vertex pointer to next element.
@@ -165,7 +146,7 @@ bool ScinthDef::buildVertexData() {
 
 bool ScinthDef::buildDescriptorLayout() {
     std::vector<VkDescriptorSetLayoutBinding> bindings;
-    if (m_abstract->uniformManifest().sizeInBytes()) {
+    if (m_abstract->drawUniformManifest().sizeInBytes()) {
         VkDescriptorSetLayoutBinding uniformBinding = {};
         uniformBinding.binding = bindings.size();
         uniformBinding.descriptorCount = 1;
@@ -174,7 +155,7 @@ bool ScinthDef::buildDescriptorLayout() {
         bindings.emplace_back(uniformBinding);
     }
 
-    auto totalSamplers = m_abstract->fixedImages().size() + m_abstract->parameterizedImages().size();
+    auto totalSamplers = m_abstract->drawFixedImages().size() + m_abstract->drawParameterizedImages().size();
     for (auto i = 0; i < totalSamplers; ++i) {
         VkDescriptorSetLayoutBinding imageBinding = {};
         imageBinding.binding = bindings.size();
@@ -198,7 +179,7 @@ bool ScinthDef::buildDescriptorLayout() {
 }
 
 bool ScinthDef::buildSamplers() {
-    for (auto pair : m_abstract->fixedImages()) {
+    for (auto pair : m_abstract->drawFixedImages()) {
         std::shared_ptr<vk::Sampler> sampler = m_samplerFactory->getSampler(pair.first);
         if (!sampler) {
             spdlog::error("ScinthDef {} did not find fixed Sampler with key {:08x}", m_abstract->name(), pair.first);
@@ -208,7 +189,7 @@ bool ScinthDef::buildSamplers() {
         m_fixedSamplers.emplace_back(sampler);
     }
 
-    for (auto pair : m_abstract->parameterizedImages()) {
+    for (auto pair : m_abstract->drawParameterizedImages()) {
         std::shared_ptr<vk::Sampler> sampler = m_samplerFactory->getSampler(pair.first);
         if (!sampler) {
             spdlog::error("ScinthDef {} did not find parameterized Sampler with key {:08x}", m_abstract->name(),

@@ -3,6 +3,8 @@
 
 #include "vulkan/Vulkan.hpp"
 
+#include "glm/glm.hpp"
+
 #include <memory>
 #include <vector>
 
@@ -41,6 +43,7 @@ public:
     uint32_t height() const { return m_extent.height; }
     VkRenderPass renderPass() { return m_renderPass; }
     VkFramebuffer framebuffer(size_t index) { return m_framebuffers[index]; }
+    glm::vec2 normPosScale() const { return m_normPosScale; }
 
 private:
     std::shared_ptr<vk::Device> m_device;
@@ -48,6 +51,7 @@ private:
     size_t m_numberOfImages;
     VkRenderPass m_renderPass;
     std::vector<VkFramebuffer> m_framebuffers;
+    glm::vec2 m_normPosScale;
 };
 
 } // namespace comp

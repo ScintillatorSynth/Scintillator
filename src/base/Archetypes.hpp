@@ -85,11 +85,19 @@ public:
      */
     size_t numberOfAbstractVGens();
 
+    /*! Parses but does not validate, build, or add to the ScinthDef map. Used for testing.
+     *
+     * \param yaml The yaml string assumed to contain a single ScinthDef
+     * \return A pointer to the parsed AbstractScinthDef, or nullptr on parsing error.
+     */
+    std::shared_ptr<AbstractScinthDef> parseOnly(const std::string& yaml);
+
 private:
     std::vector<YAML::Node> parseYAMLFile(const std::string& fileName);
     std::vector<YAML::Node> parseYAMLString(const std::string& yaml);
 
     std::vector<std::shared_ptr<const AbstractScinthDef>> extractFromNodes(const std::vector<YAML::Node>& nodes);
+    std::shared_ptr<AbstractScinthDef> extractSingleNode(const YAML::Node& node);
 
     /*! Builds individual AbstractVGen objects from the parsed yaml data structures and stores them in the dictionary.
      *
