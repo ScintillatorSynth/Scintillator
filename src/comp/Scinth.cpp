@@ -73,8 +73,8 @@ bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
     // Update the Uniform buffer at imageIndex, if needed.
     if (m_uniformBuffers.size()) {
         float* uniform = static_cast<float*>(m_uniformBuffers[imageIndex]->mappedAddress());
-        for (auto i = 0; i < m_scinthDef->abstract()->uniformManifest().numberOfElements(); ++i) {
-            switch (m_scinthDef->abstract()->uniformManifest().intrinsicForElement(i)) {
+        for (auto i = 0; i < m_scinthDef->abstract()->drawUniformManifest().numberOfElements(); ++i) {
+            switch (m_scinthDef->abstract()->drawUniformManifest().intrinsicForElement(i)) {
             case base::Intrinsic::kTime:
                 *uniform = static_cast<float>(frameTime - m_startTime);
                 break;
@@ -89,7 +89,7 @@ bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
                 return false;
             }
 
-            uniform += (m_scinthDef->abstract()->uniformManifest().strideForElement(i) / sizeof(float));
+            uniform += (m_scinthDef->abstract()->drawUniformManifest().strideForElement(i) / sizeof(float));
         }
     }
 
@@ -127,7 +127,7 @@ bool Scinth::allocateDescriptors() {
     auto numberOfImages = m_scinthDef->canvas()->numberOfImages();
     std::vector<VkDescriptorPoolSize> poolSizes;
 
-    auto uniformSize = m_scinthDef->abstract()->uniformManifest().sizeInBytes();
+    auto uniformSize = m_scinthDef->abstract()->drawUniformManifest().sizeInBytes();
     if (uniformSize) {
         VkDescriptorPoolSize uniformPoolSize = {};
         uniformPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -297,7 +297,7 @@ bool Scinth::updateDescriptors() {
     }
 
     // Compute index where parameterized images binding starts.
-    int32_t bindingStart = m_scinthDef->abstract()->uniformManifest().sizeInBytes() ? 1 : 0;
+    int32_t bindingStart = m_scinthDef->abstract()->drawUniformManifest().sizeInBytes() ? 1 : 0;
     bindingStart += m_scinthDef->abstract()->drawFixedImages().size();
 
     for (auto i = 0; i < m_scinthDef->canvas()->numberOfImages(); ++i) {

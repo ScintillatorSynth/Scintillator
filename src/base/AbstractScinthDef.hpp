@@ -89,12 +89,11 @@ public:
     // pre-refactor
 
     const std::string& prefix() const { return m_prefix; }
-    const std::string& parametersStructName() const { return m_parametersStructName; }
     const std::string& vertexShader() const { return m_vertexShader; }
     const std::string& fragmentShader() const { return m_fragmentShader; }
     const Manifest& fragmentManifest() const { return m_fragmentManifest; }
     const Manifest& vertexManifest() const { return m_vertexManifest; }
-    const Manifest& uniformManifest() const { return m_uniformManifest; }
+    const Manifest& drawUniformManifest() const { return m_drawUniformManifest; }
 
 private:
     /*! Recursively traverses the VGens list from output back to inputs, grouping them into compute, vertex, and
@@ -150,12 +149,7 @@ private:
     Manifest m_computeUniformManifest;
     bool m_hasComputeStage;
 
-    // TODO: define me
-    std::string m_parametersStructName;
     std::unordered_map<std::string, int> m_parameterIndices;
-
-    Manifest m_computeManifest;
-    Manifest m_uniformManifest;
 };
 
 } // namespace base

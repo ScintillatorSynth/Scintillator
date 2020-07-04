@@ -146,7 +146,7 @@ bool ScinthDef::buildVertexData() {
 
 bool ScinthDef::buildDescriptorLayout() {
     std::vector<VkDescriptorSetLayoutBinding> bindings;
-    if (m_abstract->uniformManifest().sizeInBytes()) {
+    if (m_abstract->drawUniformManifest().sizeInBytes()) {
         VkDescriptorSetLayoutBinding uniformBinding = {};
         uniformBinding.binding = bindings.size();
         uniformBinding.descriptorCount = 1;

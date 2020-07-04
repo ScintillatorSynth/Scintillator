@@ -46,6 +46,11 @@ bool AbstractScinthDef::build() {
     m_prefix = fmt::format("{}_{:08x}", m_name, randomDevice());
     m_fragmentOutputName = m_prefix + "_outColor";
 
+    // Pre-process parameter indices map, for quick lookup of parameter index by name.
+    for (auto i = 0; i < m_parameters.size(); ++i) {
+        m_parameterIndices[m_parameters[i].name()] = i;
+    }
+
     std::set<int> computeVGens;
     std::set<int> vertexVGens;
     std::set<int> fragmentVGens;
@@ -453,13 +458,13 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
         }
         vertexHeader += fmt::format("\n"
                                     "// -- vertex shader uniform buffer\n"
-                                    "layout(binding = {}) uniform UBO {{\n",
+                                    "layout(binding = {}) uniform UBO {{\n"
                                     "{}"
                                     "}} {}_ubo;\n",
                                     binding, uboBody, m_prefix);
         fragmentHeader += fmt::format("\n"
                                       "// --- fragment shader uniform buffer\n"
-                                      "layout(binding = {}) uniform UBO {{\n",
+                                      "layout(binding = {}) uniform UBO {{\n"
                                       "{}"
                                       "}} {}_ubo;\n",
                                       binding, uboBody, m_prefix);
@@ -493,7 +498,7 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
                            "// --- parammeterized image sampler inputs\n" + samplerBody;
     }
 
-    // We pack the parameters into a push constant structure.
+    // We pack the parameters into a push constant structure, supplied to both vertex and fragment shaders.
     if (m_parameters.size()) {
         std::string paramBody;
         for (const auto& param : m_parameters) {
@@ -501,15 +506,15 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
         }
         vertexHeader += fmt::format("\n"
                                     "// --- fragment shader parameter push constants\n"
-                                    "layout(push_constant) uniform parametersBlock {\n"
+                                    "layout(push_constant) uniform parametersBlock {{\n"
                                     "{}"
-                                    "}} {};\n", paramBody, m_parametersStructName);
+                                    "}} {}_parameters;\n", paramBody, m_prefix);
 
         fragmentHeader += fmt::format("\n"
                                       "// --- fragment shader parameter push constants\n"
-                                      "layout(push_constant) uniform parametersBlock {\n"
+                                      "layout(push_constant) uniform parametersBlock {{\n"
                                       "{}"
-                                      "}} {};\n", paramBody, m_parametersStructName);
+                                      "}} {}_parameters;\n", paramBody, m_prefix);
     }
 
     // Finally set the gl_Position vertex output based on input type.
