@@ -36,15 +36,30 @@ Some @names are reserved and will be automatically supplied to the VGen at compi
 
 table::
 ## strong::name:: || strong::dimenson:: || strong::rate:: || strong::brief description::
-## code::@normPos:: || 2 || shape || Position of vertex or fragment in normalized space.
-## code::@sampler:: || 1 || frame || The curently configured and bound sampler and image. Only usable in sampling VGens.
+## code::@fragCoord:: || 2 || pixel || The screen coordinates of the curent fragment in pixels.
+## code::@normPos:: || 2 || shape || Position of vertex in normalized space.
+## code::@pi:: || 1 || frame || A shortcut for the constant Pi.
+## code::@position:: || 1-4 || shape only || Unormalized position of vertex. Undefined in pixel-rate VGens. Used internally by scinserver to indicate output of vertex shader.
+## code::@sampler:: || n/a || frame || The curently configured and bound sampler and image. Only usable in sampling VGens.
 ## code::@time:: || 1 || frame || The runtime of the Scinth instance in seconds.
 ## code::@texPos:: || 2 || shape || Position of the fragment in texture coordinates space.
 ::
 
+subsection::@fragCoord
+
+Equates directly to gl_FragCoord.
+
 subsection::@normPos
 
 The emphasis::normalized:: position of the vertex or fragment. This is computed to allow for image coordinates with a 1:1 aspect ratio even though the output window or framebuffer might be rectangular. The @normPos is always a 2 dimensional value and sets up coordinate systems such that the image in smaller of width or height will run from -1.0 to 1.0 in normPos space, with the larger size running under -1.0 and over 1.0. So, for instance, if the image is a tall rectangle with height twice that of width, the normPos will run from -1.0 to 1.0 in width, and -2.0 to 2.0 in height.
+
+subsection::@pi
+
+Always substituted for the value of pi.
+
+subsection::@position
+
+The unormalized position of the vector.
 
 subsection::@sampler
 

@@ -89,9 +89,7 @@ public:
     // pre-refactor
 
     const std::string& prefix() const { return m_prefix; }
-    const std::string& vertexPositionElementName() const { return m_vertexPositionElementName; }
     const std::string& parametersStructName() const { return m_parametersStructName; }
-    const std::unordered_set<Intrinsic> intrinsics() const { return m_intrinsics; }
     const std::string& vertexShader() const { return m_vertexShader; }
     const std::string& fragmentShader() const { return m_fragmentShader; }
     const Manifest& fragmentManifest() const { return m_fragmentManifest; }
@@ -133,8 +131,6 @@ private:
 
     // To avoid collision with any VGen code we attach a ScinthDef name and random number prefix to most global names.
     std::string m_prefix;
-    // Hard-coded Shape input name to the vertex shader.
-    std::string m_vertexPositionElementName;
     // Hard-coded single output from fragment shader is color.
     std::string m_fragmentOutputName;
 
@@ -154,17 +150,8 @@ private:
     Manifest m_computeUniformManifest;
     bool m_hasComputeStage;
 
-    // pre-refactor
-
-    bool buildNames();
-    bool buildManifests();
-    bool buildComputeShader();
-    bool buildVertexShader();
-    bool buildFragmentShader();
-
     std::string m_parametersStructName;
     std::unordered_map<std::string, int> m_parameterIndices;
-    std::unordered_set<Intrinsic> m_intrinsics;
     Manifest m_computeManifest;
     Manifest m_uniformManifest;
 };
