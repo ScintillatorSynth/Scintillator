@@ -18,6 +18,8 @@ Shape::~Shape() {}
 Quad::Quad(int widthEdges, int heightEdges): m_widthEdges(widthEdges), m_heightEdges(heightEdges) {}
 Quad::~Quad() {}
 
+bool Quad::build() { return true; }
+
 Manifest::ElementType Quad::elementType() const { return Manifest::ElementType::kVec2; }
 
 uint32_t Quad::numberOfVertices() const { return quadVertices.size(); }
@@ -41,5 +43,4 @@ size_t Quad::storeTextureVertexAtIndex(uint32_t index, float* store) const {
 const uint16_t* Quad::getIndices() const { return quadIndices.data(); }
 
 } // namespace base
-
 } // namespace scin

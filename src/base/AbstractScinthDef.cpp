@@ -32,9 +32,11 @@
 namespace scin { namespace base {
 
 AbstractScinthDef::AbstractScinthDef(const std::string& name, std::unique_ptr<Shape> shape,
-                                     const std::vector<Parameter>& parameters, const std::vector<VGen>& instances):
+                                     const RenderOptions& renderOptions, const std::vector<Parameter>& parameters,
+                                     const std::vector<VGen>& instances):
     m_name(name),
     m_shape(std::move(shape)),
+    m_renderOptions(renderOptions),
     m_parameters(parameters),
     m_instances(instances),
     m_hasComputeStage(false) {}

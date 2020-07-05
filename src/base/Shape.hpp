@@ -3,6 +3,8 @@
 
 #include "base/Manifest.hpp"
 
+#include <memory>
+
 namespace scin { namespace base {
 
 /*! Abstract base class representing a geometric shape used as the starting point for rendering.
@@ -13,6 +15,12 @@ class Shape {
 public:
     Shape();
     virtual ~Shape();
+
+    /*! Initialize the Shape object.
+     *
+     * \return true on success, false on failure.
+     */
+    virtual bool build() = 0;
 
     enum Topology { kTriangleStrip };
 
@@ -50,6 +58,8 @@ public:
     Quad(int widthEdges, int heightEdges);
     virtual ~Quad();
 
+    bool build() override;
+
     Manifest::ElementType elementType() const override;
     uint32_t numberOfVertices() const override;
     uint32_t numberOfIndices() const override;
@@ -61,6 +71,8 @@ public:
 private:
     int m_widthEdges;
     int m_heightEdges;
+
+    std::unique_ptr<uint16_t[]> m_indices;
 };
 
 } // namespace base

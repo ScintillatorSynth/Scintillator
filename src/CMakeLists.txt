@@ -45,6 +45,8 @@ add_library(scintillator_base STATIC
     base/Manifest.hpp
     base/Parameter.cpp
     base/Parameter.hpp
+    base/RenderOptions.cpp
+    base/RenderOptions.hpp
     base/Shape.cpp
     base/Shape.hpp
     base/VGen.cpp
@@ -74,6 +76,7 @@ add_executable(run_unittests
     base/AbstractVGen_unittests.cpp
     base/Archetypes_unittests.cpp
     base/Manifest_unittests.cpp
+    base/Shape_unittests.cpp
     base/VGen_unittests.cpp
 
     run_unittests.cpp

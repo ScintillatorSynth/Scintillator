@@ -4,6 +4,7 @@
 #include "base/AbstractScinthDef.hpp"
 #include "base/AbstractVGen.hpp"
 #include "base/Parameter.hpp"
+#include "base/RenderOptions.hpp"
 #include "base/Shape.hpp"
 #include "base/VGen.hpp"
 
@@ -204,6 +205,29 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
     } else {
         spdlog::error("ScinthDef {} has unsupported shape name {}", name, shapeName);
         return nullptr;
+    }
+
+    if (!shape->build()) {
+        spdlog::error("ScinthDef {} shape {} failed to build.", name, shapeName);
+        return nullptr;
+    }
+
+    // Parse render options, if any.
+    RenderOptions renderOptions;
+    if (node["options"] && node["options"].IsMap()) {
+        auto optionsNode = node["options"];
+        if (optionsNode["polygonMode"] && optionsNode["polygonMode"].IsScalar()) {
+            std::string mode = optionsNode["polygonMode"].as<std::string>();
+            if (mode == "fill") {
+                renderOptions.setPolygonMode(RenderOptions::PolygonMode::kFill);
+            } else if (mode == "line") {
+                renderOptions.setPolygonMode(RenderOptions::PolygonMode::kLine);
+            } else if (mode == "point") {
+                renderOptions.setPolygonMode(RenderOptions::PolygonMode::kPoint);
+            } else {
+                spdlog::warn("Ignoring unsupported RenderOptions PolygonMode {}", mode);
+            }
+        }
     }
 
     // Parse parameter list if present.
@@ -454,7 +478,8 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
         instances.push_back(instance);
     }
 
-    std::shared_ptr<AbstractScinthDef> scinthDef(new AbstractScinthDef(name, std::move(shape), parameters, instances));
+    std::shared_ptr<AbstractScinthDef> scinthDef(new AbstractScinthDef(name, std::move(shape), renderOptions,
+                parameters, instances));
     return scinthDef;
 }
 

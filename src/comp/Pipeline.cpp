@@ -18,7 +18,8 @@ Pipeline::~Pipeline() { destroy(); }
 
 bool Pipeline::create(const base::Manifest& vertexManifest, const base::Shape* shape, Canvas* canvas,
                       std::shared_ptr<vk::Shader> vertexShader, std::shared_ptr<vk::Shader> fragmentShader,
-                      VkDescriptorSetLayout descriptorSetLayout, size_t pushConstantBlockSize) {
+                      VkDescriptorSetLayout descriptorSetLayout, size_t pushConstantBlockSize,
+                      const base::RenderOptions& renderOptions) {
     // Keep references to these graphics objects so they won't be destroyed until after this Pipeline is destroyed.
     m_vertexShader = vertexShader;
     m_fragmentShader = fragmentShader;
@@ -95,7 +96,18 @@ bool Pipeline::create(const base::Manifest& vertexManifest, const base::Shape* s
     rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizer.depthClampEnable = VK_FALSE;
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
-    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+    switch (renderOptions.polygonMode()) {
+    case base::RenderOptions::PolygonMode::kFill:
+        rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+        break;
+    case base::RenderOptions::PolygonMode::kLine:
+        rasterizer.polygonMode = VK_POLYGON_MODE_LINE;
+        break;
+
+    case base::RenderOptions::PolygonMode::kPoint:
+        rasterizer.polygonMode = VK_POLYGON_MODE_POINT;
+        break;
+    }
     rasterizer.lineWidth = 1.0f;
     rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
     rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;

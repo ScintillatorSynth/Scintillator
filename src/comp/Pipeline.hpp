@@ -2,6 +2,7 @@
 #define SRC_COMP_PIPELINE_HPP_
 
 #include "base/Manifest.hpp"
+#include "base/RenderOptions.hpp"
 #include "vulkan/Vulkan.hpp"
 
 #include <memory>
@@ -29,7 +30,8 @@ public:
 
     bool create(const base::Manifest& vertexManifest, const base::Shape* shape, Canvas* canvas,
                 std::shared_ptr<vk::Shader> vertexShader, std::shared_ptr<vk::Shader> fragmentShader,
-                VkDescriptorSetLayout descriptorSetLayout, size_t pushConstantBlockSize);
+                VkDescriptorSetLayout descriptorSetLayout, size_t pushConstantBlockSize,
+                const base::RenderOptions& renderOptions);
     void destroy();
 
     VkPipeline get() { return m_pipeline; }
