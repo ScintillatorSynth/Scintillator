@@ -4,6 +4,7 @@
 #include "base/AbstractScinthDef.hpp"
 #include "base/AbstractVGen.hpp"
 #include "base/Parameter.hpp"
+#include "base/Shape.hpp"
 #include "base/VGen.hpp"
 
 #include "spdlog/spdlog.h"
@@ -176,6 +177,34 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
     }
 
     std::string name = node["name"].as<std::string>();
+
+    // Parse shape.
+    if (!node["shape"] || !node["shape"].IsMap()) {
+        spdlog::error("ScinthDef {} absent or malformed shape tag.");
+        return nullptr;
+    }
+
+    std::unique_ptr<Shape> shape;
+    auto shapeNode = node["shape"];
+    if (!shapeNode["name"]) {
+        spdlog::error("ScinthDef {} shape map missing name.", name);
+        return nullptr;
+    }
+    auto shapeName = shapeNode["name"].as<std::string>();
+    if (shapeName == "Quad") {
+        int widthEdges = 1;
+        int heightEdges = 1;
+        if (shapeNode["widthEdges"] && shapeNode["widthEdges"].IsScalar()) {
+            widthEdges = shapeNode["widthEdges"].as<int>();
+        }
+        if (shapeNode["heightEdges"] && shapeNode["heightEdges"].IsScalar()) {
+            heightEdges = shapeNode["heightEdges"].as<int>();
+        }
+        shape.reset(new Quad(widthEdges, heightEdges));
+    } else {
+        spdlog::error("ScinthDef {} has unsupported shape name {}", name, shapeName);
+        return nullptr;
+    }
 
     // Parse parameter list if present.
     std::vector<Parameter> parameters;
@@ -425,7 +454,7 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
         instances.push_back(instance);
     }
 
-    std::shared_ptr<AbstractScinthDef> scinthDef(new AbstractScinthDef(name, parameters, instances));
+    std::shared_ptr<AbstractScinthDef> scinthDef(new AbstractScinthDef(name, std::move(shape), parameters, instances));
     return scinthDef;
 }
 

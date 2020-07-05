@@ -46,11 +46,12 @@ public:
     /*! Copy the supplied list of VGens into self and construct an AbstractScinthDef.
      *
      * \param name The name of this ScinthDef.
+     * \param shape The shape object associated with this.
      * \param parameters A list of parameter objects, in order.
      * \param instances The VGens in topological order from inputs to output. It is assumed these have been individually
      *        validated already, meaning that each VGen has appropriate rate and input configuration.
      */
-    AbstractScinthDef(const std::string& name, const std::vector<Parameter>& parameters,
+    AbstractScinthDef(const std::string& name, std::unique_ptr<Shape> shape, const std::vector<Parameter>& parameters,
                       const std::vector<VGen>& instances);
 
     /*! Destructs an AbstractScinthDef and all associated resources.
@@ -118,9 +119,9 @@ private:
                          const std::set<int>& fragmentVGens);
 
     std::string m_name;
+    std::unique_ptr<Shape> m_shape;
     std::vector<Parameter> m_parameters;
     std::vector<VGen> m_instances;
-    std::unique_ptr<Shape> m_shape;
 
     // These are pairs of sampler config, image or parameter index, grouped into sets to de-dupe the pairs.
     std::set<std::pair<uint32_t, int>> m_computeFixedImages;

@@ -15,7 +15,7 @@ namespace scin { namespace base {
 Shape::Shape() {}
 Shape::~Shape() {}
 
-Quad::Quad() {}
+Quad::Quad(int widthEdges, int heightEdges): m_widthEdges(widthEdges), m_heightEdges(heightEdges) {}
 Quad::~Quad() {}
 
 Manifest::ElementType Quad::elementType() const { return Manifest::ElementType::kVec2; }

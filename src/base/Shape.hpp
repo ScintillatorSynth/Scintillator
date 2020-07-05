@@ -6,6 +6,8 @@
 namespace scin { namespace base {
 
 /*! Abstract base class representing a geometric shape used as the starting point for rendering.
+ *
+ * Note that additional shape support requires adding parsing in Archetypes.
  */
 class Shape {
 public:
@@ -45,7 +47,7 @@ public:
 
 class Quad : public Shape {
 public:
-    Quad();
+    Quad(int widthEdges, int heightEdges);
     virtual ~Quad();
 
     Manifest::ElementType elementType() const override;
@@ -55,6 +57,10 @@ public:
     size_t storeVertexAtIndex(uint32_t index, float* store) const override;
     size_t storeTextureVertexAtIndex(uint32_t index, float* store) const override;
     const uint16_t* getIndices() const override;
+
+private:
+    int m_widthEdges;
+    int m_heightEdges;
 };
 
 } // namespace base

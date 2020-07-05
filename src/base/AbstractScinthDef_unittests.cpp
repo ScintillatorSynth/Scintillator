@@ -91,6 +91,10 @@ protected:
 TEST_F(AbstractScinthDefTest, BuildFailsWithInvalidRates) {
     // Rate flow pixel => frame => pixel invalid.
     std::shared_ptr<AbstractScinthDef> def = m_arch.parseOnly("name: a\n"
+                                                              "shape:\n"
+                                                              "    name: Quad\n"
+                                                              "    widthEdges: 1\n"
+                                                              "    heightEdges: 1\n"
                                                               "vgens:\n"
                                                               "    - className: Double\n"
                                                               "      rate: pixel\n"
@@ -123,6 +127,10 @@ TEST_F(AbstractScinthDefTest, BuildFailsWithInvalidRates) {
 
     // Rate flow shape => frame => pixel invalid.
     def = m_arch.parseOnly("name: a\n"
+                           "shape:\n"
+                           "    name: Quad\n"
+                           "    widthEdges: 1\n"
+                           "    heightEdges: 1\n"
                            "vgens:\n"
                            "    - className: Double\n"
                            "      rate: shape\n"
@@ -156,6 +164,10 @@ TEST_F(AbstractScinthDefTest, BuildFailsWithInvalidRates) {
 
 TEST_F(AbstractScinthDefTest, BuildWithSinglePixelRateVGen) {
     std::shared_ptr<AbstractScinthDef> def = m_arch.parseOnly("name: singleOut\n"
+                                                              "shape:\n"
+                                                              "    name: Quad\n"
+                                                              "    widthEdges: 1\n"
+                                                              "    heightEdges: 1\n"
                                                               "vgens:\n"
                                                               "    - className: BWOut\n"
                                                               "      rate: pixel\n"
@@ -187,6 +199,10 @@ TEST_F(AbstractScinthDefTest, BuildWithSinglePixelRateVGen) {
 
 TEST_F(AbstractScinthDefTest, BuildWithNormPosPixelRate) {
     std::shared_ptr<AbstractScinthDef> def = m_arch.parseOnly("name: normPosDef\n"
+                                                              "shape:\n"
+                                                              "    name: Quad\n"
+                                                              "    widthEdges: 1\n"
+                                                              "    heightEdges: 1\n"
                                                               "vgens:\n"
                                                               "    - className: NormPos\n"
                                                               "      rate: pixel\n"
@@ -239,6 +255,10 @@ TEST_F(AbstractScinthDefTest, BuildWithNormPosPixelRate) {
 
 TEST_F(AbstractScinthDefTest, BuildWithTexPosPixelRate) {
     std::shared_ptr<AbstractScinthDef> def = m_arch.parseOnly("name: normPosDef\n"
+                                                              "shape:\n"
+                                                              "    name: Quad\n"
+                                                              "    widthEdges: 1\n"
+                                                              "    heightEdges: 1\n"
                                                               "vgens:\n"
                                                               "    - className: TexPos\n"
                                                               "      rate: pixel\n"
@@ -291,6 +311,10 @@ TEST_F(AbstractScinthDefTest, BuildWithTexPosPixelRate) {
 
 TEST_F(AbstractScinthDefTest, BuildWithTimePixelRate) {
     std::shared_ptr<AbstractScinthDef> def = m_arch.parseOnly("name: timeTest\n"
+                                                              "shape:\n"
+                                                              "    name: Quad\n"
+                                                              "    widthEdges: 1\n"
+                                                              "    heightEdges: 1\n"
                                                               "vgens:\n"
                                                               "    - className: Time\n"
                                                               "      rate: pixel\n"
@@ -331,6 +355,10 @@ TEST_F(AbstractScinthDefTest, BuildWithTimePixelRate) {
 
 TEST_F(AbstractScinthDefTest, BuildPixelRateParams) {
     std::shared_ptr<AbstractScinthDef> def = m_arch.parseOnly("name: fragParams\n"
+                                                              "shape:\n"
+                                                              "    name: Quad\n"
+                                                              "    widthEdges: 1\n"
+                                                              "    heightEdges: 1\n"
                                                               "parameters:\n"
                                                               "    - name: a\n"
                                                               "      defaultValue: 0.5\n"

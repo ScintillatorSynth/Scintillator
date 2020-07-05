@@ -1,0 +1,25 @@
+Shape {
+	isShape { ^true }
+
+	asYAML {
+		Error.new("Base Shape object not suitable for shape specification. Did you mean to use Quad?").throw;
+	}
+}
+
+Quad : Shape {
+	var <>widthEdges;
+	var <>heightEdges;
+
+	*new { |widthEdges = 1, heightEdges = 1|
+		^super.newCopyArgs(widthEdges, heightEdges);
+	}
+
+	asYAML { |depthIndent = ""|
+		^"%name: Quad\n%widthEdges: %\n%heightEdges: %\n".format(
+			depthIndent, depthIndent, widthEdges, depthIndent, heightEdges);
+	}
+}
+
++ Object {
+	isShape { ^false }
+}

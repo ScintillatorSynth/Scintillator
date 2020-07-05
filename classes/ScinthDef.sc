@@ -1,18 +1,25 @@
 ScinthDef {
 	var <>name;
 	var <>func;
+	var <>shape;
 	var <>children;
 	var <>defServer;
 	var <>controls;
 	var <>controlNames;
 
-	*new { |name, vGenGraphFunc|
-		^super.newCopyArgs(name.asSymbol).children_(Array.new(64)).build(vGenGraphFunc);
+	*new { |name, vGenGraphFunc, shape|
+		^super.newCopyArgs(name.asSymbol, vGenGraphFunc, shape).children_(Array.new(64)).build();
 	}
 
-	build { |vGenGraphFunc|
+	build {
+		if (shape.isNil, {
+			shape = Quad.new;
+		});
+		if (shape.isShape.not, {
+			Error.new("Non-shape object provided as Shape argument.").throw;
+		});
+
 		VGen.buildScinthDef = this;
-		func = vGenGraphFunc;
 		func.valueArray(this.prBuildControls);
 
 		protect {
@@ -95,6 +102,8 @@ ScinthDef {
 		secondDepth = depthIndent ++ "    ";
 
 		yaml = indent ++ "name: %\n".format(name);
+		yaml = yaml ++ indent ++ "shape:\n";
+		yaml = yaml ++ shape.asYAML(depthIndent);
 		if (controls.size > 0, {
 			yaml = yaml ++ indent ++ "parameters:\n";
 			controls.do({ |control, i|
