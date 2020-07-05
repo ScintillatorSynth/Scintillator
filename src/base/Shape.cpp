@@ -5,8 +5,8 @@
 #include <vector>
 
 namespace {
-const std::vector<glm::vec2> quadVertices = { { -1.0f, 1.0f }, { -1.0f, -1.0f }, { 1.0f, 1.0f }, { 1.0f, -1.0f } };
-const std::vector<glm::vec2> quadTexVertices = { { 0.0f, 1.0f }, { 0.0f, 0.0f }, { 1.0f, 1.0f }, { 1.0f, 0.0f } };
+const std::vector<glm::vec2> quadVertices = { { -1.0f, -1.0f }, { 1.0f, -1.0f }, { -1.0f, 1.0f }, { 1.0f, 1.0f } };
+const std::vector<glm::vec2> quadTexVertices = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 0.0f, 1.0f }, { 1.0f, 1.0f } };
 const std::vector<uint16_t> quadIndices = { 0, 1, 2, 3 };
 }
 

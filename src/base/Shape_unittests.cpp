@@ -14,22 +14,24 @@ TEST(QuadTest, SingleEdgesInWidthAndHeight) {
     ASSERT_EQ(4, quad->numberOfIndices());
 
     std::array<float, 2> verts;
-    // Vertices should run from bottom left.
+    // Vertices should run from top left.
     quad->storeVertexAtIndex(0, verts.data());
     EXPECT_EQ(-1.0f, verts[0]);
-    EXPECT_EQ(1.0f, verts[1]);
-    // To top left.
-    quad->storeVertexAtIndex(1, verts.data());
-    EXPECT_EQ(-1.0f, verts[0]);
     EXPECT_EQ(-1.0f, verts[1]);
-    // To bottom right.
-    quad->storeVertexAtIndex(2, verts.data());
+    // To top right
+    quad->storeVertexAtIndex(1, verts.data());
     EXPECT_EQ(1.0f, verts[0]);
+    EXPECT_EQ(-1.0f, verts[1]);
+    // To bottom left
+    quad->storeVertexAtIndex(2, verts.data());
+    EXPECT_EQ(-1.0f, verts[0]);
     EXPECT_EQ(1.0f, verts[1]);
-    // To top right.
+    // To bottom right
     quad->storeVertexAtIndex(3, verts.data());
     EXPECT_EQ(1.0f, verts[0]);
-    EXPECT_EQ(-1.0f, verts[1]);
+    EXPECT_EQ(1.0f, verts[1]);
+
+    // TODO: check texture coordinates too
 
     // Indices should run from 0-3
     const uint16_t* indices = quad->getIndices();

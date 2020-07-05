@@ -68,6 +68,11 @@ bool Pipeline::create(const base::Manifest& vertexManifest, const base::Shape* s
     switch (shape->topology()) {
     case base::Shape::Topology::kTriangleStrip:
         inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+        break;
+
+    default:
+        spdlog::error("Unsupported topology in shape.");
+        return false;
     }
     inputAssembly.primitiveRestartEnable = VK_FALSE;
 
