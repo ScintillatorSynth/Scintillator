@@ -1,4 +1,8 @@
 name: t1
+shape:
+    name: Quad
+    widthEdges: 1
+    heightEdges: 1
 vgens:
     - className: RGBOut
       rate: pixel
@@ -16,6 +20,10 @@ vgens:
         - dimension: 4
 ---
 name: t2
+shape:
+    name: Quad
+    widthEdges: 1
+    heightEdges: 1
 vgens:
     - className: NormPos
       rate: pixel
