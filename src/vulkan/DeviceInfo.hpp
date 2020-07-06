@@ -33,6 +33,7 @@ public:
     const char* name() const { return reinterpret_cast<const char*>(&m_properties.deviceName); }
     int presentFamilyIndex() const { return m_presentFamilyIndex; }
     int graphicsFamilyIndex() const { return m_graphicsFamilyIndex; }
+    int computeFamilyIndex() const { return m_computeFamilyIndex; }
     int numberOfMemoryHeaps() const { return m_numberOfMemoryHeaps; }
 
     bool isSwiftShader() const;
@@ -51,6 +52,7 @@ private:
     VkPhysicalDeviceFeatures m_features;
     int m_presentFamilyIndex;
     int m_graphicsFamilyIndex;
+    int m_computeFamilyIndex;
     int m_numberOfMemoryHeaps;
     bool m_supportsWindow;
     bool m_supportsMemoryBudget;

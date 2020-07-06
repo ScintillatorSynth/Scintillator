@@ -14,6 +14,7 @@ Device::Device(std::shared_ptr<Instance> instance, const DeviceInfo& deviceInfo)
     m_instance(instance),
     m_physicalDevice(deviceInfo.physicalDevice()),
     m_name(deviceInfo.name()),
+    m_computeFamilyIndex(deviceInfo.computeFamilyIndex()),
     m_graphicsFamilyIndex(deviceInfo.graphicsFamilyIndex()),
     m_presentFamilyIndex(deviceInfo.presentFamilyIndex()),
     m_numberOfMemoryHeaps(deviceInfo.numberOfMemoryHeaps()),
@@ -21,13 +22,16 @@ Device::Device(std::shared_ptr<Instance> instance, const DeviceInfo& deviceInfo)
     m_supportsSamplerAnisotropy(deviceInfo.supportsSamplerAnisotropy()),
     m_device(VK_NULL_HANDLE),
     m_allocator(VK_NULL_HANDLE),
+    m_computeQueue(VK_NULL_HANDLE),
+    m_graphicsQueue(VK_NULL_HANDLE),
     m_presentQueue(VK_NULL_HANDLE) {}
 
 Device::~Device() { destroy(); }
 
 bool Device::create(bool supportWindow) {
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::set<uint32_t> uniqueQueueFamilies = { static_cast<uint32_t>(m_graphicsFamilyIndex) };
+    std::set<uint32_t> uniqueQueueFamilies = { static_cast<uint32_t>(m_graphicsFamilyIndex),
+        static_cast<uint32_t>(m_computeFamilyIndex) };
     if (supportWindow) {
         uniqueQueueFamilies.insert(static_cast<uint32_t>(m_presentFamilyIndex));
     }
@@ -70,6 +74,7 @@ bool Device::create(bool supportWindow) {
         return false;
     }
 
+    vkGetDeviceQueue(m_device, m_computeFamilyIndex, 0, &m_computeQueue);
     vkGetDeviceQueue(m_device, m_graphicsFamilyIndex, 0, &m_graphicsQueue);
     if (supportWindow) {
         vkGetDeviceQueue(m_device, m_presentFamilyIndex, 0, &m_presentQueue);
@@ -121,5 +126,4 @@ bool Device::getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudgetOu
 
 
 } // namespace vk
-
 } // namespace scin
