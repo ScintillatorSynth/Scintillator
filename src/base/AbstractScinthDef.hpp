@@ -5,6 +5,7 @@
 #include "base/Intrinsic.hpp"
 #include "base/Manifest.hpp"
 #include "base/Parameter.hpp"
+#include "base/RenderOptions.hpp"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -27,11 +28,11 @@ class VGen;
  * produces as output:
  *
  * a) An optional compute shader, if there are any frame-rate VGens in the graph.
- * b) An input uniform buffer manifest for the compute shader if it exists
- * c) A uniform buffer manifest shared by the vertex and fragment programs
+ * b) An input uniform buffer manifest for the compute shader if it exists, the compute uniform manifest
+ * c) A uniform buffer manifest shared by the vertex and fragment programs, called the draw uniform manifest.
  * d) A vertex shader input manifest
  * e) A vertex shader containing both any shape-rate VGens as well as necessary pass-through data to the fragment shader
- * f) A vertex shader output manifest, one of the sources of input to the fragment shader
+ * f) A vertex shader output manifest, one of the sources of input to the fragment shader, called the fragment manifest
  * g) Lists of unified Samplers both constant and parameterized for both compute and draw stages
  * h) Lists of parameters provided as push constants for both compute and draw stages
  * i) A fragment shader with the pixel-rate VGens
@@ -46,12 +47,14 @@ public:
     /*! Copy the supplied list of VGens into self and construct an AbstractScinthDef.
      *
      * \param name The name of this ScinthDef.
+     * \param shape The shape object associated with this.
+     * \param renderOptions A RenderOptions object detailing the options to use rendering this ScinthDef
      * \param parameters A list of parameter objects, in order.
      * \param instances The VGens in topological order from inputs to output. It is assumed these have been individually
      *        validated already, meaning that each VGen has appropriate rate and input configuration.
      */
-    AbstractScinthDef(const std::string& name, const std::vector<Parameter>& parameters,
-                      const std::vector<VGen>& instances);
+    AbstractScinthDef(const std::string& name, std::unique_ptr<Shape> shape, const RenderOptions& renderOptions,
+                      const std::vector<Parameter>& parameters, const std::vector<VGen>& instances);
 
     /*! Destructs an AbstractScinthDef and all associated resources.
      */
@@ -71,9 +74,10 @@ public:
     int indexForParameterName(const std::string& name) const;
 
     const std::string& name() const { return m_name; }
+    const Shape* shape() const { return m_shape.get(); }
+    const RenderOptions& renderOptions() const { return m_renderOptions; }
     const std::vector<Parameter>& parameters() const { return m_parameters; }
     const std::vector<VGen>& instances() const { return m_instances; }
-    const Shape* shape() const { return m_shape.get(); }
 
     // First element in pair is sampler key, second element is the imageID.
     const std::set<std::pair<uint32_t, int>>& computeFixedImages() const { return m_computeFixedImages; }
@@ -85,8 +89,6 @@ public:
     const std::set<std::pair<uint32_t, int>>& drawParameterizedImages() const { return m_drawParameterizedImages; }
 
     bool hasComputeStage() const { return m_hasComputeStage; }
-
-    // pre-refactor
 
     const std::string& prefix() const { return m_prefix; }
     const std::string& vertexShader() const { return m_vertexShader; }
@@ -118,9 +120,10 @@ private:
                          const std::set<int>& fragmentVGens);
 
     std::string m_name;
+    std::unique_ptr<Shape> m_shape;
+    RenderOptions m_renderOptions;
     std::vector<Parameter> m_parameters;
     std::vector<VGen> m_instances;
-    std::unique_ptr<Shape> m_shape;
 
     // These are pairs of sampler config, image or parameter index, grouped into sets to de-dupe the pairs.
     std::set<std::pair<uint32_t, int>> m_computeFixedImages;

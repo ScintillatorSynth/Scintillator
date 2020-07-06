@@ -1,18 +1,28 @@
 ScinthDef {
 	var <>name;
 	var <>func;
+	var <>shape;
+	var <>renderOptions;
 	var <>children;
 	var <>defServer;
 	var <>controls;
 	var <>controlNames;
 
-	*new { |name, vGenGraphFunc|
-		^super.newCopyArgs(name.asSymbol).children_(Array.new(64)).build(vGenGraphFunc);
+	*new { |name, vGenGraphFunc, shape, renderOptions|
+		^super.newCopyArgs(name.asSymbol, vGenGraphFunc, shape, renderOptions).children_(Array.new(64)).build();
 	}
 
-	build { |vGenGraphFunc|
+	build {
+		if (shape.isNil, {
+			shape = Quad.new;
+		}, {
+			if (shape.isShape.not, {
+				Error.new("Non-shape object provided as Shape argument.").throw;
+			});
+		});
+		// renderOptions as nil just means we accept the default
+
 		VGen.buildScinthDef = this;
-		func = vGenGraphFunc;
 		func.valueArray(this.prBuildControls);
 
 		protect {
@@ -95,6 +105,17 @@ ScinthDef {
 		secondDepth = depthIndent ++ "    ";
 
 		yaml = indent ++ "name: %\n".format(name);
+
+		yaml = yaml ++ indent ++ "shape:\n";
+		yaml = yaml ++ shape.asYAML(depthIndent);
+
+		if (renderOptions.notNil, {
+			yaml = yaml ++ indent ++ "options:\n";
+			renderOptions.keysValuesDo({ |key, value|
+				yaml = yaml ++ depthIndent ++ "%: %\n".format(key, value);
+			});
+		});
+
 		if (controls.size > 0, {
 			yaml = yaml ++ indent ++ "parameters:\n";
 			controls.do({ |control, i|
@@ -103,7 +124,7 @@ ScinthDef {
 			});
 		});
 		yaml = yaml ++ indent ++ "vgens:\n";
-		children.do({ | vgen, index |
+		children.do({ |vgen, index|
 			yaml = yaml ++ depthIndent ++ "- className:"  + vgen.name ++ "\n";
 			yaml = yaml ++ depthIndent ++ "  rate:" + vgen.rate ++ "\n";
 			if (vgen.isSamplerVGen, {

@@ -19,8 +19,27 @@ A ScinthDef file contains one or more YAML documents. Each document roughly foll
 table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
 ## code::name:: || string || name of the ScinthDef, used as primary means of identification
+## code::shape:: || dictionary || A map describing the geometry to render the ScinthDef with
+## code::options:: || dictionary || A emphasis::optional:: map describing rendering options for the ScinthDef
 ## code::parameters:: || list || An emphasis::optional:: key, if the ScinthDef has parameters, will be Parameter YAML dictionaries in an ordered list
 ## code::vgens:: || list || the VGen YAML dictionaries in an ordered list
+::
+
+subsection::Shape Dictionary Spec
+
+The sole required key for the shape dictionary is the code::name:: key, with the rest of the keys being dependent on the specific shape specified. Currently the only supported shape is the link::Classes/Quad::, which takes two optional additional keys, code::widthEdges:: and code::heightEdges::. Both have default values of 1 and indicate how many edges the quad should tesselate into.
+
+subsection::Options Dictionary Spec
+
+If ommitted the ScinthDef will use defaults for all values. The pairs of keys and values supported are detailed here. These are the same keys and values supported in the link::Classes/ScinthDef:: code::options:: dictionary.
+
+table::
+## strong::key:: || strong::values::
+## code::polygonMode:: || table::
+## code::fill:: || The default, fills the polygons completely.
+## code::line:: || Outlines the polygons only.
+## code::point:: || Draws the vertices as points only.
+::
 ::
 
 subsection::Parameter Dictionary Spec
@@ -109,7 +128,7 @@ We execute the following code:
 code::
 (
 ~k = ScinthDef.new(\foo, {
-	VOut.fr(0, VSinOsc.fr(200.0, 0.0, 0.9, 0.2));
+	BWOut.pr(VSinOsc.pr(200.0, 0.0, 0.9, 0.2));
 });
 ~k.asYAML.postln;
 )
@@ -118,10 +137,14 @@ code::
 And ScinthDef produces the following:
 
 code::
-- name: foo
-  vgens:
+name: foo
+shape:
+    name: Quad
+    widthEdges: 1
+    heightEdges: 1
+vgens:
     - className: VSinOsc
-      rate: fragment
+      rate: pixel
       inputs:
         - type: constant
           dimension: 1
@@ -137,12 +160,13 @@ code::
           value: 0.2
       outputs:
         - dimension: 1
-    - className: VOut
-      rate: fragment
+    - className: BWOut
+      rate: pixel
       inputs:
-        - type: constant
-          value: 0
         - type: vgen
           vgenIndex: 0
           outputIndex: 0
+          dimension: 1
+      outputs:
+        - dimension: 4
 ::

@@ -81,7 +81,8 @@ bool ScinthDef::build(ShaderCompiler* compiler) {
 
     m_pipeline.reset(new Pipeline(m_device));
     if (!m_pipeline->create(m_abstract->vertexManifest(), m_abstract->shape(), m_canvas.get(), m_vertexShader,
-                            m_fragmentShader, m_descriptorSetLayout, m_abstract->parameters().size() * sizeof(float))) {
+                            m_fragmentShader, m_descriptorSetLayout, m_abstract->parameters().size() * sizeof(float),
+                            m_abstract->renderOptions())) {
         spdlog::error("error creating pipeline for ScinthDef {}", m_abstract->name());
         return false;
     }
@@ -99,37 +100,10 @@ bool ScinthDef::buildVertexData() {
         return false;
     }
     spdlog::info("Copying {} bytes of vertex data to GPU for ScinthDef {}", m_vertexBuffer->size(), m_abstract->name());
-    float* vertex = static_cast<float*>(m_vertexBuffer->mappedAddress());
-    for (auto i = 0; i < m_abstract->shape()->numberOfVertices(); ++i) {
-        for (auto j = 0; j < m_abstract->vertexManifest().numberOfElements(); ++j) {
-            switch (m_abstract->vertexManifest().intrinsicForElement(j)) {
-            case base::Intrinsic::kNormPos: {
-                std::array<float, 2> verts;
-                m_abstract->shape()->storeVertexAtIndex(i, verts.data());
-                vertex[0] = verts[0] * m_canvas->normPosScale().x;
-                vertex[1] = verts[1] * m_canvas->normPosScale().y;
-            } break;
-
-            case base::Intrinsic::kPosition:
-                m_abstract->shape()->storeVertexAtIndex(i, vertex);
-                break;
-
-            case base::Intrinsic::kTexPos:
-                m_abstract->shape()->storeTextureVertexAtIndex(i, vertex);
-                break;
-
-            case base::Intrinsic::kFragCoord:
-            case base::Intrinsic::kNotFound:
-            case base::Intrinsic::kPi:
-            case base::Intrinsic::kSampler:
-            case base::Intrinsic::kTime:
-                spdlog::error("Invalid vertex intrinsic for ScinthDef {}", m_abstract->name());
-                return false;
-            }
-
-            // Advance vertex pointer to next element.
-            vertex += (m_abstract->vertexManifest().strideForElement(j) / sizeof(float));
-        }
+    if (!m_abstract->shape()->storeVertexData(m_abstract->vertexManifest(), m_canvas->normPosScale(),
+                                              static_cast<float*>(m_vertexBuffer->mappedAddress()))) {
+        spdlog::error("Failed to build Shape vertex data in ScinthDef {}", m_abstract->name());
+        return false;
     }
 
     // Lastly, copy the index buffer as well.
@@ -140,7 +114,11 @@ bool ScinthDef::buildVertexData() {
         return false;
     }
     spdlog::info("copying {} bytes of index data to GPU for ScinthDef {}", m_indexBuffer->size(), m_abstract->name());
-    std::memcpy(m_indexBuffer->mappedAddress(), m_abstract->shape()->getIndices(), m_indexBuffer->size());
+    if (!m_abstract->shape()->storeIndexData(static_cast<uint16_t*>(m_indexBuffer->mappedAddress()))) {
+        spdlog::error("Failed to build Shape index data in ScinthDef {}", m_abstract->name());
+        return false;
+    }
+
     return true;
 }
 
@@ -151,7 +129,7 @@ bool ScinthDef::buildDescriptorLayout() {
         uniformBinding.binding = bindings.size();
         uniformBinding.descriptorCount = 1;
         uniformBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uniformBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        uniformBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         bindings.emplace_back(uniformBinding);
     }
 
@@ -161,7 +139,7 @@ bool ScinthDef::buildDescriptorLayout() {
         imageBinding.binding = bindings.size();
         imageBinding.descriptorCount = 1;
         imageBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        imageBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        imageBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         bindings.emplace_back(imageBinding);
     }
 

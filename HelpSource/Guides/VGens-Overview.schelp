@@ -32,7 +32,7 @@ VGens for reading from link::Classes/ImageBuffer:: objects.
 
 table::
 ## strong::VGen:: || strong::Rates:: || strong::Dimensions:: || strong::Description::
-## link::Classes/Sampler::code::.fr(image, pos):: || pixel || table::
+## link::Classes/Sampler::code::.fr(image, pos):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## image, 2 || 4
 :: || Samples the provided imageBuffer at code::pos:: and returns the 4D color signal as code::(r, g, b, a)::

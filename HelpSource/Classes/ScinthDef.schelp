@@ -8,6 +8,7 @@ description::
 ScinthDef is intended to be the visual synthesis paralell to the audio synthesis class link::Classes/SynthDef::. The Scintillator server uses ScinthDefs as templates from which to build link::Classes/Scinth:: nodes, which run on the server to produce imagery.
 
 subsection::Dimensional Analysis
+
 Graphics programming is inherently multidimensional, with video hardware designed to handle arithmetic operations on 8 or more signals simulatenously. This is called "Single Instruction Multiple Data" or SIMD and while many modern CPUs offer extensions allowing programming using SIMD, the presence and support of SIMD is assumed as essential on all graphics hardware. ScinthDefs are expected to produce a 4-channel output signal, with the values in each channel representing red, green, blue, and alpha color values respectively. This vector programming is a difference in the approach to video synthesis than in audio, where the default output is monophonic, and higher channel counts are supported with multichannel expansion.
 
 But multichannel expansion doesn't support simultaneous operations on the same signal. For example, let's say that we wanted to have four channels of audio output with different frequencies for each, something like:
@@ -58,6 +59,19 @@ argument::name
 strong::A symbol.:: The name to associate with this ScinthDef, for creating link::Classes/Scinth:: instances from this definition.
 argument::vGenGraphFunc
 strong::A function.:: The graph function defining the how the link::Classes/VGen:: objects are connected.
+argument::shape
+strong::An optional Shape object.:: Describes the geometry to render the ScinthDef with. See the link::Classes/Shape:: documentation for more details.
+argument::renderOptions
+strong::An optional IndentityDictionary.:: The contents detail render options for this ScinthDef. Supported keys are as follows:
+
+table::
+## strong::key:: || strong::values::
+## code::polygonMode:: || table::
+## code::\fill:: || The default, fills the polygons completely.
+## code::\line:: || Outlines the polygons only.
+## code::\point:: || Draws the vertices as points only.
+::
+::
 
 returns::
 A new ScinthDef object.
