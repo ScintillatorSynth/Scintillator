@@ -50,6 +50,8 @@ public:
 
     const std::string typeNameForElement(size_t index) const;
 
+    // TODO: should consider moving from bytes to floats for units
+
     /*! Returns the size in bytes occupied by element at index, including padding.
      *
      * \note This may be larger than the element size due to padding.

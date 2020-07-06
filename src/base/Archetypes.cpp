@@ -207,11 +207,6 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
         return nullptr;
     }
 
-    if (!shape->build()) {
-        spdlog::error("ScinthDef {} shape {} failed to build.", name, shapeName);
-        return nullptr;
-    }
-
     // Parse render options, if any.
     RenderOptions renderOptions;
     if (node["options"] && node["options"].IsMap()) {
@@ -478,8 +473,8 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
         instances.push_back(instance);
     }
 
-    std::shared_ptr<AbstractScinthDef> scinthDef(new AbstractScinthDef(name, std::move(shape), renderOptions,
-                parameters, instances));
+    std::shared_ptr<AbstractScinthDef> scinthDef(
+        new AbstractScinthDef(name, std::move(shape), renderOptions, parameters, instances));
     return scinthDef;
 }
 

@@ -2,8 +2,7 @@
 
 namespace scin { namespace base {
 
-RenderOptions::RenderOptions():
-    m_polygonMode(kFill) {}
+RenderOptions::RenderOptions(): m_polygonMode(kFill) {}
 
 } // namespace base
 } // namespace scin
