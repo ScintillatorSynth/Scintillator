@@ -17,6 +17,14 @@ Sampler : VGen {
 	// one of \transparentBlack, \black, \white, only used if addressMode is set to \clampToBorder.
 	var <>clampBorderColor = \transparentBlack;
 
+	*fr { |image, pos|
+		^this.multiNew(\frame, pos).prSetupImageInput(image);
+	}
+
+	*sr { |image, pos|
+		^this.multiNew(\shape, pos).prSetupImageInput(image);
+	}
+
 	*pr { |image, pos|
 		^this.multiNew(\pixel, pos).prSetupImageInput(image);
 	}

@@ -129,7 +129,7 @@ bool ScinthDef::buildDescriptorLayout() {
         uniformBinding.binding = bindings.size();
         uniformBinding.descriptorCount = 1;
         uniformBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uniformBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        uniformBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         bindings.emplace_back(uniformBinding);
     }
 
@@ -139,7 +139,7 @@ bool ScinthDef::buildDescriptorLayout() {
         imageBinding.binding = bindings.size();
         imageBinding.descriptorCount = 1;
         imageBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        imageBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        imageBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         bindings.emplace_back(imageBinding);
     }
 
