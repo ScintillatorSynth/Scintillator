@@ -9,26 +9,6 @@
 
 #include <random>
 
-/*!
- * Information flow within a ScinthDef
- * -----------------------------------
- *
- * Compute shaders, if there are any, are scheduled separately and issued in their own consolidated command buffer.
- * Their output needs to go to a uniform buffer, with one maintained for each pipelined frame. This can be the same
- * uniform that holds intrinsics like @time, it can also hold outputs from the compute uniform. The uniform will need
- * to be adjusted for vertex and fragment access.
- *
- * Vertex computations are per-vertex, and output will always flow to the fragment shader. So inputs to vertex shader
- * come from uniform, outputs must be reserved per vertex instance, so they can be provided to the fragment.
- *
- * Outputs from AbstractScinthDef processing are compute, vertex, fragment shaders. Manifests for compute input via
- * uniform buffer and manifest for vertex/fragment uniform buffer. Manifest for vertex input, and a manifest for vertex
- * output which is also part of fragment input.
- *
- * There also unified samplers and push constants.
- *
- */
-
 namespace scin { namespace base {
 
 AbstractScinthDef::AbstractScinthDef(const std::string& name, std::unique_ptr<Shape> shape,
@@ -183,7 +163,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
 
                 case AbstractVGen::Rates::kFrame: {
                     std::string name = fmt::format("out_{}_{}", vgenIndex, vgenOutput);
-                    m_drawUniformManifest.addElement(
+                    m_uniformManifest.addElement(
                         name, static_cast<Manifest::ElementType>(m_instances[vgenIndex].outputDimension(vgenOutput)));
                     inputs.emplace_back(fmt::format("{}_ubo.{}", m_prefix, name));
                 } break;
@@ -237,7 +217,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
             } break;
 
             case kTime:
-                m_drawUniformManifest.addElement("time", Manifest::ElementType::kFloat, Intrinsic::kTime);
+                m_uniformManifest.addElement("time", Manifest::ElementType::kFloat, Intrinsic::kTime);
                 intrinsics[Intrinsic::kTime] = fmt::format("{}_ubo.time", m_prefix);
                 break;
 
@@ -308,7 +288,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
                 // same as fragment rate
                 case AbstractVGen::Rates::kFrame: {
                     std::string name = fmt::format("out_{}_{}", vgenIndex, vgenOutput);
-                    m_drawUniformManifest.addElement(
+                    m_uniformManifest.addElement(
                         name, static_cast<Manifest::ElementType>(m_instances[vgenIndex].outputDimension(vgenOutput)));
                     inputs.emplace_back(fmt::format("{}_ubo.{}", m_prefix, name));
                 } break;
@@ -363,7 +343,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
 
             // same as fragment rate
             case kTime:
-                m_drawUniformManifest.addElement("time", Manifest::ElementType::kFloat, Intrinsic::kTime);
+                m_uniformManifest.addElement("time", Manifest::ElementType::kFloat, Intrinsic::kTime);
                 intrinsics[Intrinsic::kTime] = fmt::format("{}_ubo.time", m_prefix);
                 break;
 
@@ -399,6 +379,108 @@ bool AbstractScinthDef::buildComputeStage(const std::set<int>& computeVGens) {
         return true;
     }
 
+    for (auto index : computeVGens) {
+        std::vector<std::string> inputs;
+        for (auto j = 0; j < m_instances[index].numberOfInputs(); ++j) {
+            VGen::InputType type = m_instances[index].getInputType(j);
+            switch (type) {
+            // same as fragment
+            case VGen::InputType::kConstant: {
+                float constantValue;
+                m_instances[index].getInputConstantValue(j, constantValue);
+                inputs.emplace_back(fmt::format("{}f", constantValue));
+            } break;
+
+            // same as fragment
+            case VGen::InputType::kParameter: {
+                int parameterIndex;
+                m_instances[index].getInputParameterIndex(j, parameterIndex);
+                inputs.emplace_back(fmt::format("{}_parameters.{}", m_prefix, m_parameters[parameterIndex].name()));
+            } break;
+
+            case VGen::InputType::kVGen: {
+                int vgenIndex, vgenOutput;
+                m_instances[index].getInputVGenIndex(j, vgenIndex, vgenOutput);
+                switch (m_instances[vgenIndex].rate()) {
+                case AbstractVGen::Rates::kPixel:
+                case AbstractVGen::Rates::kShape:
+                    spdlog::error("Input from non frame-rate VGens not supported in frame-rate VGens at index {}",
+                            index);
+                    return false;
+                    break;
+
+                case AbstractVGen::Rates::kFrame:
+                    inputs.emplace_back(fmt::format("out_{}_{}", vgenIndex, vgenOutput));
+                    break;
+
+                default:
+                    spdlog::error("Unsupported rate encountered in fragment stage of ScinthDef {}", m_name);
+                    return false;
+                }
+            } break;
+
+            case VGen::InputType::kInvalid:
+                spdlog::error("AbstractScinthDesc {} VGen at index {} has unknown input type at index {}.", m_name,
+                              index, j);
+                return false;
+            }
+        }
+
+        std::unordered_map<Intrinsic, std::string> intrinsics;
+        for (auto intrinsic : m_instances[index].abstractVGen()->intrinsics()) {
+            switch (intrinsic) {
+
+            case kNotFound:
+                spdlog::error("ScinthDef {} has unknown intrinsic.", m_name);
+                return false;
+
+            // same as fragment
+            case kPi:
+                intrinsics[Intrinsic::kPi] = "3.1415926535897932384626433832795f";
+                break;
+
+            // same as fragment
+            case kSampler: {
+                if (m_instances[index].imageArgType() == VGen::InputType::kConstant) {
+                    intrinsics[Intrinsic::kSampler] =
+                        fmt::format("{}_sampler_{:08x}_fixed_{}", m_prefix, m_instances[index].sampler().key(),
+                                    m_instances[index].imageIndex());
+                } else {
+                    intrinsics[Intrinsic::kSampler] =
+                        fmt::format("{}_sampler_{:08x}_param_{}", m_prefix, m_instances[index].sampler().key(),
+                                    m_instances[index].imageIndex());
+                }
+            } break;
+
+            case kTime:
+                m_uniformManifest.addElement("time", Manifest::ElementType::kFloat, Intrinsic::kTime);
+                intrinsics[Intrinsic::kTime] = fmt::format("{}_ubo.time", m_prefix);
+                break;
+
+            case kFragCoord:
+            case kTexPos:
+            case kNormPos:
+                spdlog::error("ScinthDef Unsupported intrinsics in frame-rate VGen index {}.");
+                break;
+            }
+        }
+
+        // same as fragment
+        std::vector<std::string> outputs;
+        std::vector<int> outputDimensions;
+        for (auto j = 0; j < m_instances[index].numberOfOutputs(); ++j) {
+            outputs.emplace_back(fmt::format("{}_out_{}_{}", m_prefix, index, j));
+            outputDimensions.push_back(m_instances[index].outputDimension(j));
+        }
+
+        std::unordered_set<std::string> alreadyDefined;
+
+        m_computeShader += fmt::format("\n    // --- {}\n", m_instances[index].abstractVGen()->name());
+        m_computeShader += fmt::format("    {}\n",
+                                        m_instances[index].abstractVGen()->parameterize(
+                                            inputs, intrinsics, outputs, outputDimensions, alreadyDefined));
+    }
+
     return true;
 }
 
@@ -406,9 +488,8 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
                                         const std::set<int>& fragmentVGens) {
     // Pack all the manifests as we have analyzed all VGens so they should all be final now.
     m_fragmentManifest.pack();
-    m_drawUniformManifest.pack();
+    m_uniformManifest.pack();
     m_vertexManifest.pack();
-    m_computeUniformManifest.pack();
 
     // Fragment and Vertex headers share many similar inputs so we build them together.
     std::string vertexHeader = "#version 450\n"
@@ -467,11 +548,11 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
 
     // Uniform buffer description comes next, if one is present, containing frame-rate VGen outputs and intrinsics.
     int binding = 0;
-    if (m_drawUniformManifest.numberOfElements()) {
+    if (m_uniformManifest.numberOfElements()) {
         std::string uboBody;
-        for (auto i = 0; i < m_drawUniformManifest.numberOfElements(); ++i) {
-            uboBody += fmt::format("    {} {};\n", m_drawUniformManifest.typeNameForElement(i),
-                                   m_drawUniformManifest.nameForElement(i));
+        for (auto i = 0; i < m_uniformManifest.numberOfElements(); ++i) {
+            uboBody += fmt::format("    {} {};\n", m_uniformManifest.typeNameForElement(i),
+                                   m_uniformManifest.nameForElement(i));
         }
         vertexHeader += fmt::format("\n"
                                     "// -- vertex shader uniform buffer\n"
@@ -526,7 +607,7 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
             paramBody += fmt::format("  float {};\n", param.name());
         }
         vertexHeader += fmt::format("\n"
-                                    "// --- fragment shader parameter push constants\n"
+                                    "// --- vertex shader parameter push constants\n"
                                     "layout(push_constant) uniform parametersBlock {{\n"
                                     "{}"
                                     "}} {}_parameters;\n",
@@ -576,6 +657,86 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
 
     spdlog::info("{} vertex shader:\n{}", m_name, m_vertexShader);
     spdlog::info("{} fragment shader:\n{}", m_name, m_fragmentShader);
+
+    // Build compute shader if needed.
+    if (m_hasComputeStage) {
+        std::string computeHeader = "#version 450\n";
+        // Add compute uniform buffer input, if present
+        binding = 0;
+        if (m_uniformManifest.numberOfElements()) {
+            std::string uboBody;
+            for (auto i = 0; i < m_uniformManifest.numberOfElements(); ++i) {
+                uboBody += fmt::format("    {} {};\n", m_uniformManifest.typeNameForElement(i),
+                                        m_uniformManifest.nameForElement(i));
+
+                // Assumption here, similar to that in the vertex shader, that a non-intrinsic in the uniform represents
+                // an output from a frame-rate VGen that needs to be copied into the uniform buffer.
+                if (m_uniformManifest.intrinsicForElement(i) == kNotFound) {
+                    m_computeShader += fmt::format("\n    // -- export compute VGen output to uniform buffer"
+                                                   "\n    {}_ubo.{} = {}_{};\n",
+                                                   m_prefix, fest.nameForElement(i),
+                                                   m_prefix, m_uniformManifest.nameForElement(i));
+                }
+            }
+            computeHeader += fmt::format("\n"
+                                        "// -- compute shader uniform buffer\n"
+                                        "layout(binding = {}) uniform UBO {{\n"
+                                        "{}"
+                                        "}} {}_ubo;\n",
+                                        binding, uboBody, m_prefix);
+
+
+            ++binding;
+        }
+
+        // Fixed image samplers, followed by parameterized image samplers are declared here.
+        if (m_computeFixedImages.size()) {
+            std::string samplerBody;
+            for (auto pair : m_computeFixedImages) {
+                    samplerBody += fmt::format("layout(binding = {}) uniform sampler2D {}_sampler_{:08x}_fixed_{};\n",
+                                               binding, m_prefix, pair.first, pair.second);
+                    ++binding;
+            }
+            computeHeader += "\n"
+                             "// -- fixed image sampler inputs\n"
+                             + samplerBody;
+        }
+
+        if (m_computeParameterizedImages.size()) {
+            std::string samplerBody;
+            for (auto pair : m_computeParameterizedImages) {
+                samplerBody += fmt::format("layout(binding = {}) uniform sampler2D {}_sampler_{:08x}_param_{};\n",
+                                           binding, m_prefix, pair.first, pair.second);
+                ++binding;
+            }
+            computeHeader += "\n"
+                             "// --- parammeterized image sampler inputs\n"
+                             + samplerBody;
+        }
+
+        // Parameters are also supplied to the compute shader via push constant.
+        if (m_parameters.size()) {
+            std::string paramBody;
+            for (const auto& param : m_parameters) {
+                paramBody += fmt::format("  float {};\n", param.name());
+            }
+            computeHeader += fmt::format("\n"
+                                        "// --- compute shader parameter push constants\n"
+                                        "layout(push_constant) uniform parametersBlock {{\n"
+                                        "{}"
+                                        "}} {}_parameters;\n",
+                                        paramBody, m_prefix);
+        }
+
+
+        m_computeShader = computeHeader
+        + "\n"
+          "void main() {"
+        + m_computeShader + "}\n";
+
+        spdlog::info("{} compute shader:\n{}", m_name, m_computeShader);
+    }
+
     return true;
 }
 

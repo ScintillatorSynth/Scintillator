@@ -28,14 +28,13 @@ class VGen;
  * produces as output:
  *
  * a) An optional compute shader, if there are any frame-rate VGens in the graph.
- * b) An input uniform buffer manifest for the compute shader if it exists, the compute uniform manifest
- * c) A uniform buffer manifest shared by the vertex and fragment programs, called the draw uniform manifest.
- * d) A vertex shader input manifest
- * e) A vertex shader containing both any shape-rate VGens as well as necessary pass-through data to the fragment shader
- * f) A vertex shader output manifest, one of the sources of input to the fragment shader, called the fragment manifest
- * g) Lists of unified Samplers both constant and parameterized for both compute and draw stages
- * h) Lists of parameters provided as push constants for both compute and draw stages
- * i) A fragment shader with the pixel-rate VGens
+ * b) A unified uniform buffer manifest containing any intrinsic inputs for the ScinthDef as well as compute outputs
+ * c) A vertex shader input manifest
+ * d) A vertex shader containing both any shape-rate VGens as well as necessary pass-through data to the fragment shader
+ * e) A vertex shader output manifest, one of the sources of input to the fragment shader, called the fragment manifest
+ * f) Lists of unified Samplers both constant and parameterized for both compute and draw stages
+ * g) Lists of parameters provided as push constants for both compute and draw stages
+ * h) A fragment shader with the pixel-rate VGens
  *
  * Overall approach is to take a first pass through the graph from output back to inputs, validating the rate flow and
  * bucketing the VGens into one of compute, vertex, or fragment shader groups. Then we take a forward pass through each
@@ -95,7 +94,7 @@ public:
     const std::string& fragmentShader() const { return m_fragmentShader; }
     const Manifest& fragmentManifest() const { return m_fragmentManifest; }
     const Manifest& vertexManifest() const { return m_vertexManifest; }
-    const Manifest& drawUniformManifest() const { return m_drawUniformManifest; }
+    const Manifest& uniformManifest() const { return m_uniformManifest; }
 
 private:
     /*! Recursively traverses the VGens list from output back to inputs, grouping them into compute, vertex, and
@@ -139,8 +138,8 @@ private:
     // Outputs from the vertex shader that are supplied as inputs to the fragment shader.
     Manifest m_fragmentManifest;
 
-    // Outputs from compute shader and any intrinsics are supplied as a uniform to both vertex and fragment shaders.
-    Manifest m_drawUniformManifest;
+    // Inputs to, and outputs from compute shader, and any intrinsics are supplied as a uniform to all shaders.
+    Manifest m_uniformManifest;
 
     // Intrinsic and Shape inputs to the vertex shader.
     Manifest m_vertexManifest;
@@ -149,14 +148,12 @@ private:
     std::string m_vertexShader;
     std::string m_computeShader;
 
-    Manifest m_computeUniformManifest;
     bool m_hasComputeStage;
 
     std::unordered_map<std::string, int> m_parameterIndices;
 };
 
 } // namespace base
-
 } // namespace scin
 
 #endif // SRC_CORE_ABSTRACT_SCINTHDEF_HPP_
