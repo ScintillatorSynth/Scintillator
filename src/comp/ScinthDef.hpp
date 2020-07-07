@@ -68,6 +68,7 @@ private:
     std::shared_ptr<const base::AbstractScinthDef> m_abstract;
     std::shared_ptr<vk::HostBuffer> m_vertexBuffer;
     std::shared_ptr<vk::HostBuffer> m_indexBuffer;
+    std::shared_ptr<vk::Shader> m_computeShader;
     std::shared_ptr<vk::Shader> m_vertexShader;
     std::shared_ptr<vk::Shader> m_fragmentShader;
     VkDescriptorSetLayout m_descriptorSetLayout;

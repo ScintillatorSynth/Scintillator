@@ -47,6 +47,15 @@ ScinthDef::~ScinthDef() {
 }
 
 bool ScinthDef::build(ShaderCompiler* compiler) {
+    if (m_abstract->hasComputeStage()) {
+        m_computeShader = compiler->compile(m_device, m_abstract->computeShader(),
+                m_abstract->prefix() + "_computeShader", "main", vk::Shader::kCompute);
+        if (!m_computeShader) {
+            spdlog::error("error compiling compute shader for ScinthDef {}.", m_abstract->name());
+            return false;
+        }
+    }
+
     // Build the vertex data. Because Intrinsics can add data payloads to the vertex data, each ScinthDef shares a
     // vertex buffer and index buffer across all Scinth instances, allowing for the potential unique combination
     // between Shape data and payloads.

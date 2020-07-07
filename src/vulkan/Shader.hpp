@@ -12,7 +12,7 @@ class Device;
 
 class Shader {
 public:
-    enum Kind { kVertex, kFragment };
+    enum Kind { kCompute, kVertex, kFragment };
     Shader(Kind kind, std::shared_ptr<Device> device, const std::string& entryPoint);
     ~Shader();
 

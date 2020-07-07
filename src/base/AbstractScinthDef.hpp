@@ -90,6 +90,7 @@ public:
     bool hasComputeStage() const { return m_hasComputeStage; }
 
     const std::string& prefix() const { return m_prefix; }
+    const std::string& computeShader() const { return m_computeShader; }
     const std::string& vertexShader() const { return m_vertexShader; }
     const std::string& fragmentShader() const { return m_fragmentShader; }
     const Manifest& fragmentManifest() const { return m_fragmentManifest; }

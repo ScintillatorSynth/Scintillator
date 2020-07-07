@@ -674,7 +674,7 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
                 if (m_uniformManifest.intrinsicForElement(i) == kNotFound) {
                     m_computeShader += fmt::format("\n    // -- export compute VGen output to uniform buffer"
                                                    "\n    {}_ubo.{} = {}_{};\n",
-                                                   m_prefix, fest.nameForElement(i),
+                                                   m_prefix, m_uniformManifest.nameForElement(i),
                                                    m_prefix, m_uniformManifest.nameForElement(i));
                 }
             }
