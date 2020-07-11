@@ -88,8 +88,8 @@ bool ScinthDef::build(ShaderCompiler* compiler) {
         return false;
     }
 
-    m_pipeline.reset(new Pipeline(m_device));
-    if (!m_pipeline->create(m_abstract->vertexManifest(), m_abstract->shape(), m_canvas.get(), m_vertexShader,
+    m_drawPipeline.reset(new Pipeline(m_device));
+    if (!m_drawPipeline->create(m_abstract->vertexManifest(), m_abstract->shape(), m_canvas.get(), m_vertexShader,
                             m_fragmentShader, m_descriptorSetLayout, m_abstract->parameters().size() * sizeof(float),
                             m_abstract->renderOptions())) {
         spdlog::error("error creating pipeline for ScinthDef {}", m_abstract->name());

@@ -54,7 +54,8 @@ public:
     const std::vector<std::shared_ptr<vk::Sampler>>& fixedSamplers() const { return m_fixedSamplers; }
     const std::vector<std::shared_ptr<vk::Sampler>>& parameterizedSamplers() const { return m_parameterizedSamplers; }
     std::shared_ptr<vk::Sampler> emptySampler() const { return m_emptySampler; }
-    std::shared_ptr<Pipeline> pipeline() const { return m_pipeline; }
+    std::shared_ptr<Pipeline> drawPipeline() const { return m_drawPipeline; }
+    std::shared_ptr<Pipeline> computePipeline() const { return m_computePipeline; }
 
 private:
     bool buildVertexData();
@@ -75,7 +76,8 @@ private:
     std::vector<std::shared_ptr<vk::Sampler>> m_fixedSamplers;
     std::vector<std::shared_ptr<vk::Sampler>> m_parameterizedSamplers;
     std::shared_ptr<vk::Sampler> m_emptySampler;
-    std::shared_ptr<Pipeline> m_pipeline;
+    std::shared_ptr<Pipeline> m_drawPipeline;
+    std::shared_ptr<Pipeline> m_computePipeline;
 };
 
 } // namespace comp

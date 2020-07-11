@@ -32,6 +32,8 @@ public:
                 std::shared_ptr<vk::Shader> vertexShader, std::shared_ptr<vk::Shader> fragmentShader,
                 VkDescriptorSetLayout descriptorSetLayout, size_t pushConstantBlockSize,
                 const base::RenderOptions& renderOptions);
+    bool createCompute(std::shared_ptr<vk::Shader> computeshader, VkDescriptorSetLayout descriptorSetLayout, size_t
+            pushConstantBlockSize);
     void destroy();
 
     VkPipeline get() { return m_pipeline; }

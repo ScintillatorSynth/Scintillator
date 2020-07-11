@@ -359,11 +359,11 @@ bool Scinth::rebuildBuffers() {
         }
 
         if (m_numberOfParameters) {
-            vkCmdPushConstants(m_commands->buffer(i), m_scinthDef->pipeline()->layout(), VK_SHADER_STAGE_FRAGMENT_BIT,
+            vkCmdPushConstants(m_commands->buffer(i), m_scinthDef->drawPipeline()->layout(), VK_SHADER_STAGE_FRAGMENT_BIT,
                                0, m_numberOfParameters * sizeof(float), m_parameterValues.get());
         }
 
-        vkCmdBindPipeline(m_commands->buffer(i), VK_PIPELINE_BIND_POINT_GRAPHICS, m_scinthDef->pipeline()->get());
+        vkCmdBindPipeline(m_commands->buffer(i), VK_PIPELINE_BIND_POINT_GRAPHICS, m_scinthDef->drawPipeline()->get());
         VkBuffer vertexBuffers[] = { m_scinthDef->vertexBuffer()->buffer() };
         VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(m_commands->buffer(i), 0, 1, vertexBuffers, offsets);
@@ -371,7 +371,7 @@ bool Scinth::rebuildBuffers() {
 
         if (m_descriptorSets.size()) {
             vkCmdBindDescriptorSets(m_commands->buffer(i), VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                    m_scinthDef->pipeline()->layout(), 0, 1, &m_descriptorSets[i], 0, nullptr);
+                                    m_scinthDef->drawPipeline()->layout(), 0, 1, &m_descriptorSets[i], 0, nullptr);
         }
 
         vkCmdDrawIndexed(m_commands->buffer(i), m_scinthDef->abstract()->shape()->numberOfIndices(), 1, 0, 0, 0);
