@@ -163,9 +163,9 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
 
                 case AbstractVGen::Rates::kFrame: {
                     std::string name = fmt::format("out_{}_{}", vgenIndex, vgenOutput);
-                    m_uniformManifest.addElement(
+                    m_computeManifest.addElement(
                         name, static_cast<Manifest::ElementType>(m_instances[vgenIndex].outputDimension(vgenOutput)));
-                    inputs.emplace_back(fmt::format("{}_ubo.{}", m_prefix, name));
+                    inputs.emplace_back(fmt::format("{}_compute_buffer.{}", m_prefix, name));
                 } break;
 
                 default:
@@ -288,9 +288,9 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
                 // same as fragment rate
                 case AbstractVGen::Rates::kFrame: {
                     std::string name = fmt::format("out_{}_{}", vgenIndex, vgenOutput);
-                    m_uniformManifest.addElement(
+                    m_computeManifest.addElement(
                         name, static_cast<Manifest::ElementType>(m_instances[vgenIndex].outputDimension(vgenOutput)));
-                    inputs.emplace_back(fmt::format("{}_ubo.{}", m_prefix, name));
+                    inputs.emplace_back(fmt::format("{}_compute_buffer.{}", m_prefix, name));
                 } break;
 
                 default:
@@ -490,6 +490,7 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
     m_fragmentManifest.pack();
     m_uniformManifest.pack();
     m_vertexManifest.pack();
+    m_computeManifest.pack();
 
     // Fragment and Vertex headers share many similar inputs so we build them together.
     std::string vertexHeader = "#version 450\n"
@@ -546,7 +547,7 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
         }
     }
 
-    // Uniform buffer description comes next, if one is present, containing frame-rate VGen outputs and intrinsics.
+    // Uniform buffer description comes next, if one is present, containing intrinsics.
     int binding = 0;
     if (m_uniformManifest.numberOfElements()) {
         std::string uboBody;
@@ -598,6 +599,29 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
         fragmentHeader += "\n"
                           "// --- parammeterized image sampler inputs\n"
             + samplerBody;
+    }
+
+    if (m_computeManifest.numberOfElements()) {
+        std::string bufferBody;
+        for (auto i = 0; i < m_computeManifest.numberOfElements(); ++i) {
+            bufferBody += fmt::format("    {} {};\n", m_computeManifest.typeNameForElement(i),
+                    m_computeManifest.nameForElement(i));
+        }
+
+        vertexHeader += fmt::format("\n"
+                                    "// --- buffer for compute shader outputs\n"
+                                    "layout(binding = {}) buffer ComputeBuffer {{\n"
+                                    "{}"
+                                    "}} {}_compute_buffer;\n",
+                                    binding, bufferBody, m_prefix);
+
+        fragmentHeader += fmt::format("\n"
+                                      "// --- buffer for compute shader outputs\n"
+                                      "layout(binding = {}) buffer ComputeBuffer {{\n"
+                                      "{}"
+                                      "}} {}_compute_buffer;\n",
+                                      binding, bufferBody, m_prefix);
+        ++binding;
     }
 
     // We pack the parameters into a push constant structure, supplied to both vertex and fragment shaders.
@@ -672,10 +696,6 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
                 // Assumption here, similar to that in the vertex shader, that a non-intrinsic in the uniform represents
                 // an output from a frame-rate VGen that needs to be copied into the uniform buffer.
                 if (m_uniformManifest.intrinsicForElement(i) == kNotFound) {
-                    m_computeShader += fmt::format("\n    // -- export compute VGen output to uniform buffer"
-                                                   "\n    {}_ubo.{} = {}_{};\n",
-                                                   m_prefix, m_uniformManifest.nameForElement(i),
-                                                   m_prefix, m_uniformManifest.nameForElement(i));
                 }
             }
             computeHeader += fmt::format("\n"
@@ -714,6 +734,25 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
                              + samplerBody;
         }
 
+        // Compute shader outputs in an output buffer, add copy instructions at the same time.
+        std::string bufferBody;
+        for (auto i = 0; i < m_computeManifest.numberOfElements(); ++i) {
+            bufferBody += fmt::format("    {} {};\n", m_computeManifest.typeNameForElement(i),
+                    m_computeManifest.nameForElement(i));
+            m_computeShader += fmt::format("\n    // -- export compute VGen output to uniform buffer"
+                                           "\n    {}_compute_buffer.{} = {}_{};\n",
+                                           m_prefix, m_computeManifest.nameForElement(i),
+                                           m_prefix, m_computeManifest.nameForElement(i));
+        }
+
+        computeHeader += fmt::format("\n"
+                                     "// --- buffer for compute shader outputs\n"
+                                     "layout(binding = {}) buffer ComputeBuffer {{\n"
+                                     "{}"
+                                     "}} {}_compute_buffer;\n",
+                                     binding, bufferBody, m_prefix);
+        ++binding;
+
         // Parameters are also supplied to the compute shader via push constant.
         if (m_parameters.size()) {
             std::string paramBody;
@@ -727,7 +766,6 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
                                         "}} {}_parameters;\n",
                                         paramBody, m_prefix);
         }
-
 
         m_computeShader = computeHeader
         + "\n"

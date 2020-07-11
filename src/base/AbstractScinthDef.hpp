@@ -96,6 +96,7 @@ public:
     const Manifest& fragmentManifest() const { return m_fragmentManifest; }
     const Manifest& vertexManifest() const { return m_vertexManifest; }
     const Manifest& uniformManifest() const { return m_uniformManifest; }
+    const Manifest& computeManifest() const { return m_computeManifest; }
 
 private:
     /*! Recursively traverses the VGens list from output back to inputs, grouping them into compute, vertex, and
@@ -144,6 +145,9 @@ private:
 
     // Intrinsic and Shape inputs to the vertex shader.
     Manifest m_vertexManifest;
+
+    // Outputs from compute shader for reading in draw stages.
+    Manifest m_computeManifest;
 
     std::string m_fragmentShader;
     std::string m_vertexShader;
