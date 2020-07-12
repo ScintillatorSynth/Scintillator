@@ -33,8 +33,8 @@ class ShaderCompiler;
 class ScinthDef {
 public:
     ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<Canvas> canvas,
-              std::shared_ptr<vk::CommandPool> computeCommandPool,
-              std::shared_ptr<vk::CommandPool> drawCommandPool, std::shared_ptr<SamplerFactory> samplerFactory,
+              std::shared_ptr<vk::CommandPool> computeCommandPool, std::shared_ptr<vk::CommandPool> drawCommandPool,
+              std::shared_ptr<SamplerFactory> samplerFactory,
               std::shared_ptr<const base::AbstractScinthDef> abstractScinthDef);
     ~ScinthDef();
 

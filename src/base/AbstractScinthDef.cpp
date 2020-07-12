@@ -405,7 +405,7 @@ bool AbstractScinthDef::buildComputeStage(const std::set<int>& computeVGens) {
                 case AbstractVGen::Rates::kPixel:
                 case AbstractVGen::Rates::kShape:
                     spdlog::error("Input from non frame-rate VGens not supported in frame-rate VGens at index {}",
-                            index);
+                                  index);
                     return false;
                     break;
 
@@ -429,7 +429,6 @@ bool AbstractScinthDef::buildComputeStage(const std::set<int>& computeVGens) {
         std::unordered_map<Intrinsic, std::string> intrinsics;
         for (auto intrinsic : m_instances[index].abstractVGen()->intrinsics()) {
             switch (intrinsic) {
-
             case kNotFound:
                 spdlog::error("ScinthDef {} has unknown intrinsic.", m_name);
                 return false;
@@ -477,8 +476,8 @@ bool AbstractScinthDef::buildComputeStage(const std::set<int>& computeVGens) {
 
         m_computeShader += fmt::format("\n    // --- {}\n", m_instances[index].abstractVGen()->name());
         m_computeShader += fmt::format("    {}\n",
-                                        m_instances[index].abstractVGen()->parameterize(
-                                            inputs, intrinsics, outputs, outputDimensions, alreadyDefined));
+                                       m_instances[index].abstractVGen()->parameterize(
+                                           inputs, intrinsics, outputs, outputDimensions, alreadyDefined));
     }
 
     return true;
@@ -605,7 +604,7 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
         std::string bufferBody;
         for (auto i = 0; i < m_computeManifest.numberOfElements(); ++i) {
             bufferBody += fmt::format("    {} {};\n", m_computeManifest.typeNameForElement(i),
-                    m_computeManifest.nameForElement(i));
+                                      m_computeManifest.nameForElement(i));
         }
 
         vertexHeader += fmt::format("\n"
@@ -691,7 +690,7 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
             std::string uboBody;
             for (auto i = 0; i < m_uniformManifest.numberOfElements(); ++i) {
                 uboBody += fmt::format("    {} {};\n", m_uniformManifest.typeNameForElement(i),
-                                        m_uniformManifest.nameForElement(i));
+                                       m_uniformManifest.nameForElement(i));
 
                 // Assumption here, similar to that in the vertex shader, that a non-intrinsic in the uniform represents
                 // an output from a frame-rate VGen that needs to be copied into the uniform buffer.
@@ -699,11 +698,11 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
                 }
             }
             computeHeader += fmt::format("\n"
-                                        "// -- compute shader uniform buffer\n"
-                                        "layout(binding = {}) uniform UBO {{\n"
-                                        "{}"
-                                        "}} {}_ubo;\n",
-                                        binding, uboBody, m_prefix);
+                                         "// -- compute shader uniform buffer\n"
+                                         "layout(binding = {}) uniform UBO {{\n"
+                                         "{}"
+                                         "}} {}_ubo;\n",
+                                         binding, uboBody, m_prefix);
 
 
             ++binding;
@@ -713,13 +712,13 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
         if (m_computeFixedImages.size()) {
             std::string samplerBody;
             for (auto pair : m_computeFixedImages) {
-                    samplerBody += fmt::format("layout(binding = {}) uniform sampler2D {}_sampler_{:08x}_fixed_{};\n",
-                                               binding, m_prefix, pair.first, pair.second);
-                    ++binding;
+                samplerBody += fmt::format("layout(binding = {}) uniform sampler2D {}_sampler_{:08x}_fixed_{};\n",
+                                           binding, m_prefix, pair.first, pair.second);
+                ++binding;
             }
             computeHeader += "\n"
                              "// -- fixed image sampler inputs\n"
-                             + samplerBody;
+                + samplerBody;
         }
 
         if (m_computeParameterizedImages.size()) {
@@ -731,18 +730,18 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
             }
             computeHeader += "\n"
                              "// --- parammeterized image sampler inputs\n"
-                             + samplerBody;
+                + samplerBody;
         }
 
         // Compute shader outputs in an output buffer, add copy instructions at the same time.
         std::string bufferBody;
         for (auto i = 0; i < m_computeManifest.numberOfElements(); ++i) {
             bufferBody += fmt::format("    {} {};\n", m_computeManifest.typeNameForElement(i),
-                    m_computeManifest.nameForElement(i));
+                                      m_computeManifest.nameForElement(i));
             m_computeShader += fmt::format("\n    // -- export compute VGen output to uniform buffer"
                                            "\n    {}_compute_buffer.{} = {}_{};\n",
-                                           m_prefix, m_computeManifest.nameForElement(i),
-                                           m_prefix, m_computeManifest.nameForElement(i));
+                                           m_prefix, m_computeManifest.nameForElement(i), m_prefix,
+                                           m_computeManifest.nameForElement(i));
         }
 
         computeHeader += fmt::format("\n"
@@ -760,17 +759,17 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
                 paramBody += fmt::format("  float {};\n", param.name());
             }
             computeHeader += fmt::format("\n"
-                                        "// --- compute shader parameter push constants\n"
-                                        "layout(push_constant) uniform parametersBlock {{\n"
-                                        "{}"
-                                        "}} {}_parameters;\n",
-                                        paramBody, m_prefix);
+                                         "// --- compute shader parameter push constants\n"
+                                         "layout(push_constant) uniform parametersBlock {{\n"
+                                         "{}"
+                                         "}} {}_parameters;\n",
+                                         paramBody, m_prefix);
         }
 
         m_computeShader = computeHeader
-        + "\n"
-          "void main() {"
-        + m_computeShader + "}\n";
+            + "\n"
+              "void main() {"
+            + m_computeShader + "}\n";
 
         spdlog::info("{} compute shader:\n{}", m_name, m_computeShader);
     }

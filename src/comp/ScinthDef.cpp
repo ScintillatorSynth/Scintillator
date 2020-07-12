@@ -83,21 +83,22 @@ bool ScinthDef::build(ShaderCompiler* compiler) {
 
     m_drawPipeline.reset(new Pipeline(m_device));
     if (!m_drawPipeline->create(m_abstract->vertexManifest(), m_abstract->shape(), m_canvas.get(), m_vertexShader,
-                            m_fragmentShader, m_descriptorSetLayout, m_abstract->parameters().size() * sizeof(float),
-                            m_abstract->renderOptions())) {
+                                m_fragmentShader, m_descriptorSetLayout,
+                                m_abstract->parameters().size() * sizeof(float), m_abstract->renderOptions())) {
         spdlog::error("Error creating draw pipeline for ScinthDef {}", m_abstract->name());
         return false;
     }
 
     if (m_abstract->hasComputeStage()) {
         m_computeShader = compiler->compile(m_device, m_abstract->computeShader(),
-                m_abstract->prefix() + "_computeShader", "main", vk::Shader::kCompute);
+                                            m_abstract->prefix() + "_computeShader", "main", vk::Shader::kCompute);
         if (!m_computeShader) {
             spdlog::error("error compiling compute shader for ScinthDef {}.", m_abstract->name());
             return false;
         }
         m_computePipeline.reset(new Pipeline(m_device));
-        if (!m_computePipeline->createCompute(m_computeShader, m_descriptorSetLayout, m_abstract->parameters().size())) {
+        if (!m_computePipeline->createCompute(m_computeShader, m_descriptorSetLayout,
+                                              m_abstract->parameters().size())) {
             spdlog::error("Error creating compute pipeline for ScinthDef {}", m_abstract->name());
             return false;
         }
@@ -145,7 +146,8 @@ bool ScinthDef::buildDescriptorLayout() {
         uniformBinding.binding = bindings.size();
         uniformBinding.descriptorCount = 1;
         uniformBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uniformBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        uniformBinding.stageFlags =
+            VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         bindings.emplace_back(uniformBinding);
     }
 
@@ -155,7 +157,8 @@ bool ScinthDef::buildDescriptorLayout() {
         imageBinding.binding = bindings.size();
         imageBinding.descriptorCount = 1;
         imageBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        imageBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        imageBinding.stageFlags =
+            VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         bindings.emplace_back(imageBinding);
     }
 
@@ -164,7 +167,8 @@ bool ScinthDef::buildDescriptorLayout() {
         bufferBinding.binding = bindings.size();
         bufferBinding.descriptorCount = 1;
         bufferBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        bufferBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        bufferBinding.stageFlags =
+            VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         bindings.emplace_back(bufferBinding);
     }
 

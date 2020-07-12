@@ -162,11 +162,11 @@ bool Scinth::allocateDescriptors() {
         poolSizes.emplace_back(bufferPoolSize);
 
         for (auto i = 0; i < numberOfImages; ++i) {
-            std::shared_ptr<vk::DeviceBuffer> computeBuffer(new vk::DeviceBuffer(m_device, vk::Buffer::Kind::kStorage,
-                computeBufferSize));
+            std::shared_ptr<vk::DeviceBuffer> computeBuffer(
+                new vk::DeviceBuffer(m_device, vk::Buffer::Kind::kStorage, computeBufferSize));
             if (!computeBuffer->create()) {
                 spdlog::error("Scinth {} failed to create compute storage buffer of size {}", m_nodeID,
-                        computeBufferSize);
+                              computeBufferSize);
                 return false;
             }
             m_computeBuffers.emplace_back(computeBuffer);
@@ -391,6 +391,65 @@ bool Scinth::rebuildBuffers() {
                 spdlog::error("failed beginning compute command buffer {} for Scinth {}", i, m_nodeID);
                 return false;
             }
+
+            // If the compute and graphics queues are separate we insert execution barriers around the buffers to
+            // prevent simultaneous access to the buffer by both draw and compute shaders.
+            if (m_device->computeFamilyIndex() != m_device->graphicsFamilyIndex()) {
+                VkBufferMemoryBarrier barrier = {};
+                barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+                barrier.srcAccessMask = 0;
+                barrier.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+                barrier.srcQueueFamilyIndex = m_device->computeFamilyIndex();
+                barrier.dstQueueFamilyIndex = m_device->graphicsFamilyIndex();
+                barrier.buffer = m_computeBuffers[i]->buffer();
+                barrier.offset = 0;
+                barrier.size = m_computeBuffers[i]->size();
+
+                vkCmdPipelineBarrier(m_computeCommands->buffer(i), VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
+                                     VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0, 0, nullptr, 1, &barrier, 0, nullptr);
+            }
+
+            // Write parameters as push constants.
+            if (m_numberOfParameters) {
+                vkCmdPushConstants(m_computeCommands->buffer(i), m_scinthDef->computePipeline()->layout(),
+                                   VK_SHADER_STAGE_COMPUTE_BIT, 0, m_numberOfParameters * sizeof(float),
+                                   m_parameterValues.get());
+            }
+
+            // Bind compute pipeline.
+            vkCmdBindPipeline(m_computeCommands->buffer(i), VK_PIPELINE_BIND_POINT_COMPUTE,
+                              m_scinthDef->computePipeline()->get());
+
+            // Bind descriptor sets.
+            if (m_descriptorSets.size()) {
+                vkCmdBindDescriptorSets(m_computeCommands->buffer(i), VK_PIPELINE_BIND_POINT_COMPUTE,
+                                        m_scinthDef->computePipeline()->layout(), 0, 1, &m_descriptorSets[i], 0,
+                                        nullptr);
+            }
+
+            // Execute compute shader.
+            vkCmdDispatch(m_computeCommands->buffer(i), 1, 1, 1);
+
+            // Second memory barrier if needed.
+            if (m_device->computeFamilyIndex() != m_device->graphicsFamilyIndex()) {
+                VkBufferMemoryBarrier barrier = {};
+                barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+                barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+                barrier.dstAccessMask = 0;
+                barrier.srcQueueFamilyIndex = m_device->computeFamilyIndex();
+                barrier.dstQueueFamilyIndex = m_device->graphicsFamilyIndex();
+                barrier.buffer = m_computeBuffers[i]->buffer();
+                barrier.offset = 0;
+                barrier.size = m_computeBuffers[i]->size();
+
+                vkCmdPipelineBarrier(m_computeCommands->buffer(i), VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                                     VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, 0, 0, nullptr, 1, &barrier, 0, nullptr);
+            }
+
+            if (vkEndCommandBuffer(m_computeCommands->buffer(i)) != VK_SUCCESS) {
+                spdlog::error("failed ending compute command buffer {} for Scinth {}", i, m_nodeID);
+                return false;
+            }
         }
     }
 
@@ -418,11 +477,13 @@ bool Scinth::rebuildBuffers() {
         }
 
         if (m_numberOfParameters) {
-            vkCmdPushConstants(m_drawCommands->buffer(i), m_scinthDef->drawPipeline()->layout(), VK_SHADER_STAGE_FRAGMENT_BIT,
-                               0, m_numberOfParameters * sizeof(float), m_parameterValues.get());
+            vkCmdPushConstants(m_drawCommands->buffer(i), m_scinthDef->drawPipeline()->layout(),
+                               VK_SHADER_STAGE_FRAGMENT_BIT, 0, m_numberOfParameters * sizeof(float),
+                               m_parameterValues.get());
         }
 
-        vkCmdBindPipeline(m_drawCommands->buffer(i), VK_PIPELINE_BIND_POINT_GRAPHICS, m_scinthDef->drawPipeline()->get());
+        vkCmdBindPipeline(m_drawCommands->buffer(i), VK_PIPELINE_BIND_POINT_GRAPHICS,
+                          m_scinthDef->drawPipeline()->get());
         VkBuffer vertexBuffers[] = { m_scinthDef->vertexBuffer()->buffer() };
         VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(m_drawCommands->buffer(i), 0, 1, vertexBuffers, offsets);
@@ -436,7 +497,7 @@ bool Scinth::rebuildBuffers() {
         vkCmdDrawIndexed(m_drawCommands->buffer(i), m_scinthDef->abstract()->shape()->numberOfIndices(), 1, 0, 0, 0);
 
         if (vkEndCommandBuffer(m_drawCommands->buffer(i)) != VK_SUCCESS) {
-            spdlog::error("failed ending command buffer {} for Scinth {}", i, m_nodeID);
+            spdlog::error("failed ending draw command buffer {} for Scinth {}", i, m_nodeID);
             return false;
         }
     }

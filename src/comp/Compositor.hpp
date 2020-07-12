@@ -199,11 +199,16 @@ private:
     AudioStagerList m_audioStagers;
 
     // Following should only be accessed from the same thread that calls prepareFrame.
-    std::shared_ptr<vk::CommandBuffer> m_primaryCommands;
+    std::shared_ptr<vk::CommandBuffer> m_drawPrimary;
     // We keep the subcommand buffers referenced each frame, and make a copy of them at each image index, so that they
     // are always valid until we are rendering a new frame over the old commands.
-    Commands m_secondaryCommands;
-    std::vector<Commands> m_frameCommands;
+    Commands m_drawSecondary;
+
+    std::shared_ptr<vk::CommandBuffer> m_computePrimary;
+    Commands m_computeSecondary;
+
+    std::vector<Commands> m_computeCommands;
+    std::vector<Commands> m_drawCommands;
 };
 
 } // namespace comp

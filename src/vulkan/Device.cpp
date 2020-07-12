@@ -31,7 +31,7 @@ Device::~Device() { destroy(); }
 bool Device::create(bool supportWindow) {
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies = { static_cast<uint32_t>(m_graphicsFamilyIndex),
-        static_cast<uint32_t>(m_computeFamilyIndex) };
+                                               static_cast<uint32_t>(m_computeFamilyIndex) };
     if (supportWindow) {
         uniqueQueueFamilies.insert(static_cast<uint32_t>(m_presentFamilyIndex));
     }
