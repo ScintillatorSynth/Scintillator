@@ -79,8 +79,9 @@ ScinthDef {
 	prCheckRates { |vgen, rate|
 		switch (rate,
 			\frame, {
-				if (vgen.rate !== \frame, {
-					Error.new("Frame rate VGen can only accept other frame rate VGens as input").throw;
+				if (vgen.rate !== \frame and: { vgen.rate !== \param }, {
+					Error.new("Frame rate VGen can only accept other frame rate VGens as input, got a rate of %"
+						.format(vgen.rate)).throw;
 				});
 			},
 			\shape, {

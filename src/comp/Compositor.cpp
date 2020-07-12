@@ -276,7 +276,10 @@ void Compositor::destroy() {
         m_scinths.clear();
         m_audioStagers.clear();
     }
-    // TODO: as a last resort, could call destroy on each of these
+    m_computePrimary.reset();
+    m_computeSecondary.clear();
+    m_computeCommands.clear();
+
     m_drawPrimary.reset();
     m_drawSecondary.clear();
     m_drawCommands.clear();

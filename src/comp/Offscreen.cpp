@@ -46,6 +46,7 @@ Offscreen::Offscreen(std::shared_ptr<vk::Device> device, int width, int height, 
 Offscreen::~Offscreen() { destroy(); }
 
 bool Offscreen::create(size_t numberOfImages) {
+    // Design of Offscreen is such that it assumes a minimum of two images.
     m_numberOfImages = std::max(numberOfImages, static_cast<size_t>(2));
 
     spdlog::info("creating Offscreen renderer with {} images.", m_numberOfImages);
@@ -276,7 +277,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
             }
 
             // If framerate is 0 then we turn the render flag back off to block again after this iteration.
-            if (render && m_frameRate == 0) {
+            if (render && m_snapShotMode) {
                 m_render = false;
                 flush = true;
                 m_deltaTime = 0.0;
@@ -339,19 +340,25 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
             drawSubmitInfo.waitSemaphoreCount = 1;
             drawSubmitInfo.pWaitSemaphores = computeFinished;
             drawSubmitInfo.pWaitDstStageMask = colorWaitStage;
-            drawSubmitInfo.signalSemaphoreCount = 1;
-            drawSubmitInfo.pSignalSemaphores = renderFinished;
         } else {
-            /*
-            drawSubmitInfo.waitSemaphoreCount = 1;
-            drawSubmitInfo.pWaitSemaphores = renderFinished;
-            drawSubmitInfo.pWaitDstStageMask = colorWaitStage;
-            drawSubmitInfo.signalSemaphoreCount = 1;
-            drawSubmitInfo.pSignalSemaphores = renderFinished;
-            */
-            drawSubmitInfo.waitSemaphoreCount = 0;
-            drawSubmitInfo.signalSemaphoreCount = 0;
+            // TODO: might get some performance improvement by submitting transfers to the transfer queue as part of a
+            // separate submission. Could also work for the StageManager. Then we would be waiting on the prior
+            // transfers having completed, if any.
+            if (frameNumber > m_numberOfImages) {
+                // We can wait on the semaphore that we also signal as long as it has been signaled by a prior render
+                // on this image.
+                drawSubmitInfo.waitSemaphoreCount = 1;
+                drawSubmitInfo.pWaitSemaphores = renderFinished;
+                drawSubmitInfo.pWaitDstStageMask = colorWaitStage;
+            } else {
+                drawSubmitInfo.waitSemaphoreCount = 0;
+            }
         }
+
+        // We always want to signal render finished, in case the next frame introduces a compute stage it will not be
+        // waiting on a unsignaled render finished semaphore.
+        drawSubmitInfo.signalSemaphoreCount = 1;
+        drawSubmitInfo.pSignalSemaphores = renderFinished;
 
         std::vector<VkCommandBuffer> drawCommandBuffers;
         drawCommandBuffers.push_back(m_drawCommands[frameIndex]->buffer(frameIndex));

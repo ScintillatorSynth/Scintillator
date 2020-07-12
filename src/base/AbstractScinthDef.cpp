@@ -609,14 +609,14 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
 
         vertexHeader += fmt::format("\n"
                                     "// --- buffer for compute shader outputs\n"
-                                    "layout(binding = {}) buffer ComputeBuffer {{\n"
+                                    "layout(binding = {}) readonly buffer computeBuffer {{\n"
                                     "{}"
                                     "}} {}_compute_buffer;\n",
                                     binding, bufferBody, m_prefix);
 
         fragmentHeader += fmt::format("\n"
                                       "// --- buffer for compute shader outputs\n"
-                                      "layout(binding = {}) buffer ComputeBuffer {{\n"
+                                      "layout(binding = {}) readonly buffer computeBuffer {{\n"
                                       "{}"
                                       "}} {}_compute_buffer;\n",
                                       binding, bufferBody, m_prefix);
@@ -746,7 +746,7 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
 
         computeHeader += fmt::format("\n"
                                      "// --- buffer for compute shader outputs\n"
-                                     "layout(binding = {}) buffer ComputeBuffer {{\n"
+                                     "layout(binding = {}) buffer computeBuffer {{\n"
                                      "{}"
                                      "}} {}_compute_buffer;\n",
                                      binding, bufferBody, m_prefix);

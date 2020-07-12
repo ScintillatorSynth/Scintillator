@@ -60,6 +60,7 @@ bool Scinth::create() {
 void Scinth::destroy() {
     // Break circular references here so Scinth can be automatically reclaimed when referencing objects (namely the
     // command buffer) go out of scope and are themselves deleted.
+    m_computeCommands.reset();
     m_drawCommands.reset();
 }
 
@@ -386,6 +387,9 @@ bool Scinth::rebuildBuffers() {
             VkCommandBufferBeginInfo beginInfo = {};
             beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
             beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+            VkCommandBufferInheritanceInfo inheritanceInfo = {};
+            inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+            beginInfo.pInheritanceInfo = &inheritanceInfo;
 
             if (vkBeginCommandBuffer(m_computeCommands->buffer(i), &beginInfo) != VK_SUCCESS) {
                 spdlog::error("failed beginning compute command buffer {} for Scinth {}", i, m_nodeID);

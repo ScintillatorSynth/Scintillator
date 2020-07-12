@@ -218,3 +218,18 @@
   captureTimes: [ 1 ]
   free: [ "alphaBlue" ]
   assertAllFree: true
+- name: "Frame Rate oscillator"
+  category: "frame"
+  comment: "Test a global oscillator running in frame rate VGen with parameters and intrinsics"
+  shortName: "frOsc"
+  scinthDef: "{ |k = 7.0|
+    var phaseMul = VSinOsc.fr(freq: 0.3, mul: k, add: 1.0);
+    BWOut.pr(Step.pr(VSinOsc.pr(freq: 0.1, phase: Length.pr(NormPos.pr) * (5 + phaseMul)), 0.5));
+  }"
+  captureTimes: [ 1, 1, 1, 1 ]
+  parameters:
+      - "none"
+      - k: 10
+      - k: 60
+      - k: 150
+

@@ -98,7 +98,7 @@ bool ScinthDef::build(ShaderCompiler* compiler) {
         }
         m_computePipeline.reset(new Pipeline(m_device));
         if (!m_computePipeline->createCompute(m_computeShader, m_descriptorSetLayout,
-                                              m_abstract->parameters().size())) {
+                                              m_abstract->parameters().size() * sizeof(float))) {
             spdlog::error("Error creating compute pipeline for ScinthDef {}", m_abstract->name());
             return false;
         }
