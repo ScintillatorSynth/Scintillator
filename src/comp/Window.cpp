@@ -90,6 +90,7 @@ void Window::destroy() {
     if (!m_directRendering) {
         m_offscreen->destroy();
     }
+    m_computeCommands = nullptr;
     m_drawCommands = nullptr;
     m_renderSync->destroy();
     m_swapchain->destroy();
