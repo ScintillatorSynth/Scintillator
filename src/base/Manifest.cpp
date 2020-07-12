@@ -11,7 +11,6 @@ Manifest::~Manifest() {}
 
 bool Manifest::addElement(const std::string& name, ElementType type, Intrinsic intrinsic) {
     if (m_types.find(name) != m_types.end()) {
-        spdlog::error("duplicate addition to Manifest of {}", name);
         return false;
     }
 

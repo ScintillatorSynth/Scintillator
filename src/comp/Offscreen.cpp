@@ -344,7 +344,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
             // TODO: might get some performance improvement by submitting transfers to the transfer queue as part of a
             // separate submission. Could also work for the StageManager. Then we would be waiting on the prior
             // transfers having completed, if any.
-            if (frameNumber > m_numberOfImages) {
+            if (frameNumber >= m_numberOfImages) {
                 // We can wait on the semaphore that we also signal as long as it has been signaled by a prior render
                 // on this image.
                 drawSubmitInfo.waitSemaphoreCount = 1;
