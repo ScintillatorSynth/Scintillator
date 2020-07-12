@@ -35,6 +35,10 @@ std::unique_ptr<vk::Shader> ShaderCompiler::compile(std::shared_ptr<vk::Device> 
 
     shaderc_shader_kind shaderKind;
     switch (kind) {
+    case vk::Shader::kCompute:
+        shaderKind = shaderc_compute_shader;
+        break;
+
     case vk::Shader::kVertex:
         shaderKind = shaderc_vertex_shader;
         break;

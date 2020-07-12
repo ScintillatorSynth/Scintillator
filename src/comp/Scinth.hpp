@@ -13,6 +13,7 @@ namespace vk {
 class CommandBuffer;
 class CommandPool;
 class Device;
+class DeviceBuffer;
 class DeviceImage;
 class HostBuffer;
 }
@@ -70,7 +71,8 @@ public:
      */
     void setParameterByIndex(int index, float value);
 
-    std::shared_ptr<vk::CommandBuffer> frameCommands() { return m_commands; }
+    std::shared_ptr<vk::CommandBuffer> computeCommands() { return m_computeCommands; }
+    std::shared_ptr<vk::CommandBuffer> drawCommands() { return m_drawCommands; }
     int nodeID() const { return m_nodeID; }
     bool running() const { return m_running; }
 
@@ -93,9 +95,11 @@ private:
     std::vector<std::shared_ptr<vk::DeviceImage>> m_fixedImages;
     std::vector<std::shared_ptr<vk::DeviceImage>> m_parameterizedImages;
     std::vector<std::shared_ptr<vk::HostBuffer>> m_uniformBuffers;
+    std::vector<std::shared_ptr<vk::DeviceBuffer>> m_computeBuffers;
     // The parameter index and the currently bound image Ids for parameterized images.
     std::vector<std::pair<int, int>> m_parameterizedImageIDs;
-    std::shared_ptr<vk::CommandBuffer> m_commands;
+    std::shared_ptr<vk::CommandBuffer> m_computeCommands;
+    std::shared_ptr<vk::CommandBuffer> m_drawCommands;
     bool m_running;
     std::unique_ptr<float[]> m_parameterValues;
     size_t m_numberOfParameters;

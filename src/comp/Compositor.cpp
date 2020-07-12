@@ -27,13 +27,15 @@ Compositor::Compositor(std::shared_ptr<vk::Device> device, std::shared_ptr<Canva
     m_canvas(canvas),
     m_clearColor(0.0f, 0.0f, 0.0f),
     m_shaderCompiler(new ShaderCompiler()),
-    m_commandPool(new vk::CommandPool(device)),
+    m_computeCommandPool(new vk::CommandPool(device)),
+    m_drawCommandPool(new vk::CommandPool(device)),
     m_stageManager(new StageManager(device)),
     m_samplerFactory(new SamplerFactory(device)),
     m_imageMap(new ImageMap()),
     m_commandBufferDirty(true),
     m_nodeSerial(-2) {
-    m_frameCommands.resize(m_canvas->numberOfImages());
+    m_computeCommands.resize(m_canvas->numberOfImages());
+    m_drawCommands.resize(m_canvas->numberOfImages());
 }
 
 Compositor::~Compositor() {}
@@ -44,8 +46,12 @@ bool Compositor::create() {
         return false;
     }
 
-    if (!m_commandPool->create()) {
-        spdlog::error("Compositor failed creating command pool.");
+    if (!m_computeCommandPool->create()) {
+        spdlog::error("Compositor failed creating compute command pool.");
+    }
+
+    if (!m_drawCommandPool->create()) {
+        spdlog::error("Compositor failed creating draw command pool.");
         return false;
     }
 
@@ -53,7 +59,6 @@ bool Compositor::create() {
         spdlog::error("Compositor failed to create stage manager.");
         return false;
     }
-
 
     // Create the empty image and stage.
     std::shared_ptr<vk::HostBuffer> emptyImageBuffer(new vk::HostBuffer(m_device, vk::Buffer::Kind::kStaging, 4));
@@ -86,8 +91,8 @@ bool Compositor::create() {
 }
 
 bool Compositor::buildScinthDef(std::shared_ptr<const base::AbstractScinthDef> abstractScinthDef) {
-    std::shared_ptr<ScinthDef> scinthDef(
-        new ScinthDef(m_device, m_canvas, m_commandPool, m_samplerFactory, abstractScinthDef));
+    std::shared_ptr<ScinthDef> scinthDef(new ScinthDef(m_device, m_canvas, m_computeCommandPool, m_drawCommandPool,
+                                                       m_samplerFactory, abstractScinthDef));
     if (!scinthDef->build(m_shaderCompiler.get())) {
         return false;
     }
@@ -223,8 +228,9 @@ void Compositor::setNodeParameters(int nodeID, const std::vector<std::pair<std::
     m_commandBufferDirty = true;
 }
 
-std::shared_ptr<vk::CommandBuffer> Compositor::prepareFrame(uint32_t imageIndex, double frameTime) {
-    m_secondaryCommands.clear();
+bool Compositor::prepareFrame(uint32_t imageIndex, double frameTime) {
+    m_computeSecondary.clear();
+    m_drawSecondary.clear();
 
     {
         std::lock_guard<std::mutex> lock(m_scinthMutex);
@@ -235,19 +241,26 @@ std::shared_ptr<vk::CommandBuffer> Compositor::prepareFrame(uint32_t imageIndex,
         for (auto scinth : m_scinths) {
             if (scinth->running()) {
                 scinth->prepareFrame(imageIndex, frameTime);
-                std::shared_ptr<vk::CommandBuffer> commands = scinth->frameCommands();
-                commands->associateScinth(scinth);
-                m_secondaryCommands.emplace_back(commands);
+                std::shared_ptr<vk::CommandBuffer> computeCommands = scinth->computeCommands();
+                if (computeCommands) {
+                    computeCommands->associateScinth(scinth);
+                    m_computeSecondary.emplace_back(computeCommands);
+                }
+                std::shared_ptr<vk::CommandBuffer> drawCommands = scinth->drawCommands();
+                drawCommands->associateScinth(scinth);
+                m_drawSecondary.emplace_back(drawCommands);
             }
         }
     }
 
-    m_frameCommands[imageIndex] = m_secondaryCommands;
+    m_computeCommands[imageIndex] = m_computeSecondary;
+    m_drawCommands[imageIndex] = m_drawSecondary;
 
     if (m_commandBufferDirty) {
         rebuildCommandBuffer();
     }
-    return m_primaryCommands;
+
+    return m_drawPrimary != nullptr;
 }
 
 void Compositor::releaseCompiler() { m_shaderCompiler->releaseCompiler(); }
@@ -263,15 +276,19 @@ void Compositor::destroy() {
         m_scinths.clear();
         m_audioStagers.clear();
     }
-    // TODO: as a last resort, could call destroy on each of these
-    m_primaryCommands.reset();
-    m_secondaryCommands.clear();
-    m_frameCommands.clear();
+    m_computePrimary.reset();
+    m_computeSecondary.clear();
+    m_computeCommands.clear();
 
-    // We leave the commandPool undestroyed as there may be outstanding commandbuffers pipelined. The shared_ptr
-    // system should collect them before all is done. But we must remove our reference to it or we keep it alive
+    m_drawPrimary.reset();
+    m_drawSecondary.clear();
+    m_drawCommands.clear();
+
+    // We leave the command pools undestroyed as there may be outstanding commandbuffers pipelined. The shared_ptr
+    // system should collect them before all is done. But we must remove our references to them or we keep them alive
     // until our own destructor.
-    m_commandPool = nullptr;
+    m_computeCommandPool = nullptr;
+    m_drawCommandPool = nullptr;
 
     m_stageManager->destroy();
     m_imageMap = nullptr;
@@ -343,22 +360,60 @@ bool Compositor::addAudioIngress(std::shared_ptr<audio::Ingress> ingress, int im
     return true;
 }
 
-// Needs to be called only from the same thread that calls prepareFrame. Assumes that m_secondaryCommands is up-to-date.
+// Needs to be called only from the same thread that calls prepareFrame. Assumes that m_drawSecondary is up-to-date.
 bool Compositor::rebuildCommandBuffer() {
-    m_primaryCommands.reset(new vk::CommandBuffer(m_device, m_commandPool));
-    if (!m_primaryCommands->create(m_canvas->numberOfImages(), true)) {
-        spdlog::critical("failed creating primary command buffers for Compositor.");
+    if (m_computeSecondary.size()) {
+        m_computePrimary.reset(new vk::CommandBuffer(m_device, m_computeCommandPool));
+        if (!m_computePrimary->create(m_canvas->numberOfImages(), true)) {
+            spdlog::critical("failed creating primary compute command buffers for Compositor.");
+            return false;
+        }
+
+        m_computePrimary->associateSecondaryCommands(m_computeSecondary);
+        spdlog::debug("rebuilding Compositor compute command buffer with {} secondary command buffers",
+                      m_computeSecondary.size());
+
+        for (auto i = 0; i < m_canvas->numberOfImages(); ++i) {
+            VkCommandBufferBeginInfo beginInfo = {};
+            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+            beginInfo.pInheritanceInfo = nullptr;
+
+            if (vkBeginCommandBuffer(m_computePrimary->buffer(i), &beginInfo) != VK_SUCCESS) {
+                spdlog::error("Compositor failed beginning primary compute command buffer.");
+                return false;
+            }
+
+            std::vector<VkCommandBuffer> commandBuffers;
+            for (auto command : m_computeSecondary) {
+                commandBuffers.emplace_back(command->buffer(i));
+            }
+            vkCmdExecuteCommands(m_computePrimary->buffer(i), commandBuffers.size(), commandBuffers.data());
+
+            if (vkEndCommandBuffer(m_computePrimary->buffer(i)) != VK_SUCCESS) {
+                spdlog::error("Compositor failed ending primary compute command buffer.");
+                return false;
+            }
+        }
+    } else {
+        m_computePrimary = nullptr;
+    }
+
+    m_drawPrimary.reset(new vk::CommandBuffer(m_device, m_drawCommandPool));
+    if (!m_drawPrimary->create(m_canvas->numberOfImages(), true)) {
+        spdlog::critical("failed creating primary draw command buffers for Compositor.");
         return false;
     }
 
     // Ensure the secondary command buffers get retained as long as this buffer is retained.
-    m_primaryCommands->associateSecondaryCommands(m_secondaryCommands);
+    m_drawPrimary->associateSecondaryCommands(m_drawSecondary);
 
     VkClearColorValue clearColor = { { m_clearColor.x, m_clearColor.y, m_clearColor.z, 1.0f } };
     VkClearValue clearValue = {};
     clearValue.color = clearColor;
 
-    spdlog::debug("rebuilding Compositor command buffer with {} secondary command buffers", m_secondaryCommands.size());
+    spdlog::debug("rebuilding Compositor draw command buffer with {} secondary command buffers",
+                  m_drawSecondary.size());
 
     for (auto i = 0; i < m_canvas->numberOfImages(); ++i) {
         VkCommandBufferBeginInfo beginInfo = {};
@@ -366,8 +421,8 @@ bool Compositor::rebuildCommandBuffer() {
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
         beginInfo.pInheritanceInfo = nullptr;
 
-        if (vkBeginCommandBuffer(m_primaryCommands->buffer(i), &beginInfo) != VK_SUCCESS) {
-            spdlog::error("Compositor failed beginning primary command buffer.");
+        if (vkBeginCommandBuffer(m_drawPrimary->buffer(i), &beginInfo) != VK_SUCCESS) {
+            spdlog::error("Compositor failed beginning primary draw command buffer.");
             return false;
         }
 
@@ -380,22 +435,22 @@ bool Compositor::rebuildCommandBuffer() {
         renderPassInfo.clearValueCount = 1;
         renderPassInfo.pClearValues = &clearValue;
 
-        if (m_secondaryCommands.size()) {
-            vkCmdBeginRenderPass(m_primaryCommands->buffer(i), &renderPassInfo,
+        if (m_drawSecondary.size()) {
+            vkCmdBeginRenderPass(m_drawPrimary->buffer(i), &renderPassInfo,
                                  VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
             std::vector<VkCommandBuffer> commandBuffers;
-            for (auto command : m_secondaryCommands) {
+            for (auto command : m_drawSecondary) {
                 commandBuffers.emplace_back(command->buffer(i));
             }
-            vkCmdExecuteCommands(m_primaryCommands->buffer(i), commandBuffers.size(), commandBuffers.data());
+            vkCmdExecuteCommands(m_drawPrimary->buffer(i), commandBuffers.size(), commandBuffers.data());
         } else {
-            vkCmdBeginRenderPass(m_primaryCommands->buffer(i), &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+            vkCmdBeginRenderPass(m_drawPrimary->buffer(i), &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
         }
 
-        vkCmdEndRenderPass(m_primaryCommands->buffer(i));
-        if (vkEndCommandBuffer(m_primaryCommands->buffer(i)) != VK_SUCCESS) {
-            spdlog::error("Compositor failed ending primary command buffer.");
+        vkCmdEndRenderPass(m_drawPrimary->buffer(i));
+        if (vkEndCommandBuffer(m_drawPrimary->buffer(i)) != VK_SUCCESS) {
+            spdlog::error("Compositor failed ending primary draw command buffer.");
             return false;
         }
     }

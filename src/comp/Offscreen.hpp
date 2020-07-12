@@ -139,7 +139,8 @@ private:
 
     // threadMain-only access
     std::thread m_renderThread;
-    std::vector<std::shared_ptr<vk::CommandBuffer>> m_commandBuffers;
+    std::vector<std::shared_ptr<vk::CommandBuffer>> m_computeCommands;
+    std::vector<std::shared_ptr<vk::CommandBuffer>> m_drawCommands;
     std::vector<std::vector<scin::av::Encoder::SendBuffer>> m_pendingEncodes;
     std::vector<std::shared_ptr<vk::HostImage>> m_readbackImages;
     bool m_readbackSupportsBlit;

@@ -167,7 +167,7 @@ bool Pipeline::create(const base::Manifest& vertexManifest, const base::Shape* s
     }
     VkPushConstantRange pushConstantRange = {};
     if (pushConstantBlockSize) {
-        pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT;
         pushConstantRange.offset = 0;
         pushConstantRange.size = pushConstantBlockSize;
         pipelineLayoutInfo.pushConstantRangeCount = 1;
@@ -229,6 +229,53 @@ void Pipeline::destroy() {
         vkDestroyPipeline(m_device->get(), m_pipeline, nullptr);
         m_pipeline = VK_NULL_HANDLE;
     }
+}
+
+bool Pipeline::createCompute(std::shared_ptr<vk::Shader> computeShader, VkDescriptorSetLayout descriptorSetLayout,
+                             size_t pushConstantBlockSize) {
+    m_computeShader = computeShader;
+
+    // Pipeline Layout
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    VkDescriptorSetLayout setLayouts[] = { descriptorSetLayout };
+    if (descriptorSetLayout != VK_NULL_HANDLE) {
+        pipelineLayoutInfo.setLayoutCount = 1;
+        pipelineLayoutInfo.pSetLayouts = setLayouts;
+    } else {
+        pipelineLayoutInfo.setLayoutCount = 0;
+        pipelineLayoutInfo.pSetLayouts = nullptr;
+    }
+    VkPushConstantRange pushConstantRange = {};
+    if (pushConstantBlockSize) {
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+        pushConstantRange.offset = 0;
+        pushConstantRange.size = pushConstantBlockSize;
+        pipelineLayoutInfo.pushConstantRangeCount = 1;
+        pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+    } else {
+        pipelineLayoutInfo.pushConstantRangeCount = 0;
+        pipelineLayoutInfo.pPushConstantRanges = nullptr;
+    }
+
+    if (vkCreatePipelineLayout(m_device->get(), &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS) {
+        return false;
+    }
+
+    VkComputePipelineCreateInfo pipelineInfo = {};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    pipelineInfo.stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    pipelineInfo.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    pipelineInfo.stage.module = computeShader->get();
+    pipelineInfo.stage.pName = computeShader->entryPoint();
+    pipelineInfo.layout = m_pipelineLayout;
+    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+    pipelineInfo.basePipelineIndex = -1;
+
+    return (vkCreateComputePipelines(m_device->get(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline)
+            == VK_SUCCESS);
+
+    return true;
 }
 
 } // namespace vk

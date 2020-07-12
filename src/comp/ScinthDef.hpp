@@ -33,7 +33,8 @@ class ShaderCompiler;
 class ScinthDef {
 public:
     ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<Canvas> canvas,
-              std::shared_ptr<vk::CommandPool> commandPool, std::shared_ptr<SamplerFactory> samplerFactory,
+              std::shared_ptr<vk::CommandPool> computeCommandPool, std::shared_ptr<vk::CommandPool> drawCommandPool,
+              std::shared_ptr<SamplerFactory> samplerFactory,
               std::shared_ptr<const base::AbstractScinthDef> abstractScinthDef);
     ~ScinthDef();
 
@@ -46,7 +47,8 @@ public:
     bool build(ShaderCompiler* compiler);
 
     std::shared_ptr<Canvas> canvas() const { return m_canvas; }
-    std::shared_ptr<vk::CommandPool> commandPool() const { return m_commandPool; }
+    std::shared_ptr<vk::CommandPool> computeCommandPool() const { return m_computeCommandPool; }
+    std::shared_ptr<vk::CommandPool> drawCommandPool() const { return m_drawCommandPool; }
     std::shared_ptr<const base::AbstractScinthDef> abstract() const { return m_abstract; }
     std::shared_ptr<vk::HostBuffer> vertexBuffer() const { return m_vertexBuffer; }
     std::shared_ptr<vk::HostBuffer> indexBuffer() const { return m_indexBuffer; }
@@ -54,7 +56,8 @@ public:
     const std::vector<std::shared_ptr<vk::Sampler>>& fixedSamplers() const { return m_fixedSamplers; }
     const std::vector<std::shared_ptr<vk::Sampler>>& parameterizedSamplers() const { return m_parameterizedSamplers; }
     std::shared_ptr<vk::Sampler> emptySampler() const { return m_emptySampler; }
-    std::shared_ptr<Pipeline> pipeline() const { return m_pipeline; }
+    std::shared_ptr<Pipeline> drawPipeline() const { return m_drawPipeline; }
+    std::shared_ptr<Pipeline> computePipeline() const { return m_computePipeline; }
 
 private:
     bool buildVertexData();
@@ -63,18 +66,21 @@ private:
 
     std::shared_ptr<vk::Device> m_device;
     std::shared_ptr<Canvas> m_canvas;
-    std::shared_ptr<vk::CommandPool> m_commandPool;
+    std::shared_ptr<vk::CommandPool> m_computeCommandPool;
+    std::shared_ptr<vk::CommandPool> m_drawCommandPool;
     std::shared_ptr<SamplerFactory> m_samplerFactory;
     std::shared_ptr<const base::AbstractScinthDef> m_abstract;
     std::shared_ptr<vk::HostBuffer> m_vertexBuffer;
     std::shared_ptr<vk::HostBuffer> m_indexBuffer;
+    std::shared_ptr<vk::Shader> m_computeShader;
     std::shared_ptr<vk::Shader> m_vertexShader;
     std::shared_ptr<vk::Shader> m_fragmentShader;
     VkDescriptorSetLayout m_descriptorSetLayout;
     std::vector<std::shared_ptr<vk::Sampler>> m_fixedSamplers;
     std::vector<std::shared_ptr<vk::Sampler>> m_parameterizedSamplers;
     std::shared_ptr<vk::Sampler> m_emptySampler;
-    std::shared_ptr<Pipeline> m_pipeline;
+    std::shared_ptr<Pipeline> m_drawPipeline;
+    std::shared_ptr<Pipeline> m_computePipeline;
 };
 
 } // namespace comp

@@ -13,25 +13,33 @@ RenderSync::RenderSync(std::shared_ptr<vk::Device> device): m_device(device) {}
 
 RenderSync::~RenderSync() { destroy(); }
 
-bool RenderSync::create(size_t inFlightFrames, bool makeSemaphores) {
-    if (makeSemaphores) {
+bool RenderSync::create(size_t inFlightFrames, bool makeSwapchainSemaphore) {
+    if (makeSwapchainSemaphore) {
         m_imageAvailable.resize(inFlightFrames);
-        m_renderFinished.resize(inFlightFrames);
     }
+
+    m_computeFinished.resize(inFlightFrames);
+    m_renderFinished.resize(inFlightFrames);
     m_frameRendering.resize(inFlightFrames);
 
     for (auto i = 0; i < inFlightFrames; ++i) {
-        if (makeSemaphores) {
-            VkSemaphoreCreateInfo semaphoreInfo = {};
-            semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+        VkSemaphoreCreateInfo semaphoreInfo = {};
+        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+        if (makeSwapchainSemaphore) {
             if (vkCreateSemaphore(m_device->get(), &semaphoreInfo, nullptr, &m_imageAvailable[i]) != VK_SUCCESS) {
                 spdlog::error("RenderSync failed to create image available semaphore.");
                 return false;
             }
-            if (vkCreateSemaphore(m_device->get(), &semaphoreInfo, nullptr, &m_renderFinished[i]) != VK_SUCCESS) {
-                spdlog::error("RenderSync failed to create render finished semaphore.");
-                return false;
-            }
+        }
+
+        if (vkCreateSemaphore(m_device->get(), &semaphoreInfo, nullptr, &m_computeFinished[i]) != VK_SUCCESS) {
+            spdlog::error("RenderySync failed to create compute finished semaphore.");
+            return false;
+        }
+
+        if (vkCreateSemaphore(m_device->get(), &semaphoreInfo, nullptr, &m_renderFinished[i]) != VK_SUCCESS) {
+            spdlog::error("RenderSync failed to create render finished semaphore.");
+            return false;
         }
 
         VkFenceCreateInfo fenceInfo = {};
@@ -50,6 +58,11 @@ void RenderSync::destroy() {
         vkDestroySemaphore(m_device->get(), m_imageAvailable[i], nullptr);
     }
     m_imageAvailable.clear();
+
+    for (auto i = 0; i < m_computeFinished.size(); ++i) {
+        vkDestroySemaphore(m_device->get(), m_computeFinished[i], nullptr);
+    }
+    m_computeFinished.clear();
 
     for (auto i = 0; i < m_renderFinished.size(); ++i) {
         vkDestroySemaphore(m_device->get(), m_renderFinished[i], nullptr);

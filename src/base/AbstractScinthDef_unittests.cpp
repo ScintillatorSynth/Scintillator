@@ -191,7 +191,7 @@ TEST_F(AbstractScinthDefTest, BuildWithSinglePixelRateVGen) {
 
     // Fragment and uniform manifests should be empty.
     EXPECT_EQ(0, def->fragmentManifest().numberOfElements());
-    EXPECT_EQ(0, def->drawUniformManifest().numberOfElements());
+    EXPECT_EQ(0, def->uniformManifest().numberOfElements());
     // Vertex manifest should contain a single element, the position.
     ASSERT_EQ(1, def->vertexManifest().numberOfElements());
     EXPECT_EQ(Intrinsic::kPosition, def->vertexManifest().intrinsicForElement(0));
@@ -242,7 +242,7 @@ TEST_F(AbstractScinthDefTest, BuildWithNormPosPixelRate) {
     ASSERT_EQ(1, def->fragmentManifest().numberOfElements());
     EXPECT_EQ(Intrinsic::kNormPos, def->fragmentManifest().intrinsicForElement(0));
 
-    EXPECT_EQ(0, def->drawUniformManifest().numberOfElements());
+    EXPECT_EQ(0, def->uniformManifest().numberOfElements());
 
     // Vertex manifest should contain the position and the NormPos.
     std::unordered_set<Intrinsic> vertexIntrinsics { Intrinsic::kPosition, Intrinsic::kNormPos };
@@ -298,7 +298,7 @@ TEST_F(AbstractScinthDefTest, BuildWithTexPosPixelRate) {
     ASSERT_EQ(1, def->fragmentManifest().numberOfElements());
     EXPECT_EQ(Intrinsic::kTexPos, def->fragmentManifest().intrinsicForElement(0));
 
-    EXPECT_EQ(0, def->drawUniformManifest().numberOfElements());
+    EXPECT_EQ(0, def->uniformManifest().numberOfElements());
 
     // Vertex manifest should contain the position and the NormPos.
     std::unordered_set<Intrinsic> vertexIntrinsics { Intrinsic::kPosition, Intrinsic::kTexPos };
@@ -345,8 +345,8 @@ TEST_F(AbstractScinthDefTest, BuildWithTimePixelRate) {
     EXPECT_EQ(0, def->fragmentManifest().numberOfElements());
 
     // One element in the draw uniform manifest, the time intrinsic.
-    ASSERT_EQ(1, def->drawUniformManifest().numberOfElements());
-    EXPECT_EQ(Intrinsic::kTime, def->drawUniformManifest().intrinsicForElement(0));
+    ASSERT_EQ(1, def->uniformManifest().numberOfElements());
+    EXPECT_EQ(Intrinsic::kTime, def->uniformManifest().intrinsicForElement(0));
 
     // Vertex manifest should contain only the position.
     ASSERT_EQ(1, def->vertexManifest().numberOfElements());
@@ -390,7 +390,7 @@ TEST_F(AbstractScinthDefTest, BuildPixelRateParams) {
 
     // Fragment and uniform manifests should be empty.
     EXPECT_EQ(0, def->fragmentManifest().numberOfElements());
-    EXPECT_EQ(0, def->drawUniformManifest().numberOfElements());
+    EXPECT_EQ(0, def->uniformManifest().numberOfElements());
     // Vertex manifest should contain a single element, the position.
     ASSERT_EQ(1, def->vertexManifest().numberOfElements());
     EXPECT_EQ(Intrinsic::kPosition, def->vertexManifest().intrinsicForElement(0));

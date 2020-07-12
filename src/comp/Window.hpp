@@ -85,7 +85,8 @@ private:
     // We keep the shared pointers to the command buffers until the frame is being re-rendered. This allows
     // the Compositor to change command buffers arbitrarily, and they won't get reclaimed by the system until
     // they are known finished rendering.
-    std::shared_ptr<vk::CommandBuffer> m_commandBuffers;
+    std::shared_ptr<vk::CommandBuffer> m_computeCommands;
+    std::shared_ptr<vk::CommandBuffer> m_drawCommands;
     std::atomic<bool> m_stop;
 
     // If in non realtime mode, we render to an offscreen framebuffer and blit the latest available image to the

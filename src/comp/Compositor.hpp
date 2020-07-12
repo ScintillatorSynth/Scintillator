@@ -102,13 +102,17 @@ public:
     void setNodeParameters(int nodeID, const std::vector<std::pair<std::string, float>>& namedValues,
                            const std::vector<std::pair<int, float>> indexedValues);
 
-    /*! Prepare and return a CommandBuffers that when executed in order will render the current frame.
+    /*! Prepare the CommandBuffers that when executed in order will render the current frame. Updates the values
+     * returned by computeCommands() and drawCommands().
      *
      * \param imageIndex The index of the imageView in the Canvas we will be rendering in to.
      * \param frameTime The point in time at which to build this frame for.
-     * \return A CommandBuffer object to be scheduled for graphics queue submission.
+     * \return A boolean indicating success in frame preparation.
      */
-    std::shared_ptr<vk::CommandBuffer> prepareFrame(uint32_t imageIndex, double frameTime);
+    bool prepareFrame(uint32_t imageIndex, double frameTime);
+
+    std::shared_ptr<vk::CommandBuffer> computeCommands() { return m_computePrimary; }
+    std::shared_ptr<vk::CommandBuffer> drawCommands() { return m_drawPrimary; }
 
     /*! Unload the shader compiler, releasing the resources associated with it.
      *
@@ -178,7 +182,8 @@ private:
     glm::vec3 m_clearColor;
 
     std::unique_ptr<ShaderCompiler> m_shaderCompiler;
-    std::shared_ptr<vk::CommandPool> m_commandPool;
+    std::shared_ptr<vk::CommandPool> m_computeCommandPool;
+    std::shared_ptr<vk::CommandPool> m_drawCommandPool;
     std::shared_ptr<StageManager> m_stageManager;
     std::shared_ptr<SamplerFactory> m_samplerFactory;
     std::shared_ptr<ImageMap> m_imageMap;
@@ -198,11 +203,16 @@ private:
     AudioStagerList m_audioStagers;
 
     // Following should only be accessed from the same thread that calls prepareFrame.
-    std::shared_ptr<vk::CommandBuffer> m_primaryCommands;
+    std::shared_ptr<vk::CommandBuffer> m_drawPrimary;
     // We keep the subcommand buffers referenced each frame, and make a copy of them at each image index, so that they
     // are always valid until we are rendering a new frame over the old commands.
-    Commands m_secondaryCommands;
-    std::vector<Commands> m_frameCommands;
+    Commands m_drawSecondary;
+
+    std::shared_ptr<vk::CommandBuffer> m_computePrimary;
+    Commands m_computeSecondary;
+
+    std::vector<Commands> m_computeCommands;
+    std::vector<Commands> m_drawCommands;
 };
 
 } // namespace comp

@@ -19,6 +19,7 @@ DeviceInfo::DeviceInfo(std::shared_ptr<Instance> instance, VkPhysicalDevice devi
     m_physicalDevice(device),
     m_presentFamilyIndex(-1),
     m_graphicsFamilyIndex(-1),
+    m_computeFamilyIndex(-1),
     m_numberOfMemoryHeaps(0),
     m_supportsWindow(false),
     m_supportsMemoryBudget(false) {}
@@ -26,7 +27,7 @@ DeviceInfo::DeviceInfo(std::shared_ptr<Instance> instance, VkPhysicalDevice devi
 bool DeviceInfo::build() {
     vkGetPhysicalDeviceProperties(m_physicalDevice, &m_properties);
 
-    // Look for a graphics queue family, and ask about present family support.
+    // Look for graphics and compute queue families, and ask about present family support.
     uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(m_physicalDevice, &queueFamilyCount, nullptr);
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
@@ -40,14 +41,17 @@ bool DeviceInfo::build() {
         if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             m_graphicsFamilyIndex = familyIndex;
         }
-        if (m_graphicsFamilyIndex >= 0 && m_presentFamilyIndex >= 0) {
+        if (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT) {
+            m_computeFamilyIndex = familyIndex;
+        }
+        if (m_graphicsFamilyIndex >= 0 && m_presentFamilyIndex >= 0 && m_computeFamilyIndex >= 0) {
             break;
         }
 
         ++familyIndex;
     }
-    if (m_graphicsFamilyIndex == -1) {
-        spdlog::warn("Device {} missing a graphics queue family, not usable for graphics.", name());
+    if (m_graphicsFamilyIndex == -1 || m_computeFamilyIndex == -1) {
+        spdlog::warn("Device {} missing a graphics or compute queue family, not usable for graphics.", name());
         return false;
     }
 

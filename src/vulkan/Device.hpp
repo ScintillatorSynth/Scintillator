@@ -47,6 +47,8 @@ public:
 
     int graphicsFamilyIndex() const { return m_graphicsFamilyIndex; }
     int presentFamilyIndex() const { return m_presentFamilyIndex; }
+    int computeFamilyIndex() const { return m_computeFamilyIndex; }
+    VkQueue computeQueue() { return m_computeQueue; }
     VkQueue graphicsQueue() { return m_graphicsQueue; }
     VkQueue presentQueue() { return m_presentQueue; }
     bool supportsSamplerAnisotropy() const { return m_supportsSamplerAnisotropy; }
@@ -55,6 +57,7 @@ private:
     std::shared_ptr<Instance> m_instance;
     VkPhysicalDevice m_physicalDevice;
     std::string m_name;
+    int m_computeFamilyIndex;
     int m_graphicsFamilyIndex;
     int m_presentFamilyIndex;
     int m_numberOfMemoryHeaps;
@@ -62,6 +65,7 @@ private:
     bool m_supportsSamplerAnisotropy;
     VkDevice m_device;
     VmaAllocator m_allocator;
+    VkQueue m_computeQueue;
     VkQueue m_graphicsQueue;
     VkQueue m_presentQueue;
 };
