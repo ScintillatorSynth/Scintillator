@@ -28,10 +28,10 @@ public:
      * simultaneously in-progress frames.
      *
      * \param inflightFrames How many sets of sync primitives to make. Should be > 0.
-     * \param makeSemaphores If the semaphores (mostly useful for Swapchains) should be made.
+     * \param makeSemaphores If the swapchain semaphore should be made.
      * \return true on success, false on failure.
      */
-    bool create(size_t inFlightFrames, bool makeSemaphores);
+    bool create(size_t inFlightFrames, bool makeSwapchainSemaphore);
 
     /*! Release synchronization primitives.
      */
@@ -39,11 +39,12 @@ public:
 
     void waitForFrame(size_t index);
 
-    // Requires that the semaphores were made.
+    // Requires that the swapchain (imageAvailable) semaphores were made.
     uint32_t acquireNextImage(size_t index, Swapchain* swapchain);
 
     void resetFrame(size_t index);
 
+    VkSemaphore computeFinished(size_t index) { return m_computeFinished[index]; }
     VkSemaphore imageAvailable(size_t index) { return m_imageAvailable[index]; }
     VkSemaphore renderFinished(size_t index) { return m_renderFinished[index]; }
     VkFence frameRendering(size_t index) { return m_frameRendering[index]; }
@@ -51,6 +52,7 @@ public:
 private:
     std::shared_ptr<vk::Device> m_device;
 
+    std::vector<VkSemaphore> m_computeFinished;
     std::vector<VkSemaphore> m_imageAvailable;
     std::vector<VkSemaphore> m_renderFinished;
     std::vector<VkFence> m_frameRendering;

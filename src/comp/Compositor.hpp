@@ -102,13 +102,17 @@ public:
     void setNodeParameters(int nodeID, const std::vector<std::pair<std::string, float>>& namedValues,
                            const std::vector<std::pair<int, float>> indexedValues);
 
-    /*! Prepare and return a CommandBuffers that when executed in order will render the current frame.
+    /*! Prepare the CommandBuffers that when executed in order will render the current frame. Updates the values
+     * returned by computeCommands() and drawCommands().
      *
      * \param imageIndex The index of the imageView in the Canvas we will be rendering in to.
      * \param frameTime The point in time at which to build this frame for.
-     * \return A CommandBuffer object to be scheduled for graphics queue submission.
+     * \return A boolean indicating success in frame preparation.
      */
-    std::shared_ptr<vk::CommandBuffer> prepareFrame(uint32_t imageIndex, double frameTime);
+    bool prepareFrame(uint32_t imageIndex, double frameTime);
+
+    std::shared_ptr<vk::CommandBuffer> computeCommands() { return m_computePrimary; }
+    std::shared_ptr<vk::CommandBuffer> drawCommands() { return m_drawPrimary; }
 
     /*! Unload the shader compiler, releasing the resources associated with it.
      *

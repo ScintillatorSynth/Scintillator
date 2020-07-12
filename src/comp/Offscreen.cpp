@@ -301,7 +301,12 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
         processPendingEncodes(frameIndex);
 
         // OK, we now consider the contents of the framebuffer (and any blit targets) as subject to GPU mutation.
-        m_commandBuffers[frameIndex] = compositor->prepareFrame(frameIndex, time);
+        if (!compositor->prepareFrame(frameIndex, time)) {
+            spdlog::critical("Failed to prepare frame, terminating.");
+            break;
+        }
+
+        m_commandBuffers[frameIndex] = compositor->drawCommands();
 
         std::vector<VkCommandBuffer> commandBuffers;
         commandBuffers.push_back(m_commandBuffers[frameIndex]->buffer(frameIndex));

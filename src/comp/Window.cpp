@@ -90,7 +90,7 @@ void Window::destroy() {
     if (!m_directRendering) {
         m_offscreen->destroy();
     }
-    m_commandBuffers = nullptr;
+    m_drawCommands = nullptr;
     m_renderSync->destroy();
     m_swapchain->destroy();
     vkDestroySurfaceKHR(m_instance->get(), m_surface, nullptr);
@@ -129,21 +129,63 @@ void Window::runDirectRendering(std::shared_ptr<comp::Compositor> compositor) {
 
         m_frameTimer->markFrame();
 
-        m_commandBuffers = compositor->prepareFrame(imageIndex, m_frameTimer->elapsedTime());
+        if (!compositor->prepareFrame(imageIndex, m_frameTimer->elapsedTime())) {
+            spdlog::critical("Failed to prepare frame, terminating");
+            break;
+        }
+
+        m_computeCommands = compositor->computeCommands();
+        m_drawCommands = compositor->drawCommands();
 
         VkSemaphore imageAvailable[] = { m_renderSync->imageAvailable(0) };
-        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        VkPipelineStageFlags imageWaitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+
+        VkSemaphore computeDoneAndImageAvailable[] = { m_renderSync->computeFinished(0),
+                                                       m_renderSync->imageAvailable(0) };
+        VkPipelineStageFlags computeAndImageWaitStages[] = { VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
+                                                             VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+
+        VkSubmitInfo drawSubmitInfo = {};
+        drawSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        if (m_computeCommands) {
+            VkSubmitInfo computeSubmitInfo = {};
+            computeSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            // No need to wait on anything to start this compute shader, as we already blocked the CPU on this frame
+            // being available for re-render.
+            computeSubmitInfo.waitSemaphoreCount = 0;
+            computeSubmitInfo.pWaitSemaphores = nullptr;
+            computeSubmitInfo.pWaitDstStageMask = nullptr;
+
+            computeSubmitInfo.commandBufferCount = 1;
+            VkCommandBuffer computeCommandBuffers[] = { m_computeCommands->buffer(imageIndex) };
+            computeSubmitInfo.pCommandBuffers = computeCommandBuffers;
+            computeSubmitInfo.signalSemaphoreCount = 1;
+            VkSemaphore computeFinished[] = { m_renderSync->computeFinished(0) };
+            computeSubmitInfo.pSignalSemaphores = computeFinished;
+
+            if (vkQueueSubmit(m_device->computeQueue(), 1, &computeSubmitInfo, nullptr) != VK_SUCCESS) {
+                spdlog::critical("Window failed to submit compute command buffer.");
+                break;
+            }
+
+            // The render stage must be configured to wait on both presentation finished and compute stage completion.
+            drawSubmitInfo.waitSemaphoreCount = 2;
+            drawSubmitInfo.pWaitSemaphores = computeDoneAndImageAvailable;
+            drawSubmitInfo.pWaitDstStageMask = computeAndImageWaitStages;
+        } else {
+            // No compute stage configured, so we only block render start on image available.
+            drawSubmitInfo.waitSemaphoreCount = 1;
+            drawSubmitInfo.pWaitSemaphores = imageAvailable;
+            drawSubmitInfo.pWaitDstStageMask = imageWaitStages;
+        }
+
+        drawSubmitInfo.commandBufferCount = 1;
+        VkCommandBuffer drawCommandBuffers[] = { m_drawCommands->buffer(imageIndex) };
+        drawSubmitInfo.pCommandBuffers = drawCommandBuffers;
+        drawSubmitInfo.signalSemaphoreCount = 1;
         VkSemaphore renderFinished[] = { m_renderSync->renderFinished(0) };
-        VkSubmitInfo submitInfo = {};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = imageAvailable;
-        submitInfo.pWaitDstStageMask = waitStages;
-        submitInfo.commandBufferCount = 1;
-        VkCommandBuffer commandBuffers[] = { m_commandBuffers->buffer(imageIndex) };
-        submitInfo.pCommandBuffers = commandBuffers;
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = renderFinished;
+        drawSubmitInfo.pSignalSemaphores = renderFinished;
 
         // Reset the fence so that it can be signaled by the render completion again.
         m_renderSync->resetFrame(0);
@@ -151,8 +193,8 @@ void Window::runDirectRendering(std::shared_ptr<comp::Compositor> compositor) {
         // Submits the command buffer to the queue. Won't start the buffer until the image is marked as available by
         // the imageAvailable semaphore, and when the render is finished it will signal the renderFinished semaphore
         // on the device.
-        if (vkQueueSubmit(m_device->graphicsQueue(), 1, &submitInfo, m_renderSync->frameRendering(0)) != VK_SUCCESS) {
-            spdlog::error("Window failed to submit command buffer to graphics queue.");
+        if (vkQueueSubmit(m_device->graphicsQueue(), 1, &drawSubmitInfo, m_renderSync->frameRendering(0)) != VK_SUCCESS) {
+            spdlog::critical("Window failed to submit command buffer to graphics queue.");
             break;
         }
 
