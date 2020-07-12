@@ -478,8 +478,8 @@ bool Scinth::rebuildBuffers() {
 
         if (m_numberOfParameters) {
             vkCmdPushConstants(m_drawCommands->buffer(i), m_scinthDef->drawPipeline()->layout(),
-                               VK_SHADER_STAGE_FRAGMENT_BIT, 0, m_numberOfParameters * sizeof(float),
-                               m_parameterValues.get());
+                               VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
+                               m_numberOfParameters * sizeof(float), m_parameterValues.get());
         }
 
         vkCmdBindPipeline(m_drawCommands->buffer(i), VK_PIPELINE_BIND_POINT_GRAPHICS,

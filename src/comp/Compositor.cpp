@@ -368,7 +368,7 @@ bool Compositor::rebuildCommandBuffer() {
 
         m_computePrimary->associateSecondaryCommands(m_computeSecondary);
         spdlog::debug("rebuilding Compositor compute command buffer with {} secondary command buffers",
-                m_computeSecondary.size());
+                      m_computeSecondary.size());
 
         for (auto i = 0; i < m_canvas->numberOfImages(); ++i) {
             VkCommandBufferBeginInfo beginInfo = {};

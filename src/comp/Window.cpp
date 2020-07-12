@@ -151,8 +151,9 @@ void Window::runDirectRendering(std::shared_ptr<comp::Compositor> compositor) {
         if (m_computeCommands) {
             VkSubmitInfo computeSubmitInfo = {};
             computeSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
             // No need to wait on anything to start this compute shader, as we already blocked the CPU on this frame
-            // being available for re-render.
+            // image being available for re-render.
             computeSubmitInfo.waitSemaphoreCount = 0;
             computeSubmitInfo.pWaitSemaphores = nullptr;
             computeSubmitInfo.pWaitDstStageMask = nullptr;
@@ -193,7 +194,8 @@ void Window::runDirectRendering(std::shared_ptr<comp::Compositor> compositor) {
         // Submits the command buffer to the queue. Won't start the buffer until the image is marked as available by
         // the imageAvailable semaphore, and when the render is finished it will signal the renderFinished semaphore
         // on the device.
-        if (vkQueueSubmit(m_device->graphicsQueue(), 1, &drawSubmitInfo, m_renderSync->frameRendering(0)) != VK_SUCCESS) {
+        if (vkQueueSubmit(m_device->graphicsQueue(), 1, &drawSubmitInfo, m_renderSync->frameRendering(0))
+            != VK_SUCCESS) {
             spdlog::critical("Window failed to submit command buffer to graphics queue.");
             break;
         }

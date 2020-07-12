@@ -204,7 +204,8 @@ void Offscreen::destroy() {
     m_swapchain = nullptr;
     m_swapBlitCommands.clear();
 
-    m_commandBuffers.clear();
+    m_computeCommands.clear();
+    m_drawCommands.clear();
     m_pendingEncodes.clear();
     m_readbackImages.clear();
     m_encoders.clear();
@@ -233,7 +234,8 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
     size_t frameNumber = 0;
     size_t frameIndex = 0;
 
-    m_commandBuffers.resize(m_numberOfImages);
+    m_computeCommands.resize(m_numberOfImages);
+    m_drawCommands.resize(m_numberOfImages);
     for (auto i = 0; i < m_numberOfImages; ++i) {
         m_pendingSwapchainBlits.push_back(-1);
     }
@@ -306,10 +308,53 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
             break;
         }
 
-        m_commandBuffers[frameIndex] = compositor->drawCommands();
+        m_computeCommands[frameIndex] = compositor->computeCommands();
+        m_drawCommands[frameIndex] = compositor->drawCommands();
 
-        std::vector<VkCommandBuffer> commandBuffers;
-        commandBuffers.push_back(m_commandBuffers[frameIndex]->buffer(frameIndex));
+        VkSubmitInfo drawSubmitInfo = {};
+        drawSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        VkSemaphore computeFinished[] = { m_renderSync->computeFinished(frameIndex) };
+        VkSemaphore renderFinished[] = { m_renderSync->renderFinished(frameIndex) };
+        VkPipelineStageFlags computeWaitStage[] = { VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT };
+        VkPipelineStageFlags colorWaitStage[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+
+        if (m_computeCommands[frameIndex]) {
+            VkSubmitInfo computeSubmitInfo = {};
+            computeSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            computeSubmitInfo.waitSemaphoreCount = 1;
+            computeSubmitInfo.pWaitSemaphores = renderFinished;
+            computeSubmitInfo.pWaitDstStageMask = computeWaitStage;
+            computeSubmitInfo.commandBufferCount = 1;
+            VkCommandBuffer computeCommandBuffers[] = { m_computeCommands[frameIndex]->buffer(frameIndex) };
+            computeSubmitInfo.pCommandBuffers = computeCommandBuffers;
+            computeSubmitInfo.signalSemaphoreCount = 1;
+            computeSubmitInfo.pSignalSemaphores = computeFinished;
+
+            if (vkQueueSubmit(m_device->computeQueue(), 1, &computeSubmitInfo, nullptr) != VK_SUCCESS) {
+                spdlog::critical("Offscreen failed to submit compute command buffer.");
+                break;
+            }
+
+            drawSubmitInfo.waitSemaphoreCount = 1;
+            drawSubmitInfo.pWaitSemaphores = computeFinished;
+            drawSubmitInfo.pWaitDstStageMask = colorWaitStage;
+            drawSubmitInfo.signalSemaphoreCount = 1;
+            drawSubmitInfo.pSignalSemaphores = renderFinished;
+        } else {
+            /*
+            drawSubmitInfo.waitSemaphoreCount = 1;
+            drawSubmitInfo.pWaitSemaphores = renderFinished;
+            drawSubmitInfo.pWaitDstStageMask = colorWaitStage;
+            drawSubmitInfo.signalSemaphoreCount = 1;
+            drawSubmitInfo.pSignalSemaphores = renderFinished;
+            */
+            drawSubmitInfo.waitSemaphoreCount = 0;
+            drawSubmitInfo.signalSemaphoreCount = 0;
+        }
+
+        std::vector<VkCommandBuffer> drawCommandBuffers;
+        drawCommandBuffers.push_back(m_drawCommands[frameIndex]->buffer(frameIndex));
 
         // Build list of active encoder frames we need to fill, if any. If we are flushing this frame we will process
         // this list before starting another render. If pipelined, we add this to the list of destinations once we
@@ -330,20 +375,16 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
 
         // If there's a request for at least one encode add the command buffer to blit/copy to the readback buffer.
         if (encodeRequests.size()) {
-            commandBuffers.push_back(m_readbackCommands->buffer(frameIndex));
+            drawCommandBuffers.push_back(m_readbackCommands->buffer(frameIndex));
         }
         m_pendingEncodes[frameIndex] = encodeRequests;
 
-        VkSubmitInfo submitInfo = {};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.waitSemaphoreCount = 0;
-        submitInfo.commandBufferCount = commandBuffers.size();
-        submitInfo.pCommandBuffers = commandBuffers.data();
-        submitInfo.signalSemaphoreCount = 0;
-
         m_renderSync->resetFrame(frameIndex);
 
-        if (vkQueueSubmit(m_device->graphicsQueue(), 1, &submitInfo, m_renderSync->frameRendering(frameIndex))
+        drawSubmitInfo.commandBufferCount = drawCommandBuffers.size();
+        drawSubmitInfo.pCommandBuffers = drawCommandBuffers.data();
+
+        if (vkQueueSubmit(m_device->graphicsQueue(), 1, &drawSubmitInfo, m_renderSync->frameRendering(frameIndex))
             != VK_SUCCESS) {
             spdlog::error("Offscreen failed to submit command buffer to graphics queue.");
             break;
