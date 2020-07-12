@@ -32,7 +32,7 @@ public:
                 std::shared_ptr<vk::Shader> vertexShader, std::shared_ptr<vk::Shader> fragmentShader,
                 VkDescriptorSetLayout descriptorSetLayout, size_t pushConstantBlockSize,
                 const base::RenderOptions& renderOptions);
-    bool createCompute(std::shared_ptr<vk::Shader> computeshader, VkDescriptorSetLayout descriptorSetLayout, size_t
+    bool createCompute(std::shared_ptr<vk::Shader> computeShader, VkDescriptorSetLayout descriptorSetLayout, size_t
             pushConstantBlockSize);
     void destroy();
 
@@ -47,6 +47,7 @@ private:
 
     std::shared_ptr<vk::Shader> m_vertexShader;
     std::shared_ptr<vk::Shader> m_fragmentShader;
+    std::shared_ptr<vk::Shader> m_computeShader;
 };
 
 } // namespace vk

@@ -178,7 +178,8 @@ private:
     glm::vec3 m_clearColor;
 
     std::unique_ptr<ShaderCompiler> m_shaderCompiler;
-    std::shared_ptr<vk::CommandPool> m_commandPool;
+    std::shared_ptr<vk::CommandPool> m_computeCommandPool;
+    std::shared_ptr<vk::CommandPool> m_drawCommandPool;
     std::shared_ptr<StageManager> m_stageManager;
     std::shared_ptr<SamplerFactory> m_samplerFactory;
     std::shared_ptr<ImageMap> m_imageMap;

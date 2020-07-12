@@ -27,7 +27,8 @@ Compositor::Compositor(std::shared_ptr<vk::Device> device, std::shared_ptr<Canva
     m_canvas(canvas),
     m_clearColor(0.0f, 0.0f, 0.0f),
     m_shaderCompiler(new ShaderCompiler()),
-    m_commandPool(new vk::CommandPool(device)),
+    m_computeCommandPool(new vk::CommandPool(device)),
+    m_drawCommandPool(new vk::CommandPool(device)),
     m_stageManager(new StageManager(device)),
     m_samplerFactory(new SamplerFactory(device)),
     m_imageMap(new ImageMap()),
@@ -44,8 +45,12 @@ bool Compositor::create() {
         return false;
     }
 
-    if (!m_commandPool->create()) {
-        spdlog::error("Compositor failed creating command pool.");
+    if (!m_computeCommandPool->create()) {
+        spdlog::error("Compositor failed creating compute command pool.");
+    }
+
+    if (!m_drawCommandPool->create()) {
+        spdlog::error("Compositor failed creating draw command pool.");
         return false;
     }
 
@@ -87,7 +92,7 @@ bool Compositor::create() {
 
 bool Compositor::buildScinthDef(std::shared_ptr<const base::AbstractScinthDef> abstractScinthDef) {
     std::shared_ptr<ScinthDef> scinthDef(
-        new ScinthDef(m_device, m_canvas, m_commandPool, m_samplerFactory, abstractScinthDef));
+        new ScinthDef(m_device, m_canvas, m_computeCommandPool, m_drawCommandPool, m_samplerFactory, abstractScinthDef));
     if (!scinthDef->build(m_shaderCompiler.get())) {
         return false;
     }
@@ -235,7 +240,7 @@ std::shared_ptr<vk::CommandBuffer> Compositor::prepareFrame(uint32_t imageIndex,
         for (auto scinth : m_scinths) {
             if (scinth->running()) {
                 scinth->prepareFrame(imageIndex, frameTime);
-                std::shared_ptr<vk::CommandBuffer> commands = scinth->frameCommands();
+                std::shared_ptr<vk::CommandBuffer> commands = scinth->drawCommands();
                 commands->associateScinth(scinth);
                 m_secondaryCommands.emplace_back(commands);
             }
@@ -268,10 +273,11 @@ void Compositor::destroy() {
     m_secondaryCommands.clear();
     m_frameCommands.clear();
 
-    // We leave the commandPool undestroyed as there may be outstanding commandbuffers pipelined. The shared_ptr
-    // system should collect them before all is done. But we must remove our reference to it or we keep it alive
+    // We leave the command pools undestroyed as there may be outstanding commandbuffers pipelined. The shared_ptr
+    // system should collect them before all is done. But we must remove our references to them or we keep them alive
     // until our own destructor.
-    m_commandPool = nullptr;
+    m_computeCommandPool = nullptr;
+    m_drawCommandPool = nullptr;
 
     m_stageManager->destroy();
     m_imageMap = nullptr;
@@ -345,7 +351,7 @@ bool Compositor::addAudioIngress(std::shared_ptr<audio::Ingress> ingress, int im
 
 // Needs to be called only from the same thread that calls prepareFrame. Assumes that m_secondaryCommands is up-to-date.
 bool Compositor::rebuildCommandBuffer() {
-    m_primaryCommands.reset(new vk::CommandBuffer(m_device, m_commandPool));
+    m_primaryCommands.reset(new vk::CommandBuffer(m_device, m_drawCommandPool));
     if (!m_primaryCommands->create(m_canvas->numberOfImages(), true)) {
         spdlog::critical("failed creating primary command buffers for Compositor.");
         return false;

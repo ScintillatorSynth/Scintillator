@@ -60,7 +60,7 @@ bool Scinth::create() {
 void Scinth::destroy() {
     // Break circular references here so Scinth can be automatically reclaimed when referencing objects (namely the
     // command buffer) go out of scope and are themselves deleted.
-    m_commands.reset();
+    m_drawCommands.reset();
 }
 
 bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
@@ -154,6 +154,25 @@ bool Scinth::allocateDescriptors() {
         poolSizes.emplace_back(samplerPoolSize);
     }
 
+    auto computeBufferSize = m_scinthDef->abstract()->computeManifest().sizeInBytes();
+    if (computeBufferSize) {
+        VkDescriptorPoolSize bufferPoolSize = {};
+        bufferPoolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        bufferPoolSize.descriptorCount = numberOfImages;
+        poolSizes.emplace_back(bufferPoolSize);
+
+        for (auto i = 0; i < numberOfImages; ++i) {
+            std::shared_ptr<vk::DeviceBuffer> computeBuffer(new vk::DeviceBuffer(m_device, vk::Buffer::Kind::kStorage,
+                computeBufferSize));
+            if (!computeBuffer->create()) {
+                spdlog::error("Scinth {} failed to create compute storage buffer of size {}", m_nodeID,
+                        computeBufferSize);
+                return false;
+            }
+            m_computeBuffers.emplace_back(computeBuffer);
+        }
+    }
+
     VkDescriptorPoolCreateInfo poolInfo = {};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolInfo.poolSizeCount = poolSizes.size();
@@ -178,12 +197,12 @@ bool Scinth::allocateDescriptors() {
 
     for (auto i = 0; i < numberOfImages; ++i) {
         std::vector<VkWriteDescriptorSet> descriptorWrites;
-        VkDescriptorBufferInfo bufferInfo = {};
+        VkDescriptorBufferInfo uniformBufferInfo = {};
         int32_t binding = 0;
         if (uniformSize) {
-            bufferInfo.buffer = m_uniformBuffers[i]->buffer();
-            bufferInfo.offset = 0;
-            bufferInfo.range = m_uniformBuffers[i]->size();
+            uniformBufferInfo.buffer = m_uniformBuffers[i]->buffer();
+            uniformBufferInfo.offset = 0;
+            uniformBufferInfo.range = m_uniformBuffers[i]->size();
 
             VkWriteDescriptorSet bufferWrite = {};
             bufferWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -192,7 +211,7 @@ bool Scinth::allocateDescriptors() {
             bufferWrite.dstArrayElement = 0;
             bufferWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             bufferWrite.descriptorCount = 1;
-            bufferWrite.pBufferInfo = &bufferInfo;
+            bufferWrite.pBufferInfo = &uniformBufferInfo;
             bufferWrite.pImageInfo = nullptr;
             bufferWrite.pTexelBufferView = nullptr;
             descriptorWrites.emplace_back(bufferWrite);
@@ -270,6 +289,27 @@ bool Scinth::allocateDescriptors() {
             ++imageInfoIndex;
         }
 
+        VkDescriptorBufferInfo computeBufferInfo = {};
+        if (computeBufferSize) {
+            computeBufferInfo.buffer = m_computeBuffers[i]->buffer();
+            computeBufferInfo.offset = 0;
+            computeBufferInfo.range = m_computeBuffers[i]->size();
+
+            VkWriteDescriptorSet bufferWrite = {};
+            bufferWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            bufferWrite.dstSet = m_descriptorSets[i];
+            bufferWrite.dstBinding = binding;
+            bufferWrite.dstArrayElement = 0;
+            bufferWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            bufferWrite.descriptorCount = 1;
+            bufferWrite.pBufferInfo = &computeBufferInfo;
+            bufferWrite.pImageInfo = nullptr;
+            bufferWrite.pTexelBufferView = nullptr;
+            descriptorWrites.emplace_back(bufferWrite);
+
+            ++binding;
+        }
+
         vkUpdateDescriptorSets(m_device->get(), descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
     }
 
@@ -335,9 +375,28 @@ bool Scinth::updateDescriptors() {
 }
 
 bool Scinth::rebuildBuffers() {
-    m_commands.reset(new vk::CommandBuffer(m_device, m_scinthDef->commandPool()));
-    if (!m_commands->create(m_scinthDef->canvas()->numberOfImages(), false)) {
-        spdlog::error("failed creating command buffers for Scinth {}", m_nodeID);
+    if (m_scinthDef->abstract()->hasComputeStage()) {
+        m_computeCommands.reset(new vk::CommandBuffer(m_device, m_scinthDef->computeCommandPool()));
+        if (!m_computeCommands->create(m_scinthDef->canvas()->numberOfImages(), false)) {
+            spdlog::error("failed creating compute command buffers for Scinth {}", m_nodeID);
+            return false;
+        }
+
+        for (auto i = 0; i < m_scinthDef->canvas()->numberOfImages(); ++i) {
+            VkCommandBufferBeginInfo beginInfo = {};
+            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+            if (vkBeginCommandBuffer(m_computeCommands->buffer(i), &beginInfo) != VK_SUCCESS) {
+                spdlog::error("failed beginning compute command buffer {} for Scinth {}", i, m_nodeID);
+                return false;
+            }
+        }
+    }
+
+    m_drawCommands.reset(new vk::CommandBuffer(m_device, m_scinthDef->drawCommandPool()));
+    if (!m_drawCommands->create(m_scinthDef->canvas()->numberOfImages(), false)) {
+        spdlog::error("failed creating draw command buffers for Scinth {}", m_nodeID);
         return false;
     }
 
@@ -353,30 +412,30 @@ bool Scinth::rebuildBuffers() {
         inheritanceInfo.framebuffer = m_scinthDef->canvas()->framebuffer(i);
         beginInfo.pInheritanceInfo = &inheritanceInfo;
 
-        if (vkBeginCommandBuffer(m_commands->buffer(i), &beginInfo) != VK_SUCCESS) {
-            spdlog::error("failed beginning command buffer {} for Scinth {}", i, m_nodeID);
+        if (vkBeginCommandBuffer(m_drawCommands->buffer(i), &beginInfo) != VK_SUCCESS) {
+            spdlog::error("failed beginning draw command buffer {} for Scinth {}", i, m_nodeID);
             return false;
         }
 
         if (m_numberOfParameters) {
-            vkCmdPushConstants(m_commands->buffer(i), m_scinthDef->drawPipeline()->layout(), VK_SHADER_STAGE_FRAGMENT_BIT,
+            vkCmdPushConstants(m_drawCommands->buffer(i), m_scinthDef->drawPipeline()->layout(), VK_SHADER_STAGE_FRAGMENT_BIT,
                                0, m_numberOfParameters * sizeof(float), m_parameterValues.get());
         }
 
-        vkCmdBindPipeline(m_commands->buffer(i), VK_PIPELINE_BIND_POINT_GRAPHICS, m_scinthDef->drawPipeline()->get());
+        vkCmdBindPipeline(m_drawCommands->buffer(i), VK_PIPELINE_BIND_POINT_GRAPHICS, m_scinthDef->drawPipeline()->get());
         VkBuffer vertexBuffers[] = { m_scinthDef->vertexBuffer()->buffer() };
         VkDeviceSize offsets[] = { 0 };
-        vkCmdBindVertexBuffers(m_commands->buffer(i), 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(m_commands->buffer(i), m_scinthDef->indexBuffer()->buffer(), 0, VK_INDEX_TYPE_UINT16);
+        vkCmdBindVertexBuffers(m_drawCommands->buffer(i), 0, 1, vertexBuffers, offsets);
+        vkCmdBindIndexBuffer(m_drawCommands->buffer(i), m_scinthDef->indexBuffer()->buffer(), 0, VK_INDEX_TYPE_UINT16);
 
         if (m_descriptorSets.size()) {
-            vkCmdBindDescriptorSets(m_commands->buffer(i), VK_PIPELINE_BIND_POINT_GRAPHICS,
+            vkCmdBindDescriptorSets(m_drawCommands->buffer(i), VK_PIPELINE_BIND_POINT_GRAPHICS,
                                     m_scinthDef->drawPipeline()->layout(), 0, 1, &m_descriptorSets[i], 0, nullptr);
         }
 
-        vkCmdDrawIndexed(m_commands->buffer(i), m_scinthDef->abstract()->shape()->numberOfIndices(), 1, 0, 0, 0);
+        vkCmdDrawIndexed(m_drawCommands->buffer(i), m_scinthDef->abstract()->shape()->numberOfIndices(), 1, 0, 0, 0);
 
-        if (vkEndCommandBuffer(m_commands->buffer(i)) != VK_SUCCESS) {
+        if (vkEndCommandBuffer(m_drawCommands->buffer(i)) != VK_SUCCESS) {
             spdlog::error("failed ending command buffer {} for Scinth {}", i, m_nodeID);
             return false;
         }

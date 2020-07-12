@@ -15,7 +15,7 @@ class Device;
  */
 class Buffer {
 public:
-    enum Kind { kIndex, kUniform, kVertex, kStaging };
+    enum Kind { kIndex, kUniform, kVertex, kStaging, kStorage };
     Buffer(std::shared_ptr<Device> device, Kind kind, size_t size);
     virtual ~Buffer();
 
@@ -41,6 +41,7 @@ protected:
  * system architecture. But it is not likely to be slower.
  */
 class DeviceBuffer : public Buffer {
+public:
     DeviceBuffer(std::shared_ptr<Device> device, Buffer::Kind kind, size_t size);
     virtual ~DeviceBuffer();
 

@@ -33,7 +33,8 @@ class ShaderCompiler;
 class ScinthDef {
 public:
     ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<Canvas> canvas,
-              std::shared_ptr<vk::CommandPool> commandPool, std::shared_ptr<SamplerFactory> samplerFactory,
+              std::shared_ptr<vk::CommandPool> computeCommandPool,
+              std::shared_ptr<vk::CommandPool> drawCommandPool, std::shared_ptr<SamplerFactory> samplerFactory,
               std::shared_ptr<const base::AbstractScinthDef> abstractScinthDef);
     ~ScinthDef();
 
@@ -46,7 +47,8 @@ public:
     bool build(ShaderCompiler* compiler);
 
     std::shared_ptr<Canvas> canvas() const { return m_canvas; }
-    std::shared_ptr<vk::CommandPool> commandPool() const { return m_commandPool; }
+    std::shared_ptr<vk::CommandPool> computeCommandPool() const { return m_computeCommandPool; }
+    std::shared_ptr<vk::CommandPool> drawCommandPool() const { return m_drawCommandPool; }
     std::shared_ptr<const base::AbstractScinthDef> abstract() const { return m_abstract; }
     std::shared_ptr<vk::HostBuffer> vertexBuffer() const { return m_vertexBuffer; }
     std::shared_ptr<vk::HostBuffer> indexBuffer() const { return m_indexBuffer; }
@@ -64,7 +66,8 @@ private:
 
     std::shared_ptr<vk::Device> m_device;
     std::shared_ptr<Canvas> m_canvas;
-    std::shared_ptr<vk::CommandPool> m_commandPool;
+    std::shared_ptr<vk::CommandPool> m_computeCommandPool;
+    std::shared_ptr<vk::CommandPool> m_drawCommandPool;
     std::shared_ptr<SamplerFactory> m_samplerFactory;
     std::shared_ptr<const base::AbstractScinthDef> m_abstract;
     std::shared_ptr<vk::HostBuffer> m_vertexBuffer;

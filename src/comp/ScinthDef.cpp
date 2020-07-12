@@ -21,11 +21,13 @@
 namespace scin { namespace comp {
 
 ScinthDef::ScinthDef(std::shared_ptr<vk::Device> device, std::shared_ptr<Canvas> canvas,
-                     std::shared_ptr<vk::CommandPool> commandPool, std::shared_ptr<SamplerFactory> samplerFactory,
+                     std::shared_ptr<vk::CommandPool> computeCommandPool,
+                     std::shared_ptr<vk::CommandPool> drawCommandPool, std::shared_ptr<SamplerFactory> samplerFactory,
                      std::shared_ptr<const base::AbstractScinthDef> abstractScinthDef):
     m_device(device),
     m_canvas(canvas),
-    m_commandPool(commandPool),
+    m_computeCommandPool(computeCommandPool),
+    m_drawCommandPool(drawCommandPool),
     m_samplerFactory(samplerFactory),
     m_abstract(abstractScinthDef),
     m_descriptorSetLayout(VK_NULL_HANDLE) {}
@@ -47,15 +49,6 @@ ScinthDef::~ScinthDef() {
 }
 
 bool ScinthDef::build(ShaderCompiler* compiler) {
-    if (m_abstract->hasComputeStage()) {
-        m_computeShader = compiler->compile(m_device, m_abstract->computeShader(),
-                m_abstract->prefix() + "_computeShader", "main", vk::Shader::kCompute);
-        if (!m_computeShader) {
-            spdlog::error("error compiling compute shader for ScinthDef {}.", m_abstract->name());
-            return false;
-        }
-    }
-
     // Build the vertex data. Because Intrinsics can add data payloads to the vertex data, each ScinthDef shares a
     // vertex buffer and index buffer across all Scinth instances, allowing for the potential unique combination
     // between Shape data and payloads.
@@ -92,8 +85,22 @@ bool ScinthDef::build(ShaderCompiler* compiler) {
     if (!m_drawPipeline->create(m_abstract->vertexManifest(), m_abstract->shape(), m_canvas.get(), m_vertexShader,
                             m_fragmentShader, m_descriptorSetLayout, m_abstract->parameters().size() * sizeof(float),
                             m_abstract->renderOptions())) {
-        spdlog::error("error creating pipeline for ScinthDef {}", m_abstract->name());
+        spdlog::error("Error creating draw pipeline for ScinthDef {}", m_abstract->name());
         return false;
+    }
+
+    if (m_abstract->hasComputeStage()) {
+        m_computeShader = compiler->compile(m_device, m_abstract->computeShader(),
+                m_abstract->prefix() + "_computeShader", "main", vk::Shader::kCompute);
+        if (!m_computeShader) {
+            spdlog::error("error compiling compute shader for ScinthDef {}.", m_abstract->name());
+            return false;
+        }
+        m_computePipeline.reset(new Pipeline(m_device));
+        if (!m_computePipeline->createCompute(m_computeShader, m_descriptorSetLayout, m_abstract->parameters().size())) {
+            spdlog::error("Error creating compute pipeline for ScinthDef {}", m_abstract->name());
+            return false;
+        }
     }
 
     return true;
@@ -138,7 +145,7 @@ bool ScinthDef::buildDescriptorLayout() {
         uniformBinding.binding = bindings.size();
         uniformBinding.descriptorCount = 1;
         uniformBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uniformBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        uniformBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         bindings.emplace_back(uniformBinding);
     }
 
@@ -148,8 +155,17 @@ bool ScinthDef::buildDescriptorLayout() {
         imageBinding.binding = bindings.size();
         imageBinding.descriptorCount = 1;
         imageBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        imageBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        imageBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         bindings.emplace_back(imageBinding);
+    }
+
+    if (m_abstract->computeManifest().sizeInBytes()) {
+        VkDescriptorSetLayoutBinding bufferBinding = {};
+        bufferBinding.binding = bindings.size();
+        bufferBinding.descriptorCount = 1;
+        bufferBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        bufferBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        bindings.emplace_back(bufferBinding);
     }
 
     if (bindings.size()) {

@@ -45,6 +45,10 @@ bool Buffer::createVulkanBuffer(bool hostAccessRequired) {
         bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
         break;
 
+    case kStorage:
+        bufferInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+        break;
+
     default:
         spdlog::error("buffer created with unsupported buffer type.");
         return false;
