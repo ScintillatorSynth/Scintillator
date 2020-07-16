@@ -2,9 +2,11 @@
 #define SRC_INFRA_CRASH_REPORTER_HPP_
 
 #include <memory>
+#include <string>
 
 namespace crashpad {
 class CrashpadClient;
+class CrashReportDatabase;
 }
 
 namespace scin { namespace infra {
@@ -15,13 +17,21 @@ namespace scin { namespace infra {
  */
 class CrashReporter {
 public:
-    CrashReporter();
+    CrashReporter(const std::string& databasePath);
     ~CrashReporter();
 
+    bool openDatabase();
+    bool uploadsEnabled(bool* enabled);
+    bool setUploadsEnabled(bool enabled);
+
     bool startCrashHandler();
-    void stopCrashHandler();
+
+    void dumpWithoutCrash();
 
 private:
+    std::string m_databasePath;
+
+    std::unique_ptr<crashpad::CrashReportDatabase> m_database;
     std::unique_ptr<crashpad::CrashpadClient> m_client;
 };
 

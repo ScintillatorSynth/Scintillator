@@ -8,6 +8,7 @@
 #include "comp/Offscreen.hpp"
 #include "comp/Pipeline.hpp"
 #include "comp/Window.hpp"
+#include "infra/CrashReporter.hpp"
 #include "infra/Logger.hpp"
 #include "infra/Version.hpp"
 #include "osc/Dispatcher.hpp"
@@ -91,6 +92,17 @@ int main(int argc, char* argv[]) {
         fmt::print(version);
         return EXIT_SUCCESS;
     }
+
+    std::shared_ptr<scin::infra::CrashReporter> crashReporter(new scin::infra::CrashReporter(
+                "/home/luken/src/Scintillator/build/crash_database"));
+    if (!crashReporter->openDatabase()) {
+        spdlog::warn("Failed to open crash database, continuing without crash telemetry.");
+    } else {
+        if (!crashReporter->startCrashHandler()) {
+            spdlog::warn("Failed to start crash handler, continuing without crash telemetry.");
+        }
+    }
+
     if (!fs::exists(FLAGS_quarkDir)) {
         fmt::print("invalid or nonexistent path {} supplied for --quarkDir, terminating.", FLAGS_quarkDir);
         return EXIT_FAILURE;
@@ -270,7 +282,8 @@ int main(int argc, char* argv[]) {
     } else {
         quitHandler = [offscreen] { offscreen->stop(); };
     }
-    scin::osc::Dispatcher dispatcher(logger, async, archetypes, compositor, offscreen, frameTimer, quitHandler);
+    scin::osc::Dispatcher dispatcher(logger, async, archetypes, compositor, offscreen, frameTimer, quitHandler,
+            crashReporter);
     if (!dispatcher.create(FLAGS_portNumber, FLAGS_dumpOSC)) {
         spdlog::error("Failed creating OSC command dispatcher.");
         return EXIT_FAILURE;

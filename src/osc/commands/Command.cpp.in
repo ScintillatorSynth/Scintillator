@@ -37,6 +37,7 @@ nrt_advanceFrame,   scin::osc::commands::Command::Number::kNRTAdvanceFrame
 echo,               scin::osc::commands::Command::Number::kEcho
 logAppend,          scin::osc::commands::Command::Number::kLogAppend
 sleepFor,           scin::osc::commands::Command::Number::kSleepFor
+miniDump,           scin::osc::commands::Command::Number::kMiniDump
 %%
 
 } // namespace

@@ -8,7 +8,9 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
     ${SCIN_EXT_INSTALL_DIR}/include
-    ${SCIN_EXT_INSTALL_DIR}/include/crashpad
+    # Crashpad
+    ${SCIN_EXT_INSTALL_DIR}/crashpad
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/third_party/mini_chromium/mini_chromium
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
@@ -201,6 +203,8 @@ set(scintillator_synth_files
     osc/commands/LogAppend.hpp
     osc/commands/LogLevel.cpp
     osc/commands/LogLevel.hpp
+    osc/commands/MiniDump.cpp
+    osc/commands/MiniDump.hpp
     osc/commands/NodeFree.cpp
     osc/commands/NodeFree.hpp
     osc/commands/NodeRun.cpp
@@ -284,12 +288,6 @@ find_library(SHADERC_LIBRARY
     NO_DEFAULT_PATH
 )
 
-find_library(CRASHPAD_LIBRARY
-    NAMES client
-    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
-    NO_DEFAULT_PATH
-)
-
 if (WIN32)
     find_library(AVCODEC_LIBRARY
         NAMES avcodec
@@ -350,7 +348,6 @@ target_link_libraries(scinsynth
     ${AVCODEC_LIBRARY}
     ${AVFORMAT_LIBRARY}
     ${AVUTIL_LIBRARY}
-    ${CRASHPAD_LIBRARY}
     ${SHADERC_LIBRARY}
     ${SWSCALE_LIBRARY}
     ${SCIN_EXT_INSTALL_DIR}/lib/liblo.${SCIN_LIBLO_LIBRARY_SUFFIX}
@@ -361,6 +358,31 @@ target_link_libraries(scinsynth
     portaudio_static
     scintillator_base
     spdlog
+
+    # TODO: use globbing to just pick up all the .a files and then include them twice.
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/compat/libcompat.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libtest_support.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
+
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/compat/libcompat.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libtest_support.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
 )
 
 target_include_directories(scinsynth PRIVATE

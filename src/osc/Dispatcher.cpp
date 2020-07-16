@@ -6,6 +6,7 @@
 #include "comp/Compositor.hpp"
 #include "comp/FrameTimer.hpp"
 #include "comp/Offscreen.hpp"
+#include "infra/CrashReporter.hpp"
 #include "infra/Logger.hpp"
 #include "infra/Version.hpp"
 #include "osc/Address.hpp"
@@ -21,6 +22,7 @@
 #include "osc/commands/ImageBufferQuery.hpp"
 #include "osc/commands/LogAppend.hpp"
 #include "osc/commands/LogLevel.hpp"
+#include "osc/commands/MiniDump.hpp"
 #include "osc/commands/NodeFree.hpp"
 #include "osc/commands/NodeRun.hpp"
 #include "osc/commands/NodeSet.hpp"
@@ -43,7 +45,7 @@ namespace scin { namespace osc {
 Dispatcher::Dispatcher(std::shared_ptr<infra::Logger> logger, std::shared_ptr<comp::Async> async,
                        std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<comp::Compositor> compositor,
                        std::shared_ptr<comp::Offscreen> offscreen, std::shared_ptr<const comp::FrameTimer> frameTimer,
-                       std::function<void()> quitHandler):
+                       std::function<void()> quitHandler, std::shared_ptr<infra::CrashReporter> crashReporter):
     m_logger(logger),
     m_async(async),
     m_archetypes(archetypes),
@@ -51,6 +53,7 @@ Dispatcher::Dispatcher(std::shared_ptr<infra::Logger> logger, std::shared_ptr<co
     m_offscreen(offscreen),
     m_frameTimer(frameTimer),
     m_quitHandler(quitHandler),
+    m_crashReporter(crashReporter),
     m_tcpThread(nullptr),
     m_tcpServer(nullptr),
     m_udpThread(nullptr),
@@ -104,6 +107,7 @@ bool Dispatcher::create(const std::string& bindPort, bool dumpOSC) {
     m_commands[commands::Command::kEcho].reset(new commands::Echo(this));
     m_commands[commands::Command::kLogAppend].reset(new commands::LogAppend(this));
     m_commands[commands::Command::kSleepFor].reset(new commands::SleepFor(this));
+    m_commands[commands::Command::kMiniDump].reset(new commands::MiniDump(this));
 
     return true;
 }

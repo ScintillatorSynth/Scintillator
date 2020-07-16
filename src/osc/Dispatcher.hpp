@@ -24,6 +24,7 @@ class Offscreen;
 }
 
 namespace infra {
+class CrashReporter;
 class Logger;
 }
 
@@ -46,11 +47,12 @@ public:
      * \param offscreen The offscreen renderer, if running in non realtime, for encode requests.
      * \param quitHandler Function to call if we receive an OSC /scin_quit command. When called, it should safely
      *        terminate the scinsynth program.
+     * \param crashReporter The crash reporting object, for requesting minidumps.
      */
     Dispatcher(std::shared_ptr<infra::Logger> logger, std::shared_ptr<comp::Async> async,
                std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<comp::Compositor> compositor,
                std::shared_ptr<comp::Offscreen> offscreen, std::shared_ptr<const comp::FrameTimer> frameTimer,
-               std::function<void()> quitHandler);
+               std::function<void()> quitHandler, std::shared_ptr<infra::CrashReporter> crashReporter);
     ~Dispatcher();
 
     /*! Bind the TCP and UDP ports and set up the data structues to dispatch OSC commands for handling.
@@ -113,6 +115,7 @@ public:
     std::shared_ptr<comp::Compositor> compositor() { return m_compositor; }
     std::shared_ptr<comp::Offscreen> offscreen() { return m_offscreen; }
     std::shared_ptr<const comp::FrameTimer> frameTimer() { return m_frameTimer; }
+    std::shared_ptr<infra::CrashReporter> crashReporter() { return m_crashReporter; }
     void callQuitHandler(std::shared_ptr<Address> quitOrigin);
     void setDumpOSC(bool enable) { m_dumpOSC = enable; }
     void processMessageFrom(lo_address address, std::shared_ptr<BlobMessage> onCompletion);
@@ -130,6 +133,7 @@ private:
     std::shared_ptr<comp::Offscreen> m_offscreen;
     std::shared_ptr<const comp::FrameTimer> m_frameTimer;
     std::function<void()> m_quitHandler;
+    std::shared_ptr<infra::CrashReporter> m_crashReporter;
     std::array<std::unique_ptr<commands::Command>, commands::Command::Number::kCommandCount> m_commands;
 
     lo_server_thread m_tcpThread;
