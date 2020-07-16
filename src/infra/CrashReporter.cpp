@@ -18,7 +18,7 @@ void logReport(const crashpad::CrashReportDatabase::Report& report) {
     tm* createTime = localtime(&report.creation_time);
     std::array<char, 128> timeBuf;
     strftime(timeBuf.data(), sizeof(timeBuf), "%a %d %b %H:%M:%S %Y", createTime);
-    spdlog::info("    uuid: {}, creation time: {}, uploaded: {}", report.uuid.ToString(), timeBuf.data(),
+    spdlog::info("    id: {}, on: {}, uploaded: {}", report.uuid.ToString(), timeBuf.data(),
             report.uploaded ? "yes" : "no");
 }
 } // namespace
@@ -30,71 +30,6 @@ CrashReporter::CrashReporter(const std::string& databasePath): m_databasePath(da
 }
 
 CrashReporter::~CrashReporter() {
-}
-
-bool CrashReporter::openDatabase() {
-    m_database = crashpad::CrashReportDatabase::Initialize(base::FilePath(m_databasePath));
-    if (!m_database) {
-        spdlog::error("CrashReporter failed to open or create crash database.");
-        return false;
-    }
-
-    std::vector<crashpad::CrashReportDatabase::Report> pendingReports;
-    if (m_database->GetPendingReports(&pendingReports) != crashpad::CrashReportDatabase::kNoError) {
-        spdlog::error("Failed to enumerate pending reports in the crash database.");
-        return false;
-    }
-    std::vector<crashpad::CrashReportDatabase::Report> completedReports;
-    if (m_database->GetCompletedReports(&completedReports) != crashpad::CrashReportDatabase::kNoError) {
-        spdlog::error("Failed to enumerate complete reports in the crash database.");
-        return false;
-    }
-
-    spdlog::info("Opened crash report database at {} with {} reports.", m_databasePath);
-    for (auto report : pendingReports) {
-        logReport(report);
-    }
-    auto notUploaded = pendingReports.size();
-    for (auto report : completedReports) {
-        logReport(report);
-        if (!report.uploaded) {
-            ++notUploaded;
-        }
-    }
-
-    bool enabled = false;
-    if (!uploadsEnabled(&enabled)) {
-        spdlog::error("Failed to retrieve uploads enabled from crash report database.");
-        return false;
-    }
-
-    if (enabled) {
-        spdlog::info("Automatic crash report uploads enabled.");
-    } else if (notUploaded) {
-        spdlog::warn("There are {} crash reports available for upload. Please consider uploading crash reports.", notUploaded);
-    }
-
-    return true;
-}
-
-bool CrashReporter::uploadsEnabled(bool* enabled) {
-    crashpad::Settings* settings = m_database->GetSettings();
-    if (settings) {
-        return settings->GetUploadsEnabled(enabled);
-    } else {
-        spdlog::error("failed to retrieve settings object from crash database.");
-    }
-    return false;
-}
-
-bool CrashReporter::setUploadsEnabled(bool enabled) {
-    crashpad::Settings* settings = m_database->GetSettings();
-    if (settings) {
-        return settings->SetUploadsEnabled(enabled);
-    } else {
-        spdlog::error("failed to retrieve settings object from crash database.");
-    }
-    return false;
 }
 
 bool CrashReporter::startCrashHandler() {
@@ -110,11 +45,174 @@ bool CrashReporter::startCrashHandler() {
             std::vector<base::FilePath>());
 }
 
+
+bool CrashReporter::openDatabase() {
+    // Early-out for database already open.
+    if (m_database) {
+        return true;
+    }
+
+    m_database = crashpad::CrashReportDatabase::Initialize(base::FilePath(m_databasePath));
+    if (!m_database) {
+        spdlog::error("CrashReporter failed to open or create crash database.");
+        return false;
+    }
+
+    return true;
+}
+
+void CrashReporter::closeDatabase() {
+    m_database = nullptr;
+}
+
+bool CrashReporter::uploadsEnabled(bool* enabled) {
+    if (!openDatabase()) return false;
+
+    crashpad::Settings* settings = m_database->GetSettings();
+    if (settings) {
+        return settings->GetUploadsEnabled(enabled);
+    } else {
+        spdlog::error("failed to retrieve settings object from crash database.");
+    }
+    return false;
+}
+
+bool CrashReporter::setUploadsEnabled(bool enabled) {
+    if (!openDatabase()) return false;
+
+    crashpad::Settings* settings = m_database->GetSettings();
+    if (settings) {
+        return settings->SetUploadsEnabled(enabled);
+    } else {
+        spdlog::error("failed to retrieve settings object from crash database.");
+    }
+    return false;
+}
+
 void CrashReporter::dumpWithoutCrash() {
     spdlog::info("generating minidump without crash.");
     crashpad::NativeCPUContext context;
     crashpad::CaptureContext(&context);
     m_client->DumpWithoutCrash(&context);
+}
+
+int CrashReporter::logCrashReports() {
+    if (!openDatabase()) return -1;
+
+    std::vector<crashpad::CrashReportDatabase::Report> pendingReports;
+    if (m_database->GetPendingReports(&pendingReports) != crashpad::CrashReportDatabase::kNoError) {
+        spdlog::error("Failed to enumerate pending reports in the crash database.");
+        return -1;
+    }
+    std::vector<crashpad::CrashReportDatabase::Report> completedReports;
+    if (m_database->GetCompletedReports(&completedReports) != crashpad::CrashReportDatabase::kNoError) {
+        spdlog::error("Failed to enumerate complete reports in the crash database.");
+        return -1;
+    }
+
+    auto notUploaded = pendingReports.size();
+    if (pendingReports.size() + completedReports.size()) {
+        spdlog::info("Crash report database contains {} reports:", pendingReports.size() + completedReports.size());
+        for (auto report : pendingReports) {
+            logReport(report);
+        }
+        for (auto report : completedReports) {
+            logReport(report);
+            if (!report.uploaded) {
+                ++notUploaded;
+            }
+        }
+    } else {
+        spdlog::info("Crash reports database contains no reports.");
+    }
+    return notUploaded;
+}
+
+bool CrashReporter::uploadCrashReport(const std::string& reportUUID) {
+    if (!openDatabase()) return false;
+
+    crashpad::UUID uuid;
+    if (!uuid.InitializeFromString(reportUUID)) {
+        spdlog::error("Failed to parse crash report UUID string {}.", reportUUID);
+        return false;
+    }
+
+    std::vector<crashpad::CrashReportDatabase::Report> pendingReports;
+    if (m_database->GetPendingReports(&pendingReports) != crashpad::CrashReportDatabase::kNoError) {
+        spdlog::error("Failed to enumerate pending reports in the crash database.");
+        return false;
+    }
+
+    for (auto report : pendingReports) {
+        if (uuid == report.uuid) {
+            spdlog::info("Requesting upload for crash report UUID {}.", reportUUID);
+            if (m_database->RequestUpload(uuid) != crashpad::CrashReportDatabase::kNoError) {
+                spdlog::error("Failed requesting upload for crash report UUID {}.", reportUUID);
+                return false;
+            }
+            return true;
+        }
+    }
+
+    std::vector<crashpad::CrashReportDatabase::Report> completedReports;
+    if (m_database->GetCompletedReports(&completedReports) != crashpad::CrashReportDatabase::kNoError) {
+        spdlog::error("Failed to enumerate complete reports in the crash database.");
+        return false;
+    }
+
+    for (auto report : completedReports) {
+        if (uuid == report.uuid) {
+            spdlog::info("Requesting upload for crash report UUID {}.", reportUUID);
+            if (m_database->RequestUpload(uuid) != crashpad::CrashReportDatabase::kNoError) {
+                spdlog::error("Failed requesting upload for crash report UUID {}.", reportUUID);
+                return false;
+            }
+            return true;
+        }
+    }
+
+    spdlog::error("Crash report UUID {} not found.", reportUUID);
+    return false;
+}
+
+bool CrashReporter::uploadAllCrashReports() {
+    if (!openDatabase()) return false;
+
+    std::vector<crashpad::CrashReportDatabase::Report> pendingReports;
+    if (m_database->GetPendingReports(&pendingReports) != crashpad::CrashReportDatabase::kNoError) {
+        spdlog::error("Failed to enumerate pending reports in the crash database.");
+        return false;
+    }
+
+    for (auto report : pendingReports) {
+        if (!report.uploaded) {
+            std::string uuid = report.uuid.ToString();
+            spdlog::info("Requesting upload for crash report UUID {}.", uuid);
+            if (m_database->RequestUpload(report.uuid) != crashpad::CrashReportDatabase::kNoError) {
+                spdlog::error("Failed requesting upload for crash report UUID {}.", uuid);
+                return false;
+            }
+        }
+    }
+
+    std::vector<crashpad::CrashReportDatabase::Report> completedReports;
+    if (m_database->GetCompletedReports(&completedReports) != crashpad::CrashReportDatabase::kNoError) {
+        spdlog::error("Failed to enumerate complete reports in the crash database.");
+        return false;
+    }
+
+    for (auto report : completedReports) {
+        if (!report.uploaded) {
+            std::string uuid = report.uuid.ToString();
+            spdlog::info("Requesting upload for crash report UUID {}.", uuid);
+            if (m_database->RequestUpload(report.uuid) != crashpad::CrashReportDatabase::kNoError) {
+                spdlog::error("Failed requesting upload for crash report UUID {}.", uuid);
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 } // namespace infra

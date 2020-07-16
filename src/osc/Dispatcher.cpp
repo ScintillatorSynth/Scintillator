@@ -12,6 +12,7 @@
 #include "osc/Address.hpp"
 #include "osc/BlobMessage.hpp"
 #include "osc/commands/AdvanceFrame.hpp"
+#include "osc/commands/CreateCrashReport.hpp"
 #include "osc/commands/DefFree.hpp"
 #include "osc/commands/DefLoad.hpp"
 #include "osc/commands/DefLoadDir.hpp"
@@ -21,8 +22,8 @@
 #include "osc/commands/ImageBufferAllocRead.hpp"
 #include "osc/commands/ImageBufferQuery.hpp"
 #include "osc/commands/LogAppend.hpp"
+#include "osc/commands/LogCrashReports.hpp"
 #include "osc/commands/LogLevel.hpp"
-#include "osc/commands/MiniDump.hpp"
 #include "osc/commands/NodeFree.hpp"
 #include "osc/commands/NodeRun.hpp"
 #include "osc/commands/NodeSet.hpp"
@@ -34,9 +35,10 @@
 #include "osc/commands/SleepFor.hpp"
 #include "osc/commands/Status.hpp"
 #include "osc/commands/Sync.hpp"
+#include "osc/commands/UploadCrashReport.hpp"
 
-#include "fmt/core.h"
-#include "spdlog/spdlog.h"
+#include <fmt/core.h>
+#include <spdlog/spdlog.h>
 
 #include <cstring>
 
@@ -107,7 +109,9 @@ bool Dispatcher::create(const std::string& bindPort, bool dumpOSC) {
     m_commands[commands::Command::kEcho].reset(new commands::Echo(this));
     m_commands[commands::Command::kLogAppend].reset(new commands::LogAppend(this));
     m_commands[commands::Command::kSleepFor].reset(new commands::SleepFor(this));
-    m_commands[commands::Command::kMiniDump].reset(new commands::MiniDump(this));
+    m_commands[commands::Command::kCreateCrashReport].reset(new commands::CreateCrashReport(this));
+    m_commands[commands::Command::kLogCrashReports].reset(new commands::LogCrashReports(this));
+    m_commands[commands::Command::kUploadCrashReport].reset(new commands::UploadCrashReport(this));
 
     return true;
 }

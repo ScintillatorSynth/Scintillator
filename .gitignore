@@ -11,3 +11,5 @@ bin
 # ignore vim/gvim swap cruft
 .*.swp
 
+# crash report database
+.crash_reports

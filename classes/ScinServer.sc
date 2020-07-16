@@ -32,6 +32,7 @@ ScinServerOptions {
 	var <>deviceName;
 	var <>vulkanValidation;
 	var <>audioInputChannels;
+	var <>autoUploadCrashReports;
 
 	// Can install a function to call if server exits with a non-zero error code.
 	var <>onServerError;
@@ -52,7 +53,8 @@ ScinServerOptions {
 				swiftshader: false,
 				deviceName: nil,
 				vulkanValidation: false,
-				audioInputChannels: 0
+				audioInputChannels: 0,
+				autoUploadCrashReports: false
 			)
 		);
 	}
@@ -111,6 +113,9 @@ ScinServerOptions {
 		if (audioInputChannels != defaultValues[\audioInputChannels], {
 			o = o + "--audioInputChannels=" ++ audioInputChannels;
 		});
+		if (autoUploadCrashReports != defaultValues[\autoUploadCrashReports], {
+			o = o + "--autoUploadCrashReports";
+		});
 		^o;
 	}
 }
@@ -123,6 +128,7 @@ ScinServer {
 	var scinPid;
 	var addr;
 	var statusPoller;
+	var currentLogLevel;
 
 	// For local scinsynth instances. Remote not yet supported.
 	*new { |options|
@@ -192,6 +198,7 @@ ScinServer {
 			});
 		});
 
+		currentLogLevel = options.logLevel;
 	}
 
 	quit {
@@ -210,6 +217,7 @@ ScinServer {
 	// Integer from 0 to 6.
 	logLevel_ { |level|
 		if (level >= 0 and: { level <= 6 }, {
+			currentLogLevel = level;
 			this.sendMsg('/scin_logLevel', level);
 		});
 		^this;
@@ -311,6 +319,37 @@ ScinServer {
 		}, onComplete);
 		condition.wait;
 		^result;
+	}
+
+	postCrashReports {
+		// Temporarily lower the log level to see the reports, an inelegant solution
+		// that might reveal other log spam but we want folks to be able to see
+		// the report UUIDs and upload crash reports without too much fuss.
+		this.prTempLowerLogLevel(2, '/scin_logCrashReports');
+		this.sendMsg('/scin_logCrashReports');
+	}
+
+	uploadCrashReport { |id|
+		this.prTempLowerLogLevel(2, '/scin_uploadCrashReport');
+		this.sendMsg('/scin_uploadCrashReport', id);
+	}
+
+	uploadAllCrashReports {
+		this.prTempLowerLogLevel(2, '/scin_uploadCrashReport');
+		this.sendMsg('/scin_uploadCrashReport', 'all');
+	}
+
+	prTempLowerLogLevel { |newLevel, doneToken|
+		if (currentLogLevel > newLevel, {
+			var oldLevel = currentLogLevel;
+			var complete = OSCFunc.new({ |msg|
+				if (msg[1] == doneToken, {
+					complete.free;
+					this.logLevel = oldLevel;
+				});
+			}, '/scin_done');
+			this.logLevel = newLevel;
+		});
 	}
 
 	serverRunning { ^statusPoller.serverRunning; }

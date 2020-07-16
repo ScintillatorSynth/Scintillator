@@ -20,10 +20,10 @@
 #include "vulkan/Shader.hpp"
 #include "vulkan/Vulkan.hpp"
 
-#include "fmt/core.h"
-#include "gflags/gflags.h"
-#include "glm/glm.hpp"
-#include "spdlog/spdlog.h"
+#include <fmt/core.h>
+#include <gflags/gflags.h>
+#include <glm/glm.hpp>
+#include <spdlog/spdlog.h>
 
 #include <chrono>
 #include <memory>
@@ -70,6 +70,9 @@ DEFINE_bool(swiftshader, false,
 DEFINE_int32(audioInputChannels, 0, "If non-zero, defines the number of input channels to create via portaudio.");
 DEFINE_int32(audioOutputChannels, 0, "If non-zero, defines the number of output channels to create via portaudio.");
 
+DEFINE_bool(autoUploadCrashReports, false, "If true, will automatically upload crash reports to the crash reporting "
+        "collection server. Beware that crash reports may contain personal information.");
+
 #if (__APPLE__)
 void envCheckAndUnset(const char* name) {
     const char* value = nullptr;
@@ -93,19 +96,55 @@ int main(int argc, char* argv[]) {
         return EXIT_SUCCESS;
     }
 
-    std::shared_ptr<scin::infra::CrashReporter> crashReporter(new scin::infra::CrashReporter(
-                "/home/luken/src/Scintillator/build/crash_database"));
-    if (!crashReporter->openDatabase()) {
-        spdlog::warn("Failed to open crash database, continuing without crash telemetry.");
-    } else {
-        if (!crashReporter->startCrashHandler()) {
-            spdlog::warn("Failed to start crash handler, continuing without crash telemetry.");
-        }
-    }
-
     if (!fs::exists(FLAGS_quarkDir)) {
         fmt::print("invalid or nonexistent path {} supplied for --quarkDir, terminating.", FLAGS_quarkDir);
         return EXIT_FAILURE;
+    }
+
+    fs::path quarkPath = fs::canonical(FLAGS_quarkDir);
+    if (!fs::exists(quarkPath / "Scintillator.quark")) {
+        spdlog::error("Path {} doesn't look like Scintillator Quark root directory, terminating.", quarkPath.string());
+        return EXIT_FAILURE;
+    }
+
+    fs::path crashReportDatabase = quarkPath / ".crash_reports";
+    std::shared_ptr<scin::infra::CrashReporter> crashReporter(new scin::infra::CrashReporter(
+                crashReportDatabase.string()));
+    if (!crashReporter->openDatabase()) {
+        spdlog::warn("Failed to open crash database, continuing without crash telemetry.");
+    } else {
+        spdlog::info("Opened crash report database at {}.", crashReportDatabase.string());
+        if (!crashReporter->startCrashHandler()) {
+            spdlog::warn("Failed to start crash handler, continuing without crash telemetry.");
+        } else {
+            auto notUploaded = crashReporter->logCrashReports();
+            if (notUploaded < 0) {
+                spdlog::warn("Failed to read crash reports from the database.");
+            }
+
+            bool enabled = false;
+            if (!crashReporter->uploadsEnabled(&enabled)) {
+                spdlog::warn("Failed to retrieve uploads enabled from crash report database.");
+            }
+
+            if (enabled != FLAGS_autoUploadCrashReports) {
+                if (!crashReporter->setUploadsEnabled(enabled)) {
+                    spdlog::error("Failed to update the automatic upload crash report setting!");
+                } else {
+                    enabled = FLAGS_autoUploadCrashReports;
+                }
+            }
+
+            if (enabled) {
+                spdlog::info("** Automatic crash report uploads enabled.");
+            } else if (notUploaded > 0) {
+                spdlog::warn("There are {} Scintillator Server crash reports available for upload.", notUploaded);
+            }
+
+            // Shouldn't be a need normally to keep this open. If the process crashes the out-of-process crash handler
+            // will hopefully catch it and write to the database.
+            crashReporter->closeDatabase();
+        }
     }
 
 #if (__APPLE__)
@@ -116,12 +155,6 @@ int main(int argc, char* argv[]) {
     envCheckAndUnset("VK_LAYER_PATH");
     envCheckAndUnset("VULKAN_SDK");
 #endif
-
-    fs::path quarkPath = fs::canonical(FLAGS_quarkDir);
-    if (!fs::exists(quarkPath / "Scintillator.quark")) {
-        spdlog::error("Path {} doesn't look like Scintillator Quark root directory, terminating.", quarkPath.string());
-        return EXIT_FAILURE;
-    }
 
 #if (WIN32)
     if (FLAGS_vulkanValidation) {

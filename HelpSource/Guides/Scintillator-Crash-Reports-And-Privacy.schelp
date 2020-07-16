@@ -1,0 +1,26 @@
+title:: Scintillator Crash Reports and Privacy
+summary:: A discussion of the privacy implications of uploading crash reports
+categories:: Quarks>Scintillator>Guides
+related:: Classes/ScinServer, Classes/ScinServerOptions
+
+section::Crash Reports May Contain Personal Information
+
+Scintillator uses link::https://chromium.googlesource.com/crashpad/crashpad/##CrashPad::, an open-source crash reporting system used by a variety of programs but primarily Chromium and Google Chrome, to collect debugging information about the Scintillator Server when it crashes. If a program is crashing on a user's computer it can be extremely difficult to figure out as a developer how to fix the problem, and the crash reports can be enormously valuable to aid in fixing the bugs that are causing the crash.
+
+One concern is that crash reports emphasis::may:: contain some personally identifying information. The crash reporting system is not designed to maliciously collect personal information from your computer, but in trying to build a picture of what was going on with the synth server when it crashed, there may be some information contained in there that could contain things like your username on the current system or technical information about the kind of computer that the server crashed on. See the Example Crash Report below for an understanding of the typical data included in a crash report.
+
+section::Upload, Analysis, and Retention of Crash Reports
+
+All crash reports are uploaded over SSL, meaning that the crash report is protected by encryption while it is transfered over the internet. It is uploaded to a custom crash report telemetry system called link::https://github.com/ScintillatorSynth/Gargamelle##Gargamelle::, which is another part of the Scintillator development ecosystem. This upload software runs on a cloud server with access control limited only to Scintillator developers.
+
+The crash telemetry system makes no effort to link crash reports to individual people. For example, we do not retain the IP address of where a crash report upload came from. We do allow retrieval of crash reports based on crash ids, which are large random numbers. This allows users to provide bug reports containing crash ids and developers to find those in the crash report database.
+
+We retain crash reports for 1 year from time of upload, after which they are automatically deleted. Some aggregate statistics will remain after a crash report is deleted, such as the number of crash reports uploaded on a given day or associated with a given version of Scintillator.
+
+section::Example Crash Report
+
+This is an analysis of an example crash report as printed by the crash reporting tools. Note that it is not an exhaustive list of everything that might be included, and is more intended to convey the kind of information relayed by the system.
+
+teletype::
+Foo
+::

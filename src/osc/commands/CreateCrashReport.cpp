@@ -1,4 +1,4 @@
-#include "osc/commands/MiniDump.hpp"
+#include "osc/commands/CreateCrashReport.hpp"
 
 #include "infra/CrashReporter.hpp"
 #include "osc/Dispatcher.hpp"
@@ -9,11 +9,11 @@
 
 namespace scin { namespace osc { namespace commands {
 
-MiniDump::MiniDump(osc::Dispatcher* dispatcher): Command(dispatcher) {}
+CreateCrashReport::CreateCrashReport(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
-MiniDump::~MiniDump() {}
+CreateCrashReport::~CreateCrashReport() {}
 
-void MiniDump::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
+void CreateCrashReport::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
     m_dispatcher->crashReporter()->dumpWithoutCrash();
 }
 

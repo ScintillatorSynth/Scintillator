@@ -183,6 +183,8 @@ set(scintillator_synth_files
     osc/commands/AdvanceFrame.cpp
     osc/commands/AdvanceFrame.hpp
     osc/commands/Command.hpp
+    osc/commands/CreateCrashReport.cpp
+    osc/commands/CreateCrashReport.hpp
     osc/commands/DefFree.cpp
     osc/commands/DefFree.hpp
     osc/commands/DefLoad.cpp
@@ -201,10 +203,10 @@ set(scintillator_synth_files
     osc/commands/ImageBufferQuery.hpp
     osc/commands/LogAppend.cpp
     osc/commands/LogAppend.hpp
+    osc/commands/LogCrashReports.cpp
+    osc/commands/LogCrashReports.hpp
     osc/commands/LogLevel.cpp
     osc/commands/LogLevel.hpp
-    osc/commands/MiniDump.cpp
-    osc/commands/MiniDump.hpp
     osc/commands/NodeFree.cpp
     osc/commands/NodeFree.hpp
     osc/commands/NodeRun.cpp
@@ -227,6 +229,8 @@ set(scintillator_synth_files
     osc/commands/Status.hpp
     osc/commands/Sync.cpp
     osc/commands/Sync.hpp
+    osc/commands/UploadCrashReport.cpp
+    osc/commands/UploadCrashReport.hpp
 
     vulkan/Buffer.cpp
     vulkan/Buffer.hpp

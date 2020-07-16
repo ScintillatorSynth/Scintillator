@@ -96,6 +96,19 @@ An integer, default strong::600::. The height of the window (or framebuffer, in 
 METHOD:: alwaysOnTop
 A boolean, default strong::true::. Just like the link::Classes/Window:: method of the same name, if true the server will create a window that floats on top of other windows. If false, the window will allow other windows to layer on top of it. If code::createWindow:: is false this value is ignored.
 
+METHOD::audioInputChannels
+An integer, default strong::2::. For emphasis::interactive:: mode only, determines the number of audio input channels the Scintillator server should open up and monitor for audio input.
+
+METHOD::autoUploadCrashReports
+A boolean, default strong::false::. If true the crash reporting system will mark any new server crashes detected as ok to upload automatically. In order to respect the privacy of Scintillator users we leave this false by default and setting this to true does not persist between server runs, meaning that like other options it has the scope of this run of the server only. Keeping the value true will require setting this explicity to true each time the server is run.
+
+note::
+Please read the link::Guides/Scintillator-Crash-Reports-And-Privacy:: discussion before uploading crash reports.
+::
+
+METHOD::vulkanValidation
+A boolean, default strong::false::. Useful for debugging, will load a library that checks every graphics call for validity and reports errors to the console log. This comes at the cost of speed, so the validation is normally disabled.
+
 subsection::Other Methods
 
 METHOD:: asOptionsString
