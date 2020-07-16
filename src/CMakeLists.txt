@@ -8,6 +8,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
     ${SCIN_EXT_INSTALL_DIR}/include
+    ${SCIN_EXT_INSTALL_DIR}/include/crashpad
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
@@ -166,6 +167,8 @@ set(scintillator_synth_files
     comp/Window.cpp
     comp/Window.hpp
 
+    infra/CrashReporter.cpp
+    infra/CrashReporter.hpp
     infra/Logger.cpp
     infra/Logger.hpp
 
@@ -280,6 +283,13 @@ find_library(SHADERC_LIBRARY
     PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
     NO_DEFAULT_PATH
 )
+
+find_library(CRASHPAD_LIBRARY
+    NAMES client
+    PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
+    NO_DEFAULT_PATH
+)
+
 if (WIN32)
     find_library(AVCODEC_LIBRARY
         NAMES avcodec
@@ -327,6 +337,7 @@ else()
         PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
         NO_DEFAULT_PATH
     )
+
     find_library(Vulkan_LIBRARY
         NAMES vulkan
         PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
@@ -339,6 +350,7 @@ target_link_libraries(scinsynth
     ${AVCODEC_LIBRARY}
     ${AVFORMAT_LIBRARY}
     ${AVUTIL_LIBRARY}
+    ${CRASHPAD_LIBRARY}
     ${SHADERC_LIBRARY}
     ${SWSCALE_LIBRARY}
     ${SCIN_EXT_INSTALL_DIR}/lib/liblo.${SCIN_LIBLO_LIBRARY_SUFFIX}
