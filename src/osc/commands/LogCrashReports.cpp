@@ -15,6 +15,7 @@ LogCrashReports::~LogCrashReports() {}
 
 void LogCrashReports::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
     m_dispatcher->crashReporter()->logCrashReports();
+    m_dispatcher->crashReporter()->closeDatabase();
     m_dispatcher->respond(address, "/scin_done", "/scin_logCrashReports");
 }
 

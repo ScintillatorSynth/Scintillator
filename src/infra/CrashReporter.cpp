@@ -37,7 +37,7 @@ bool CrashReporter::startCrashHandler() {
             base::FilePath("/home/luken/src/Scintillator/build/install-ext/crashpad/out/Default/crashpad_handler"),
             base::FilePath(m_databasePath),
             base::FilePath("/home/luken/src/Scintillator/build/metrics"),
-            "http://127.0.0.1:8080/dump",
+            "http://gargamelle.scintillatorsynth.org/dump",
             std::map<std::string, std::string>(),
             std::vector<std::string>(),
             false,

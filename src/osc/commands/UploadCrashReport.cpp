@@ -25,7 +25,8 @@ void UploadCrashReport::processMessage(int argc, lo_arg** argv, const char* type
     } else {
         m_dispatcher->crashReporter()->uploadCrashReport(uuid);
     }
-    m_dispatacher->crashReporter()->closeCrashDatabase();
+    m_dispatcher->crashReporter()->closeDatabase();
+
     m_dispatcher->respond(address, "/scin_done", "/scin_uploadCrashReport");
 }
 
