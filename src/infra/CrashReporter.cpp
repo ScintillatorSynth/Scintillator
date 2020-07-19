@@ -14,6 +14,9 @@
 #include <vector>
 
 namespace {
+
+static const char* kGargamelleURL = "https://ggml.scintillatorsynth.org/api/dump";
+
 void logReport(const crashpad::CrashReportDatabase::Report& report) {
     tm* createTime = localtime(&report.creation_time);
     std::array<char, 128> timeBuf;
@@ -37,7 +40,7 @@ bool CrashReporter::startCrashHandler() {
             base::FilePath("/home/luken/src/Scintillator/build/install-ext/crashpad/out/Default/crashpad_handler"),
             base::FilePath(m_databasePath),
             base::FilePath("/home/luken/src/Scintillator/build/metrics"),
-            "http://gargamelle.scintillatorsynth.org/dump",
+            kGargamelleURL,
             std::map<std::string, std::string>(),
             std::vector<std::string>(),
             false,
