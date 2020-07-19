@@ -13,6 +13,7 @@ namespace {
 
 %}
 %language=C++
+%compare-strncmp
 %struct-type
 struct IntrinsicPair { const char* name; scin::base::Intrinsic intrinsic; };
 %%

@@ -12,6 +12,7 @@ namespace {
 
 %}
 %language=C++
+%compare-strncmp
 %struct-type
 struct CommandPair { const char* name; scin::osc::commands::Command::Number number; };
 %%
