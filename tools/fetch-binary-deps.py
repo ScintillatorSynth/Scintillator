@@ -39,6 +39,7 @@ def main(argv):
 
     if platform.system() == 'Linux':
         os_name = 'linux'
+        needed_deps.append('crashpad-ext')
     elif platform.system() == 'Darwin':
         os_name = 'osx'
     elif platform.system() == 'Windows':

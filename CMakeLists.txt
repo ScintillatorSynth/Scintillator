@@ -43,6 +43,12 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
         OUTPUT_VARIABLE GIT_COMMIT_HASH
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
+    execute_process(
+        COMMAND git log -1 --format=%H
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_COMPLETE_HASH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
 else()
     set(GIT_BRANCH "not_a_git_checkout")
     set(GIT_COMMIT_HASH "na")

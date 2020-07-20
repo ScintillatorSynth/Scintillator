@@ -1,8 +1,11 @@
 #include "infra/CrashReporter.hpp"
 
+#include "infra/Version.hpp"
+
 #include <client/crash_report_database.h>
 #include <client/crashpad_client.h>
 #include <client/settings.h>
+#include <fmt/core.h>
 #include <spdlog/spdlog.h>
 #include <util/misc/capture_context.h>
 #include <util/misc/uuid.h>
@@ -36,12 +39,19 @@ CrashReporter::~CrashReporter() {
 }
 
 bool CrashReporter::startCrashHandler() {
+    std::map<std::string, std::string> metadata;
+    metadata["program"] = "scinsynth";
+    metadata["version"] = fmt::format("{}.{}.{}", kScinVersionMajor, kScinVersionMinor, kScinVersionPatch);
+    metadata["commit"] = kScinCompleteHash;
+    metadata["branch"] = kScinBranch;
+
     return m_client->StartHandler(
-            base::FilePath("/home/luken/src/Scintillator/build/install-ext/crashpad/out/Default/crashpad_handler"),
+            // TODO: find the binary!
+            base::FilePath("crashpad_handler"),
             base::FilePath(m_databasePath),
             base::FilePath("/home/luken/src/Scintillator/build/metrics"),
             kGargamelleURL,
-            std::map<std::string, std::string>(),
+            metadata,
             std::vector<std::string>(),
             false,
             false,
