@@ -13,3 +13,7 @@ bin
 
 # crash report database
 .crash_reports
+
+# only encrypted values
+.travis_symbol_upload_key.json
+

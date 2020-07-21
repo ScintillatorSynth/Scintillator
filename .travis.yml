@@ -1,3 +1,8 @@
+# encrypted key password for symbol_upload_key_password
+env:
+  global:
+    secure: w/xMGQ+3OSfEiBqnPE2CrC6LcsIiLMwOHhwUgnygDzoI1QgirQ66Lb1nQz6U0GGp6bCHiKoXfzhsVxNuieFOzLO/7ZrV8Gei+NFPWb3s8auu+hH3+eBdiagrED+yxZuafY2hPuJVihQ7cZS06tNpvCFuzKVDfbVzeoLdWRX1WJMQzVJ1d1jcnS7k9/bCq7/aBxxOcbb+Qovb+mezCwfV5L1nbvvDTmA0Ykqah6zLRtywPuwmCQ2BI4LB22AFTgYgSx9Yy8MeVnztVLxiwB+57aDJRXXtPcTU7gEgroA20XLxGMBrlHRqlhmCGhoBzc7GdspGZ69jp4OhuczzUQzjLT0js0i4doOGHNAI6poVrsSTtthhWe/qQU+gLZSBgLQJfobsUkFBAhzbpuqjXNTK3hcfDzViReT/GjvyXx4O+4C6fhNTollX0PDXGWl24PxGcXLDoDhl9t0TJKnXdO/B6kSWYxE9u/TAArLgTU7WFYZqtYW4BTUB2t7ysLa1Rbry7cWtw77LlZuIV1kfOcfIA8I7FhKOY2TwkPo1LLlkzsyGEdsNfbp2dUdVHgG1VBVIT8tej2rKVM+/vrte2L7naay7iAkANfJRfhDwsSkr+ggWjNkJPOZHJEdaRjtXgq7pmH4asRSH/rfq4buYH/VAiB0OiXCiwvVf6zTLjXh6n9Y=
+
 language: cpp
 matrix:
   include:
@@ -19,7 +24,7 @@ matrix:
     env:
     - DO_COVERAGE=false
 before_install:
-- openssl aes-256-cbc -K $encrypted_8258faed94eb_key -iv $encrypted_8258faed94eb_iv -in .travis_symbol_upload_key.json.enc -out .travis_symbol_upload_key.json -d
+- echo $symbol_upload_key_password | gpg --passphrase-fd 0 .travis_sumbol_upload_key.json.gpg
 - "$TRAVIS_BUILD_DIR/.travis/before-install-$TRAVIS_OS_NAME.sh"
 before_script:
 - "$TRAVIS_BUILD_DIR/.travis/before-script-$TRAVIS_OS_NAME.sh"
@@ -75,3 +80,4 @@ deploy:
   on:
     condition: "$DO_COVERAGE = false"
     branch: master
+
