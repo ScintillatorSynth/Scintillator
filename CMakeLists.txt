@@ -26,6 +26,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED)
 
 option(SCIN_BUILD_DOCS "Add docs build target to build C++ documentation with Doxygen" ON)
+option(SCIN_USE_CRASHPAD "Add crash detection and reporting to scinsynth" ON)
 
 # If this is a git checkout we can extract the git hash and branch. This code copied verbatim or close to it from the
 # SuperCollider CMake files.
@@ -51,6 +52,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
 else()
     set(GIT_BRANCH "not_a_git_checkout")
     set(GIT_COMMIT_HASH "na")
+    set(GIT_COMPLETE_HASH "not available")
 endif()
 
 message(STATUS "Scintillator Version: ${PROJECT_VERSION}")

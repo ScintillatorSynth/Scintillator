@@ -106,6 +106,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+#if defined(SCIN_USE_CRASHPAD)
     fs::path crashReportDatabase = quarkPath / ".crash_reports";
     std::shared_ptr<scin::infra::CrashReporter> crashReporter(new scin::infra::CrashReporter(
                 FLAGS_crashpadHandlerPath, crashReportDatabase.string()));
@@ -135,6 +136,7 @@ int main(int argc, char* argv[]) {
         spdlog::warn("Invalid path '{}' to Crashpad handler executable, disabling crash reporting.",
                 FLAGS_crashpadHandlerPath);
     }
+#endif
 
 #if (__APPLE__)
     // Look in the environment variables for hard-coded paths to Vulkan SDK components that might break our built-in

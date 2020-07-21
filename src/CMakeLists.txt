@@ -8,9 +8,6 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
     ${SCIN_EXT_INSTALL_DIR}/include
-    # Crashpad
-    ${SCIN_EXT_INSTALL_DIR}/crashpad
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/third_party/mini_chromium/mini_chromium
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
@@ -407,12 +404,19 @@ add_dependencies(scinsynth
     liblo-install
 )
 
-add_custom_target(dump_symbols
-    ${PYTHON_EXECUTABLE} tools/prepare-symbol-dump.py
-    DEPENDS scinsynth
-    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    VERBATIM
-)
+if (SCIN_USE_CRASHPAD)
+    target_include_directories(scinsynth PRIVATE
+        ${SCIN_EXT_INSTALL_DIR}/crashpad
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/third_party/mini_chromium/mini_chromium
+    )
+    add_custom_target(dump_symbols
+        ${PYTHON_EXECUTABLE} tools/prepare-symbol-dump.py
+        DEPENDS scinsynth
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        VERBATIM
+    )
+    target_compile_definitions(scinsynth PRIVATE SCIN_USE_CRASHPAD)
+endif()
 
 file(MAKE_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
 if (APPLE)
@@ -488,10 +492,12 @@ elseif(UNIX)
     install(DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d"
         DESTINATION "${SCIN_APPDIR}/usr/share/vulkan"
     )
-    # Copy the crash report handler binary
-    install(PROGRAMS "${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/crashpad_handler"
-        DESTINATION "${SCIN_APPDIR}/usr/bin"
-    )
+    if (SCIN_USE_CRASHPAD)
+        # Copy the crash report handler binary
+        install(PROGRAMS "${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/crashpad_handler"
+            DESTINATION "${SCIN_APPDIR}/usr/bin"
+        )
+    endif()
     # Now invoke linuxdeploy to assemble AppImage. Need to provide a path to LD_LIBRARY_PATH environment variable so the
     # tool knows where to look for the dependent libraries.
     install(CODE "

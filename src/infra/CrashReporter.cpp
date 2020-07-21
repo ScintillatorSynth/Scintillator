@@ -1,3 +1,4 @@
+#if defined(SCIN_USE_CRASHPAD)
 #include "infra/CrashReporter.hpp"
 
 #include "infra/Version.hpp"
@@ -207,4 +208,4 @@ bool CrashReporter::uploadAllCrashReports() {
 
 } // namespace infra
 } // namespace scin
-
+#endif // SCIN_USE_CRASHPAD
