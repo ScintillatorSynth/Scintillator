@@ -19,10 +19,11 @@ class CrashReporter {
 public:
     /*! CrashReporter constructor.
      *
+     * \param crashpadHandlerPath The path to the executable to run as the crashpad handler.
      * \param databasePath A file path to the crash report database root directory. If it does not exist it will be
      *        created.
      */
-    explicit CrashReporter(const std::string& databasePath);
+    CrashReporter(const std::string& crashpadHandlerPath, const std::string& databasePath);
 
     /*! CrashReporter destructor. Will disable crash reporting when executed, so should be deferred as late as possible
      * in process exit.
@@ -84,6 +85,7 @@ public:
     bool uploadAllCrashReports();
 
 private:
+    std::string m_crashpadHandlerPath;
     std::string m_databasePath;
 
     std::unique_ptr<crashpad::CrashReportDatabase> m_database;

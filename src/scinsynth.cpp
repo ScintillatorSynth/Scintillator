@@ -70,8 +70,7 @@ DEFINE_bool(swiftshader, false,
 DEFINE_int32(audioInputChannels, 0, "If non-zero, defines the number of input channels to create via portaudio.");
 DEFINE_int32(audioOutputChannels, 0, "If non-zero, defines the number of output channels to create via portaudio.");
 
-DEFINE_bool(autoUploadCrashReports, false, "If true, will automatically upload crash reports to the crash reporting "
-        "collection server. Beware that crash reports may contain personal information.");
+DEFINE_string(crashpadHandlerPath, "", "Path to the crash report handler executable.");
 
 #if (__APPLE__)
 void envCheckAndUnset(const char* name) {
@@ -109,42 +108,32 @@ int main(int argc, char* argv[]) {
 
     fs::path crashReportDatabase = quarkPath / ".crash_reports";
     std::shared_ptr<scin::infra::CrashReporter> crashReporter(new scin::infra::CrashReporter(
-                crashReportDatabase.string()));
-    if (!crashReporter->openDatabase()) {
-        spdlog::warn("Failed to open crash database, continuing without crash telemetry.");
-    } else {
-        spdlog::info("Opened crash report database at {}.", crashReportDatabase.string());
-        if (!crashReporter->startCrashHandler()) {
-            spdlog::warn("Failed to start crash handler, continuing without crash telemetry.");
+                FLAGS_crashpadHandlerPath, crashReportDatabase.string()));
+    if (fs::exists(FLAGS_crashpadHandlerPath)) {
+        if (!crashReporter->openDatabase()) {
+            spdlog::warn("Failed to open crash database, continuing without crash telemetry.");
         } else {
-            auto notUploaded = crashReporter->logCrashReports();
-            if (notUploaded < 0) {
-                spdlog::warn("Failed to read crash reports from the database.");
-            }
-
-            bool enabled = false;
-            if (!crashReporter->uploadsEnabled(&enabled)) {
-                spdlog::warn("Failed to retrieve uploads enabled from crash report database.");
-            }
-
-            if (enabled != FLAGS_autoUploadCrashReports) {
-                if (!crashReporter->setUploadsEnabled(enabled)) {
-                    spdlog::error("Failed to update the automatic upload crash report setting!");
-                } else {
-                    enabled = FLAGS_autoUploadCrashReports;
+            spdlog::info("Opened crash report database at {}.", crashReportDatabase.string());
+            if (!crashReporter->startCrashHandler()) {
+                spdlog::warn("Failed to start crash handler, continuing without crash telemetry.");
+            } else {
+                auto notUploaded = crashReporter->logCrashReports();
+                if (notUploaded < 0) {
+                    spdlog::warn("Failed to read crash reports from the database.");
                 }
-            }
 
-            if (enabled) {
-                spdlog::info("** Automatic crash report uploads enabled.");
-            } else if (notUploaded > 0) {
-                spdlog::warn("There are {} Scintillator Server crash reports available for upload.", notUploaded);
-            }
+                if (notUploaded > 0) {
+                    spdlog::warn("There are {} Scintillator Server crash reports available for upload.", notUploaded);
+                }
 
-            // Shouldn't be a need normally to keep this open. If the process crashes the out-of-process crash handler
-            // will hopefully catch it and write to the database.
-            crashReporter->closeDatabase();
+                // Shouldn't be a need normally to keep this open. If the process crashes the out-of-process crash handler
+                // will hopefully catch it and write to the database.
+                crashReporter->closeDatabase();
+            }
         }
+    } else {
+        spdlog::warn("Invalid path '{}' to Crashpad handler executable, disabling crash reporting.",
+                FLAGS_crashpadHandlerPath);
     }
 
 #if (__APPLE__)

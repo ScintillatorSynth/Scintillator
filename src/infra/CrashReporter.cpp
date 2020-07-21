@@ -31,7 +31,9 @@ void logReport(const crashpad::CrashReportDatabase::Report& report) {
 
 namespace scin { namespace infra {
 
-CrashReporter::CrashReporter(const std::string& databasePath): m_databasePath(databasePath),
+CrashReporter::CrashReporter(const std::string& crashpadHandlerPath, const std::string& databasePath):
+    m_crashpadHandlerPath(crashpadHandlerPath),
+    m_databasePath(databasePath),
     m_client(new crashpad::CrashpadClient()) {
 }
 
@@ -46,10 +48,9 @@ bool CrashReporter::startCrashHandler() {
     metadata["branch"] = kScinBranch;
 
     return m_client->StartHandler(
-            // TODO: find the binary!
-            base::FilePath("crashpad_handler"),
+            base::FilePath(m_crashpadHandlerPath),
             base::FilePath(m_databasePath),
-            base::FilePath("/home/luken/src/Scintillator/build/metrics"),
+            base::FilePath(""),  // Metrics path
             kGargamelleURL,
             metadata,
             std::vector<std::string>(),

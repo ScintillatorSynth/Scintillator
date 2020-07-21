@@ -482,7 +482,7 @@ elseif(UNIX)
         DESTINATION "${SCIN_APPDIR}/usr/share/vulkan"
     )
     # Copy the crash report handler binary
-    install(FILES "${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/crashpad_handler"
+    install(PROGRAMS "${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/crashpad_handler"
         DESTINATION "${SCIN_APPDIR}/usr/bin"
     )
     # Now invoke linuxdeploy to assemble AppImage. Need to provide a path to LD_LIBRARY_PATH environment variable so the
