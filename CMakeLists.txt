@@ -25,8 +25,9 @@ project(Scintillator VERSION 0.0.6 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED)
 
-option(SCIN_BUILD_DOCS
-    "Add docs build target to build C++ documentation with Doxygen" ON)
+option(SCIN_BUILD_DOCS "Add docs build target to build C++ documentation with Doxygen" ON)
+
+option(SCIN_RELEASE_BUILD "Add release-specific features like crash reporting" OFF)
 
 # If this is a git checkout we can extract the git hash and branch. This code copied verbatim or close to it from the
 # SuperCollider CMake files.

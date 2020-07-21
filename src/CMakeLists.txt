@@ -407,6 +407,15 @@ add_dependencies(scinsynth
     liblo-install
 )
 
+if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" AND SCIN_RELEASE_BUILD)
+    add_custom_target(dump_symbols
+        COMMAND ${SCIN_EXT_INSTALL_DIR}/bin/dump_syms -v ${CMAKE_CURRENT_BINARY_DIR}/scinsynth > scinsynth.sym
+        DEPENDS scinsynth
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        VERBATIM
+    )
+endif()
+
 file(MAKE_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
 if (APPLE)
     set(MACOSX_BUNDLE_ICON_FILE AppIcon.icns)
