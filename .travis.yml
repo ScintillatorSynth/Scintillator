@@ -24,6 +24,7 @@ matrix:
     env:
     - DO_COVERAGE=false
 before_install:
+- export GPG_TTY=$(tty)
 - echo $symbol_upload_key_password | gpg --output .travis_symbol_upload_key.json --passphrase-fd 0 -d .travis_symbol_upload_key.json.gpg
 - "$TRAVIS_BUILD_DIR/.travis/before-install-$TRAVIS_OS_NAME.sh"
 before_script:
