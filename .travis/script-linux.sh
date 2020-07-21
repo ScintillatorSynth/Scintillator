@@ -11,5 +11,6 @@ if [ $DO_COVERAGE = true ]; then
     make docs || exit 5
 else
     make compare_images || exit 2
+    make dump_symbols || exit 3
 fi
 

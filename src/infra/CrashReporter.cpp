@@ -79,30 +79,6 @@ void CrashReporter::closeDatabase() {
     m_database = nullptr;
 }
 
-bool CrashReporter::uploadsEnabled(bool* enabled) {
-    if (!openDatabase()) return false;
-
-    crashpad::Settings* settings = m_database->GetSettings();
-    if (settings) {
-        return settings->GetUploadsEnabled(enabled);
-    } else {
-        spdlog::error("failed to retrieve settings object from crash database.");
-    }
-    return false;
-}
-
-bool CrashReporter::setUploadsEnabled(bool enabled) {
-    if (!openDatabase()) return false;
-
-    crashpad::Settings* settings = m_database->GetSettings();
-    if (settings) {
-        return settings->SetUploadsEnabled(enabled);
-    } else {
-        spdlog::error("failed to retrieve settings object from crash database.");
-    }
-    return false;
-}
-
 void CrashReporter::dumpWithoutCrash() {
     spdlog::info("generating minidump without crash.");
     crashpad::NativeCPUContext context;

@@ -76,4 +76,12 @@ deploy:
         tags: true
         condition: $DO_COVERAGE = false
         all_branches: true
+    # symbol uploads for crash analysis
+    - provider: gcs
+      key_file: .travis_symbol_upload_key.json
+      bucket: "scintillator-gargamelle-symbols"
+      cleanup: false
+      on:
+          condition: $DO_COVERAGE = false
+          branch: master
 

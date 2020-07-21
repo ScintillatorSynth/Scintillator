@@ -87,8 +87,8 @@ def main(argv):
         if os_name == 'windows':
             # Certutil doesn't seem like it can validate against an existing hash file, so we capture output
             # and compare against the downloaded hash manually.
-            hash_check = subprocess.run(['certutil', '-hashfile', file_path, 'SHA256'], stdout=subprocess.PIPE);
-            hash_result = hash_check.stdout.decode('utf-8').split('\n')[1].strip();            
+            hash_check = subprocess.run(['certutil', '-hashfile', file_path, 'SHA256'], stdout=subprocess.PIPE)
+            hash_result = hash_check.stdout.decode('utf-8').split('\n')[1].strip()
             hash_expected = open(sha_path, 'r').read().strip()
             if dep == 'ffmpeg-ext':
                 # ffmpeg on Windows is cross-compiled so the hash file is from the shasum output, strip off

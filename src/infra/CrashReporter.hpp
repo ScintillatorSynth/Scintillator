@@ -47,19 +47,6 @@ public:
      */
     void closeDatabase();
 
-    /*! Reads the current uploads enabled setting from the crash report database.
-     *
-     * \param A pointer to a boolean where the enabled setting will be stored on return.
-     * \return true if the value was successfully retrieved, false if not.
-     */
-    bool uploadsEnabled(bool* enabled);
-
-    /*! Store a value for uploads enabled in the crash report database.
-     * \note Crash Reports can contain personal information, enable automatic upload with caution.
-     * \return true if the value was successfully set, false if not.
-     */
-    bool setUploadsEnabled(bool enabled);
-
     /*! Print all crash reports in the database to the log at the informational level (2).
      *
      * \return The number of un-uploaded crash reports in the database, or -1 if there was an error.

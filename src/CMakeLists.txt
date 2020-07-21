@@ -407,14 +407,12 @@ add_dependencies(scinsynth
     liblo-install
 )
 
-if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" AND SCIN_RELEASE_BUILD)
-    add_custom_target(dump_symbols
-        COMMAND ${SCIN_EXT_INSTALL_DIR}/bin/dump_syms -v ${CMAKE_CURRENT_BINARY_DIR}/scinsynth > scinsynth.sym
-        DEPENDS scinsynth
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-        VERBATIM
-    )
-endif()
+add_custom_target(dump_symbols
+    ${PYTHON_EXECUTABLE} tools/prepare-symbol-dump.py
+    DEPENDS scinsynth
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    VERBATIM
+)
 
 file(MAKE_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
 if (APPLE)
