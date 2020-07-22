@@ -19,6 +19,7 @@ void UploadCrashReport::processMessage(int argc, lo_arg** argv, const char* type
         return;
     }
 
+#if defined(SCIN_USE_CRASHPAD)
     std::string uuid(reinterpret_cast<const char*>(argv[0]));
     if (uuid == "all") {
         m_dispatcher->crashReporter()->uploadAllCrashReports();
@@ -26,6 +27,9 @@ void UploadCrashReport::processMessage(int argc, lo_arg** argv, const char* type
         m_dispatcher->crashReporter()->uploadCrashReport(uuid);
     }
     m_dispatcher->crashReporter()->closeDatabase();
+#else
+    spdlog::warn("crash report upload requested but crash reports disabled in current build.");
+#endif
 
     m_dispatcher->respond(address, "/scin_done", "/scin_uploadCrashReport");
 }

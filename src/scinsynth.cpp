@@ -306,8 +306,12 @@ int main(int argc, char* argv[]) {
     } else {
         quitHandler = [offscreen] { offscreen->stop(); };
     }
+#if defined(SCIN_USE_CRASHPAD)
     scin::osc::Dispatcher dispatcher(logger, async, archetypes, compositor, offscreen, frameTimer, quitHandler,
                                      crashReporter);
+#else
+    scin::osc::Dispatcher dispatcher(logger, async, archetypes, compositor, offscreen, frameTimer, quitHandler);
+#endif
     if (!dispatcher.create(FLAGS_portNumber, FLAGS_dumpOSC)) {
         spdlog::error("Failed creating OSC command dispatcher.");
         return EXIT_FAILURE;
