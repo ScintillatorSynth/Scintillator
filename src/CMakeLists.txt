@@ -416,6 +416,12 @@ if (SCIN_USE_CRASHPAD)
         VERBATIM
     )
     target_compile_definitions(scinsynth PRIVATE SCIN_USE_CRASHPAD)
+    add_custom_target(log_crashes
+        ${PYTHON_EXECUTABLE} tools/minidump-stackwalk.py --database .crash_reports --fail_with_nonempty_database
+        DEPENDS scinsynth
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        VERBATIM
+    )
 endif()
 
 file(MAKE_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")

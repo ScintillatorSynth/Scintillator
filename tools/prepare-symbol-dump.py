@@ -39,11 +39,8 @@ def main(argv):
 
     sym_path = os.path.join('build', 'symbols', 'scinsynth', dump_id)
 
-    # Feeling some paranoia that there might be other stuff in this directory so we delete it first
-    if os.path.exists(os.path.join('build', 'symbols')):
-        print('removing existing symbols path')
-        shutil.rmtree(os.path.join('build', 'symbols'))
-    os.makedirs(sym_path)
+    # There may be other symbol dump entries in there which is fine.
+    os.makedirs(sym_path, exist_ok=True)
 
     # save symbol file
     print('saving symbol file to ' + os.path.join(sym_path, 'scinsynth.sym'))
