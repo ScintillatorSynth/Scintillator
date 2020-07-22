@@ -1,8 +1,6 @@
-# encrypted key password for symbol_upload_key_password
 env:
   global:
-    secure: "oiE4MugKsUd9+KI7++HYMbJHS8yLsFnlmcm0/x2w6Hl2dLoFaiy3TYbJF6qm2kUG82wlFtD97PNLKFNY6/JKqytD82U0MosfnFlQFboZr8gsjeeyTjdXDNaUIKlvzhaDGpwK15kuE5nn6lM4szIdqZQyBSIGpvig1w5Wju1v2vBJmnQ6Vc2dv1ES6Bk6SRQ5kvj5LWWVuvj/rSz2UGOA9zOtrbEv9w8oIKts9X47TNbshETi6+v74ZaVdK91WvtwWzNSDhmbo3F/S4Rs6kqFXjMfOeismdKq90yv+FTmrpS5y9j6b07V4lzM2qePd96LJ+RYKl1wkLsUENxWchyhetDp0IBDnu2D0IxMa4G4in3rMuv764p6U1DuJ+LSfBbHe1ohVnkKyoScsWK+sklBD3xZIDyFYvV0wEoDd7+Unj9f4XO0KMyTaYTqu3PEkCdkInPGnX9OrtVxbpYhjanZBSCDeRM219fXDNMIJ2q1FM8Q+NjeoeChV3FtSZdDgRoLi9xMz/8od+Oexf5tZje6bpT0SOp40HiPJNPdktXtSnUxIPTQHYEOeunuUcFGHGk1oYSARUcaBqTR8TJwTsBr1pjBasEWOS+xV7U5fE3jfOBrIOfFh6yBWpv3/Fz6GEylDLs9rrnDn8yRtaYNTxmPQ33NGm+JOJ+bSBCoGIDM6LU="
-
+  - secure: BkQ5CrC3VnXpJ0CihXtFd9+mNVlNvmiciTQqvxTEhq6HTUsfLKkvuu/48ig3KARUQaaKlg3CZtXp7nZb7wkqGZHPK1DUT17HVmZeF3F+ku8Sl5IxWovHys2UW2SU3czMoZfvHBpOpR80fkE86F0JhMsYrQm+tbiY7aBR40j/Ylu+SMbgWC9Agkn98MbRhWd1EqZr0+QzUIKm/h5pXvJSzc2KCqAGDCmuxw7G4rCZI8NxHF5ymYjUvimTADeU+PdA7Nm0Y0LtN/kly8F8163u84OJ75jj42DQXE9Wde/urGt3hDYx3KhwIjcVjL+tXGleJz2v2qevOeC6h+AWPeRvDjFULWrupnYBONWFETYMi8ii8OVL0aDqLzpE75XI+aJrrsw9flbGJVUjVChq0d5z2SaJOyKPa8CQFt+ocNfEdfQyw5WC7MJMCreMGH9jnE4sEVJO4wuTXOxw9Y6RYKUnIUhdbnPJfwJbzc0Pg8F1FJKq3Rz12MRS+WqXiFXGh4/B8hHw3SPwJeCZE4JolAHqIYN9SckB2oJRpUFOFPEkDMF/KIiJAhi4VA3ufXnYSFIfF041rR6TobtAZh+XeAttjFw4iwMnwRWkQ09P/VW0cXlBGoJzthjop2qeH57NeVcy/OfJDzDrmyq34Hewpi97Bhl1K54q3Ey87wXF/GgIx3Q=
 language: cpp
 matrix:
   include:
@@ -24,8 +22,8 @@ matrix:
     env:
     - DO_COVERAGE=false
 before_install:
-    # -pbkdf2
-- openssl aes-256-cbc -k "$symbol_upload_key_password" -in .travis_symbol_upload_key.json.enc -out .travis_symbol_upload_key.json -d
+- openssl aes-256-cbc -pbkdf2 -k "$symbol_upload_key_password" -in .travis_symbol_upload_key.json.enc
+  -out .travis_symbol_upload_key.json -d
 - "$TRAVIS_BUILD_DIR/.travis/before-install-$TRAVIS_OS_NAME.sh"
 before_script:
 - "$TRAVIS_BUILD_DIR/.travis/before-script-$TRAVIS_OS_NAME.sh"
@@ -81,4 +79,3 @@ deploy:
   on:
     condition: "$DO_COVERAGE = false"
     branch: master
-
