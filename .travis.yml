@@ -19,7 +19,6 @@ matrix:
     env:
     - DO_COVERAGE=false
 before_install:
-- openssl aes-256-cbc -pbkdf2 -k "$symbol_upload_key_password" -in .travis_symbol_upload_key.json.enc -out .travis_symbol_upload_key.json -d
 - "$TRAVIS_BUILD_DIR/.travis/before-install-$TRAVIS_OS_NAME.sh"
 before_script:
 - "$TRAVIS_BUILD_DIR/.travis/before-script-$TRAVIS_OS_NAME.sh"
@@ -69,12 +68,11 @@ deploy:
     condition: "$DO_COVERAGE = false"
     all_branches: true
 - provider: gcs
-  key_file: ".travis_symbol_upload_key.json"
+  access_key_id: "$GCS_SYMBOL_ID"
+  secret_access_key: "$GCS_SYMBOL_KEY"
   bucket: scintillator-gargamelle-symbols
   cleanup: false
   on:
     condition: "$DO_COVERAGE = false"
     branch: master
-env:
-  global:
-    secure: NY1K4y4nP7d+uviWp7+LwHKzOEoVkiET5Mp3GM3yzZLIjlBTNw+spqZwMRzaCTyge306YSj90cfrGb7RqcAuJ5QnN7Ou0wzAABmUbcgk0WRXlC7TWMxHjXU0Uh85ppsi4eFpLYie+OvVU5j6h7TfU35VX4Amt8SeYJqW9EbUPMtGiGbF23i0f+0Jfx7634Z1tgxuWY+N8TlYRqPdZzwenWs5tA/mOI2LewTHCZcMG0yHq53CL4rKvvf4Ya1xKZjanJAZd8IHRffzHVnwE+jQoY+uRcOU7/l/+MCNsa7Zw7qpcmsFqmD4m93B3gwGMY6ov+Cg2SXazEEdU8l40Gt1p0XZBpjBXyndvS4xuz28kB2g/Sbhj300XhsFfnp2wSaOnozlYrB96WwVAA21h26Gi4OIlJwAoiGBMwyW/ZPtbqC6AN8Cjihc6EMLxtTjmSQIYJ0dh6coTQexljJXq80pTHPjiKCx6v92Znuqyg0SBBQQB0uA/O/IxD3AF4+p6N6eD7GTmsCmaL5q9hiBa9XO9ll3GFaFXayqo1A6STWFG7U4TDqMOZbXaPR19yfCieqfu1S8BsfW6iOBR9fX+9sxN8fgvEkDsNVRgg9xOS9Vuh23BvTxvdKSYUc3GZ314uozTR1crelszPSVbXxBhQwkUNM4/12d4VpNH3E4oOGW5hI=
+
