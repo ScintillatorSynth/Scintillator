@@ -19,8 +19,7 @@ matrix:
     env:
     - DO_COVERAGE=false
 before_install:
-- openssl aes-256-cbc -pbkdf2 -k "$symbol_upload_key_password" -in .travis_symbol_upload_key.json.enc
-  -out .travis_symbol_upload_key.json -d
+- openssl aes-256-cbc -pbkdf2 -k "$symbol_upload_key_password" -in .travis_symbol_upload_key.json.enc -out .travis_symbol_upload_key.json -d
 - "$TRAVIS_BUILD_DIR/.travis/before-install-$TRAVIS_OS_NAME.sh"
 before_script:
 - "$TRAVIS_BUILD_DIR/.travis/before-script-$TRAVIS_OS_NAME.sh"
