@@ -108,8 +108,8 @@ int main(int argc, char* argv[]) {
 
 #if defined(SCIN_USE_CRASHPAD)
     fs::path crashReportDatabase = quarkPath / ".crash_reports";
-    std::shared_ptr<scin::infra::CrashReporter> crashReporter(new scin::infra::CrashReporter(
-                FLAGS_crashpadHandlerPath, crashReportDatabase.string()));
+    std::shared_ptr<scin::infra::CrashReporter> crashReporter(
+        new scin::infra::CrashReporter(FLAGS_crashpadHandlerPath, crashReportDatabase.string()));
     if (fs::exists(FLAGS_crashpadHandlerPath)) {
         if (!crashReporter->openDatabase()) {
             spdlog::warn("Failed to open crash database, continuing without crash telemetry.");
@@ -127,14 +127,14 @@ int main(int argc, char* argv[]) {
                     spdlog::warn("There are {} Scintillator Server crash reports available for upload.", notUploaded);
                 }
 
-                // Shouldn't be a need normally to keep this open. If the process crashes the out-of-process crash handler
-                // will hopefully catch it and write to the database.
+                // Shouldn't be a need normally to keep this open. If the process crashes the out-of-process crash
+                // handler will hopefully catch it and write to the database.
                 crashReporter->closeDatabase();
             }
         }
     } else {
         spdlog::warn("Invalid path '{}' to Crashpad handler executable, disabling crash reporting.",
-                FLAGS_crashpadHandlerPath);
+                     FLAGS_crashpadHandlerPath);
     }
 #endif
 
@@ -307,7 +307,7 @@ int main(int argc, char* argv[]) {
         quitHandler = [offscreen] { offscreen->stop(); };
     }
     scin::osc::Dispatcher dispatcher(logger, async, archetypes, compositor, offscreen, frameTimer, quitHandler,
-            crashReporter);
+                                     crashReporter);
     if (!dispatcher.create(FLAGS_portNumber, FLAGS_dumpOSC)) {
         spdlog::error("Failed creating OSC command dispatcher.");
         return EXIT_FAILURE;

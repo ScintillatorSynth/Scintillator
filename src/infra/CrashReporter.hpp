@@ -1,9 +1,9 @@
 #if defined(SCIN_USE_CRASHPAD)
-#ifndef SRC_INFRA_CRASH_REPORTER_HPP_
-#define SRC_INFRA_CRASH_REPORTER_HPP_
+#    ifndef SRC_INFRA_CRASH_REPORTER_HPP_
+#        define SRC_INFRA_CRASH_REPORTER_HPP_
 
-#include <memory>
-#include <string>
+#        include <memory>
+#        include <string>
 
 namespace crashpad {
 class CrashpadClient;
@@ -83,5 +83,5 @@ private:
 } // namespace infra
 } // namespace scin
 
-#endif // SRC_INFRA_CRASH_REPORTER_HPP_
+#    endif // SRC_INFRA_CRASH_REPORTER_HPP_
 #endif // SCIN_USE_CRASHPAD

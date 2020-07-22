@@ -1,21 +1,21 @@
 #if defined(SCIN_USE_CRASHPAD)
-#include "infra/CrashReporter.hpp"
+#    include "infra/CrashReporter.hpp"
 
-#include "infra/Version.hpp"
+#    include "infra/Version.hpp"
 
-#include <client/crash_report_database.h>
-#include <client/crashpad_client.h>
-#include <client/settings.h>
-#include <fmt/core.h>
-#include <spdlog/spdlog.h>
-#include <util/misc/capture_context.h>
-#include <util/misc/uuid.h>
+#    include <client/crash_report_database.h>
+#    include <client/crashpad_client.h>
+#    include <client/settings.h>
+#    include <fmt/core.h>
+#    include <spdlog/spdlog.h>
+#    include <util/misc/capture_context.h>
+#    include <util/misc/uuid.h>
 
-#include <array>
-#include <map>
-#include <string>
-#include <time.h>
-#include <vector>
+#    include <array>
+#    include <map>
+#    include <string>
+#    include <time.h>
+#    include <vector>
 
 namespace {
 
@@ -26,7 +26,7 @@ void logReport(const crashpad::CrashReportDatabase::Report& report) {
     std::array<char, 128> timeBuf;
     strftime(timeBuf.data(), sizeof(timeBuf), "%a %d %b %H:%M:%S %Y", createTime);
     spdlog::info("    id: {}, on: {}, uploaded: {}", report.uuid.ToString(), timeBuf.data(),
-            report.uploaded ? "yes" : "no");
+                 report.uploaded ? "yes" : "no");
 }
 } // namespace
 
@@ -35,11 +35,9 @@ namespace scin { namespace infra {
 CrashReporter::CrashReporter(const std::string& crashpadHandlerPath, const std::string& databasePath):
     m_crashpadHandlerPath(crashpadHandlerPath),
     m_databasePath(databasePath),
-    m_client(new crashpad::CrashpadClient()) {
-}
+    m_client(new crashpad::CrashpadClient()) {}
 
-CrashReporter::~CrashReporter() {
-}
+CrashReporter::~CrashReporter() {}
 
 bool CrashReporter::startCrashHandler() {
     std::map<std::string, std::string> metadata;
@@ -48,16 +46,10 @@ bool CrashReporter::startCrashHandler() {
     metadata["commit"] = kScinCompleteHash;
     metadata["branch"] = kScinBranch;
 
-    return m_client->StartHandler(
-            base::FilePath(m_crashpadHandlerPath),
-            base::FilePath(m_databasePath),
-            base::FilePath(""),  // Metrics path
-            kGargamelleURL,
-            metadata,
-            std::vector<std::string>(),
-            false,
-            false,
-            std::vector<base::FilePath>());
+    return m_client->StartHandler(base::FilePath(m_crashpadHandlerPath), base::FilePath(m_databasePath),
+                                  base::FilePath(""), // Metrics path
+                                  kGargamelleURL, metadata, std::vector<std::string>(), false, false,
+                                  std::vector<base::FilePath>());
 }
 
 
@@ -76,9 +68,7 @@ bool CrashReporter::openDatabase() {
     return true;
 }
 
-void CrashReporter::closeDatabase() {
-    m_database = nullptr;
-}
+void CrashReporter::closeDatabase() { m_database = nullptr; }
 
 void CrashReporter::dumpWithoutCrash() {
     spdlog::info("generating minidump without crash.");
@@ -88,7 +78,8 @@ void CrashReporter::dumpWithoutCrash() {
 }
 
 int CrashReporter::logCrashReports() {
-    if (!openDatabase()) return -1;
+    if (!openDatabase())
+        return -1;
 
     std::vector<crashpad::CrashReportDatabase::Report> pendingReports;
     if (m_database->GetPendingReports(&pendingReports) != crashpad::CrashReportDatabase::kNoError) {
@@ -120,7 +111,8 @@ int CrashReporter::logCrashReports() {
 }
 
 bool CrashReporter::uploadCrashReport(const std::string& reportUUID) {
-    if (!openDatabase()) return false;
+    if (!openDatabase())
+        return false;
 
     crashpad::UUID uuid;
     if (!uuid.InitializeFromString(reportUUID)) {
@@ -167,7 +159,8 @@ bool CrashReporter::uploadCrashReport(const std::string& reportUUID) {
 }
 
 bool CrashReporter::uploadAllCrashReports() {
-    if (!openDatabase()) return false;
+    if (!openDatabase())
+        return false;
 
     std::vector<crashpad::CrashReportDatabase::Report> pendingReports;
     if (m_database->GetPendingReports(&pendingReports) != crashpad::CrashReportDatabase::kNoError) {
