@@ -251,7 +251,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
         bool stage = false;
         bool swapBlit = false;
         uint32_t swapImageIndex = 0;
-        std::function<void(size_t)> flushCallback;
+        std::function<void(size_t)> flushCallback([](size_t){});
 
         {
             std::unique_lock<std::mutex> lock(m_renderMutex);
@@ -401,9 +401,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
         if (flush) {
             m_renderSync->waitForFrame(frameIndex);
             processPendingEncodes(frameIndex);
-            if (flushCallback) {
-                m_flushCallback(frameNumber);
-            }
+            flushCallback(frameNumber);
         }
 
         time += deltaTime;
