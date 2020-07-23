@@ -14,7 +14,7 @@ CreateCrashReport::CreateCrashReport(osc::Dispatcher* dispatcher): Command(dispa
 CreateCrashReport::~CreateCrashReport() {}
 
 void CreateCrashReport::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
-#if defined(SCIN_USE_CRASHPAD)
+#if __linux__ && defined(SCIN_USE_CRASHPAD)
     m_dispatcher->crashReporter()->dumpWithoutCrash();
 #else
     spdlog::warn("crash report requested but build has crashpad disabled.");

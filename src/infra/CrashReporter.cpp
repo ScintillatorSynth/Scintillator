@@ -70,12 +70,14 @@ bool CrashReporter::openDatabase() {
 
 void CrashReporter::closeDatabase() { m_database = nullptr; }
 
+#if __linux__
 void CrashReporter::dumpWithoutCrash() {
     spdlog::info("generating minidump without crash.");
     crashpad::NativeCPUContext context;
     crashpad::CaptureContext(&context);
     m_client->DumpWithoutCrash(&context);
 }
+#endif
 
 int CrashReporter::logCrashReports() {
     if (!openDatabase())

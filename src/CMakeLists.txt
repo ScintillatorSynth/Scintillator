@@ -384,32 +384,55 @@ if (SCIN_USE_CRASHPAD)
         ${SCIN_EXT_INSTALL_DIR}/crashpad
         ${SCIN_EXT_INSTALL_DIR}/crashpad/third_party/mini_chromium/mini_chromium
     )
-    target_link_libraries(scinsynth
-        # TODO: use globbing to just pick up all the .a files and then include them twice.
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/compat/libcompat.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libtest_support.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
+    if (APPLE)
+        target_link_libraries(scinsynth
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/test/libtest.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/test/libgoogletest_main.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/test/libgooglemock_main.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libmig_output.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/googletest/libgooglemock.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/googletest/libgoogletest.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/googletest/libgoogletest_main.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/googletest/libgooglemock_main.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libtest_support.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
+        )
+    elseif(UNIX)
+        target_link_libraries(scinsynth
+            # TODO: use globbing to just pick up all the .a files and then include them twice.
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/compat/libcompat.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libtest_support.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
 
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/compat/libcompat.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libtest_support.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
-    )
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/compat/libcompat.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libtest_support.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
+            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
+        )
+    endif()
     add_custom_target(dump_symbols
         ${PYTHON_EXECUTABLE} tools/prepare-symbol-dump.py
         DEPENDS scinsynth
