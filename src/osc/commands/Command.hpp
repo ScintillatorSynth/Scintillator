@@ -50,9 +50,12 @@ public:
         kEcho = 69,
         kLogAppend = 70,
         kSleepFor = 71,
+        kCreateCrashReport = 72,
+        kLogCrashReports = 73,
+        kUploadCrashReport = 74,
 
         // Not a command, an upper bound for Command counts.
-        kCommandCount = 72
+        kCommandCount = 75
     };
 
     /*! Returns Number enum associated with name, or kNone if no Command found by that name.

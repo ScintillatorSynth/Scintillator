@@ -291,12 +291,12 @@ table::
 ::
 
 definitionlist::
-## Asynchronous. || Replies to sender with strong::/scin_done:: followed by strong::/scin_nrt_advanceFrame::.
+## Asynchronous. || Replies to sender with code::[ /scin_done, /scin_nrt_advanceFrame ]::.
 ::
 
-section::Testing Commands
+section::Testing, Debugging and Development Commands
 
-Commands useful for accessing diagnostic functions or automated validation of scinsynth behavior.
+Commands useful for accessing the diagnostic functions or automated validation of scinsynth behavior.
 
 subsection::/scin_echo
 
@@ -306,7 +306,7 @@ table::
 ## strong::bytes:: || An OSC message to respond to the caller with.
 ::
 
-definitionList::
+definitionlist::
 ## Asynchronous. || Replies to the sender immediately with the provided message blob.
 ::
 
@@ -333,4 +333,27 @@ This will tie up one of the available threads on the server, and is therefore no
 
 definitionList::
 ## Asynchronous. || Replies to the sender on wakeup with strong::/scin_awake::.
+::
+
+subsection::/scin_createCrashReport
+
+Generate a crash report without crashing and save to the crash report database.
+
+subsection::/scin_logCrashReports
+
+Prints a complete list of crash reports in the log, at the informational log level (2).
+
+definitionlist::
+## Asynchronous. || Replies to sender with code::[ /scin_done, /scin_logCrashReports ]::.
+::
+
+subsection:/scin_uploadCrashReport
+
+Mark a specific crash report, or all not uploaded reports, as upload requested.
+
+table::
+## strong::string:: || A crash report UUID, or the string "all", in which case all reports will marked for upload.
+
+definitionlist::
+## Asynchronous. || Replies to sender with code::[ /scin_done, /scin_uploadCrashReport ]::.
 ::

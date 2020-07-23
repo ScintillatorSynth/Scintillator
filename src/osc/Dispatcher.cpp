@@ -6,11 +6,13 @@
 #include "comp/Compositor.hpp"
 #include "comp/FrameTimer.hpp"
 #include "comp/Offscreen.hpp"
+#include "infra/CrashReporter.hpp"
 #include "infra/Logger.hpp"
 #include "infra/Version.hpp"
 #include "osc/Address.hpp"
 #include "osc/BlobMessage.hpp"
 #include "osc/commands/AdvanceFrame.hpp"
+#include "osc/commands/CreateCrashReport.hpp"
 #include "osc/commands/DefFree.hpp"
 #include "osc/commands/DefLoad.hpp"
 #include "osc/commands/DefLoadDir.hpp"
@@ -20,6 +22,7 @@
 #include "osc/commands/ImageBufferAllocRead.hpp"
 #include "osc/commands/ImageBufferQuery.hpp"
 #include "osc/commands/LogAppend.hpp"
+#include "osc/commands/LogCrashReports.hpp"
 #include "osc/commands/LogLevel.hpp"
 #include "osc/commands/NodeFree.hpp"
 #include "osc/commands/NodeRun.hpp"
@@ -32,18 +35,26 @@
 #include "osc/commands/SleepFor.hpp"
 #include "osc/commands/Status.hpp"
 #include "osc/commands/Sync.hpp"
+#include "osc/commands/UploadCrashReport.hpp"
 
-#include "fmt/core.h"
-#include "spdlog/spdlog.h"
+#include <fmt/core.h>
+#include <spdlog/spdlog.h>
 
 #include <cstring>
 
 namespace scin { namespace osc {
 
+#if defined(SCIN_USE_CRASHPAD)
+Dispatcher::Dispatcher(std::shared_ptr<infra::Logger> logger, std::shared_ptr<comp::Async> async,
+                       std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<comp::Compositor> compositor,
+                       std::shared_ptr<comp::Offscreen> offscreen, std::shared_ptr<const comp::FrameTimer> frameTimer,
+                       std::function<void()> quitHandler, std::shared_ptr<infra::CrashReporter> crashReporter):
+#else
 Dispatcher::Dispatcher(std::shared_ptr<infra::Logger> logger, std::shared_ptr<comp::Async> async,
                        std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<comp::Compositor> compositor,
                        std::shared_ptr<comp::Offscreen> offscreen, std::shared_ptr<const comp::FrameTimer> frameTimer,
                        std::function<void()> quitHandler):
+#endif
     m_logger(logger),
     m_async(async),
     m_archetypes(archetypes),
@@ -51,12 +62,16 @@ Dispatcher::Dispatcher(std::shared_ptr<infra::Logger> logger, std::shared_ptr<co
     m_offscreen(offscreen),
     m_frameTimer(frameTimer),
     m_quitHandler(quitHandler),
+#if defined(SCIN_USE_CRASHPAD)
+    m_crashReporter(crashReporter),
+#endif
     m_tcpThread(nullptr),
     m_tcpServer(nullptr),
     m_udpThread(nullptr),
     m_udpServer(nullptr),
     m_quitOrigin(nullptr),
-    m_dumpOSC(false) {}
+    m_dumpOSC(false) {
+}
 
 Dispatcher::~Dispatcher() { destroy(); }
 
@@ -104,6 +119,9 @@ bool Dispatcher::create(const std::string& bindPort, bool dumpOSC) {
     m_commands[commands::Command::kEcho].reset(new commands::Echo(this));
     m_commands[commands::Command::kLogAppend].reset(new commands::LogAppend(this));
     m_commands[commands::Command::kSleepFor].reset(new commands::SleepFor(this));
+    m_commands[commands::Command::kCreateCrashReport].reset(new commands::CreateCrashReport(this));
+    m_commands[commands::Command::kLogCrashReports].reset(new commands::LogCrashReports(this));
+    m_commands[commands::Command::kUploadCrashReport].reset(new commands::UploadCrashReport(this));
 
     return true;
 }

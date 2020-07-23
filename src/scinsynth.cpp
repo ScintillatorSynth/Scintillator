@@ -8,6 +8,7 @@
 #include "comp/Offscreen.hpp"
 #include "comp/Pipeline.hpp"
 #include "comp/Window.hpp"
+#include "infra/CrashReporter.hpp"
 #include "infra/Logger.hpp"
 #include "infra/Version.hpp"
 #include "osc/Dispatcher.hpp"
@@ -19,10 +20,10 @@
 #include "vulkan/Shader.hpp"
 #include "vulkan/Vulkan.hpp"
 
-#include "fmt/core.h"
-#include "gflags/gflags.h"
-#include "glm/glm.hpp"
-#include "spdlog/spdlog.h"
+#include <fmt/core.h>
+#include <gflags/gflags.h>
+#include <glm/glm.hpp>
+#include <spdlog/spdlog.h>
 
 #include <chrono>
 #include <memory>
@@ -69,6 +70,8 @@ DEFINE_bool(swiftshader, false,
 DEFINE_int32(audioInputChannels, 0, "If non-zero, defines the number of input channels to create via portaudio.");
 DEFINE_int32(audioOutputChannels, 0, "If non-zero, defines the number of output channels to create via portaudio.");
 
+DEFINE_string(crashpadHandlerPath, "", "Path to the crash report handler executable.");
+
 #if (__APPLE__)
 void envCheckAndUnset(const char* name) {
     const char* value = nullptr;
@@ -91,10 +94,49 @@ int main(int argc, char* argv[]) {
         fmt::print(version);
         return EXIT_SUCCESS;
     }
+
     if (!fs::exists(FLAGS_quarkDir)) {
         fmt::print("invalid or nonexistent path {} supplied for --quarkDir, terminating.", FLAGS_quarkDir);
         return EXIT_FAILURE;
     }
+
+    fs::path quarkPath = fs::canonical(FLAGS_quarkDir);
+    if (!fs::exists(quarkPath / "Scintillator.quark")) {
+        spdlog::error("Path {} doesn't look like Scintillator Quark root directory, terminating.", quarkPath.string());
+        return EXIT_FAILURE;
+    }
+
+#if defined(SCIN_USE_CRASHPAD)
+    fs::path crashReportDatabase = quarkPath / ".crash_reports";
+    std::shared_ptr<scin::infra::CrashReporter> crashReporter(
+        new scin::infra::CrashReporter(FLAGS_crashpadHandlerPath, crashReportDatabase.string()));
+    if (fs::exists(FLAGS_crashpadHandlerPath)) {
+        if (!crashReporter->openDatabase()) {
+            spdlog::warn("Failed to open crash database, continuing without crash telemetry.");
+        } else {
+            spdlog::info("Opened crash report database at {}.", crashReportDatabase.string());
+            if (!crashReporter->startCrashHandler()) {
+                spdlog::warn("Failed to start crash handler, continuing without crash telemetry.");
+            } else {
+                auto notUploaded = crashReporter->logCrashReports();
+                if (notUploaded < 0) {
+                    spdlog::warn("Failed to read crash reports from the database.");
+                }
+
+                if (notUploaded > 0) {
+                    spdlog::warn("There are {} Scintillator Server crash reports available for upload.", notUploaded);
+                }
+
+                // Shouldn't be a need normally to keep this open. If the process crashes the out-of-process crash
+                // handler will hopefully catch it and write to the database.
+                crashReporter->closeDatabase();
+            }
+        }
+    } else {
+        spdlog::warn("Invalid path '{}' to Crashpad handler executable, disabling crash reporting.",
+                     FLAGS_crashpadHandlerPath);
+    }
+#endif
 
 #if (__APPLE__)
     // Look in the environment variables for hard-coded paths to Vulkan SDK components that might break our built-in
@@ -104,12 +146,6 @@ int main(int argc, char* argv[]) {
     envCheckAndUnset("VK_LAYER_PATH");
     envCheckAndUnset("VULKAN_SDK");
 #endif
-
-    fs::path quarkPath = fs::canonical(FLAGS_quarkDir);
-    if (!fs::exists(quarkPath / "Scintillator.quark")) {
-        spdlog::error("Path {} doesn't look like Scintillator Quark root directory, terminating.", quarkPath.string());
-        return EXIT_FAILURE;
-    }
 
 #if (WIN32)
     if (FLAGS_vulkanValidation) {
@@ -270,7 +306,12 @@ int main(int argc, char* argv[]) {
     } else {
         quitHandler = [offscreen] { offscreen->stop(); };
     }
+#if defined(SCIN_USE_CRASHPAD)
+    scin::osc::Dispatcher dispatcher(logger, async, archetypes, compositor, offscreen, frameTimer, quitHandler,
+                                     crashReporter);
+#else
     scin::osc::Dispatcher dispatcher(logger, async, archetypes, compositor, offscreen, frameTimer, quitHandler);
+#endif
     if (!dispatcher.create(FLAGS_portNumber, FLAGS_dumpOSC)) {
         spdlog::error("Failed creating OSC command dispatcher.");
         return EXIT_FAILURE;

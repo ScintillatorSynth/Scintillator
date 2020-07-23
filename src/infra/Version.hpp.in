@@ -6,6 +6,7 @@ constexpr int kScinVersionMinor = @PROJECT_VERSION_MINOR@;
 constexpr int kScinVersionPatch = @PROJECT_VERSION_PATCH@;
 constexpr const char* kScinBranch = "@GIT_BRANCH@";
 constexpr const char* kScinCommitHash = "@GIT_COMMIT_HASH@";
+constexpr const char* kScinCompleteHash = "@GIT_COMPLETE_HASH@";
 
 #endif  // SRC_VERSION_HPP_
 

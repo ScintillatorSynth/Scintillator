@@ -166,6 +166,8 @@ set(scintillator_synth_files
     comp/Window.cpp
     comp/Window.hpp
 
+    infra/CrashReporter.cpp
+    infra/CrashReporter.hpp
     infra/Logger.cpp
     infra/Logger.hpp
 
@@ -178,6 +180,8 @@ set(scintillator_synth_files
     osc/commands/AdvanceFrame.cpp
     osc/commands/AdvanceFrame.hpp
     osc/commands/Command.hpp
+    osc/commands/CreateCrashReport.cpp
+    osc/commands/CreateCrashReport.hpp
     osc/commands/DefFree.cpp
     osc/commands/DefFree.hpp
     osc/commands/DefLoad.cpp
@@ -196,6 +200,8 @@ set(scintillator_synth_files
     osc/commands/ImageBufferQuery.hpp
     osc/commands/LogAppend.cpp
     osc/commands/LogAppend.hpp
+    osc/commands/LogCrashReports.cpp
+    osc/commands/LogCrashReports.hpp
     osc/commands/LogLevel.cpp
     osc/commands/LogLevel.hpp
     osc/commands/NodeFree.cpp
@@ -220,6 +226,8 @@ set(scintillator_synth_files
     osc/commands/Status.hpp
     osc/commands/Sync.cpp
     osc/commands/Sync.hpp
+    osc/commands/UploadCrashReport.cpp
+    osc/commands/UploadCrashReport.hpp
 
     vulkan/Buffer.cpp
     vulkan/Buffer.hpp
@@ -280,6 +288,7 @@ find_library(SHADERC_LIBRARY
     PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
     NO_DEFAULT_PATH
 )
+
 if (WIN32)
     find_library(AVCODEC_LIBRARY
         NAMES avcodec
@@ -327,6 +336,7 @@ else()
         PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
         NO_DEFAULT_PATH
     )
+
     find_library(Vulkan_LIBRARY
         NAMES vulkan
         PATHS "${SCIN_EXT_INSTALL_DIR}/lib"
@@ -368,6 +378,52 @@ endif()
 add_dependencies(scinsynth
     liblo-install
 )
+
+if (SCIN_USE_CRASHPAD)
+    target_include_directories(scinsynth PRIVATE
+        ${SCIN_EXT_INSTALL_DIR}/crashpad
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/third_party/mini_chromium/mini_chromium
+    )
+    target_link_libraries(scinsynth
+        # TODO: use globbing to just pick up all the .a files and then include them twice.
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/compat/libcompat.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libtest_support.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
+
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/compat/libcompat.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libtest_support.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
+    )
+    add_custom_target(dump_symbols
+        ${PYTHON_EXECUTABLE} tools/prepare-symbol-dump.py
+        DEPENDS scinsynth
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        VERBATIM
+    )
+    target_compile_definitions(scinsynth PRIVATE SCIN_USE_CRASHPAD)
+    add_custom_target(log_crashes
+        ${PYTHON_EXECUTABLE} tools/minidump-stackwalk.py --database .crash_reports --fail_with_nonempty_database
+        DEPENDS scinsynth
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        VERBATIM
+    )
+endif()
 
 file(MAKE_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
 if (APPLE)
@@ -443,6 +499,12 @@ elseif(UNIX)
     install(DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d"
         DESTINATION "${SCIN_APPDIR}/usr/share/vulkan"
     )
+    if (SCIN_USE_CRASHPAD)
+        # Copy the crash report handler binary
+        install(PROGRAMS "${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/crashpad_handler"
+            DESTINATION "${SCIN_APPDIR}/usr/bin"
+        )
+    endif()
     # Now invoke linuxdeploy to assemble AppImage. Need to provide a path to LD_LIBRARY_PATH environment variable so the
     # tool knows where to look for the dependent libraries.
     install(CODE "

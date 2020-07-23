@@ -1,79 +1,78 @@
 language: cpp
-
 matrix:
-    include:
-        - os: linux
-          dist: bionic
-          compiler: clang
-          env:
-              - CC=clang-8 CXX=clang++-8
-              - DO_COVERAGE=true
-        - os: linux
-          dist: bionic
-          env:
-              - DO_COVERAGE=false
-        - os: osx
-          osx_image: xcode11
-          env:
-              - DO_COVERAGE=false
-        - os: windows
-          env:
-              - DO_COVERAGE=false
-
+  include:
+  - os: linux
+    dist: bionic
+    compiler: clang
+    env:
+    - CC=clang-8 CXX=clang++-8
+    - DO_COVERAGE=true
+  - os: linux
+    dist: bionic
+    env:
+    - DO_COVERAGE=false
+  - os: osx
+    osx_image: xcode11
+    env:
+    - DO_COVERAGE=false
+  - os: windows
+    env:
+    - DO_COVERAGE=false
 before_install:
-    - $TRAVIS_BUILD_DIR/.travis/before-install-$TRAVIS_OS_NAME.sh
-
+- "$TRAVIS_BUILD_DIR/.travis/before-install-$TRAVIS_OS_NAME.sh"
 before_script:
-    - $TRAVIS_BUILD_DIR/.travis/before-script-$TRAVIS_OS_NAME.sh
-
+- "$TRAVIS_BUILD_DIR/.travis/before-script-$TRAVIS_OS_NAME.sh"
 script:
-    - $TRAVIS_BUILD_DIR/.travis/script-$TRAVIS_OS_NAME.sh
-
+- "$TRAVIS_BUILD_DIR/.travis/script-$TRAVIS_OS_NAME.sh"
 before_deploy:
-    - $TRAVIS_BUILD_DIR/.travis/before-deploy-$TRAVIS_OS_NAME.sh
-
+- "$TRAVIS_BUILD_DIR/.travis/before-deploy-$TRAVIS_OS_NAME.sh"
 deploy:
-    # coverage reports and documentation
-    - provider: s3
-      access_key_id: $AWS_KEY
-      secret_access_key: $AWS_SECRET
-      bucket: scintillator-synth-coverage
-      local-dir: $HOME/artifacts
-      upload-dir: artifacts/$TRAVIS_COMMIT
-      verbose: true
-      edge: true
-      cleanup: false
-      acl: public_read
-      on:
-        condition: $DO_COVERAGE = true
-        branch: master
-    # build artifacts for non-tagged builds
-    - provider: s3
-      access_key_id: $AWS_KEY
-      secret_access_key: $AWS_SECRET
-      bucket: scintillator-synth-coverage
-      local-dir: $HOME/builds
-      upload-dir: builds
-      verbose: true
-      edge: true
-      cleanup: false
-      acl: public_read
-      on:
-        condition: $DO_COVERAGE = false
-        branch: master
-    # releases for tagged builds
-    - provider: s3
-      access_key_id: $AWS_KEY
-      secret_access_key: $AWS_SECRET
-      bucket: scintillator-synth-coverage
-      local-dir: $HOME/releases
-      upload-dir: releases
-      verbose: true
-      edge: true
-      cleanup: false
-      acl: public_read
-      on:
-        tags: true
-        condition: $DO_COVERAGE = false
-        all_branches: true
+- provider: s3
+  access_key_id: "$AWS_KEY"
+  secret_access_key: "$AWS_SECRET"
+  bucket: scintillator-synth-coverage
+  local-dir: "$HOME/artifacts"
+  upload-dir: artifacts/$TRAVIS_COMMIT
+  verbose: true
+  edge: true
+  cleanup: false
+  acl: public_read
+  on:
+    condition: "$DO_COVERAGE = true"
+    branch: master
+- provider: s3
+  access_key_id: "$AWS_KEY"
+  secret_access_key: "$AWS_SECRET"
+  bucket: scintillator-synth-coverage
+  local-dir: "$HOME/builds"
+  upload-dir: builds
+  verbose: true
+  edge: true
+  cleanup: false
+  acl: public_read
+  on:
+    condition: "$DO_COVERAGE = false"
+    branch: master
+- provider: s3
+  access_key_id: "$AWS_KEY"
+  secret_access_key: "$AWS_SECRET"
+  bucket: scintillator-synth-coverage
+  local-dir: "$HOME/releases"
+  upload-dir: releases
+  verbose: true
+  edge: true
+  cleanup: false
+  acl: public_read
+  on:
+    tags: true
+    condition: "$DO_COVERAGE = false"
+    all_branches: true
+- provider: gcs
+  access_key_id: "$GCS_SYMBOL_ID"
+  secret_access_key: "$GCS_SYMBOL_KEY"
+  bucket: scintillator-gargamelle-symbols
+  cleanup: false
+  on:
+    condition: "$DO_COVERAGE = false"
+    branch: master
 

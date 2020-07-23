@@ -34,7 +34,8 @@ Offscreen::Offscreen(std::shared_ptr<vk::Device> device, int width, int height, 
     m_stagingRequested(false),
     m_swapchainImageIndex(0),
     m_frameRate(frameRate),
-    m_deltaTime(0) {
+    m_deltaTime(0),
+    m_flushCallback([](size_t) {}) {
     if (frameRate > 0) {
         m_deltaTime = 1.0 / static_cast<double>(frameRate);
         m_snapShotMode = false;
@@ -251,7 +252,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
         bool stage = false;
         bool swapBlit = false;
         uint32_t swapImageIndex = 0;
-        std::function<void(size_t)> flushCallback;
+        std::function<void(size_t)> flushCallback([](size_t) {});
 
         {
             std::unique_lock<std::mutex> lock(m_renderMutex);
@@ -401,9 +402,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
         if (flush) {
             m_renderSync->waitForFrame(frameIndex);
             processPendingEncodes(frameIndex);
-            if (flushCallback) {
-                m_flushCallback(frameNumber);
-            }
+            flushCallback(frameNumber);
         }
 
         time += deltaTime;

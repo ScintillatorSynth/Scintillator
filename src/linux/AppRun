@@ -22,5 +22,13 @@ then
     export VK_LAYER_PATH=$HERE/usr/share/vulkan/explicit_layer.d
 fi
 
-exec "$HERE/usr/bin/scinsynth" "$@"
+if [[ "$*" == *crashpadHandlerPath* ]]
+then
+    echo "Respecting override for crashpad handler path"
+    CRASHPAD_HANDLER=""
+else
+    CRASHPAD_HANDLER="--crashpadHandlerPath=$HERE/usr/bin/crashpad_handler"
+fi
+
+exec "$HERE/usr/bin/scinsynth" $CRASHPAD_HANDLER "$@"
 
