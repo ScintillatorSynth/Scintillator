@@ -47,9 +47,11 @@ def main(argv):
             'bin/scinsynth.app/Contents/entitlements.plist', '--sign', signIdentity]
     runtime = ['--options', 'runtime']
 
-    # Sign app and binary.
+    # Sign app, binary, and crashpad handler (if present)
     subprocess.run(codesign + runtime + ['bin/scinsynth.app'], check=True)
     subprocess.run(codesign + runtime + ['bin/scinsynth.app/Contents/MacOS/scinsynth'], check=True)
+    if os.path.exists('bin/scinsynth.app/Contents/MacOS/crashpad_handler'):
+        subprocess.run(codesign + runtime + ['bin/scinsynth.app/Contents/MacOS/crashpad_handler'], check=True)
 
     # Sign all dynamic libraries.
     dylibs = subprocess.run(['find', 'bin/scinsynth.app', '-type', 'f', '-name', '*.dylib'], check=True,

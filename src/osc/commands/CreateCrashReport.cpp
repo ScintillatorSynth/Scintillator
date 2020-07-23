@@ -18,6 +18,8 @@ void CreateCrashReport::processMessage(int argc, lo_arg** argv, const char* type
     m_dispatcher->crashReporter()->dumpWithoutCrash();
 #else
     spdlog::warn("crash report requested but build has crashpad disabled.");
+    int* foo = nullptr;
+    spdlog::error("deref null: {}", *foo);
 #endif
 }
 

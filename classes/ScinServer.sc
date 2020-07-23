@@ -180,11 +180,18 @@ ScinServer {
 		});
 
 		statusPoller.serverBooting = true;
-		if (thisProcess.platform.name === 'windows', {
-			commandLine = scinBinaryPath + options.asOptionsString();
-		}, {
-			commandLine = scinBinaryPath.shellQuote + options.asOptionsString();
-		});
+		Platform.case(
+			\osx, {
+				commandLine = scinBinaryPath.shellQuote + options.asOptionsString() + '--crashpadHandlerPath='
+				++ Scintillator.binDir +/+ "scinsynth.app" +/+ "Contents" +/+ "MacOS" +/+ "crashpad_handler";
+			},
+			\linux, {
+				commandLine = scinBinaryPath.shellQuote + options.asOptionsString();
+			},
+			\windows, {
+				commandLine = scinBinaryPath + options.asOptionsString();
+			}
+		);
 
 		scinPid = commandLine.unixCmd({ |exitCode, exitPid|
 			if (exitCode == 0, {

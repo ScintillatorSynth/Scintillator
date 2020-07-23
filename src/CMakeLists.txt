@@ -389,25 +389,19 @@ if (SCIN_USE_CRASHPAD)
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/test/libtest.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/test/libgoogletest_main.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/test/libgooglemock_main.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libmig_output.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/googletest/libgooglemock.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/googletest/libgoogletest.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/googletest/libgoogletest_main.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/googletest/libgooglemock_main.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libtest_support.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
+
+            "-framework AppKit"
+            "-framework Security"
+            bsm
         )
     elseif(UNIX)
         target_link_libraries(scinsynth
-            # TODO: use globbing to just pick up all the .a files and then include them twice.
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/compat/libcompat.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
@@ -417,7 +411,7 @@ if (SCIN_USE_CRASHPAD)
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
+            #${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
 
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
@@ -429,23 +423,24 @@ if (SCIN_USE_CRASHPAD)
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
+            #${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
+        )
+        # analysis tool is linux-only
+        add_custom_target(log_crashes
+            ${PYTHON_EXECUTABLE} tools/minidump-stackwalk.py --database .crash_reports --fail_with_nonempty_database
+            DEPENDS scinsynth
+            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+            VERBATIM
         )
     endif()
     add_custom_target(dump_symbols
-        ${PYTHON_EXECUTABLE} tools/prepare-symbol-dump.py
+        ${PYTHON_EXECUTABLE} tools/prepare-symbol-dump.py $<TARGET_FILE:scinsynth>
         DEPENDS scinsynth
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         VERBATIM
     )
     target_compile_definitions(scinsynth PRIVATE SCIN_USE_CRASHPAD)
-    add_custom_target(log_crashes
-        ${PYTHON_EXECUTABLE} tools/minidump-stackwalk.py --database .crash_reports --fail_with_nonempty_database
-        DEPENDS scinsynth
-        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-        VERBATIM
-    )
 endif()
 
 file(MAKE_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
@@ -471,6 +466,11 @@ if (APPLE)
     install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/macos/Resources/vulkan"
         DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Resources"
     )
+    if (SCIN_USE_CRASHPAD)
+        install(PROGRAMS "${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/crashpad_handler"
+            DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/MacOS"
+        )
+    endif()
     list(APPEND SCIN_MACOS_LIBS "${SCIN_EXT_INSTALL_DIR}/lib")
     list(APPEND SCIN_MACOS_LIBS "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Frameworks")
     install(CODE "

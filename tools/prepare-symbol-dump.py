@@ -15,6 +15,7 @@
 # c) creates the dump_id subdirectory, copies the symbol file into it
 
 import os
+import platform
 import select
 import shutil
 import subprocess
@@ -26,8 +27,19 @@ def main(argv):
         print('Please run this script from the Scintillator Quark root directory.')
         sys.exit(1)
 
+    if len(argv) < 1:
+        print ('Usage: python3 prepare-symbol-dump.py <path to scintillator binary>')
+        sys.exit(1)
+
     print('extracting symbols from scinsynth')
-    dump_syms = subprocess.run(['build/install-ext/bin/dump_syms', '-v', 'build/src/scinsynth'], stdout=subprocess.PIPE)
+    dump_syms_command = ['build/install-ext/bin/dump_syms']
+    if platform.system() == 'Linux':
+        dump_syms_command.append('-v')
+        dump_syms_command.append(argv[0])
+    elif platform.system() == 'Darwin':
+        dump_syms_command.append(argv[0])
+
+    dump_syms = subprocess.run(dump_syms_command, stdout=subprocess.PIPE)
     # syms is typically ~10MB of text data
     syms = dump_syms.stdout.decode('utf-8')
 
