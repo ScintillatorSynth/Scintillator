@@ -411,7 +411,6 @@ if (SCIN_USE_CRASHPAD)
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
-            #${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
 
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
@@ -423,10 +422,9 @@ if (SCIN_USE_CRASHPAD)
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
-            #${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
             ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
         )
-        # analysis tool is linux-only
+        # analysis tool is Linux-only
         add_custom_target(log_crashes
             ${PYTHON_EXECUTABLE} tools/minidump-stackwalk.py --database .crash_reports --fail_with_nonempty_database
             DEPENDS scinsynth
