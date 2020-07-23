@@ -34,7 +34,8 @@ Offscreen::Offscreen(std::shared_ptr<vk::Device> device, int width, int height, 
     m_stagingRequested(false),
     m_swapchainImageIndex(0),
     m_frameRate(frameRate),
-    m_deltaTime(0) {
+    m_deltaTime(0),
+    m_flushCallback([](size_t){}) {
     if (frameRate > 0) {
         m_deltaTime = 1.0 / static_cast<double>(frameRate);
         m_snapShotMode = false;
