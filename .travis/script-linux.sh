@@ -14,3 +14,6 @@ else
     make compare_images || make log_crashes || exit 3
 fi
 
+# extra catch in the bottom to break build if scinsynth crashed *at any time*
+make log_crashes
+

@@ -48,6 +48,11 @@ def main(argv):
     sym_file.write(syms)
     sym_file.close()
 
+    # gzip symbol file in correct format for upload to symbol archive
+    sym_zip_path = 'build/symbols-scinsynth-' + dump_id + '.sym'
+    shutil.copyfile(os.path.join(sym_path, 'scinsynth.sym'), sym_zip_path)
+    subprocess.run(['gzip', sym_zip_path])
+
     sys.exit(0)
 
 if __name__ == "__main__":

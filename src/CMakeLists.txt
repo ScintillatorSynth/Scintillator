@@ -359,31 +359,6 @@ target_link_libraries(scinsynth
     portaudio_static
     scintillator_base
     spdlog
-
-    # TODO: use globbing to just pick up all the .a files and then include them twice.
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/compat/libcompat.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libtest_support.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
-
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/compat/libcompat.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libtest_support.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
-    ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
 )
 
 target_include_directories(scinsynth PRIVATE
@@ -408,6 +383,32 @@ if (SCIN_USE_CRASHPAD)
     target_include_directories(scinsynth PRIVATE
         ${SCIN_EXT_INSTALL_DIR}/crashpad
         ${SCIN_EXT_INSTALL_DIR}/crashpad/third_party/mini_chromium/mini_chromium
+    )
+    target_link_libraries(scinsynth
+        # TODO: use globbing to just pick up all the .a files and then include them twice.
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/compat/libcompat.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libtest_support.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
+
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/compat/libcompat.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libtest_support.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libtest_support.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
     )
     add_custom_target(dump_symbols
         ${PYTHON_EXECUTABLE} tools/prepare-symbol-dump.py

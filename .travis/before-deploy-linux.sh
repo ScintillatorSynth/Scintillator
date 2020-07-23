@@ -18,8 +18,9 @@ else
     cd $HOME/releases/$TRAVIS_TAG
     gzip scinsynth-x86_64.AppImage
     shasum -a 256 -b scinsynth-x86_64.AppImage.gz > scinsynth-x86_64.AppImage.gz.sha256
-
-    # symbol upload
-    mkdir -p $HOME/symbols
-    tar czf $HOME/symbols/scinsynth-symbols-$TRAVIS_COMMIT-$TRAVIS_OS_NAME.tgz
 fi
+
+# symbol upload
+mkdir -p $HOME/symbols
+cp $TRAVIS_BUILD_DIR/build/symbols-scinsynth-*.gz $HOME/symbols
+
