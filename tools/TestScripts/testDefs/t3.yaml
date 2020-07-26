@@ -4,11 +4,11 @@ shape:
     widthEdges: 1
     heightEdges: 1
 vgens:
-    - className: NormPos
+    - className: VNormPos
       rate: pixel
       outputs:
         - dimension: 2
-    - className: Length
+    - className: VLength
       rate: pixel
       inputs:
         - type: vgen
@@ -17,7 +17,7 @@ vgens:
           dimension: 2
       outputs:
         - dimension: 1
-    - className: BWOut
+    - className: VBWOut
       rate: pixel
       inputs:
         - type: vgen

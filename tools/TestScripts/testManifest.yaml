@@ -8,15 +8,15 @@
   category: "VOsc"
   comment: "VSinOsc frequency as a function of distance from center."
   shortName: "scinOsc"
-  scinthDef: "{ BWOut.pr(VSinOsc.pr(Length.pr(NormPos.pr))); }"
+  scinthDef: "{ VBWOut.pr(VSinOsc.pr(VLength.pr(VNormPos.pr))); }"
   captureTimes: [ 1, 1, 1, 1, 1 ]
 - name: "VSaw Checker"
   category: "VOsc"
   comment: "VSaw two color checker pattern."
   shortName: "gingham"
   scinthDef: "{
-    var pos = NormPos.pr;
-    RGBOut.pr(VSaw.pr(1.0, VX.pr(pos)), VSaw.pr(1.5, VY.pr(pos)), VSaw.pr(VX.pr(NormPos.pr)));
+    var pos = VNormPos.pr;
+    VRGBOut.pr(VSaw.pr(1.0, VX.pr(pos)), VSaw.pr(1.5, VY.pr(pos)), VSaw.pr(VX.pr(VNormPos.pr)));
   }"
   captureTimes: [ 1, 1 ]
 - name: "Param Colors"
@@ -24,7 +24,7 @@
   comment: "Test default values of parameters and a simple change"
   shortName: "paramColors"
   scinthDef: "{ |r = 0.5, g = 0.1, b = 0.9|
-    RGBOut.pr(r, g, b);
+    VRGBOut.pr(r, g, b);
   }"
   captureTimes: [ 1, 1, 1 ]
   parameters:
@@ -37,10 +37,10 @@
   comment: "Test parameters on a more complex ScinthDef"
   shortName: "paramParab"
   scinthDef: "{ |scale=2.0, xmod=0.5, ymod=0.5|
-    var pos = NormPos.pr() * scale;
+    var pos = VNormPos.pr() * scale;
     var sawA = VSaw.pr(0.7, (VX.pr(pos) % xmod) * VY.pr(pos));
     var sawB = VSaw.pr(0.9, VX.pr(pos) * (VY.pr(pos) % ymod));
-    BWOut.pr(sawA * sawB);
+    VBWOut.pr(sawA * sawB);
   }"
   captureTimes: [ 1, 1, 1 ]
   parameters:
@@ -54,11 +54,11 @@
   comment: "Test simple image render with constant image"
   shortName: "constImage"
   scinthDef: "{
-    var size = TextureSize.pr(1);
+    var size = VTextureSize.pr(1);
     var aspect = VX.pr(size) / VY.pr(size);
-    var pos = TexPos.pr;
-    pos = Vec2.pr((VX.pr(pos) - 0.125) / aspect, VY.pr(pos));
-    Sampler.pr(1, pos); }"
+    var pos = VTexPos.pr;
+    pos = VVec2.pr((VX.pr(pos) - 0.125) / aspect, VY.pr(pos));
+    VSampler.pr(1, pos); }"
   images:
     - file: "molly.png"
       number: 1
@@ -68,11 +68,11 @@
   comment: "Test simple image render with parameterized image"
   shortName: "paramImage"
   scinthDef: "{ |i|
-    var size = TextureSize.pr(i);
+    var size = VTextureSize.pr(i);
     var aspect = VX.pr(size) / VY.pr(size);
-    var pos = TexPos.pr;
-    pos = Vec2.pr((VX.pr(pos) - 0.125) / aspect, VY.pr(pos));
-    Sampler.pr(i, pos);
+    var pos = VTexPos.pr;
+    pos = VVec2.pr((VX.pr(pos) - 0.125) / aspect, VY.pr(pos));
+    VSampler.pr(i, pos);
   }"
   images:
     - file: "storm.png"
@@ -89,7 +89,7 @@
   category: "images"
   comment: "Test sampler border mode clamp with a white border"
   shortName: "whiteBorder"
-  scinthDef: "{ Sampler.pr(1, TexPos.pr * 3.0).clampBorderColor_('white'); }"
+  scinthDef: "{ VSampler.pr(1, VTexPos.pr * 3.0).clampBorderColor_('white'); }"
   images:
     - file: "molly.png"
       number: 1
@@ -98,7 +98,7 @@
   category: "images"
   comment: "Test sampler with border mode clamp with an opaque black border"
   shortName: "blackBorder"
-  scinthDef: "{ Sampler.pr(1, TexPos.pr * 3.0).clampBorderColor_('black'); }"
+  scinthDef: "{ VSampler.pr(1, VTexPos.pr * 3.0).clampBorderColor_('black'); }"
   images:
     - file: "molly.png"
       number: 1
@@ -107,7 +107,7 @@
   category: "images"
   comment: "Test sampler with clamp to edge border mode"
   shortName: "edgeBorder"
-  scinthDef: "{ Sampler.pr(1, TexPos.pr * 3.0).addressMode('clampToEdge'); }"
+  scinthDef: "{ VSampler.pr(1, VTexPos.pr * 3.0).addressMode('clampToEdge'); }"
   images:
     - file: "molly.png"
       number: 1
@@ -116,7 +116,7 @@
   category: "images"
   comment: "Test sampler with repeat border mode"
   shortName: "repeatBorder"
-  scinthDef: "{ Sampler.pr(1, TexPos.pr * 3.0).addressMode('repeat'); }"
+  scinthDef: "{ VSampler.pr(1, VTexPos.pr * 3.0).addressMode('repeat'); }"
   images:
     - file: "molly.png"
       number: 1
@@ -125,7 +125,7 @@
   category: "images"
   comment: "Test sampler with repeat border mode"
   shortName: "mirrorBorder"
-  scinthDef: "{ Sampler.pr(1, TexPos.pr * 3.0).addressMode('mirroredRepeat'); }"
+  scinthDef: "{ VSampler.pr(1, VTexPos.pr * 3.0).addressMode('mirroredRepeat'); }"
   images:
     - file: "molly.png"
       number: 1
@@ -135,9 +135,9 @@
   comment: "Test providing all forms of parameters to an Scinth"
   shortName: "complexImage"
   scinthDef: "{ |i = 2|
-    var pos = TexPos.pr;
-    var m = Sampler.pr(1, Vec2.pr(VSaw.pr(freq: 0.5, phase: VX.pr(pos)), VSaw.pr(freq: (0.75 / 2.0), phase: VY.pr(pos))));
-    var s = Sampler.pr(i, Vec2.pr(VSaw.pr(freq: 2.0, phase: 1.0 - VX.pr(pos)), VSaw.pr(freq: 1.5, phase: 1.0 - VY.pr(pos))) * 2.0);
+    var pos = VTexPos.pr;
+    var m = VSampler.pr(1, VVec2.pr(VSaw.pr(freq: 0.5, phase: VX.pr(pos)), VSaw.pr(freq: (0.75 / 2.0), phase: VY.pr(pos))));
+    var s = VSampler.pr(i, VVec2.pr(VSaw.pr(freq: 2.0, phase: 1.0 - VX.pr(pos)), VSaw.pr(freq: 1.5, phase: 1.0 - VY.pr(pos))) * 2.0);
     s + m;
   }"
   images:
@@ -156,7 +156,7 @@
   comment: "Test alpha blending colors between different Scinths, starting with a white opaque background."
   shortName: "alphaWhite"
   scinthDef: "{
-    BWOut.pr(1.0);
+    VBWOut.pr(1.0);
   }"
   captureTimes: [ 1 ]
   keep: true
@@ -165,9 +165,9 @@
   comment: "Add in a green alpha-blended offset circle."
   shortName: "alphaGreen"
   scinthDef: "{
-    var off = Vec2.pr(-0.3, 0.3);
-    var v = Clamp.pr(1.1 - (Length.pr(NormPos.pr - off)), 0.0, 1.0);
-    RGBAOut.pr(0, v, 0, v);
+    var off = VVec2.pr(-0.3, 0.3);
+    var v = VClamp.pr(1.1 - (VLength.pr(VNormPos.pr - off)), 0.0, 1.0);
+    VRGBAOut.pr(0, v, 0, v);
   }"
   captureTimes: [ 1 ]
   keep: true
@@ -176,9 +176,9 @@
   comment: "Now add in a red layer. Note that the generated image is order-dependent."
   shortName: "alphaRed"
   scinthDef: "{
-    var off = Vec2.pr(0.3, 0.3);
-    var v = Clamp.pr(1.1 - (Length.pr(NormPos.pr - off)), 0.0, 1.0);
-    RGBAOut.pr(v, 0, 0, v);
+    var off = VVec2.pr(0.3, 0.3);
+    var v = VClamp.pr(1.1 - (VLength.pr(VNormPos.pr - off)), 0.0, 1.0);
+    VRGBAOut.pr(v, 0, 0, v);
   }"
   captureTimes: [ 1 ]
   keep: true
@@ -187,9 +187,9 @@
   comment: "Add in a blue layer to complete the color wheel."
   shortName: "alphaBlue"
   scinthDef: "{
-    var off = Vec2.pr(0.0, -1.0 * Length.pr(0.3, 0.3));
-    var v = Clamp.pr(1.1 - (Length.pr(NormPos.pr - off)), 0.0, 1.0);
-    RGBAOut.pr(0, 0, v, v);
+    var off = VVec2.pr(0.0, -1.0 * VLength.pr(0.3, 0.3));
+    var v = VClamp.pr(1.1 - (VLength.pr(VNormPos.pr - off)), 0.0, 1.0);
+    VRGBAOut.pr(0, 0, v, v);
   }"
   captureTimes: [ 1 ]
   keep: true
@@ -224,7 +224,7 @@
   shortName: "frOsc"
   scinthDef: "{ |k = 7.0|
     var phaseMul = VSinOsc.fr(freq: 0.3, mul: k, add: 1.0);
-    BWOut.pr(Step.pr(VSinOsc.pr(freq: 0.1, phase: Length.pr(NormPos.pr) * (5 + phaseMul)), 0.5));
+    VBWOut.pr(VStep.pr(VSinOsc.pr(freq: 0.1, phase: VLength.pr(VNormPos.pr) * (5 + phaseMul)), 0.5));
   }"
   captureTimes: [ 1, 1, 1, 1 ]
   parameters:
