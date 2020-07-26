@@ -6,18 +6,15 @@ related:: Classes/SinOsc
 DESCRIPTION::
 VSinOsc, just like the audio UGen link::Classes/SinOsc:: UGen, is a sinusoidal oscillator. It can process inputs of one to four dimensions and produces an output in the same dimension. The arguments parallel the arguments used by link::Classes/SinOsc::, with the only difference being that the default code::mul:: and code::add:: argument values are modified to support producing a sin output range within code::[0, 1]:: instead of the audio range code::[-1, 1]::.
 
+strong::Supported Rates: frame, shape, pixel::
+
 CLASSMETHODS::
 
 METHOD:: fr
+METHOD:: sr
+METHOD:: pr
 
-strong::dimensions::
-table::
-## strong::input:: || strong::output::
-## 1, 1, 1, 1 || 1
-## 2, 2, 2, 2 || 2
-## 3, 3, 3, 3 || 3
-## 4, 4, 4, 4 || 4
-::
+Make a VSinOsc VGen at requested rate.
 
 ARGUMENT:: freq
 Oscillator frequency in cycles per second or Hz.
@@ -30,6 +27,15 @@ Multiplier to apply to oscillator output.
 
 ARGUMENT:: add
 Value to add to oscillator output after multiply.
+
+strong::Dimensions::
+table::
+## strong::input:: || strong::output::
+## 1, 1, 1, 1 || 1
+## 2, 2, 2, 2 || 2
+## 3, 3, 3, 3 || 3
+## 4, 4, 4, 4 || 4
+::
 
 INSTANCEMETHODS::
 private:: inputDimensions, outputDimensions
@@ -46,10 +52,10 @@ code::
 // Scintillator currently can't "autosplat" defaults to
 // higher-dimensional arguments.
 ~k = ScinthDef.new(\k, { |dot = 0.5|
-	var r = Length.fr(NormPos.fr);
-	var rgb = VSinOsc.fr(Vec3.fr(r, 2.0 * r, 3.0 * r),
-		Vec3.fr, Splat3.fr(0.5), Splat3.fr(0.5));
-	RGBOut.fr(VX.fr(rgb), VY.fr(rgb), VZ.fr(rgb));
+	var r = VLength.pr(NormPos.pr);
+	var rgb = VSinOsc.pr(Vec3.pr(r, 2.0 * r, 3.0 * r),
+		Vec3.pr, Splat3.pr(0.5), Splat3.pr(0.5));
+	RGBOut.pr(VX.pr(rgb), VY.pr(rgb), VZ.pr(rgb));
 }).add;
 )
 

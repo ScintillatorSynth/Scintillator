@@ -1,0 +1,42 @@
+TITLE:: VCross
+summary:: VGen to compute vector cross product
+categories:: Quarks>Scintillator>VGens>Mathematics>Vector Math
+related:: Classes/VDot
+
+DESCRIPTION::
+
+Computes the link::https://en.wikipedia.org/wiki/Cross_product##cross product:: of two three dimensional vectors emphasis::u:: and emphasis::v::.
+
+strong::Supported Rates: frame, shape, pixel::
+
+CLASSMETHODS::
+
+METHOD:: fr
+METHOD:: sr
+METHOD:: pr
+
+Make a VCross VGen at requested rate.
+
+ARGUMENT:: u
+First vector input to cross product.
+
+ARGUMENT:: v
+Second vector input to cross product.
+
+returns::
+The cross product of emphasis::u:: and emphasis::v::
+
+strong::Dimensions::
+table::
+## strong::input:: || strong::output::
+## 3, 3 || 3
+::
+
+INSTANCEMETHODS::
+private:: inputDimensions, outputDimensions
+
+EXAMPLES::
+
+code::
+(TODO)
+::

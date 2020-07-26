@@ -1,0 +1,51 @@
+TITLE:: VVecMix
+summary:: Piecewise vector blending VGen
+categories:: Quarks>Scintillator>VGens>Mathematics>Signal Processing
+related:: Classes/VClamp, Classes/VStep
+
+
+DESCRIPTION::
+Similar to the binary operator code::blend::, returns a linear mix of code::u, v:: with code::a:: between code::[0, 1]::. Supports piecewise blend or a single blend argument to apply to all components
+
+strong::Supported Rates: frame, shape, pixel::
+
+CLASSMETHODS::
+
+METHOD:: fr
+METHOD:: sr
+METHOD:: pr
+
+Make a VVecMix VGen at requested rate.
+
+ARGUMENT:: u
+The first vector input to blend.
+
+ARGUMENT:: v
+The second vector input to blend.
+
+ARGUMENT:: a
+The blend factor. If a is a vector then each component of a will be used as the blend factor for the corresponding components in u and v. If a is a single number then it will apply that blend factor to all components of u and v.
+
+returns::
+If 0, returns u. If 1 returns v. Generally returns code::(u * (1 - a)) + (v * a)::
+
+strong::Dimensions::
+table::
+## strong::input:: || strong::output::
+## 1, 1, 1 || 1
+## 2, 2, 1 || 2
+## 2, 2, 2 || 2
+## 3, 3, 1 || 3
+## 3, 3, 3 || 3
+## 4, 4, 1 || 4
+## 4, 4, 4 || 4
+::
+
+INSTANCEMETHODS::
+private:: inputDimensions, outputDimensions
+
+EXAMPLES::
+
+code::
+(TODO)
+::

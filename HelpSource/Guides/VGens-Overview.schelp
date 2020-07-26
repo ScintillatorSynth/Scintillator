@@ -1,6 +1,6 @@
 title:: VGens Overview
 summary:: A list of the available VGens within Scintillator.
-categories:: Quarks>Scintillator>VGens
+categories:: Quarks>Scintillator>Guides
 related:: Classes/VGen, Classes/ScinthDef, Guides/Scintillator-Parallel-Classes
 
 section::Video Oscillators
@@ -64,7 +64,7 @@ table::
 ## - || 2
 :: || Texture Sampler position
 
-## link::Classes/FragCoord::code::.fr():: || pixel || table::
+## link::Classes/VFragCoord::code::.pr():: || pixel || table::
 ## strong::input:: || strong::output::
 ## - || 2
 :: || Onscreen coordinates of current fragment in pixels
@@ -174,15 +174,15 @@ subsection::Vector Operations
 
 table::
 ## strong::VGen:: || strong::Rates:: || strong::Dimensions:: || strong::Description::
-## link::Classes/Clamp::code::.fr(x, min, max):: || frame, shape, pixel || table::
+## link::Classes/VClamp::code::.pr(v, min, max):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1 || 1
 ## 2, 2, 2 || 2
 ## 3, 3, 3 || 3
 ## 4, 4, 4 || 4
-:: || Video equivalent of link::Classes/Clip:: UGen, piecewise bounds input code::x:: between code::[min, max]::
+:: || Video equivalent of link::Classes/Clip:: UGen, piecewise bounds input code::v:: between code::[min, max]::
 
-## link::Classes/Length::code::.fr(x):: || frame, shape, pixel || table::
+## link::Classes/VLength::code::.pr(v):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1 || 1
 ## 2 || 1
@@ -190,14 +190,14 @@ table::
 ## 4 || 1
 :: || Returns the length of the vector code::x::, or the square root of the sum of the squares
 
-## link::Classes/Distance::code::.fr(x, y):: || frame, shape, pixel || table::
+## link::Classes/VDistance::code::.pr(u, v):: || frame, shape, pixel || table::
 ## 1, 1 || 1
 ## 2, 2 || 1
 ## 3, 3 || 1
 ## 4, 4 || 1
-:: || Computes the distance between code::x:: and code::y::, which is the length of the vector code::x - y::
+:: || Computes the distance between code::u:: and code::v::, which is the length of the vector code::v - u::
 
-## link::Classes/Step::code::.fr(step, x):: || frame, shape, pixel || table::
+## link::Classes/VStep::code::.pr(step, x):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1, 1 || 1
 ## 2, 2 || 2
@@ -205,7 +205,7 @@ table::
 ## 4, 4 || 4
 :: || Just like the binary operator code::thresh::, returns code::0:: when code::x < step::, otherwise code::x::
 
-## link::Classes/VecMix::code::.fr(x, y, a):: || frame, shape, pixel || table::
+## link::Classes/VVecMix::code::.pr(v, u, a):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1 || 1
 ## 2, 2, 1 || 2
@@ -214,28 +214,28 @@ table::
 ## 3, 3, 3 || 3
 ## 4, 4, 1 || 4
 ## 4, 4, 4 || 4
-:: || Similar to the binary operator code::blend::, returns a linear mix of code::x, y:: with code::a:: between code::[0, 1]::. Supports piecewise comparison or a single blend argument to apply to all components
+:: || Similar to the binary operator code::blend::, returns a linear mix of code::v, u:: with code::a:: between code::[0, 1]::. Supports piecewise blend or a single blend argument to apply to all components
 
-## link::Classes/Dot::code::.fr(x, y):: || frame, shape, pixel || table::
+## link::Classes/VDot::code::.pr(u, v):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1, 1 || 1
 ## 2, 2 || 1
 ## 3, 3 || 1
 ## 4, 4 || 1
-:: || Returns the dot product between code::x:: and code::y::, or the sum of the product of each component in the vector
+:: || Returns the link::https://en.wikipedia.org/wiki/Dot_product##dot product:: between code::u:: and code::v::, or the sum of the product of each component in the vector
 
-## link::Classes/Cross::code::.fr(x, y):: || frame, shape, pixel || table::
+## link::Classes/VCross::code::.pr(u, v):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 3, 3 || 3
-:: || Returns the cross product of code::x:: and code::y::
+:: || Returns the link::https://en.wikipedia.org/wiki/Cross_product##cross product:: of code::u:: and code::v::
 
-## link::Classes/VNorm::code::.fr(x):: || frame, shape, pixel || table::
+## link::Classes/VNorm::code::.pr(v):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1, 1 || 1
 ## 2, 2 || 2
 ## 3, 3 || 3
 ## 4, 4 || 4
-:: || Returns a emphasis::normalized:: vector parallel to code::x:: with length code::1::
+:: || Returns a emphasis::normalized:: vector parallel to code::v:: with length code::1::
 
 ::
 

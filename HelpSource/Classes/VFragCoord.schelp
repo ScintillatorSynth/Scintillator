@@ -1,4 +1,4 @@
-TITLE:: FragCoord
+TITLE:: VFragCoord
 summary:: Fragment shader pixel coordinates VGen.
 categories:: Quarks>Scintillator>VGens>Built-In
 related:: Classes/NormPos, Classes/TexPos, Reference/Scintillator-Default-Graphics-Setup
@@ -8,7 +8,7 @@ FragCoord exposes the underlying GLSL primitive code::gl_FragCoord::. It returns
 
 CLASSMETHODS::
 
-METHOD:: fr
+METHOD:: pr
 
 strong::dimensions::
 table::
@@ -43,4 +43,4 @@ code::
 )
 ::
 
-image::FragCoordVis.png::
+image::VFragCoord.png::

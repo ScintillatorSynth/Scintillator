@@ -1,14 +1,14 @@
-Clamp : VGen {
-	*fr { |x, min, max|
-		^this.multiNew(\frame, x, min, max);
+VClamp : VGen {
+	*fr { |v, min, max|
+		^this.multiNew(\frame, v, min, max);
 	}
 
-	*sr { |x, min, max|
-		^this.multiNew(\shape, x, min, max);
+	*sr { |v, min, max|
+		^this.multiNew(\shape, v, min, max);
 	}
 
-	*pr { |x, min, max|
-		^this.multiNew(\pixel, x, min, max);
+	*pr { |v, min, max|
+		^this.multiNew(\pixel, v, min, max);
 	}
 
 	inputDimensions {
@@ -20,18 +20,17 @@ Clamp : VGen {
 	}
 }
 
-
-Cross : VGen {
-	*fr { |x, y|
-		^this.multiNew(\frame, x, y);
+VCross : VGen {
+	*fr { |u, v|
+		^this.multiNew(\frame, u, v);
 	}
 
-	*sr { |x, y|
-		^this.multiNew(\shape, x, y);
+	*sr { |u, v|
+		^this.multiNew(\shape, u, v);
 	}
 
-	*pr { |x, y|
-		^this.multiNew(\pixel, x, y);
+	*pr { |u, v|
+		^this.multiNew(\pixel, u, v);
 	}
 
 	inputDimensions {
@@ -43,39 +42,17 @@ Cross : VGen {
 	}
 }
 
-Dot : VGen {
-	*fr { |x, y|
-		^this.multiNew(\frame, x, y);
+VDot : VGen {
+	*fr { |u, v|
+		^this.multiNew(\frame, u, v);
 	}
 
-	*sr { |x, y|
-		^this.multiNew(\shape, x, y);
+	*sr { |u, v|
+		^this.multiNew(\shape, u, v);
 	}
 
-	*pr { |x, y|
-		^this.multiNew(\pixel, x, y);
-	}
-
-	inputDimensions {
-		^[[1, 1], [2, 2], [3, 3], [4, 4]];
-	}
-
-	outputDimensions {
-		^[[1], [1], [1], [1]];
-	}
-}
-
-Distance : VGen {
-	*fr { |x, y|
-		^this.multiNew(\frame, x, y);
-	}
-
-	*sr { |x, y|
-		^this.multiNew(\shape, x, y);
-	}
-
-	*pr { |x, y|
-		^this.multiNew(\pixel, x, y);
+	*pr { |u, v|
+		^this.multiNew(\pixel, u, v);
 	}
 
 	inputDimensions {
@@ -87,15 +64,29 @@ Distance : VGen {
 	}
 }
 
-FragCoord : VGen {
-	*fr {
-		^this.multiNew(\frame);
+VDistance : VGen {
+	*fr { |u, v|
+		^this.multiNew(\frame, u, v);
 	}
 
-	*sr {
-		^this.multiNew(\shape);
+	*sr { |u, v|
+		^this.multiNew(\shape, u, v);
 	}
 
+	*pr { |u, v|
+		^this.multiNew(\pixel, u, v);
+	}
+
+	inputDimensions {
+		^[[1, 1], [2, 2], [3, 3], [4, 4]];
+	}
+
+	outputDimensions {
+		^[[1], [1], [1], [1]];
+	}
+}
+
+VFragCoord : VGen {
 	*pr {
 		^this.multiNew(\pixel);
 	}
@@ -109,17 +100,17 @@ FragCoord : VGen {
 	}
 }
 
-Length : VGen {
-	*fr { |vec|
-		^this.multiNew(\frame, vec);
+VLength : VGen {
+	*fr { |v|
+		^this.multiNew(\frame, v);
 	}
 
-	*sr { |vec|
-		^this.multiNew(\shape, vec);
+	*sr { |v|
+		^this.multiNew(\shape, v);
 	}
 
-	*pr { |vec|
-		^this.multiNew(\pixel, vec);
+	*pr { |v|
+		^this.multiNew(\pixel, v);
 	}
 
 	inputDimensions {
@@ -131,17 +122,17 @@ Length : VGen {
 	}
 }
 
-Step : VGen {
-	*fr { |step, x|
-		^this.multiNew(\frame, step, x);
+VStep : VGen {
+	*fr { |step, v|
+		^this.multiNew(\frame, step, v);
 	}
 
-	*sr { |step, x|
-		^this.multiNew(\shape, step, x);
+	*sr { |step, v|
+		^this.multiNew(\shape, step, v);
 	}
 
-	*pr { |step, x|
-		^this.multiNew(\pixel, step, x);
+	*pr { |step, v|
+		^this.multiNew(\pixel, step, v);
 	}
 
 	inputDimensions {
@@ -153,17 +144,17 @@ Step : VGen {
 	}
 }
 
-VecMix : VGen {
-	*fr { |x, y, a|
-		^this.multiNew(\frame, x, y, a);
+VVecMix : VGen {
+	*fr { |u, v, a|
+		^this.multiNew(\frame, u, v, a);
 	}
 
-	*sr { |x, y, a|
-		^this.multiNew(\shape, x, y, a);
+	*sr { |u, v, a|
+		^this.multiNew(\shape, u, v, a);
 	}
 
-	*pr { |x, y, a|
-		^this.multiNew(\pixel, x, y, a);
+	*pr { |u, v, a|
+		^this.multiNew(\pixel, u, v, a);
 	}
 
 	inputDimensions {
@@ -176,16 +167,16 @@ VecMix : VGen {
 }
 
 VNorm : VGen {
-	*fr { |x|
-		^this.multiNew(\frame, x);
+	*fr { |v|
+		^this.multiNew(\frame, v);
 	}
 
-	*sr { |x|
-		^this.multiNew(\shape, x);
+	*sr { |v|
+		^this.multiNew(\shape, v);
 	}
 
-	*pr { |x|
-		^this.multiNew(\pixel, x);
+	*pr { |v|
+		^this.multiNew(\pixel, v);
 	}
 
 	inputDimensions {

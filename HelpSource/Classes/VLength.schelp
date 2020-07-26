@@ -1,14 +1,26 @@
-TITLE:: Length
+TITLE:: VLength
 summary:: Computes the length of the provided vector
 categories:: Quarks>Scintillator>VGens>Mathematics>Vector Math
-related:: Classes/Distance
+related:: Classes/VDistance
 
 DESCRIPTION::
-Length computes the length of the provided vector as the square root of the sum of the squares of its components. It works on input dimensions 1-4. In the 1D case it returns the absolute value of the input.
+VLength computes the length of the provided vector as the square root of the sum of the squares of its components. It works on input dimensions 1-4. In the 1D case it returns the absolute value of the input.
+
+strong::Supported Rates: frame, shape, pixel::
 
 CLASSMETHODS::
 
 METHOD:: fr
+METHOD:: sr
+METHOD:: pr
+
+Make a VLength VGen at requested rate.
+
+ARGUMENT:: v
+The input vector.
+
+returns::
+The length of the vector.
 
 strong::dimensions::
 table::
@@ -18,9 +30,6 @@ table::
 ## 3 || 1
 ## 4 || 1
 ::
-
-ARGUMENT:: vec
-The input vector.
 
 INSTANCEMETHODS::
 private::inputDimensions, outputDimensions
@@ -51,4 +60,4 @@ code::
 )
 ::
 
-image::Length.png::
+image::VLength.png::

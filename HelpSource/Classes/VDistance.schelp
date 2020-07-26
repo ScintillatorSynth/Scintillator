@@ -1,14 +1,29 @@
-TITLE:: Distance
+TITLE:: VDistance
 summary:: Computes the distance between two vectors
 categories:: Quarks>Scintillator>VGens>Mathematics>Vector Math
-related:: Classes/Length
+related:: Classes/VLength
 
 DESCRIPTION::
-Distance computes the distance between two vectors by calculating the length of their difference. It works on input dimensions 1-4.
+VDistance computes the distance between two vectors by calculating the length of their difference, essentially code::VLength.pr(v - u)::.
+
+strong::Supported Rates: frame, shape, pixel::
 
 CLASSMETHODS::
 
 METHOD:: fr
+METHOD:: sr
+METHOD:: pr
+
+Make a VDistance VGen at the requested rate
+
+ARGUMENT:: u
+First vector input for distance computation.
+
+ARGUMENT:: v
+Second vector input for distance computation.
+
+returns::
+The distance between u and v.
 
 strong::dimensions::
 table::
@@ -18,12 +33,6 @@ table::
 ## 3, 3 || 1
 ## 4, 4 || 1
 ::
-
-ARGUMENT:: x
-First vector input for distance computation.
-
-ARGUMENT:: y
-Second vector input for distance computation.
 
 INSTANCEMETHODS::
 private::inputDimensions, outputDimensions
@@ -57,4 +66,4 @@ code::
 )
 ::
 
-image::Distance.png::
+image::VDistance.png::

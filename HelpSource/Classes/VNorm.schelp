@@ -1,0 +1,43 @@
+TITLE:: VNorm
+summary:: Parallel vector with unit length VGen
+categories:: Quarks>Scintillator>VGens>Mathematics>Vector Math
+related:: Classes/VLength
+
+DESCRIPTION::
+VNorm computes a emphasis::normalized:: vector parallel to code::v:: with length code::1::. For scalar values this is equivalent to the VSign VGen, returning -1 for all values < 0 and +1 for all values > 0.
+
+strong::Supported Rates: frame, shape, pixel::
+
+CLASSMETHODS::
+
+METHOD:: fr
+METHOD:: sr
+METHOD:: pr
+
+Make a VNorm VGen at requested rate.
+
+ARGUMENT:: v
+The input vector.
+
+returns::
+A vector parallel to v but with unit length.
+
+strong::dimensions::
+table::
+## strong::input:: || strong::output::
+## 1 || 1
+## 2 || 2
+## 3 || 3
+## 4 || 4
+::
+
+INSTANCEMETHODS::
+private::inputDimensions, outputDimensions
+
+EXAMPLES::
+
+code::
+(
+(TODO)
+)
+::

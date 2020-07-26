@@ -337,7 +337,7 @@ definitionList::
 
 subsection::/scin_createCrashReport
 
-Generate a crash report without crashing and save to the crash report database.
+Generate a crash report without crashing and save to the crash report database. Not supported on MacOS.
 
 subsection::/scin_logCrashReports
 
@@ -353,6 +353,7 @@ Mark a specific crash report, or all not uploaded reports, as upload requested.
 
 table::
 ## strong::string:: || A crash report UUID, or the string "all", in which case all reports will marked for upload.
+::
 
 definitionlist::
 ## Asynchronous. || Replies to sender with code::[ /scin_done, /scin_uploadCrashReport ]::.
