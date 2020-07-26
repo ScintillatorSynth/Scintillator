@@ -14,3 +14,8 @@ else
     powershell 'compress-archive '$SCIN_BIN_PATH' '$SCIN_ZIP_PATH
     certutil -hashfile $HOME/releases/$TRAVIS_TAG/scinsynth-w64.zip SHA256 | sed -n '2,2p;2q' > $HOME/releases/$TRAVIS_TAG/scinsynth-w64.zip.sha256
 fi
+
+# symbol upload
+mkdir -p $HOME/symbols
+cp $TRAVIS_BUILD_DIR/build/symbols-scinsynth-*.gz $HOME/symbols
+

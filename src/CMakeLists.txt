@@ -67,6 +67,10 @@ elseif(UNIX)
     target_link_libraries(scintillator_base
         stdc++fs
     )
+elseif(WIN32)
+    set_property(TARGET scintillator_base PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreadedDLL"
+    )
 endif()
 
 #### Unit Testing for Core Files
@@ -91,6 +95,10 @@ target_link_libraries(run_unittests
 if (UNIX AND NOT APPLE)
     target_link_libraries(run_unittests
         stdc++fs
+    )
+elseif(WIN32)
+    set_property(TARGET run_unittests PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreadedDLL"
     )
 endif()
 
@@ -280,6 +288,9 @@ elseif(UNIX)
     )
 elseif(WIN32)
     add_executable(scinsynth ${scintillator_synth_files})
+    set_property(TARGET scinsynth PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreadedDLL"
+    )
 endif()
 
 # Force using the locally sourced libraries as opposed to system libs
@@ -379,67 +390,78 @@ add_dependencies(scinsynth
     liblo-install
 )
 
-if (SCIN_USE_CRASHPAD)
-    target_include_directories(scinsynth PRIVATE
-        ${SCIN_EXT_INSTALL_DIR}/crashpad
-        ${SCIN_EXT_INSTALL_DIR}/crashpad/third_party/mini_chromium/mini_chromium
+target_include_directories(scinsynth PRIVATE
+    ${SCIN_EXT_INSTALL_DIR}/crashpad
+    ${SCIN_EXT_INSTALL_DIR}/crashpad/third_party/mini_chromium/mini_chromium
+)
+if (APPLE)
+    target_link_libraries(scinsynth
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libmig_output.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
+
+        "-framework AppKit"
+        "-framework Security"
+        bsm
     )
-    if (APPLE)
-        target_link_libraries(scinsynth
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libmig_output.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
+elseif(UNIX)
+    target_link_libraries(scinsynth
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/compat/libcompat.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libtest_support.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
 
-            "-framework AppKit"
-            "-framework Security"
-            bsm
-        )
-    elseif(UNIX)
-        target_link_libraries(scinsynth
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/compat/libcompat.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libtest_support.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
-
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/compat/libcompat.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libtest_support.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
-            ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
-        )
-        # analysis tool is Linux-only
-        add_custom_target(log_crashes
-            ${PYTHON_EXECUTABLE} tools/minidump-stackwalk.py --database .crash_reports --fail_with_nonempty_database
-            DEPENDS scinsynth
-            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-            VERBATIM
-        )
-    endif()
-    add_custom_target(dump_symbols
-        ${PYTHON_EXECUTABLE} tools/prepare-symbol-dump.py $<TARGET_FILE:scinsynth>
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/libbase.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/compat/libcompat.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libformat.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libtest_support.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/libminidump.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/libclient.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/libutil.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libsnapshot.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/libcontext.a
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/handler/libhandler.a
+    )
+    # analysis tool is Linux-only
+    add_custom_target(log_crashes
+        ${PYTHON_EXECUTABLE} tools/minidump-stackwalk.py --database .crash_reports --fail_with_nonempty_database
         DEPENDS scinsynth
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         VERBATIM
     )
-    target_compile_definitions(scinsynth PRIVATE SCIN_USE_CRASHPAD)
+else() # assumption this is windows
+    target_link_libraries(scinsynth
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/client/client.lib
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/compat/compat.lib
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/format.lib
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/minidump/minidump.lib
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/context.lib
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/snapshot/snapshot.lib
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/getopt/getopt.lib
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/mini_chromium/mini_chromium/base/base.lib
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/third_party/zlib/zlib.lib
+        ${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/obj/util/util.lib
+    )
 endif()
+
+add_custom_target(dump_symbols
+    ${PYTHON_EXECUTABLE} tools/prepare-symbol-dump.py $<TARGET_FILE:scinsynth>
+    DEPENDS scinsynth
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    VERBATIM
+)
 
 file(MAKE_DIRECTORY "${PROJECT_SOURCE_DIR}/bin")
 if (APPLE)
@@ -464,11 +486,9 @@ if (APPLE)
     install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/macos/Resources/vulkan"
         DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Resources"
     )
-    if (SCIN_USE_CRASHPAD)
-        install(PROGRAMS "${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/crashpad_handler"
-            DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/MacOS"
-        )
-    endif()
+    install(PROGRAMS "${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/crashpad_handler"
+        DESTINATION "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/MacOS"
+    )
     list(APPEND SCIN_MACOS_LIBS "${SCIN_EXT_INSTALL_DIR}/lib")
     list(APPEND SCIN_MACOS_LIBS "${PROJECT_SOURCE_DIR}/bin/scinsynth.app/Contents/Frameworks")
     install(CODE "
@@ -520,12 +540,10 @@ elseif(UNIX)
     install(DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d"
         DESTINATION "${SCIN_APPDIR}/usr/share/vulkan"
     )
-    if (SCIN_USE_CRASHPAD)
-        # Copy the crash report handler binary
-        install(PROGRAMS "${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/crashpad_handler"
-            DESTINATION "${SCIN_APPDIR}/usr/bin"
-        )
-    endif()
+    # Copy the crash report handler binary
+    install(PROGRAMS "${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/crashpad_handler"
+        DESTINATION "${SCIN_APPDIR}/usr/bin"
+    )
     # Now invoke linuxdeploy to assemble AppImage. Need to provide a path to LD_LIBRARY_PATH environment variable so the
     # tool knows where to look for the dependent libraries.
     install(CODE "
@@ -559,6 +577,10 @@ elseif(WIN32)
         "${SCIN_EXT_INSTALL_DIR}/lib/VkLayer_khronos_validation.dll"
         "${SCIN_EXT_INSTALL_DIR}/lib/VkLayer_khronos_validation.json"
         DESTINATION "${SCIN_WIN64_DIR}/vulkan/explicit_layer.d"
+    )
+    install(PROGRAMS
+         "${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/crashpad_handler.com"
+          DESTINATION "${SCIN_WIN64_DIR}"
     )
 endif()
 

@@ -38,6 +38,8 @@ def main(argv):
         dump_syms_command.append(argv[0])
     elif platform.system() == 'Darwin':
         dump_syms_command.append(argv[0])
+    elif platform.system() == 'Windows':
+        dump_syms_command.append(argv[0])
 
     dump_syms = subprocess.run(dump_syms_command, stdout=subprocess.PIPE)
     # syms is typically ~10MB of text data
