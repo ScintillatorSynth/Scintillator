@@ -85,7 +85,7 @@ shader: "@out = @v.z;"
 name: VW
 rates: [ frame, shape, pixel ]
 inputs:
-    - vec
+    - v
 outputs:
     - out
 dimensions:

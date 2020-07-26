@@ -14,11 +14,15 @@ CreateCrashReport::CreateCrashReport(osc::Dispatcher* dispatcher): Command(dispa
 CreateCrashReport::~CreateCrashReport() {}
 
 void CreateCrashReport::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
+    if (m_dispatcher->crashReporter()) {
 #if __linux__ || WIN32
-    m_dispatcher->crashReporter()->dumpWithoutCrash();
+        m_dispatcher->crashReporter()->dumpWithoutCrash();
 #else
-    spdlog::warn("crash report requested but crashpad doesn't support crashes on this platform.");
+        spdlog::warn("crash report requested but crashpad doesn't support crashes on this platform.");
 #endif
+    } else {
+        spdlog::warn("Crash reporting disabled.");
+    }
 }
 
 } // namespace commands

@@ -32,7 +32,7 @@ ScinServerOptions {
 	var <>deviceName;
 	var <>vulkanValidation;
 	var <>audioInputChannels;
-	var <>autoUploadCrashReports;
+	var <>crashReporting;
 
 	// Can install a function to call if server exits with a non-zero error code.
 	var <>onServerError;
@@ -54,7 +54,7 @@ ScinServerOptions {
 				deviceName: nil,
 				vulkanValidation: false,
 				audioInputChannels: 0,
-				autoUploadCrashReports: false
+				crashReporting: true
 			)
 		);
 	}
@@ -113,8 +113,8 @@ ScinServerOptions {
 		if (audioInputChannels != defaultValues[\audioInputChannels], {
 			o = o + "--audioInputChannels=" ++ audioInputChannels;
 		});
-		if (autoUploadCrashReports != defaultValues[\autoUploadCrashReports], {
-			o = o + "--autoUploadCrashReports";
+		if (crashReporting != defaultValues[\crashReporting], {
+			o = o + "--crashReporting=" ++ crashReporting;
 		});
 		^o;
 	}
