@@ -1,20 +1,20 @@
-#    include "infra/CrashReporter.hpp"
+#include "infra/CrashReporter.hpp"
 
-#    include "infra/Version.hpp"
+#include "infra/Version.hpp"
 
-#    include <client/crash_report_database.h>
-#    include <client/crashpad_client.h>
-#    include <client/settings.h>
-#    include <fmt/core.h>
-#    include <spdlog/spdlog.h>
-#    include <util/misc/capture_context.h>
-#    include <util/misc/uuid.h>
+#include <client/crash_report_database.h>
+#include <client/crashpad_client.h>
+#include <client/settings.h>
+#include <fmt/core.h>
+#include <spdlog/spdlog.h>
+#include <util/misc/capture_context.h>
+#include <util/misc/uuid.h>
 
-#    include <array>
-#    include <map>
-#    include <string>
-#    include <time.h>
-#    include <vector>
+#include <array>
+#include <map>
+#include <string>
+#include <time.h>
+#include <vector>
 
 namespace {
 
@@ -49,16 +49,13 @@ bool CrashReporter::startCrashHandler() {
 #if (WIN32)
     // TODO: crash reporting seems to be working despite the header comments in crashpad_client.h stating that on
     // windows a named IPC pipe call must also be made after startup. Investigate the inconsistency.
-    return m_client->StartHandler(base::FilePath(m_handlerPath.wstring()),
-                                  base::FilePath(m_databasePath.wstring()),
-                                  base::FilePath(m_metricsPath.wstring()),
-                                  kGargamelleURL, metadata, std::vector<std::string>(), false, false,
-                                  std::vector<base::FilePath>());
+    return m_client->StartHandler(base::FilePath(m_handlerPath.wstring()), base::FilePath(m_databasePath.wstring()),
+                                  base::FilePath(m_metricsPath.wstring()), kGargamelleURL, metadata,
+                                  std::vector<std::string>(), false, false, std::vector<base::FilePath>());
 #else
     return m_client->StartHandler(base::FilePath(m_handlerPath.string()), base::FilePath(m_databasePath.string()),
-                       base::FilePath(m_metricsPath.string()),
-                       kGargamelleURL, metadata, std::vector<std::string>(), false, false,
-                       std::vector<base::FilePath>());
+                                  base::FilePath(m_metricsPath.string()), kGargamelleURL, metadata,
+                                  std::vector<std::string>(), false, false, std::vector<base::FilePath>());
 #endif
 }
 
@@ -80,12 +77,12 @@ bool CrashReporter::openDatabase() {
 
 void CrashReporter::closeDatabase() { m_database = nullptr; }
 
-#    if __linux__
+#if __linux__
 void CrashReporter::dumpWithoutCrash() {
     spdlog::info("generating linux minidump without crash.");
     crashpad::NativeCPUContext context;
-    crashpad::CaptureContext(context);
-    m_client->DumpWithoutCrash(context);
+    crashpad::CaptureContext(&context);
+    m_client->DumpWithoutCrash(&context);
 }
 #elif (WIN32)
 void CrashReporter::dumpWithoutCrash() {

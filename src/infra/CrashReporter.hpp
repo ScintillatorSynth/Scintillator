@@ -1,10 +1,10 @@
-#    ifndef SRC_INFRA_CRASH_REPORTER_HPP_
-#        define SRC_INFRA_CRASH_REPORTER_HPP_
+#ifndef SRC_INFRA_CRASH_REPORTER_HPP_
+#define SRC_INFRA_CRASH_REPORTER_HPP_
 
 #include "base/FileSystem.hpp"
 
-#        include <memory>
-#        include <string>
+#include <memory>
+#include <string>
 
 namespace crashpad {
 class CrashpadClient;
@@ -55,12 +55,12 @@ public:
      */
     int logCrashReports();
 
-#        if __linux__ || WIN32
+#if __linux__ || WIN32
     /*! Requests the handler to generate a minidump stack trace and all accessory information in a crash report.
      * Useful for testing the crash reporting system. Linux only.
      */
     void dumpWithoutCrash();
-#        endif
+#endif
 
     /*! Mark the provided crash report as ready for upload by the handler process.
      *
@@ -87,4 +87,4 @@ private:
 } // namespace infra
 } // namespace scin
 
-#    endif // SRC_INFRA_CRASH_REPORTER_HPP_
+#endif // SRC_INFRA_CRASH_REPORTER_HPP_

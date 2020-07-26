@@ -61,8 +61,7 @@ Dispatcher::Dispatcher(std::shared_ptr<infra::Logger> logger, std::shared_ptr<co
     m_udpThread(nullptr),
     m_udpServer(nullptr),
     m_quitOrigin(nullptr),
-    m_dumpOSC(false) {
-}
+    m_dumpOSC(false) {}
 
 Dispatcher::~Dispatcher() { destroy(); }
 
