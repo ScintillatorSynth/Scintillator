@@ -49,3 +49,7 @@ else
     shasum -a 256 -b scinsynth.app.zip > scinsynth.app.zip.sha256
     security delete-keychain build.keychain
 fi
+
+mkdir -p $HOME/symbols
+cp $TRAVIS_BUILD_DIR/build/symbols-scinsynth-*.gz $HOME/symbols
+
