@@ -59,7 +59,7 @@ rates: [ frame, shape, pixel ]
 outputs: [ out ]
 dimensions:
     - outputs: 2
-shader: "@out = vec2(@fragCoord.x, @fragCoord.y);"
+shader: "@out = vec2(@vFragCoord.x, @vFragCoord.y);"
 ---
 name: VLength
 rates: [ frame, shape, pixel ]

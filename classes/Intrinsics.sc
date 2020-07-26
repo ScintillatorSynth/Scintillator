@@ -1,4 +1,4 @@
-NormPos : VGen {
+VNormPos : VGen {
 	*sr {
 		^this.multiNew(\shape);
 	}
@@ -16,7 +16,7 @@ NormPos : VGen {
 	}
 }
 
-TexPos : VGen {
+VTexPos : VGen {
 	*sr {
 		^this.multiNew(\shape);
 	}

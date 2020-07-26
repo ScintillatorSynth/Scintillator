@@ -54,12 +54,12 @@ Scintillator offers a few different means to determine the position of the curre
 
 table::
 ## strong::VGen:: || strong::Rates:: || strong::Dimensions:: || strong::Description::
-## link::Classes/NormPos::code::.fr():: || shape, pixel || table::
+## link::Classes/VNormPos::code::.pr():: || shape, pixel || table::
 ## strong::input:: || strong::output::
 ## - || 2
 :: || Normalized fragment position
 
-## link::Classes/TexPos::code::.fr():: || shape, pixel || table::
+## link::Classes/VTexPos::code::.pr():: || shape, pixel || table::
 ## strong::input:: || strong::output::
 ## - || 2
 :: || Texture Sampler position

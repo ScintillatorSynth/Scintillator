@@ -1,5 +1,5 @@
 ---
-name: RGBOut
+name: VRGBOut
 rates: [ pixel ]
 inputs:
     - red
@@ -12,7 +12,7 @@ dimensions:
       outputs: 4
 shader: "@rgba = vec4(@red, @blue, @green, 1.0);"
 ---
-name: BWOut
+name: VBWOut
 rates: [ pixel ]
 inputs:
     - value
@@ -23,7 +23,7 @@ dimensions:
       outputs: 4
 shader: "@rgba = vec4(@value, @value, @value, 1.0);"
 ---
-name: RGBAOut
+name: VRGBAOut
 rates: [ pixel ]
 inputs:
     - red
