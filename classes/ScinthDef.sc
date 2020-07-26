@@ -14,10 +14,10 @@ ScinthDef {
 
 	build {
 		if (shape.isNil, {
-			shape = Quad.new;
+			shape = ScinQuad.new;
 		}, {
-			if (shape.isShape.not, {
-				Error.new("Non-shape object provided as Shape argument.").throw;
+			if (shape.isScinShape.not, {
+				Error.new("Non-shape object provided as ScinShape argument.").throw;
 			});
 		});
 		// renderOptions as nil just means we accept the default

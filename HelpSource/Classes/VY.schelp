@@ -1,14 +1,26 @@
 TITLE:: VY
 summary:: Extract the second single-dimensional element from a vector
-categories:: Quarks>Scintillator>VGens>Vector Manipulation
+categories:: Quarks>Scintillator>VGens>Vector Manipulation>Element Access
 related:: Classes/VX, Classes/VZ, Classes/VW
 
 DESCRIPTION::
 Like its sibling classes link::Classes/VX::, link::Classes/VZ::, link::Classes/VW::, access a particular single-dimensional element of the provided vector, in this case the second element, commonly called code::y:: in computer graphics parlance.
 
+strong::Supported Rates: frame, shape, pixel::
+
 CLASSMETHODS::
 
 METHOD:: fr
+METHOD:: sr
+METHOD:: pr
+
+Make a VY VGen at requested rate.
+
+ARGUMENT:: vec
+The vector to extract the second element from.
+
+returns::
+The second element in the vector.
 
 strong::dimensions::
 table::
@@ -18,15 +30,12 @@ table::
 ## 2 || 1
 ::
 
-ARGUMENT:: vec
-The vector to extract the second element from.
-
 INSTANCEMETHODS::
 private::inputDimensions, outputDimensions
 
 EXAMPLES::
 
 code::
-var v = Vec4.fr(1, 2, 3, 4);
+var v = VVec4.fr(1, 2, 3, 4);
 var y = VY.fr(v); // y: 2
 ::

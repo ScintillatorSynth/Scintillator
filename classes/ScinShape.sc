@@ -1,12 +1,12 @@
-Shape {
-	isShape { ^true }
+ScinShape {
+	isScinShape { ^true }
 
 	asYAML {
-		Error.new("Base Shape object not suitable for shape specification. Did you mean to use Quad?").throw;
+		Error.new("Base ScinShape object not suitable for shape specification. Did you mean to use ScinQuad?").throw;
 	}
 }
 
-Quad : Shape {
+ScinQuad : ScinShape {
 	var <>widthEdges;
 	var <>heightEdges;
 
@@ -21,5 +21,5 @@ Quad : Shape {
 }
 
 + Object {
-	isShape { ^false }
+	isScinShape { ^false }
 }

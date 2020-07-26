@@ -144,7 +144,7 @@ VStep : VGen {
 	}
 }
 
-VVecMix : VGen {
+VMix : VGen {
 	*fr { |u, v, a|
 		^this.multiNew(\frame, u, v, a);
 	}

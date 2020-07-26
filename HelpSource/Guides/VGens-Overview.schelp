@@ -32,17 +32,17 @@ VGens for reading from link::Classes/ScinImageBuffer:: objects.
 
 table::
 ## strong::VGen:: || strong::Rates:: || strong::Dimensions:: || strong::Description::
-## link::Classes/Sampler::code::.fr(image, pos):: || frame, shape, pixel || table::
+## link::Classes/VSampler::code::.pr(image, pos):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## image, 2 || 4
-:: || Samples the provided imageBuffer at code::pos:: and returns the 4D color signal as code::(r, g, b, a)::
+:: || Samples the provided imageBuffer at code::pos:: and returns the 4D color signal as code::(red, green, blue, alpha)::
 
-## link::Classes/TexPos::code::.fr():: || shape, pixel || table::
+## link::Classes/VTexPos::code::.fr():: || shape, pixel || table::
 ## strong::input:: || strong::output::
 ## - || 2
 :: || Texture Sampler position
 
-## link::Classes/TextureSize::code::.fr(image):: || frame, shape, pixel || table::
+## link::Classes/VTextureSize::code::.fr(image):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## - || 2
 :: || Returns the dimensions in pixels of the provided ScinImageBuffer. Roughly analogous to link::Classes/BufFrames::.
@@ -72,48 +72,48 @@ table::
 
 section::Vector Manipulation
 
-These utility UGens allow the grouping of one-dimensional elements into vectors, access to individual elements within vectors, and lastly a convenience function to repeat (or emphasis::splat::) a single element across all elements within a vector.
+These utility VGens allow the grouping of one-dimensional elements into vectors, access to individual elements within vectors, and lastly a convenience function to repeat (or emphasis::splat::) a single element across all elements within a vector.
 
-subsection::Building Vectors
+subsection::Vector Building
 
 Some VGens require inputs that are higher-dimensional vectors. To construct those inputs from single-dimensional components, Scintillator provides the code::VecN:: classes.
 
 table::
 ## strong::VGen:: || strong::Rates:: || strong::Dimensions:: || strong::Description::
-## link::Classes/Vec2::code::.fr(x, y):: || frame, shape, pixel || table::
+## link::Classes/VVec2::code::.fr(x, y):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1, 1 || 2
 :: || Construct a 2D vector from individual elements code::x:: and code::y::
 
-## link::Classes/Vec3::code::.fr(x, y, z):: || frame, shape, pixel || table::
+## link::Classes/VVec3::code::.fr(x, y, z):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1 || 3
 :: || Construct a 3D vector from individual elements code::x:: and code::y::
 
-## link::Classes/Vec4::code::.fr(x, y, z, w):: || frame, shape, pixel || table::
+## link::Classes/VVec4::code::.fr(x, y, z, w):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1, 1 || 4
 :: || Construct a 4D vector from individual elements code::x:: and code::y::
 
-## link::Classes/Splat2::code::.fr(x):: || frame, shape, pixel || table::
+## link::Classes/VSplat2::code::.fr(x):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1 || 2
 :: || Construct a 2D vector from a single element copied into both
 
-## link::Classes/Splat3::code::.fr(x):: || frame, shape, pixel || table::
+## link::Classes/VSplat3::code::.fr(x):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1 || 3
 :: || Construct a 3D vector from a single element copied into both
 
-## link::Classes/Splat4::code::.fr(x):: || frame, shape, pixel || table::
+## link::Classes/VSplat4::code::.fr(x):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1 || 4
 :: || Construct a 4D vector from a single element copied into both
 ::
 
-subsection::Accessing Elements Within Vectors
+subsection::Element Access
 
-To break out a single-dimensional signal from a higher-dimensional vector, use the code::VN:: classes. These follow the computer graphics naming conventions for elements within the vector, where the names emphasis::x, y, z, w:: are used to indicate the first through fourth element respectively.
+To break out a single-dimensional signal from a higher-dimensional vector, use the code::VX:: and related classes. These follow the computer graphics naming conventions for elements within the vector, where the names emphasis::x, y, z, w:: are used to indicate the first through fourth element respectively.
 
 table::
 ## strong::VGen:: || strong::Rates:: || strong::Dimensions:: || strong::Description::
@@ -247,10 +247,10 @@ For documentation of these operators in base SuperCollider see the link::Overvie
 
 The following tables detail the current supported operations along with the ones that are not yet supported, the name of the VGen sent to the server to realize the operation, a brief explanation of their function and conceptual mathematical code. Since all numbers within a Scintillator link::Classes/ScinthDef:: must be floating-point, several of the integer operations like bit manipulation are marked as emphasis::not applicable::. If support is planned, but not yet implemented, the function is marked as emphasis::not yet implemented::.
 
-For higher-dimensional signals all operations happen emphasis::piecewise::, meaning the operator is applied to each component of the signal independently. For example if code::b = a.neg:: and both code::a:: and code::b:: are link::Classes/Vec4:: objects then:
+For higher-dimensional signals all operations happen emphasis::piecewise::, meaning the operator is applied to each component of the signal independently. For example if code::b = a.neg:: and both code::a:: and code::b:: are link::Classes/VVec4:: objects then:
 
 code::
-b = Vec4.fr(
+b = VVec4.fr(
 	VX.fr(a).neg,
 	VY.fr(a).neg,
 	VZ.fr(a).neg,
@@ -320,10 +320,10 @@ table::
 
 subsection::Built-In Binary Operations
 
-Binary operations also happen emphasis::piecewise::, meaning that the binary operator is applied to each individual component separately. Conceptually if code::c = a * b:: and both code::a:: and code::b:: are link::Classes/Vec4::s then:
+Binary operations also happen emphasis::piecewise::, meaning that the binary operator is applied to each individual component separately. Conceptually if code::c = a * b:: and both code::a:: and code::b:: are link::Classes/VVec4::s then:
 
 code::
-c = Vec4.fr(
+c = VVec4.fr(
 	VX.fr(a) * VX.fr(b),
 	VY.fr(a) * VY.fr(b),
 	VZ.fr(a) * VZ.fr(b),

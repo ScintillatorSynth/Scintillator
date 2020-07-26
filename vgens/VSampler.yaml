@@ -1,6 +1,6 @@
 # Image and Video Buffer Input and Output
 ---
-name: Sampler
+name: VSampler
 rates: [ frame, shape, pixel ]
 sampler: true
 inputs:

@@ -1,4 +1,4 @@
-TITLE:: VVecMix
+TITLE:: VMix
 summary:: Piecewise vector blending VGen
 categories:: Quarks>Scintillator>VGens>Mathematics>Signal Processing
 related:: Classes/VClamp, Classes/VStep
@@ -15,7 +15,7 @@ METHOD:: fr
 METHOD:: sr
 METHOD:: pr
 
-Make a VVecMix VGen at requested rate.
+Make a VMix VGen at requested rate.
 
 ARGUMENT:: u
 The first vector input to blend.

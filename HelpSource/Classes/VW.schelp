@@ -1,14 +1,26 @@
 TITLE:: VW
 summary:: Extract the fourth single-dimensional element from a vector
-categories:: Quarks>Scintillator>VGens>Vector Manipulation
+categories:: Quarks>Scintillator>VGens>Vector Manipulation>Element Access
 related:: Classes/VX, Classes/VY, Classes/VZ
 
 DESCRIPTION::
 Like its sibling classes link::Classes/VX::, link::Classes/VY::, link::Classes/VZ::, access a particular single-dimensional element of the provided vector, in this case the fourth element, commonly called code::w:: in computer graphics parlance.
 
+strong::Supported Rates: frame, shape, pixel::
+
 CLASSMETHODS::
 
 METHOD:: fr
+METHOD:: sr
+METHOD:: pr
+
+Make a VW VGen at requested rate.
+
+ARGUMENT:: vec
+The vector to extract the fourth element from.
+
+returns::
+The fourth element in the vector.
 
 strong::dimensions::
 table::
@@ -16,15 +28,12 @@ table::
 ## 4 || 1
 ::
 
-ARGUMENT:: vec
-The vector to extract the fourth element from.
-
 INSTANCEMETHODS::
 private::inputDimensions, outputDimensions
 
 EXAMPLES::
 
 code::
-var v = Vec4.fr(1, 2, 3, 4);
+var v = VVec4.fr(1, 2, 3, 4);
 var w = VW.fr(v); // w: 4
 ::
