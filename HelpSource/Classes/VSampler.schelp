@@ -1,7 +1,7 @@
 TITLE:: VSampler
 summary:: Represents a server-side graphics memory region for sampling static images.
 categories:: Quarks>Scintillator>VGens>Image Sampling
-related:: Classes/ScinImageBuffer, Classes/VTexPos
+related:: Classes/ScinImageBuffer, Classes/VTexPos, Classes/VTextureSize
 
 DESCRIPTION::
 VSampler is the fundamental image sampling VGen in Scintillator. It takes a link::Classes/ScinImageBuffer:: id and a position as inputs and produces a link::Classes/VVec4:: color output in code::(red, green, blue, alpha):: order. VSamplers can be configured to sample the image buffer in a variety of ways which are documented below.
@@ -17,7 +17,7 @@ METHOD:: pr
 Make a VSampler VGen at the requested rate.
 
 ARGUMENT:: image
-The link::ScinImageBuffer:: object to sample or a server-issued image ID integer.
+The link::Classes/ScinImageBuffer:: object to sample or a server-issued image ID integer.
 
 ARGUMENT:: pos
 A 2D vector to sample the input image at using the provided filter mode.

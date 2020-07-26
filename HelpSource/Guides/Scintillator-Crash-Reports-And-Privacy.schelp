@@ -32,11 +32,12 @@ list::
 ## This is a development version of scinsynth as the commit hash and branch weren't released.
 ## This computer runs Ubuntu Linux 20.04.
 ## The computer has 72 CPU cores, which is unusual, so will likely uniquely identify a user or device.
-## This was a debugging crash dump caused by a request to generate a crash dump.
+## This was a debugging crash dump caused by an OSC message with a request to generate a crash dump.
 ::
 
-teletype::
+The example crash report as output in human-readable format follows:
 
+teletype::
 Client ID: d538239b-6345-4e76-84c6-69f5b95023bc
 program: scinsynth
 version: 0.0.6

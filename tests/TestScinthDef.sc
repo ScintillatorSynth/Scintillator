@@ -83,7 +83,7 @@ TestScinthDef : UnitTest {
 
 	test_singleVgenBuild {
 		var def = ScinthDef.new(\singleVgenBuild, {
-			BWOut.pr(1.0);
+			VBWOut.pr(1.0);
 		});
 
 		this.sanityCheckBuild(def);
@@ -93,13 +93,13 @@ TestScinthDef : UnitTest {
 		// no parameters for this def so the controls array should be empty.
 		this.assertEquals(def.name, \singleVgenBuild);
 		this.assertEquals(def.children.size, 1);
-		this.assertEquals(def.children[0].class, BWOut);
+		this.assertEquals(def.children[0].class, VBWOut);
 		this.assertEquals(def.controls.size, 0);
 	}
 
 	test_inputChainLinearBuild {
 		var def = ScinthDef.new(\inputChainLinearBuild, {
-			BWOut.pr(VSinOsc.pr.abs);
+			VBWOut.pr(VSinOsc.pr.abs);
 		});
 
 		this.sanityCheckBuild(def);
@@ -110,13 +110,13 @@ TestScinthDef : UnitTest {
 		this.assertEquals(def.children[1].class, UnaryOpVGen);
 		this.assertEquals(def.children[1].name, 'VAbs');
 		this.assertEquals(def.children[1].inputs[0], def.children[0]);
-		this.assertEquals(def.children[2].class, BWOut);
+		this.assertEquals(def.children[2].class, VBWOut);
 		this.assertEquals(def.controls.size, 0);
 	}
 
 	test_singleVgenYaml {
 		var def = ScinthDef.new(\singleVgenYaml, {
-			BWOut.pr(1.0.neg);
+			VBWOut.pr(1.0.neg);
 		});
 		var yaml = def.asYAML;
 
@@ -126,8 +126,8 @@ TestScinthDef : UnitTest {
 
 	test_inputChainYaml {
 		var def = ScinthDef.new(\inputChainYaml, {
-			var pos = NormPos.pr;
-			BWOut.pr(VSinOsc.pr(freq: VY.pr(pos).neg, phase: VX.pr(pos), mul: 0.2, add: 0.5));
+			var pos = VNormPos.pr;
+			VBWOut.pr(VSinOsc.pr(freq: VY.pr(pos).neg, phase: VX.pr(pos), mul: 0.2, add: 0.5));
 		});
 		var yaml = def.asYAML;
 
@@ -137,8 +137,8 @@ TestScinthDef : UnitTest {
 
 	test_paramsNoValues {
 		var def = ScinthDef.new(\paramsNoValues, { |a, b, c|
-			var sin3 = Vec3.pr(a, b, c).sin;
-			RGBOut.pr(VX.pr(sin3), VY.pr(sin3), VZ.pr(sin3));
+			var sin3 = VVec3.pr(a, b, c).sin;
+			VRGBOut.pr(VX.pr(sin3), VY.pr(sin3), VZ.pr(sin3));
 		});
 		// Make sure names are in correct order and all represented.
 		this.assertEquals(3, def.controlNames.size);
@@ -158,7 +158,7 @@ TestScinthDef : UnitTest {
 	test_paramsMixedValues {
 		var def = ScinthDef.new(\paramsValues, { |quick = 10.0, slow = 0.001, x = -17|
 			var average = quick + slow / 2;
-			BWOut.pr(average - x);
+			VBWOut.pr(average - x);
 		});
 		this.assertEquals(3, def.controlNames.size);
 		this.assertEquals('quick', def.controlNames[0]);
@@ -174,12 +174,12 @@ TestScinthDef : UnitTest {
 	}
 
 	test_vgenInputValid_nilIsInvalid {
-		var expected = "BWOut arg: 'v' has bad input: nil";
+		var expected = "VBWOut arg: 'value' has bad input: nil";
 		var err;
 
 		try {
 			ScinthDef(\vgen_nilIsInvalid, {
-				BWOut.pr(nil);
+				VBWOut.pr(nil);
 			});
 		} { | e |
 			err = e;
@@ -190,12 +190,12 @@ TestScinthDef : UnitTest {
 	}
 
 	test_vgenInputValid_ugenIsInvalid {
-		var expected = "BWOut arg: 'v' has bad input: a SinOsc";
+		var expected = "VBWOut arg: 'value' has bad input: a SinOsc";
 		var err;
 
 		try {
 			ScinthDef(\vgen_nilIsInvalid, {
-				BWOut.pr(SinOsc.ar());
+				VBWOut.pr(SinOsc.ar());
 			});
 		} { | e |
 			err = e;

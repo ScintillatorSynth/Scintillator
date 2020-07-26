@@ -205,7 +205,7 @@ table::
 ## 4, 4 || 4
 :: || Just like the binary operator code::thresh::, returns code::0:: when code::x < step::, otherwise code::x::
 
-## link::Classes/VVecMix::code::.pr(v, u, a):: || frame, shape, pixel || table::
+## link::Classes/VMix::code::.pr(v, u, a):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1 || 1
 ## 2, 2, 1 || 2
