@@ -1,0 +1,38 @@
+TITLE:: VBWOut
+summary:: Opaque black and white output VGen
+categories:: Quarks>Scintillator>VGens>Vector Manipulation>Color Output
+related:: Classes/VRGBAOut, Classes/VRGBOut
+
+DESCRIPTION::
+Provides a single value for all three color channels, resulting in a black-and-white, opaque color output signal.
+
+strong::Supported Rates: pixel::
+
+CLASSMETHODS::
+
+METHOD:: pr
+
+Make a VBWOut VGen at requested rate.
+
+ARGUMENT:: value
+The black and white value, with 0.0 representing black and 1.0 representing white.
+
+returns::
+The vector code::VVec4.pr(value, value, value, 1.0)::
+
+strong::dimensions::
+table::
+## strong::input:: || strong::output::
+## 1 || 4
+::
+
+INSTANCEMETHODS::
+private::inputDimensions, outputDimensions
+
+EXAMPLES::
+
+code::
+(
+(TODO)
+)
+::

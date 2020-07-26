@@ -1,0 +1,47 @@
+TITLE:: VRGBAOut
+summary:: Red, green, blue, and alpha color output VGen
+categories:: Quarks>Scintillator>VGens>Vector Manipulation>Color Output
+related:: Classes/VRGBOut, Classes/VBWOut
+
+DESCRIPTION::
+Groups single-channel red, green, blue, and alpha color values into the required 4-dimensional RGBA pixel output color signal.
+
+strong::Supported Rates: pixel::
+
+CLASSMETHODS::
+
+METHOD:: pr
+
+Make a VRGBAOut VGen at requested rate.
+
+ARGUMENT:: red
+The red color component value, between 0 and 1.
+
+ARGUMENT:: green
+The green color component value, between 0 and 1.
+
+ARGUMENT:: blue
+The blue color component value, between 0 and 1.
+
+ARGUMENT:: alpha
+The alpha blending component values, between 0 and 1, with 0 meaning completely transparent and 1 meaning completely opaque.
+
+returns::
+The vector code::VVec4.pr(red, green, blue, alpha)::
+
+strong::dimensions::
+table::
+## strong::input:: || strong::output::
+## 1, 1, 1, 1 || 4
+::
+
+INSTANCEMETHODS::
+private::inputDimensions, outputDimensions
+
+EXAMPLES::
+
+code::
+(
+(TODO)
+)
+::

@@ -1,10 +1,10 @@
-TITLE:: ImageBuffer
+TITLE:: ScinImageBuffer
 summary:: Represents a server-side graphics memory region for sampling static images.
 categories:: Quarks>Scintillator>Media
-related:: Classes/TexPos, Classes/Sampler
+related:: Classes/VTexPos, Classes/VSampler
 
 DESCRIPTION::
-The ImageBuffer class is designed to be analagous to the SuperCollider audio link::Classes/Buffer:: class, but for reading static images for sampling. ImageBuffers are most commonly used inside of link::Classes/ScinthDef:: functions as arguments to link::Classes/Sampler:: instances. Currently ImageBuffer support is limited to reading static images, but more may be added in the future.
+The ScinImageBuffer class is designed to be analagous to the SuperCollider audio link::Classes/Buffer:: class, but for reading static images for sampling. ScinImageBuffers are most commonly used inside of link::Classes/ScinthDef:: functions as arguments to link::Classes/VSampler:: instances. Currently ScinImageBuffer support is limited to reading static images, but more may be added in the future.
 
 CLASSMETHODS::
 
@@ -69,17 +69,17 @@ code::
 )
 
 (
-~molly = ImageBuffer.read(path: "~/src/TestGoldImages/sourceMedia/molly.png".standardizePath);
-~storm = ImageBuffer.read(path: "~/src/TestGoldImages/sourceMedia/storm.png".standardizePath);
+~molly = ScinImageBuffer.read(path: "~/src/TestGoldImages/sourceMedia/molly.png".standardizePath);
+~storm = ScinImageBuffer.read(path: "~/src/TestGoldImages/sourceMedia/storm.png".standardizePath);
 )
 
 (
 ~f = ScinthDef.new(\chromaKey, { |r, g, b, key = 0.25|
-	var m = Sampler.fr(~molly, TexPos.fr);
-	var s = Sampler.fr(~storm, TexPos.fr);
-	var dist = Length.fr(m - Vec4.fr(r, g, b, 1.0));
-	var pick = Step.fr(key, dist);
-	VecMix.fr(s, m, pick);
+	var m = VSampler.fr(~molly, VTexPos.fr);
+	var s = VSampler.fr(~storm, VTexPos.fr);
+	var dist = VLength.fr(m - VVec4.fr(r, g, b, 1.0));
+	var pick = VStep.fr(key, dist);
+	VVecMix.fr(s, m, pick);
 }).add;
 )
 
@@ -88,7 +88,7 @@ code::
 )
 ::
 
-image::ImageBufferA.png::
+image::ScinImageBufferA.png::
 
 code::
 // Now vary the parameters of the ScinthDef to pick up a brighter color and with a larger key
@@ -98,4 +98,4 @@ code::
 )
 ::
 
-image::ImageBufferB.png::
+image::ScinImageBufferB.png::

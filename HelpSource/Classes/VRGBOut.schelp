@@ -1,0 +1,44 @@
+TITLE:: VRGBOut
+summary:: Opaque red, green, blue color output VGen
+categories:: Quarks>Scintillator>VGens>Vector Manipulation>Color Output
+related:: Classes/VRGBAOut, Classes/VBWOut
+
+DESCRIPTION::
+Groups single-channel red, green, and blue color values into the required 4-dimensional RGBA pixel output color signal, with a constant of 1.0 for the opacity.
+
+strong::Supported Rates: pixel::
+
+CLASSMETHODS::
+
+METHOD:: pr
+
+Make a VRGBOut VGen at requested rate.
+
+ARGUMENT:: red
+The red color component value, between 0 and 1.
+
+ARGUMENT:: green
+The green color component value, between 0 and 1.
+
+ARGUMENT:: blue
+The blue color component value, between 0 and 1.
+
+returns::
+The vector code::VVec4.pr(red, green, blue, 1.0)::
+
+strong::dimensions::
+table::
+## strong::input:: || strong::output::
+## 1, 1, 1 || 4
+::
+
+INSTANCEMETHODS::
+private::inputDimensions, outputDimensions
+
+EXAMPLES::
+
+code::
+(
+(TODO)
+)
+::
