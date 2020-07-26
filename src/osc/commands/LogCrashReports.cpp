@@ -14,12 +14,8 @@ LogCrashReports::LogCrashReports(osc::Dispatcher* dispatcher): Command(dispatche
 LogCrashReports::~LogCrashReports() {}
 
 void LogCrashReports::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
-#if defined(SCIN_USE_CRASHPAD)
     m_dispatcher->crashReporter()->logCrashReports();
     m_dispatcher->crashReporter()->closeDatabase();
-#else
-    spdlog::warn("crash log requested but build has crashpad disabled.");
-#endif
     m_dispatcher->respond(address, "/scin_done", "/scin_logCrashReports");
 }
 

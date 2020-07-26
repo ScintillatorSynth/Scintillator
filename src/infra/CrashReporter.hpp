@@ -1,9 +1,10 @@
-#if defined(SCIN_USE_CRASHPAD)
-#    ifndef SRC_INFRA_CRASH_REPORTER_HPP_
-#        define SRC_INFRA_CRASH_REPORTER_HPP_
+#ifndef SRC_INFRA_CRASH_REPORTER_HPP_
+#define SRC_INFRA_CRASH_REPORTER_HPP_
 
-#        include <memory>
-#        include <string>
+#include "base/FileSystem.hpp"
+
+#include <memory>
+#include <string>
 
 namespace crashpad {
 class CrashpadClient;
@@ -20,11 +21,11 @@ class CrashReporter {
 public:
     /*! CrashReporter constructor.
      *
-     * \param crashpadHandlerPath The path to the executable to run as the crashpad handler.
-     * \param databasePath A file path to the crash report database root directory. If it does not exist it will be
-     *        created.
+     * \param handler The path to the executable to run as the crashpad handler.
+     * \param database A path to the crash report database root directory. If it does not exist it will be created.
+     * \param metrics A path to the metrics database root directory. If it does not exist it will be created.
      */
-    CrashReporter(const std::string& crashpadHandlerPath, const std::string& databasePath);
+    CrashReporter(const fs::path& handler, const fs::path& database, const fs::path& metrics);
 
     /*! CrashReporter destructor. Will disable crash reporting when executed, so should be deferred as late as possible
      * in process exit.
@@ -54,12 +55,12 @@ public:
      */
     int logCrashReports();
 
-#        if __linux__
+#if __linux__ || WIN32
     /*! Requests the handler to generate a minidump stack trace and all accessory information in a crash report.
      * Useful for testing the crash reporting system. Linux only.
      */
     void dumpWithoutCrash();
-#        endif
+#endif
 
     /*! Mark the provided crash report as ready for upload by the handler process.
      *
@@ -75,8 +76,9 @@ public:
     bool uploadAllCrashReports();
 
 private:
-    std::string m_crashpadHandlerPath;
-    std::string m_databasePath;
+    fs::path m_handlerPath;
+    fs::path m_databasePath;
+    fs::path m_metricsPath;
 
     std::unique_ptr<crashpad::CrashReportDatabase> m_database;
     std::unique_ptr<crashpad::CrashpadClient> m_client;
@@ -85,5 +87,4 @@ private:
 } // namespace infra
 } // namespace scin
 
-#    endif // SRC_INFRA_CRASH_REPORTER_HPP_
-#endif // SCIN_USE_CRASHPAD
+#endif // SRC_INFRA_CRASH_REPORTER_HPP_

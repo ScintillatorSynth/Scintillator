@@ -189,7 +189,8 @@ ScinServer {
 				commandLine = scinBinaryPath.shellQuote + options.asOptionsString();
 			},
 			\windows, {
-				commandLine = scinBinaryPath + options.asOptionsString();
+				commandLine = scinBinaryPath + options.asOptionsString() + '--crashpadHandlerPath='
+				++ Scintillator.binDir +/+ "scinsynth-w64" +/+ "crashpad_handler.com";
 			}
 		);
 

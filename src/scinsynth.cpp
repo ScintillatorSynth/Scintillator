@@ -106,11 +106,12 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-#if defined(SCIN_USE_CRASHPAD)
+    fs::path crashpadHandler = fs::path(FLAGS_crashpadHandlerPath);
     fs::path crashReportDatabase = quarkPath / ".crash_reports";
+    fs::path crashReportMetrics = quarkPath / ".crash_metrics";
     std::shared_ptr<scin::infra::CrashReporter> crashReporter(
-        new scin::infra::CrashReporter(FLAGS_crashpadHandlerPath, crashReportDatabase.string()));
-    if (fs::exists(FLAGS_crashpadHandlerPath)) {
+        new scin::infra::CrashReporter(crashpadHandler, crashReportDatabase, crashReportMetrics));
+    if (fs::exists(crashpadHandler)) {
         if (!crashReporter->openDatabase()) {
             spdlog::warn("Failed to open crash database, continuing without crash telemetry.");
         } else {
@@ -136,7 +137,6 @@ int main(int argc, char* argv[]) {
         spdlog::warn("Invalid path '{}' to Crashpad handler executable, disabling crash reporting.",
                      FLAGS_crashpadHandlerPath);
     }
-#endif
 
 #if (__APPLE__)
     // Look in the environment variables for hard-coded paths to Vulkan SDK components that might break our built-in
@@ -306,12 +306,8 @@ int main(int argc, char* argv[]) {
     } else {
         quitHandler = [offscreen] { offscreen->stop(); };
     }
-#if defined(SCIN_USE_CRASHPAD)
     scin::osc::Dispatcher dispatcher(logger, async, archetypes, compositor, offscreen, frameTimer, quitHandler,
                                      crashReporter);
-#else
-    scin::osc::Dispatcher dispatcher(logger, async, archetypes, compositor, offscreen, frameTimer, quitHandler);
-#endif
     if (!dispatcher.create(FLAGS_portNumber, FLAGS_dumpOSC)) {
         spdlog::error("Failed creating OSC command dispatcher.");
         return EXIT_FAILURE;

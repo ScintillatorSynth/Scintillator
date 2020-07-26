@@ -1,21 +1,20 @@
-#if defined(SCIN_USE_CRASHPAD)
-#    include "infra/CrashReporter.hpp"
+#include "infra/CrashReporter.hpp"
 
-#    include "infra/Version.hpp"
+#include "infra/Version.hpp"
 
-#    include <client/crash_report_database.h>
-#    include <client/crashpad_client.h>
-#    include <client/settings.h>
-#    include <fmt/core.h>
-#    include <spdlog/spdlog.h>
-#    include <util/misc/capture_context.h>
-#    include <util/misc/uuid.h>
+#include <client/crash_report_database.h>
+#include <client/crashpad_client.h>
+#include <client/settings.h>
+#include <fmt/core.h>
+#include <spdlog/spdlog.h>
+#include <util/misc/capture_context.h>
+#include <util/misc/uuid.h>
 
-#    include <array>
-#    include <map>
-#    include <string>
-#    include <time.h>
-#    include <vector>
+#include <array>
+#include <map>
+#include <string>
+#include <time.h>
+#include <vector>
 
 namespace {
 
@@ -32,9 +31,10 @@ void logReport(const crashpad::CrashReportDatabase::Report& report) {
 
 namespace scin { namespace infra {
 
-CrashReporter::CrashReporter(const std::string& crashpadHandlerPath, const std::string& databasePath):
-    m_crashpadHandlerPath(crashpadHandlerPath),
-    m_databasePath(databasePath),
+CrashReporter::CrashReporter(const fs::path& handler, const fs::path& database, const fs::path& metrics):
+    m_handlerPath(handler),
+    m_databasePath(database),
+    m_metricsPath(metrics),
     m_client(new crashpad::CrashpadClient()) {}
 
 CrashReporter::~CrashReporter() {}
@@ -46,10 +46,17 @@ bool CrashReporter::startCrashHandler() {
     metadata["commit"] = kScinCompleteHash;
     metadata["branch"] = kScinBranch;
 
-    return m_client->StartHandler(base::FilePath(m_crashpadHandlerPath), base::FilePath(m_databasePath),
-                                  base::FilePath(""), // Metrics path
-                                  kGargamelleURL, metadata, std::vector<std::string>(), false, false,
-                                  std::vector<base::FilePath>());
+#if (WIN32)
+    // TODO: crash reporting seems to be working despite the header comments in crashpad_client.h stating that on
+    // windows a named IPC pipe call must also be made after startup. Investigate the inconsistency.
+    return m_client->StartHandler(base::FilePath(m_handlerPath.wstring()), base::FilePath(m_databasePath.wstring()),
+                                  base::FilePath(m_metricsPath.wstring()), kGargamelleURL, metadata,
+                                  std::vector<std::string>(), false, false, std::vector<base::FilePath>());
+#else
+    return m_client->StartHandler(base::FilePath(m_handlerPath.string()), base::FilePath(m_databasePath.string()),
+                                  base::FilePath(m_metricsPath.string()), kGargamelleURL, metadata,
+                                  std::vector<std::string>(), false, false, std::vector<base::FilePath>());
+#endif
 }
 
 
@@ -70,14 +77,21 @@ bool CrashReporter::openDatabase() {
 
 void CrashReporter::closeDatabase() { m_database = nullptr; }
 
-#    if __linux__
+#if __linux__
 void CrashReporter::dumpWithoutCrash() {
-    spdlog::info("generating minidump without crash.");
+    spdlog::info("generating linux minidump without crash.");
     crashpad::NativeCPUContext context;
     crashpad::CaptureContext(&context);
     m_client->DumpWithoutCrash(&context);
 }
-#    endif
+#elif (WIN32)
+void CrashReporter::dumpWithoutCrash() {
+    spdlog::info("generating windows minidump without crash.");
+    CONTEXT context;
+    crashpad::CaptureContext(&context);
+    m_client->DumpWithoutCrash(context);
+}
+#endif
 
 int CrashReporter::logCrashReports() {
     if (!openDatabase())
@@ -203,4 +217,3 @@ bool CrashReporter::uploadAllCrashReports() {
 
 } // namespace infra
 } // namespace scin
-#endif // SCIN_USE_CRASHPAD

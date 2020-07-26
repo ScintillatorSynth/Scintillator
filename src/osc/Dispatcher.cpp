@@ -44,17 +44,10 @@
 
 namespace scin { namespace osc {
 
-#if defined(SCIN_USE_CRASHPAD)
 Dispatcher::Dispatcher(std::shared_ptr<infra::Logger> logger, std::shared_ptr<comp::Async> async,
                        std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<comp::Compositor> compositor,
                        std::shared_ptr<comp::Offscreen> offscreen, std::shared_ptr<const comp::FrameTimer> frameTimer,
                        std::function<void()> quitHandler, std::shared_ptr<infra::CrashReporter> crashReporter):
-#else
-Dispatcher::Dispatcher(std::shared_ptr<infra::Logger> logger, std::shared_ptr<comp::Async> async,
-                       std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<comp::Compositor> compositor,
-                       std::shared_ptr<comp::Offscreen> offscreen, std::shared_ptr<const comp::FrameTimer> frameTimer,
-                       std::function<void()> quitHandler):
-#endif
     m_logger(logger),
     m_async(async),
     m_archetypes(archetypes),
@@ -62,16 +55,13 @@ Dispatcher::Dispatcher(std::shared_ptr<infra::Logger> logger, std::shared_ptr<co
     m_offscreen(offscreen),
     m_frameTimer(frameTimer),
     m_quitHandler(quitHandler),
-#if defined(SCIN_USE_CRASHPAD)
     m_crashReporter(crashReporter),
-#endif
     m_tcpThread(nullptr),
     m_tcpServer(nullptr),
     m_udpThread(nullptr),
     m_udpServer(nullptr),
     m_quitOrigin(nullptr),
-    m_dumpOSC(false) {
-}
+    m_dumpOSC(false) {}
 
 Dispatcher::~Dispatcher() { destroy(); }
 

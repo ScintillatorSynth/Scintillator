@@ -35,14 +35,12 @@ def main(argv):
     os.makedirs(binary_path, exist_ok=True)
     os.makedirs(install_ext, exist_ok=True)
 
-    needed_deps = ['ffmpeg-ext', 'vulkan-ext', 'swiftshader-ext']
+    needed_deps = ['crashpad-ext', 'ffmpeg-ext', 'vulkan-ext', 'swiftshader-ext']
 
     if platform.system() == 'Linux':
         os_name = 'linux'
-        needed_deps.append('crashpad-ext')
     elif platform.system() == 'Darwin':
         os_name = 'osx'
-        needed_deps.append('crashpad-ext')
     elif platform.system() == 'Windows':
         os_name = 'windows'
     else:
