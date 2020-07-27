@@ -50,7 +50,7 @@ table::
 
 section::Fragment Position
 
-Scintillator offers a few different means to determine the position of the current fragment shader relative to the geometry being rendered, or the onscreen pixel dimensions. The link::Classes/TexPos:: VGen is in the Image Sampling section.
+Scintillator offers a few different means to determine the position of the current fragment shader relative to the geometry being rendered, or the onscreen pixel dimensions. The link::Classes/VTexPos:: VGen is in the Image Sampling section.
 
 table::
 ## strong::VGen:: || strong::Rates:: || strong::Dimensions:: || strong::Description::

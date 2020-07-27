@@ -1,6 +1,6 @@
 TITLE:: ScinServerInstaller
 summary:: An automatic installation script for the Scintillator server.
-categories:: Quarks>Scintillator>Scintillator Server
+categories:: Quarks>Scintillator>Server
 related:: Classes/ScinServer
 
 DESCRIPTION::

@@ -1,6 +1,6 @@
 TITLE:: ScinServer
 summary:: Represents a Scintillator server application.
-categories:: Quarks>Scintillator>Scintillator Server
+categories:: Quarks>Scintillator>Server
 related:: Classes/ScinServerOptions
 
 DESCRIPTION::

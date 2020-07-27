@@ -1,6 +1,6 @@
 TITLE:: ScinServerOptions
 summary:: Encapsulates command line and other options for the Scintillator synthesis server.
-categories:: Quarks>Scintillator>Scintillator Server
+categories:: Quarks>Scintillator>Server
 related:: Classes/ScinServer
 
 DESCRIPTION::
