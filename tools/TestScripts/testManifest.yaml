@@ -218,7 +218,7 @@
   captureTimes: [ 1 ]
   free: [ "alphaBlue" ]
   assertAllFree: true
-- name: "Frame Rate oscillator"
+- name: "Frame Rate Oscillator"
   category: "frame"
   comment: "Test a global oscillator running in frame rate VGen with parameters and intrinsics"
   shortName: "frOsc"
@@ -232,4 +232,24 @@
       - k: 10
       - k: 60
       - k: 150
-
+- name: "Frame Rate Aspect Ratio"
+  category: "frame"
+  comment: "Test a aspect ratio computation at compute time."
+  shortName: "aspect"
+  scinthDef: "{ |i|
+    var size = VTextureSize.fr(i);
+    var aspect = VVec2.fr(VY.fr(size) / VX.fr(size), 1.0);
+    var colors = VSampler.pr(i, VTexPos.pr * aspect);
+    VBWOut.pr(VLength.pr(VVec3.pr(VX.pr(colors), VY.pr(colors), VZ.pr(colors))));
+  }"
+  images:
+    - file: "storm.png"
+      number: 1
+    - file: "molly.png"
+      number: 2
+  captureTimes: [ 1, 1, 1, 1 ]
+  parameters:
+    - "none"
+    - i: 1
+    - i: 2
+    - i: -1

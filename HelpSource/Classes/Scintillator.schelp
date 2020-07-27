@@ -16,5 +16,3 @@ Returns the path to the Scintillator quark
 
 METHOD:: binDir
 Returns the directory for the Scintillator server binary
-
-INSTANCEMETHODS::

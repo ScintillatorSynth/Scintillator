@@ -33,6 +33,37 @@ EXAMPLES::
 
 code::
 (
-(TODO)
+~blades = ScinthDef.new(\blades, { |scale=2.0, xmod=0.5, ymod=0.5|
+	var pos = VNormPos.pr() * scale;
+	var sawA = VSaw.pr(0.7, (VX.pr(pos) % xmod) * VY.pr(pos));
+	var sawB = VSaw.pr(0.9, VX.pr(pos) * (VY.pr(pos) % ymod));
+	VBWOut.pr(sawA * sawB);
+}).add;
+)
+(
+~k = Scinth.new(\blades);
 )
 ::
+
+image::VBWOut.png::
+
+code::
+(
+~molly = ScinImageBuffer.read(path: "~/src/TestGoldImages/sourceMedia/molly.png".standardizePath);
+)
+
+(
+~bwMolly = ScinthDef.new(\bwMolly, {
+	var size = VTextureSize.fr(~molly);
+	var aspect = VVec2.fr(VY.fr(size) / VX.fr(size), 1.0);
+	var colors = VSampler.pr(~molly, VTexPos.pr * aspect);
+	VBWOut.pr(VLength.pr(VVec3.pr(VX.pr(colors), VY.pr(colors), VZ.pr(colors))));
+}).add;
+)
+
+(
+~t = Scinth.new(\bwMolly);
+)
+::
+
+image::VBWMolly.png::

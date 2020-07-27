@@ -410,7 +410,7 @@ bool AbstractScinthDef::buildComputeStage(const std::set<int>& computeVGens) {
                     break;
 
                 case AbstractVGen::Rates::kFrame:
-                    inputs.emplace_back(fmt::format("out_{}_{}", vgenIndex, vgenOutput));
+                    inputs.emplace_back(fmt::format("{}_out_{}_{}", m_prefix, vgenIndex, vgenOutput));
                     break;
 
                 default:

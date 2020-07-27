@@ -99,7 +99,7 @@ dimensions:
     - outputs: 2
 shader: "@out = vec2(textureSize(@sampler, 0));"
 ---
-name: VVecMix
+name: VMix
 rates: [ frame, shape, pixel ]
 inputs: [ v, u, a ]
 outputs: [ out ]
