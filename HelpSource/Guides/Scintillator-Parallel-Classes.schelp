@@ -22,7 +22,7 @@ table::
 ## strong::Parallel UGen:: || strong::VGen:: || strong::comments::
 ## link::Classes/SinOsc:: || link::Classes/VSinOsc:: || Sinusoidal oscillator.
 ## link::Classes/LFSaw:: || link::Classes/VSaw:: || Sawtooth oscillator.
-## link::Classes/PlayBuf:: || link::Classes/Sampler:: || Image sampling VGen.
-## link::Classes/BufFrames:: || link::Classes/TextureSize:: || Dimensions of image buffer in pixels.
-## link::Classes/Clip:: || link::Classes/Clamp:: || Constrain a signal within minimum and maximum values.
+## link::Classes/PlayBuf:: || link::Classes/VSampler:: || Image sampling VGen.
+## link::Classes/BufFrames:: || link::Classes/VTextureSize:: || Dimensions of image buffer in pixels.
+## link::Classes/Clip:: || link::Classes/VClamp:: || Constrain a signal within minimum and maximum values.
 ::

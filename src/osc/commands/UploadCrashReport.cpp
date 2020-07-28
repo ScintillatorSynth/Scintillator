@@ -19,13 +19,17 @@ void UploadCrashReport::processMessage(int argc, lo_arg** argv, const char* type
         return;
     }
 
-    std::string uuid(reinterpret_cast<const char*>(argv[0]));
-    if (uuid == "all") {
-        m_dispatcher->crashReporter()->uploadAllCrashReports();
+    if (m_dispatcher->crashReporter()) {
+        std::string uuid(reinterpret_cast<const char*>(argv[0]));
+        if (uuid == "all") {
+            m_dispatcher->crashReporter()->uploadAllCrashReports();
+        } else {
+            m_dispatcher->crashReporter()->uploadCrashReport(uuid);
+        }
+        m_dispatcher->crashReporter()->closeDatabase();
     } else {
-        m_dispatcher->crashReporter()->uploadCrashReport(uuid);
+        spdlog::warn("Crash reporting disabled.");
     }
-    m_dispatcher->crashReporter()->closeDatabase();
 
     m_dispatcher->respond(address, "/scin_done", "/scin_uploadCrashReport");
 }

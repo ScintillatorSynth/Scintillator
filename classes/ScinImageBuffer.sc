@@ -1,4 +1,4 @@
-ImageBuffer {
+ScinImageBuffer {
 	var <server, <bufnum;
 	var <width, <height;
 	var action;

@@ -1,0 +1,52 @@
+TITLE:: VVec4
+summary:: Pack four single-dimensional signals into a 4D signal.
+categories:: Quarks>Scintillator>VGens>Vector Manipulation>Vector Building
+related:: Classes/VVec3, Classes/VVec2
+
+DESCRIPTION::
+Like its partner classes link::Classes/VVec3:: and link::Classes/VVec2::, VVec4 packs single-dimensional signals into a single signal, in this case a 4-dimensional signal.
+
+strong::Supported Rates: frame, shape, pixel::
+
+CLASSMETHODS::
+
+METHOD:: fr
+METHOD:: sr
+METHOD:: pr
+
+Make a VVec3 VGen at requested rate.
+
+ARGUMENT:: x
+The first component in the resulting signal.
+
+ARGUMENT:: y
+The second component in the resulting signal.
+
+ARGUMENT:: z
+The third component in the resulting signal.
+
+ARGUMENT:: w
+The fourth component in the resulting signal.
+
+returns::
+A 4D vector composed of (x, y, z, w).
+
+
+strong::dimensions::
+table::
+## strong::input:: || strong::output::
+## 1, 1, 1, 1 || 4
+::
+
+INSTANCEMETHODS::
+private:: inputDimensions, outputDimensions
+
+EXAMPLES::
+
+code::
+var v = VVec4.fr(1, 2, 3, 4);
+var x = VX.fr(v); // x: 1
+var y = VY.fr(v); // y: 2
+var z = VZ.fr(v); // z: 3
+var w = VW.fr(v); // w: 4
+::

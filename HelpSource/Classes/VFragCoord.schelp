@@ -1,14 +1,14 @@
-TITLE:: FragCoord
+TITLE:: VFragCoord
 summary:: Fragment shader pixel coordinates VGen.
 categories:: Quarks>Scintillator>VGens>Built-In
-related:: Classes/NormPos, Classes/TexPos, Reference/Scintillator-Default-Graphics-Setup
+related:: Classes/VNormPos, Classes/VTexPos, Classes/VTextureSize, Reference/Scintillator-Default-Graphics-Setup
 
 DESCRIPTION::
 FragCoord exposes the underlying GLSL primitive code::gl_FragCoord::. It returns the position of the running fragment shader in pixel dimensions, with the origin in the upper left hand corner of the screen. Note that the FragCoord returns screen-relative coordinates, not geometry coordinates.
 
 CLASSMETHODS::
 
-METHOD:: fr
+METHOD:: pr
 
 strong::dimensions::
 table::
@@ -23,18 +23,17 @@ EXAMPLES::
 
 code::
 (
-~o = ScinServerOptions.new;
-~v = ScinServer.new(~o).boot;
+~v = ScinServer.new.boot;
 )
 
 // Note this ScinthDef uses the ScinServerOptions object defined above
-// to provide screen width and height as constants to the Scinth.
+// in the ScinServer to provide screen width and height as constants to the Scinth.
 (
 ~f = ScinthDef.new(\f, {
-	RGBOut.fr(
-		VX.fr(FragCoord.fr) / ~o.width,
+	VRGBOut.pr(
+		VX.pr(VFragCoord.pr) / ~v.options.width,
 		0.0,
-		VY.fr(FragCoord.fr) / ~o.height);
+		VY.pr(VFragCoord.pr) / ~v.options.height);
 }).add;
 )
 
@@ -43,4 +42,4 @@ code::
 )
 ::
 
-image::FragCoordVis.png::
+image::VFragCoord.png::

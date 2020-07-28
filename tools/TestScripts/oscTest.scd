@@ -284,7 +284,7 @@ fork {
 	c.test = false;
 	d.test = false;
 	valid = false;
-	testDef = ScinthDef.new(\t, { BWOut.pr(1.0); });
+	testDef = ScinthDef.new(\t, { VBWOut.pr(1.0); });
 	response = OSCFunc.new({ |msg|
 		c.test = true;
 		c.signal;

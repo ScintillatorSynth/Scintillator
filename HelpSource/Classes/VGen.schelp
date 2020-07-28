@@ -10,7 +10,7 @@ CLASSMETHODS::
 private::buildScinthDef, multiNewList, multiNew, singleNew
 
 INSTANCEMETHODS::
-private::scinthIndex, composeUnaryOp, init, isVGen, asVGenInput, outputIndex, composeBinaryOp, composeNAryOp, reverseComposeBinaryOp, numOutputs, isSamplerVGen, inputs, addToScinth, isValidVGenInput
+private::scinthIndex, composeUnaryOp, init, isVGen, asVGenInput, outputIndex, composeBinaryOp, composeNAryOp, reverseComposeBinaryOp, numOutputs, isSamplerVGen, inputs, addToScinth, isValidVGenInput, argNameForInputAt, argNamesInputOffset, checkValidInputs, dumpArgs, methodSelectorForRate
 
 METHOD:: scinthDef
 A reference to the containing link::Classes/ScinthDef::. Used as part of building the ScinthDef.

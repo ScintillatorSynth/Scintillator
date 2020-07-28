@@ -1,10 +1,10 @@
 TITLE:: Scintillator
 summary:: Scintillator utility class
-categories:: Quarks>Scintillator
+categories:: Quarks>Scintillator>Server
 related:: Classes/ScinServer
 
 DESCRIPTION::
-This is a utility class to report information about the Scintillator installation.
+A utility class to report information about the Scintillator installation.
 
 CLASSMETHODS::
 

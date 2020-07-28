@@ -1,0 +1,32 @@
+TITLE:: VTextureSize
+summary:: VGen providing sampler image dimensions in pixels.
+categories:: Quarks>Scintillator>VGens>Image Sampling
+related:: Classes/VSampler, Classes/ScinImageBuffer
+
+DESCRIPTION::
+Loosely analogous to the link::Classes/BufFrames:: UGen, this VGen provides a 2D vector containing the width and height of the sampled texture. This can be useful, for example, for adjusting the width and height of image sampling to respect aspect ratio.
+
+strong::Supported Rates: frame, shape, pixel::
+
+CLASSMETHODS::
+
+METHOD:: fr
+METHOD:: sr
+METHOD:: pr
+
+Make a VTextureSize VGen at the requested rate.
+
+ARGUMENT:: image
+The link::Classes/ScinImageBuffer:: object to return the dimensions of.
+
+returns::
+A 2D vector containing the dimensions of the supplied image in (width, height) order.
+
+strong::dimensions::
+table::
+## strong::input:: || strong::output::
+## image || 2
+::
+
+INSTANCEMETHODS::
+private:: inputDimensions, outputDimensions

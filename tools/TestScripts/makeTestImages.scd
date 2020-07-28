@@ -44,7 +44,7 @@ fork {
 		// Load any images first.
 		if (def["images"].notNil, {
 			def["images"].do({ |img|
-				ImageBuffer.read(server, testImagesPath +/+ img["file"], bufnum: img["number"].asInteger);
+				ScinImageBuffer.read(server, testImagesPath +/+ img["file"], bufnum: img["number"].asInteger);
 			});
 			server.sync;
 		});

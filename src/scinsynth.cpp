@@ -70,6 +70,7 @@ DEFINE_bool(swiftshader, false,
 DEFINE_int32(audioInputChannels, 0, "If non-zero, defines the number of input channels to create via portaudio.");
 DEFINE_int32(audioOutputChannels, 0, "If non-zero, defines the number of output channels to create via portaudio.");
 
+DEFINE_bool(crashReporting, true, "Collect crash reports if the server crashes.");
 DEFINE_string(crashpadHandlerPath, "", "Path to the crash report handler executable.");
 
 #if (__APPLE__)
@@ -106,36 +107,41 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    fs::path crashpadHandler = fs::path(FLAGS_crashpadHandlerPath);
-    fs::path crashReportDatabase = quarkPath / ".crash_reports";
-    fs::path crashReportMetrics = quarkPath / ".crash_metrics";
-    std::shared_ptr<scin::infra::CrashReporter> crashReporter(
-        new scin::infra::CrashReporter(crashpadHandler, crashReportDatabase, crashReportMetrics));
-    if (fs::exists(crashpadHandler)) {
-        if (!crashReporter->openDatabase()) {
-            spdlog::warn("Failed to open crash database, continuing without crash telemetry.");
-        } else {
-            spdlog::info("Opened crash report database at {}.", crashReportDatabase.string());
-            if (!crashReporter->startCrashHandler()) {
-                spdlog::warn("Failed to start crash handler, continuing without crash telemetry.");
+    std::shared_ptr<scin::infra::CrashReporter> crashReporter;
+    if (FLAGS_crashReporting) {
+        fs::path crashpadHandler = fs::path(FLAGS_crashpadHandlerPath);
+        fs::path crashReportDatabase = quarkPath / ".crash_reports";
+        fs::path crashReportMetrics = quarkPath / ".crash_metrics";
+        crashReporter.reset(new scin::infra::CrashReporter(crashpadHandler, crashReportDatabase, crashReportMetrics));
+        if (fs::exists(crashpadHandler)) {
+            if (!crashReporter->openDatabase()) {
+                spdlog::warn("Failed to open crash database, continuing without crash telemetry.");
             } else {
-                auto notUploaded = crashReporter->logCrashReports();
-                if (notUploaded < 0) {
-                    spdlog::warn("Failed to read crash reports from the database.");
-                }
+                spdlog::info("Opened crash report database at {}.", crashReportDatabase.string());
+                if (!crashReporter->startCrashHandler()) {
+                    spdlog::warn("Failed to start crash handler, continuing without crash telemetry.");
+                } else {
+                    auto notUploaded = crashReporter->logCrashReports();
+                    if (notUploaded < 0) {
+                        spdlog::warn("Failed to read crash reports from the database.");
+                    }
 
-                if (notUploaded > 0) {
-                    spdlog::warn("There are {} Scintillator Server crash reports available for upload.", notUploaded);
-                }
+                    if (notUploaded > 0) {
+                        spdlog::warn("There are {} Scintillator Server crash reports available for upload.",
+                                     notUploaded);
+                    }
 
-                // Shouldn't be a need normally to keep this open. If the process crashes the out-of-process crash
-                // handler will hopefully catch it and write to the database.
-                crashReporter->closeDatabase();
+                    // Shouldn't be a need normally to keep this open. If the process crashes the out-of-process crash
+                    // handler will hopefully catch it and write to the database.
+                    crashReporter->closeDatabase();
+                }
             }
+        } else {
+            spdlog::warn("Invalid path '{}' to Crashpad handler executable, disabling crash reporting.",
+                         FLAGS_crashpadHandlerPath);
         }
     } else {
-        spdlog::warn("Invalid path '{}' to Crashpad handler executable, disabling crash reporting.",
-                     FLAGS_crashpadHandlerPath);
+        spdlog::info("Crash reporting disabled.");
     }
 
 #if (__APPLE__)

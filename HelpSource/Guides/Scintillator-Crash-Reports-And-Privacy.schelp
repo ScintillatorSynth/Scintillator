@@ -5,26 +5,444 @@ related:: Classes/ScinServer, Classes/ScinServerOptions
 
 section::Crash Reports May Contain Personal Information
 
-Scintillator uses link::https://chromium.googlesource.com/crashpad/crashpad/##CrashPad::, an open-source crash reporting system used by a variety of programs but primarily Chromium and Google Chrome, to collect debugging information about the Scintillator Server when it crashes. If a program is crashing on a user's computer it can be extremely difficult to figure out as a developer how to fix the problem, and the crash reports can be enormously valuable to aid in fixing the bugs that are causing the crash.
+Scintillator uses link::https://chromium.googlesource.com/crashpad/crashpad/##CrashPad::, an open-source crash reporting system used by a variety of programs, notably Chromium and Google Chrome, to collect debugging information about the Scintillator Video Synth Server, code::scinsynth::, when it crashes. If a program is crashing on a user's computer it can be difficult for a developer to figure out how to fix the problem, and the crash reports can be valuable to aid in fixing the bugs that are causing the crash.
 
-One concern is that crash reports emphasis::may:: contain some personally identifying information. The crash reporting system is not designed to maliciously collect personal information from your computer, but in trying to build a picture of what was going on with the synth server when it crashed, there may be some personal information contained in there like your username or technical information about the kind of computer that the server crashed on. See the Example Crash Report below for an understanding of the typical data included in a crash report.
+One concern is that crash reports emphasis::may:: contain some personally identifying information. The crash reporting system is not designed to maliciously collect personal information from your computer, but in trying to build a picture of what was going on with the synth server when it crashed, there may be some personal information inadvertently included. This personal information may be things like your username or technical information about the kind of computer that the server crashed on. See the Example Crash Report below for an understanding of the typical data included in a crash report.
 
-Because of the potential privacy concerns with sharing crash reports, emphasis::it is the policy of the Scintillator developers that we will never upload a crash report without your consent.::
+Because of the potential privacy concerns with sharing crash reports, emphasis::it is the policy of the Scintillator developers that we will never automatically upload a crash report.:: To opt out of even the collection of crash reports locally see the code::crashReporting:: option on link::Classes/ScinServerOptions::. It is default true, however, so will need to be set to false each time the server is run in order to disable crash report collection.
+
+The code::.crash_reports:: directory inside of the Scintillator Quark can also be deleted at any time, to remove any existing crash reports, uploaded or no. Note that local deletion of an uploaded crash report will not delete the crash report from the Gargamelle database.
 
 section::Crash Report Life Cycle
 
-When a crash is detected the crash report is written into file-based database and stored in the teletype::.crash_reports:: folder inside the Scintillator Quark directory. This file database has a unique identifer which allows developers to look up all uploaded crash reports from a given crash database.
+When a crash is detected, the crash report is written into a file and stored in the teletype::.crash_reports:: folder inside the Scintillator Quark directory. This file-based database has a unique identifer which allows developers to look up all uploaded crash reports from a given crash database.
 
-All crash reports are uploaded over SSL, meaning that the crash report is protected by encryption while it is transfered over the internet. It is uploaded to a custom crash report telemetry system called link::https://github.com/ScintillatorSynth/Gargamelle##Gargamelle::, which is another part of the Scintillator development ecosystem. This upload software runs on a cloud server with access control limited only to Scintillator developers.
+All crash reports are uploaded over SSL, meaning that the crash report is protected by encryption while it is transfered over the internet. The report is uploaded to a custom crash report telemetry system called link::https://github.com/ScintillatorSynth/Gargamelle##Gargamelle::, which is another part of the Scintillator development ecosystem. This upload software runs on a cloud server with access control limited only to Scintillator developers.
 
-The crash telemetry system makes no effort to link crash reports to individual people. For example, we do not retain the IP address of where a crash report upload came from. We do allow retrieval of crash reports based on crash ids, which are large random numbers. This allows users to provide bug reports containing crash ids and developers to find those in the crash report database.
+The crash telemetry system makes no effort to link crash reports to individual people. For example, we do not retain the IP address of where a crash report upload came from. We do allow retrieval of crash reports based on crash ids, which are large random numbers (making them difficult to guess). This allows users to provide bug reports containing crash ids and developers to find those in the crash report system.
 
-We retain crash reports for 1 year from time of upload, after which they are automatically deleted. Some aggregate statistics will remain after a crash report is deleted, such as the number of crash reports uploaded on a given day or associated with a given version of Scintillator.
+We retain crash reports for 1 year from time of upload, after which they are automatically deleted. Some aggregate statistics may remain after a crash report is deleted, such as the number of crash reports uploaded on a given day or associated with a given version of Scintillator.
 
 section::Example Crash Report
 
-This is an analysis of an example crash report as printed by the crash reporting tools. Note that it is not an exhaustive list of everything that might be included, and is more intended to convey the kind of information relayed by the system.
+This is an analysis of an example crash report as printed by the crash reporting tools. Note that it is not an exhaustive list of everything that might be included, and is more intended to convey the kind of information relayed by the system. From this crash report developers can determine:
+
+list::
+## The Client ID is code::d538239b-6345-4e76-84c6-69f5b95023bc::, this is the database ID, allowing developers to look at other crashes that were uploaded from the same computer.
+## This is a development version of scinsynth as the commit hash and branch weren't released.
+## This computer runs Ubuntu Linux 20.04.
+## The computer has 72 CPU cores, which is unusual, so will likely uniquely identify a user or device.
+## This was a debugging crash dump caused by an OSC message with a request to generate a crash dump.
+::
+
+The example crash report as output in human-readable format follows:
 
 teletype::
-Foo
+Client ID: d538239b-6345-4e76-84c6-69f5b95023bc
+program: scinsynth
+version: 0.0.6
+commit: 33bd14c230dd738aa255310fb5a4fdb8ef65afcd
+branch: master
+
+---- minidump .crash_reports/pending/809341fa-dd61-4e69-bab1-908c2caac1fa.dmp:
+Operating system: Linux
+                  5.4.0 -7634-generic #38~1592497129~20.04~9a1ea2e-Ubuntu SMP Fri Jun 19 22:43:37 UTC  x86_64
+CPU: amd64
+     family 6 model 79 stepping 1
+     72 CPUs
+
+GPU: UNKNOWN
+
+Crash reason:  DUMP_REQUESTED
+Crash address: 0x0
+Process uptime: 7 seconds
+
+Thread 6 (crashed)
+ 0  scinsynth!scin::infra::CrashReporter::dumpWithoutCrash() [CrashReporter.cpp : 85 + 0x0]
+    rax = 0x0000000000000000   rdx = 0x0000000000000002
+    rcx = 0x00007f4bc6eaf08f   rbx = 0x0000000000000000
+    rsi = 0x0000000000000000   rdi = 0x00007f4bb5608370
+    rbp = 0x00007f4bb5608370   rsp = 0x00007f4bb56082f0
+     r8 = 0x0000000000000000    r9 = 0x00007f4bc6f8a600
+    r10 = 0x0000000000000032   r11 = 0x0000000000000000
+    r12 = 0x0000000000000000   r13 = 0x00007f4bb5608310
+    r14 = 0x0000000000000000   r15 = 0x00007f4ba0001240
+    rip = 0x00005622af94b47e
+    Found by: given as instruction pointer in context
+ 1  scinsynth!scin::osc::commands::CreateCrashReport::processMessage(int, lo_arg**, char const*, void*) [CreateCrashReport.cpp : 19 + 0x5]
+    rbx = 0x00005622b0b22480   rbp = 0x00005622b036e7b0
+    rsp = 0x00007f4bb5608770   r12 = 0x00007f4bc719fbb0
+    r13 = 0x00005622b036e380   r14 = 0x0000000000000000
+    r15 = 0x00007f4ba0001240   rip = 0x00005622af952f52
+    Found by: call frame info
+ 2  scinsynth!scin::osc::Dispatcher::dispatch(char const*, int, lo_arg**, char const*, void*) [Dispatcher.cpp : 223 + 0x1e]
+    rbx = 0x0000000000000017   rbp = 0x00007f4bb5608bb0
+    rsp = 0x00007f4bb5608830   r12 = 0x00007f4ba0001240
+    r13 = 0x0000000000000048   r14 = 0x0000000000000000
+    r15 = 0x00007f4ba0001240   rip = 0x00005622af951505
+    Found by: call frame info
+ 3  scinsynth!scin::osc::Dispatcher::loHandle(char const*, char const*, lo_arg**, int, void*, void*) [Dispatcher.cpp : 177 + 0xb]
+    rbx = 0x00007f4ba0001011   rbp = 0x00007ffc92de9e20
+    rsp = 0x00007f4bb5608bc0   r12 = 0x00007f4ba0001240
+    r13 = 0x0000000000000000   r14 = 0x0000000000000000
+    r15 = 0x00007f4ba0001240   rip = 0x00005622af951f0a
+    Found by: call frame info
+ 4  scinsynth!dispatch_method [server.c : 1942 + 0x19]
+    rbx = 0x00005622b0b22150   rbp = 0x00007f4ba0001011
+    rsp = 0x00007f4bb5608bf0   r12 = 0x00007f4ba0000cf0
+    r13 = 0x00007f4ba0001240   r14 = 0x0000000000000000
+    r15 = 0x00007f4ba0001240   rip = 0x00005622afdf3679
+    Found by: call frame info
+ 5  scinsynth!dispatch_data [server.c : 1866 + 0x11]
+    rbx = 0x0000000000000001   rbp = 0x00007f4ba0000cf0
+    rsp = 0x00007f4bb5608ca0   r12 = 0x00007f4ba0001240
+    r13 = 0x00007f4bb5608d70   r14 = 0x00005622b0b21de0
+    r15 = 0x000000000000001c   rip = 0x00005622afdf3ec8
+    Found by: call frame info
+ 6  scinsynth!lo_server_recv [server.c : 1693 + 0x13]
+    rbx = 0x0000000000000001   rbp = 0x00005622b0b21de0
+    rsp = 0x00007f4bb5608d50   r12 = 0x00000000ffffffff
+    r13 = 0x00007f4bb5608d70   r14 = 0x00007f4ba0001240
+    r15 = 0x00007f4bb5608f80   rip = 0x00005622afdf641e
+    Found by: call frame info
+ 7  scinsynth!lo_servers_recv_noblock [server.c : 1577 + 0x9]
+    rbx = 0x0000000000000000   rbp = 0x00007f4bb5608e94
+    rsp = 0x00007f4bb5608e50   r12 = 0x0000000000000000
+    r13 = 0x0000000000000000   r14 = 0x00007f4bb5608e88
+    r15 = 0x00007f4bb5608f80   rip = 0x00005622afdf669d
+    Found by: call frame info
+ 8  scinsynth!lo_server_recv_noblock [server.c : 1587 + 0x5]
+    rbx = 0x0000000000000000   rbp = 0x00005622b0b220e0
+    rsp = 0x00007f4bb5608e80   r12 = 0x00007ffc92de97be
+    r13 = 0x00007ffc92de97bf   r14 = 0x00007ffc92de97c0
+    r15 = 0x00007f4bb5608f80   rip = 0x00005622afdf6703
+    Found by: call frame info
+ 9  scinsynth!thread_func [server_thread.c : 278 + 0xe]
+    rbx = 0x0000000000000000   rbp = 0x00005622b0b220e0
+    rsp = 0x00007f4bb5608eb0   r12 = 0x00007ffc92de97be
+    r13 = 0x00007ffc92de97bf   r14 = 0x00007ffc92de97c0
+    r15 = 0x00007f4bb5608f80   rip = 0x00005622afdf6ece
+    Found by: call frame info
+10  libpthread.so.0 + 0x9609
+    rbx = 0x0000000000000000   rbp = 0x0000000000000000
+    rsp = 0x00007f4bb5608ec0   r12 = 0x00007ffc92de97be
+    r13 = 0x00007ffc92de97bf   r14 = 0x00007ffc92de97c0
+    r15 = 0x00007f4bb5608f80   rip = 0x00007f4bc7197609
+    Found by: call frame info
+11  libc.so.6 + 0x122103
+    rsp = 0x00007f4bb5608f80   rip = 0x00007f4bc6ec0103
+    Found by: stack scanning
+
+Thread 0
+ 0  libc.so.6 + 0x11596f
+    rax = 0xfffffffffffffdfc   rdx = 0x000000000000000a
+    rcx = 0x00007f4bc6eb396f   rbx = 0x00005622b0b245b0
+    rsi = 0x0000000000000001   rdi = 0x00005622b0b245b0
+    rbp = 0x0000000000000001   rsp = 0x00007ffc92de95c0
+     r8 = 0x0000000000000000    r9 = 0x000000000000000a
+    r10 = 0x00005622b0aab480   r11 = 0x0000000000000293
+    r12 = 0x00005622b0aab480   r13 = 0x0000000000000001
+    r14 = 0x000000000000000a   r15 = 0x00005622b0aab480
+    rip = 0x00007f4bc6eb396f
+    Found by: given as instruction pointer in context
+ 1  libnvidia-glcore.so.440.100 + 0xe59585
+    rsp = 0x00007ffc92de95f0   rip = 0x00007f4bc391e585
+    Found by: stack scanning
+ 2  libnvidia-glcore.so.440.100 + 0x12347eb
+    rsp = 0x00007ffc92de9620   rip = 0x00007f4bc3cf97eb
+    Found by: stack scanning
+ 3  libnvidia-glcore.so.440.100 + 0x1d6b900
+    rsp = 0x00007ffc92de9628   rip = 0x00007f4bc4830900
+    Found by: stack scanning
+ 4  libnvidia-glcore.so.440.100 + 0x124f106
+    rsp = 0x00007ffc92de9630   rip = 0x00007f4bc3d14106
+    Found by: stack scanning
+ 5  libnvidia-glcore.so.440.100 + 0x123adfa
+    rsp = 0x00007ffc92de96a0   rip = 0x00007f4bc3cffdfa
+    Found by: stack scanning
+ 6  scinsynth!scin::comp::Window::runDirectRendering(std::shared_ptr<scin::comp::Compositor>) [Window.cpp : 125 + 0xb]
+    rsp = 0x00007ffc92de9700   rip = 0x00005622af949c8d
+    Found by: stack scanning
+ 7  scinsynth!scin::comp::Window::run(std::shared_ptr<scin::comp::Compositor>) [Window.cpp : 83 + 0x5]
+    rbx = 0x00007ffc92de9bc0   rbp = 0x00007ffc92dea2a0
+    rsp = 0x00007ffc92de98e0   r12 = 0x00007ffc92de9e20
+    r13 = 0x00005622b070cd90   r14 = 0x00005622b036bd60
+    r15 = 0x00007ffc92de9ac0   rip = 0x00005622af94a51b
+    Found by: call frame info
+ 8  scinsynth!main [scinsynth.cpp : 333 + 0xb]
+    rbx = 0x00007ffc92de9bc0   rbp = 0x00007ffc92dea2a0
+    rsp = 0x00007ffc92de9910   r12 = 0x00007ffc92de9e20
+    r13 = 0x00005622b070cd90   r14 = 0x00005622b036bd60
+    r15 = 0x00007ffc92de9ac0   rip = 0x00005622af8f57e9
+    Found by: call frame info
+ 9  libc.so.6 + 0x270b3
+    rbx = 0x00005622afeee000   rbp = 0x0000000000000000
+    rsp = 0x00007ffc92dea2b0   r12 = 0x00005622af8fa150
+    r13 = 0x00007ffc92dea390   r14 = 0x0000000000000000
+    r15 = 0x0000000000000000   rip = 0x00007f4bc6dc50b3
+    Found by: call frame info
+10  libc.so.6 + 0x1ed980
+    rsp = 0x00007ffc92dea2b8   rip = 0x00007f4bc6f8b980
+    Found by: stack scanning
+11  scinsynth + 0x6b810
+    rsp = 0x00007ffc92dea2d0   rip = 0x00005622af8f4810
+    Found by: stack scanning
+12  scinsynth + 0x665000
+    rsp = 0x00007ffc92dea2d8   rip = 0x00005622afeee000
+    Found by: stack scanning
+13  scinsynth + 0x71150
+    rsp = 0x00007ffc92dea2e8   rip = 0x00005622af8fa150
+    Found by: stack scanning
+14  scinsynth + 0x71150
+    rsp = 0x00007ffc92dea360   rip = 0x00005622af8fa150
+    Found by: stack scanning
+15  scinsynth!_start + 0x2e
+    rsp = 0x00007ffc92dea380   rip = 0x00005622af8fa17e
+    Found by: stack scanning
+16  0x7ffc92dea388
+    rsp = 0x00007ffc92dea388   rip = 0x00007ffc92dea388
+    Found by: call frame info
+
+Thread 1
+ 0  libpthread.so.0 + 0x10376
+    rax = 0xfffffffffffffe00   rdx = 0x0000000000000000
+    rcx = 0x00007f4bc719e376   rbx = 0x0000000000000000
+    rsi = 0x0000000000000080   rdi = 0x00005622b03c2c84
+    rbp = 0x00005622b03c2c58   rsp = 0x00007f4bba20dc30
+     r8 = 0x0000000000000000    r9 = 0x0000000000000004
+    r10 = 0x0000000000000000   r11 = 0x0000000000000282
+    r12 = 0x00005622b03c2c7c   r13 = 0x00005622b03c2c30
+    r14 = 0x00007f4bba20dc70   r15 = 0x00005622b03c2c84
+    rip = 0x00007f4bc719e376
+    Found by: given as instruction pointer in context
+ 1  scinsynth!VmaAllocationObjectAllocator::Free(VmaAllocation_T*) [gthr-default.h : 749 + 0x5]
+    rsp = 0x00007f4bba20dc70   rip = 0x00005622afe0220f
+    Found by: stack scanning
+
+Thread 2
+ 0  libpthread.so.0 + 0x10376
+    rax = 0xfffffffffffffe00   rdx = 0x0000000000000000
+    rcx = 0x00007f4bc719e376   rbx = 0x0000000000000000
+    rsi = 0x0000000000000080   rdi = 0x00005622b0b213a8
+    rbp = 0x00005622b0b21380   rsp = 0x00007f4bb760cca0
+     r8 = 0x0000000000000000    r9 = 0x0000000000000000
+    r10 = 0x0000000000000000   r11 = 0x0000000000000282
+    r12 = 0x00005622b0b213a4   r13 = 0x00005622b0b21358
+    r14 = 0x00007f4bb760cce0   r15 = 0x00005622b0b213a8
+    rip = 0x00007f4bc719e376
+    Found by: given as instruction pointer in context
+ 1  libpthread.so.0 + 0x10050
+    rsp = 0x00007f4bb760cce8   rip = 0x00007f4bc719e050
+    Found by: stack scanning
+ 2  libpthread.so.0 + 0x11bb0
+    rsp = 0x00007f4bb760cd50   rip = 0x00007f4bc719fbb0
+    Found by: stack scanning
+ 3  libstdc++.so.6 + 0xd0e20
+    rsp = 0x00007f4bb760cd70   rip = 0x00007f4bc707de20
+    Found by: stack scanning
+ 4  scinsynth!scin::comp::Async::workerThreadMain(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) [condition_variable : 101 + 0xf]
+    rsp = 0x00007f4bb760cd80   rip = 0x00005622af91ef1c
+    Found by: stack scanning
+ 5  scinsynth!std::thread::_State_impl<std::thread::_Invoker<std::tuple<void (scin::comp::Async::*)(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >), scin::comp::Async*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > >::_M_run() [invoke.h : 73 + 0x2]
+    rbx = 0x00007f4bb760ce60   rbp = 0x00005622b0adaa70
+    rsp = 0x00007f4bb760ce50   r12 = 0x00007ffc92de952e
+    r13 = 0x00007ffc92de952f   r14 = 0x00007ffc92de9530
+    r15 = 0x00007f4bb760cf80   rip = 0x00005622af921ea6
+    Found by: call frame info
+ 6  libstdc++.so.6 + 0xd6cb4
+    rbx = 0x0000000000000000   rbp = 0x00005622b0adaa70
+    rsp = 0x00007f4bb760cea0   r12 = 0x00007ffc92de952e
+    r13 = 0x00007ffc92de952f   r14 = 0x00007ffc92de9530
+    r15 = 0x00007f4bb760cf80   rip = 0x00007f4bc7083cb4
+    Found by: call frame info
+ 7  libpthread.so.0 + 0x9609
+    rsp = 0x00007f4bb760cec0   rip = 0x00007f4bc7197609
+    Found by: stack scanning
+ 8  libc.so.6 + 0x122103
+    rsp = 0x00007f4bb760cf80   rip = 0x00007f4bc6ec0103
+    Found by: stack scanning
+
+Thread 3
+ 0  libpthread.so.0 + 0x10376
+    rax = 0xfffffffffffffe00   rdx = 0x0000000000000000
+    rcx = 0x00007f4bc719e376   rbx = 0x0000000000000000
+    rsi = 0x0000000000000080   rdi = 0x00005622b0b213a8
+    rbp = 0x00005622b0b21380   rsp = 0x00007f4bb6e0bca0
+     r8 = 0x0000000000000000    r9 = 0x0000000000000000
+    r10 = 0x0000000000000000   r11 = 0x0000000000000282
+    r12 = 0x00005622b0b213a4   r13 = 0x00005622b0b21358
+    r14 = 0x00007f4bb6e0bce0   r15 = 0x00005622b0b213a8
+    rip = 0x00007f4bc719e376
+    Found by: given as instruction pointer in context
+ 1  libpthread.so.0 + 0x10050
+    rsp = 0x00007f4bb6e0bce8   rip = 0x00007f4bc719e050
+    Found by: stack scanning
+ 2  libpthread.so.0 + 0x11bb0
+    rsp = 0x00007f4bb6e0bd50   rip = 0x00007f4bc719fbb0
+    Found by: stack scanning
+ 3  libstdc++.so.6 + 0xd0e20
+    rsp = 0x00007f4bb6e0bd70   rip = 0x00007f4bc707de20
+    Found by: stack scanning
+ 4  scinsynth!scin::comp::Async::workerThreadMain(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) [condition_variable : 101 + 0xf]
+    rsp = 0x00007f4bb6e0bd80   rip = 0x00005622af91ef1c
+    Found by: stack scanning
+ 5  scinsynth!std::thread::_State_impl<std::thread::_Invoker<std::tuple<void (scin::comp::Async::*)(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >), scin::comp::Async*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > >::_M_run() [invoke.h : 73 + 0x2]
+    rbx = 0x00007f4bb6e0be60   rbp = 0x00005622b0adaae0
+    rsp = 0x00007f4bb6e0be50   r12 = 0x00007ffc92de952e
+    r13 = 0x00007ffc92de952f   r14 = 0x00007ffc92de9530
+    r15 = 0x00007f4bb6e0bf80   rip = 0x00005622af921ea6
+    Found by: call frame info
+ 6  libstdc++.so.6 + 0xd6cb4
+    rbx = 0x0000000000000000   rbp = 0x00005622b0adaae0
+    rsp = 0x00007f4bb6e0bea0   r12 = 0x00007ffc92de952e
+    r13 = 0x00007ffc92de952f   r14 = 0x00007ffc92de9530
+    r15 = 0x00007f4bb6e0bf80   rip = 0x00007f4bc7083cb4
+    Found by: call frame info
+ 7  libpthread.so.0 + 0x9609
+    rsp = 0x00007f4bb6e0bec0   rip = 0x00007f4bc7197609
+    Found by: stack scanning
+ 8  libc.so.6 + 0x122103
+    rsp = 0x00007f4bb6e0bf80   rip = 0x00007f4bc6ec0103
+    Found by: stack scanning
+
+Thread 4
+ 0  libpthread.so.0 + 0x10376
+    rax = 0xfffffffffffffe00   rdx = 0x0000000000000000
+    rcx = 0x00007f4bc719e376   rbx = 0x0000000000000000
+    rsi = 0x0000000000000080   rdi = 0x00005622b0b21488
+    rbp = 0x00005622b0b21460   rsp = 0x00007f4bb660ac90
+     r8 = 0x0000000000000000    r9 = 0x0000000000000000
+    r10 = 0x0000000000000000   r11 = 0x0000000000000282
+    r12 = 0x00005622b0b21484   r13 = 0x00005622b0b21438
+    r14 = 0x00007f4bb660acd0   r15 = 0x00005622b0b21488
+    rip = 0x00007f4bc719e376
+    Found by: given as instruction pointer in context
+ 1  libpthread.so.0 + 0x10050
+    rsp = 0x00007f4bb660acd8   rip = 0x00007f4bc719e050
+    Found by: stack scanning
+ 2  libstdc++.so.6 + 0xd0e20
+    rsp = 0x00007f4bb660ad60   rip = 0x00007f4bc707de20
+    Found by: stack scanning
+ 3  scinsynth!scin::comp::Async::syncThreadMain() [condition_variable : 101 + 0xb]
+    rsp = 0x00007f4bb660ad70   rip = 0x00005622af91b6c8
+    Found by: stack scanning
+ 4  scinsynth!_fini + 0x4268
+    rsp = 0x00007f4bb660ae08   rip = 0x00005622afef22e0
+    Found by: stack scanning
+ 5  scinsynth + 0xd4560
+    rsp = 0x00007f4bb660ae28   rip = 0x00005622af95d560
+    Found by: stack scanning
+ 6  scinsynth + 0xd44d0
+    rsp = 0x00007f4bb660ae30   rip = 0x00005622af95d4d0
+    Found by: stack scanning
+ 7  scinsynth + 0xd44d0
+    rsp = 0x00007f4bb660ae50   rip = 0x00005622af95d4d0
+    Found by: stack scanning
+ 8  libstdc++.so.6 + 0xd6cb4
+    rsp = 0x00007f4bb660aea0   rip = 0x00007f4bc7083cb4
+    Found by: stack scanning
+ 9  libpthread.so.0 + 0x9609
+    rsp = 0x00007f4bb660aec0   rip = 0x00007f4bc7197609
+    Found by: stack scanning
+10  libc.so.6 + 0x122103
+    rsp = 0x00007f4bb660af80   rip = 0x00007f4bc6ec0103
+    Found by: stack scanning
+
+Thread 5
+ 0  libc.so.6 + 0x11596f
+    rax = 0xfffffffffffffdfc   rdx = 0x000000000000000a
+    rcx = 0x00007f4bc6eb396f   rbx = 0x00007f4bb5e09e94
+    rsi = 0x0000000000000001   rdi = 0x00007f4bb5e09d10
+    rbp = 0x00007f4bb5e09e40   rsp = 0x00007f4bb5e09ce0
+     r8 = 0x0000000000000000    r9 = 0x00007f4bb5e09cb8
+    r10 = 0x00007f4bb5e09cb0   r11 = 0x0000000000000293
+    r12 = 0x00007f4bb5e09e88   r13 = 0x0000000000000000
+    r14 = 0x00007f4bb5e09e88   r15 = 0x00007f4bb5e09d10
+    rip = 0x00007f4bc6eb396f
+    Found by: given as instruction pointer in context
+ 1  scinsynth!lo_servers_recv_noblock [server.c : 1572 + 0x5]
+    rbp = 0x00007f4bb5e09e94   rsp = 0x00007f4bb5e09e50
+    rip = 0x00005622afdf6669
+    Found by: previous frame's frame pointer
+ 2  scinsynth!lo_server_recv_noblock [server.c : 1587 + 0x5]
+    rbx = 0x0000000000000000   rbp = 0x00005622b0b21da0
+    rsp = 0x00007f4bb5e09e80   r12 = 0x00007ffc92de97be
+    r13 = 0x00007ffc92de97bf   r14 = 0x00007ffc92de97c0
+    rip = 0x00005622afdf6703
+    Found by: call frame info
+ 3  scinsynth!thread_func [server_thread.c : 278 + 0xe]
+    rbx = 0x0000000000000000   rbp = 0x00005622b0b21da0
+    rsp = 0x00007f4bb5e09eb0   r12 = 0x00007ffc92de97be
+    r13 = 0x00007ffc92de97bf   r14 = 0x00007ffc92de97c0
+    rip = 0x00005622afdf6ece
+    Found by: call frame info
+ 4  libpthread.so.0 + 0x9609
+    rbx = 0x0000000000000000   rbp = 0x0000000000000000
+    rsp = 0x00007f4bb5e09ec0   r12 = 0x00007ffc92de97be
+    r13 = 0x00007ffc92de97bf   r14 = 0x00007ffc92de97c0
+    rip = 0x00007f4bc7197609
+    Found by: call frame info
+ 5  libc.so.6 + 0x122103
+    rsp = 0x00007f4bb5e09f80   rip = 0x00007f4bc6ec0103
+    Found by: stack scanning
+
+Loaded modules:
+0x5622af889000 - 0x5622b00b5bef  scinsynth  0.0.0.0  (main)
+0x7f4bba86e000 - 0x7f4bba88a057  libxcb-glx.so.0  0.0.0.0
+0x7f4bba88b000 - 0x7f4bbca2c21f  libnvidia-rtcore.so.440.100  0.0.0.0
+0x7f4bbca2d000 - 0x7f4bbcc8ff37  libnvidia-fatbinaryloader.so.440.100  0.0.0.0
+0x7f4bbcc90000 - 0x7f4bbcef519f  libnvidia-cbl.so.440.100  0.0.0.0
+0x7f4bbcef6000 - 0x7f4bbdb9c1ff  libnvidia-glvkspirv.so.440.100  0.0.0.0
+0x7f4bbdd42000 - 0x7f4bbdd7197f  libtinfo.so.6  0.0.0.0
+0x7f4bbdd72000 - 0x7f4bbdda905f  libedit.so.2  0.0.0.0
+0x7f4bbddaa000 - 0x7f4bbddc517f  libelf.so.1  0.0.0.0
+0x7f4bbddc6000 - 0x7f4bbddd1247  libdrm_amdgpu.so.1  0.0.0.0
+0x7f4bbddd2000 - 0x7f4bc2465c88  libLLVM-10.so.1  0.0.0.0
+0x7f4bc2466000 - 0x7f4bc2ac4577  libvulkan_radeon.so  0.0.0.0
+0x7f4bc2ac5000 - 0x7f4bc483a87f  libnvidia-glcore.so.440.100  0.0.0.0  (WARNING: No symbols, libnvidia-glcore.so.440.100, D820C1AEE0FACE244430778C5BDF350E0)
+0x7f4bc483b000 - 0x7f4bc4a3e51f  libnvidia-tls.so.440.100  0.0.0.0
+0x7f4bc4a3f000 - 0x7f4bc4d50aa7  libGLX_nvidia.so.0  0.0.0.0
+0x7f4bc4d51000 - 0x7f4bc4d5c627  libffi.so.7  0.0.0.0
+0x7f4bc4d5d000 - 0x7f4bc4e0503f  libzstd.so.1  0.0.0.0
+0x7f4bc4e06000 - 0x7f4bc5007077  libxshmfence.so.1  0.0.0.0
+0x7f4bc5008000 - 0x7f4bc5011077  libxcb-sync.so.1  0.0.0.0
+0x7f4bc5012000 - 0x7f4bc5016057  libxcb-present.so.0  0.0.0.0
+0x7f4bc5017000 - 0x7f4bc504409f  libexpat.so.1  0.0.0.0
+0x7f4bc5045000 - 0x7f4bc5057067  libxcb-randr.so.0  0.0.0.0
+0x7f4bc5058000 - 0x7f4bc50684a7  libwayland-client.so.0  0.0.0.0
+0x7f4bc508b000 - 0x7f4bc595efd7  libvulkan_intel.so  0.0.0.0
+0x7f4bc595f000 - 0x7f4bc5963027  libX11-xcb.so.1  0.0.0.0
+0x7f4bc5964000 - 0x7f4bc5968127  libXinerama.so.1  0.0.0.0
+0x7f4bc5969000 - 0x7f4bc5970107  libXfixes.so.3  0.0.0.0
+0x7f4bc5971000 - 0x7f4bc597d1c7  libXcursor.so.1  0.0.0.0
+0x7f4bc597e000 - 0x7f4bc5b87267  libXrender.so.1  0.0.0.0
+0x7f4bc5b88000 - 0x7f4bc5b94187  libXrandr.so.2  0.0.0.0
+0x7f4bc5b95000 - 0x7f4bc5ba61a7  libXi.so.6  0.0.0.0
+0x7f4bc5ba8000 - 0x7f4bc5bad067  libxcb-dri3.so.0  0.0.0.0
+0x7f4bc5bae000 - 0x7f4bc5bc1bcf  libdrm.so.2  0.0.0.0
+0x7f4bc6ac9000 - 0x7f4bc6ae216f  libbsd.so.0  0.0.0.0
+0x7f4bc6ae3000 - 0x7f4bc6aea07f  libXdmcp.so.6  0.0.0.0
+0x7f4bc6aeb000 - 0x7f4bc6af0107  libXau.so.6  0.0.0.0
+0x7f4bc6af1000 - 0x7f4bc6afbbdf  librt.so.1  0.0.0.0
+0x7f4bc6afc000 - 0x7f4bc6b252a7  libxcb.so.1  0.0.0.0
+0x7f4bc6b28000 - 0x7f4bc6b3b817  libbz2.so.1.0  0.0.0.0
+0x7f4bc6b3c000 - 0x7f4bc6b570b7  libz.so.1  0.0.0.0
+0x7f4bc6b80000 - 0x7f4bc6d9d83f  libswresample.so.3  0.0.0.0
+0x7f4bc6d9e000 - 0x7f4bc6f8f4d7  libc.so.6  0.0.0.0  (WARNING: No symbols, libc.so.6, E0524263F8C539B057A2E529719D41010)
+0x7f4bc6f92000 - 0x7f4bc6fac447  libgcc_s.so.1  0.0.0.0
+0x7f4bc6fad000 - 0x7f4bc718d7ff  libstdc++.so.6  0.0.0.0  (WARNING: No symbols, libstdc++.so.6, 14A7F1484AF65CC8AA1496BCB14275C80)
+0x7f4bc718e000 - 0x7f4bc71b0477  libpthread.so.0  0.0.0.0  (WARNING: No symbols, libpthread.so.0, FFBB5C7714F8664560786780B0B3B4000)
+0x7f4bc71b1000 - 0x7f4bc72ff10f  libm.so.6  0.0.0.0
+0x7f4bc7300000 - 0x7f4bc734bd47  libjack.so.0  0.0.0.0
+0x7f4bc734c000 - 0x7f4bc7488d37  libX11.so.6  0.0.0.0
+0x7f4bc748b000 - 0x7f4bc749010f  libdl.so.2  0.0.0.0
+0x7f4bc7493000 - 0x7f4bc74a78b7  libXext.so.6  0.0.0.0
+0x7f4bc74a8000 - 0x7f4bc74ae147  libXxf86vm.so.1  0.0.0.0
+0x7f4bc74b3000 - 0x7f4bc774189f  libswscale.so.5  0.0.0.0
+0x7f4bc7742000 - 0x7f4bc7bf606f  libavutil.so.56  0.0.0.0
+0x7f4bc7bf7000 - 0x7f4bc8062187  libavformat.so.58  0.0.0.0
+0x7f4bc8063000 - 0x7f4bc9780ce7  libavcodec.so.58  0.0.0.0
+0x7f4bc9781000 - 0x7f4bc99e50b7  libvulkan.so.1  0.0.0.0
+0x7f4bc99e8000 - 0x7f4bc9a1718f  ld-linux-x86-64.so.2  0.0.0.0
+0x7ffc92df3000 - 0x7ffc92df3a3b  linux-vdso.so.1  0.0.0.0
 ::

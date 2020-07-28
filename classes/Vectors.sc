@@ -1,4 +1,4 @@
-Vec2 : VGen {
+VVec2 : VGen {
 	*fr { |x = 0.0, y = 0.0|
 		^this.multiNew(\frame, x, y);
 	}
@@ -20,7 +20,7 @@ Vec2 : VGen {
 	}
 }
 
-Vec3 : VGen {
+VVec3 : VGen {
 	*fr { |x = 0.0, y = 0.0, z = 0.0|
 		^this.multiNew(\frame, x, y, z);
 	}
@@ -42,7 +42,7 @@ Vec3 : VGen {
 	}
 }
 
-Vec4 : VGen {
+VVec4 : VGen {
 	*fr { |x = 0.0, y = 0.0, z = 0.0, w = 0.0|
 		^this.multiNew(\frame, x, y, z, w);
 	}
@@ -153,7 +153,7 @@ VW : VGen {
 	}
 }
 
-Splat2 : VGen {
+VSplat2 : VGen {
 	*fr { |x|
 		^this.multiNew(\frame, x);
 	}
@@ -175,7 +175,7 @@ Splat2 : VGen {
 	}
 }
 
-Splat3 : VGen {
+VSplat3 : VGen {
 	*fr { |x|
 		^this.multiNew(\frame, x);
 	}
@@ -197,7 +197,7 @@ Splat3 : VGen {
 	}
 }
 
-Splat4 : VGen {
+VSplat4 : VGen {
 	*fr { |x|
 		^this.multiNew(\frame, x);
 	}

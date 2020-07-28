@@ -1,0 +1,46 @@
+TITLE:: VStep
+summary:: Dynamic threshold VGen
+categories:: Quarks>Scintillator>VGens>Mathematics>Signal Processing
+related:: Classes/VClamp
+
+DESCRIPTION::
+
+Just like the binary operator code::thresh::, returns code::0:: when code::v < step::, otherwise code::v::. Higher-dimensional versions of VStep do the comparison piecewise, meaning each component of v will be compaired against the same component of step.
+
+strong::Supported Rates: frame, shape, pixel::
+
+CLASSMETHODS::
+
+METHOD:: fr
+METHOD:: sr
+METHOD:: pr
+
+Make a VStep VGen at requested rate.
+
+ARGUMENT:: step
+The minimum value v must exceed for the VGen to return v instead of 0.
+
+ARGUMENT:: v
+The input value to compare against step.
+
+returns::
+For each component of v, code::0:: when code::v < step::, otherwise code::v::
+
+strong::Dimensions::
+table::
+## strong::input:: || strong::output::
+## 1, 1, 1, 1 || 1
+## 2, 2, 2, 2 || 2
+## 3, 3, 3, 3 || 3
+## 4, 4, 4, 4 || 4
+::
+
+INSTANCEMETHODS::
+private:: inputDimensions, outputDimensions
+
+EXAMPLES::
+
+code::
+(TODO)
+::
+

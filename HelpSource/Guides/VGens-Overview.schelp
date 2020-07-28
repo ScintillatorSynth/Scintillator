@@ -1,6 +1,6 @@
 title:: VGens Overview
 summary:: A list of the available VGens within Scintillator.
-categories:: Quarks>Scintillator>VGens
+categories:: Quarks>Scintillator>Guides
 related:: Classes/VGen, Classes/ScinthDef, Guides/Scintillator-Parallel-Classes
 
 section::Video Oscillators
@@ -28,43 +28,43 @@ table::
 
 section::Image Sampling
 
-VGens for reading from link::Classes/ImageBuffer:: objects.
+VGens for reading from link::Classes/ScinImageBuffer:: objects.
 
 table::
 ## strong::VGen:: || strong::Rates:: || strong::Dimensions:: || strong::Description::
-## link::Classes/Sampler::code::.fr(image, pos):: || frame, shape, pixel || table::
+## link::Classes/VSampler::code::.pr(image, pos):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## image, 2 || 4
-:: || Samples the provided imageBuffer at code::pos:: and returns the 4D color signal as code::(r, g, b, a)::
+:: || Samples the provided imageBuffer at code::pos:: and returns the 4D color signal as code::(red, green, blue, alpha)::
 
-## link::Classes/TexPos::code::.fr():: || shape, pixel || table::
+## link::Classes/VTexPos::code::.fr():: || shape, pixel || table::
 ## strong::input:: || strong::output::
 ## - || 2
 :: || Texture Sampler position
 
-## link::Classes/TextureSize::code::.fr(image):: || frame, shape, pixel || table::
+## link::Classes/VTextureSize::code::.fr(image):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## - || 2
-:: || Returns the dimensions in pixels of the provided ImageBuffer. Roughly analogous to link::Classes/BufFrames::.
+:: || Returns the dimensions in pixels of the provided ScinImageBuffer. Roughly analogous to link::Classes/BufFrames::.
 ::
 
 section::Fragment Position
 
-Scintillator offers a few different means to determine the position of the current fragment shader relative to the geometry being rendered, or the onscreen pixel dimensions. The link::Classes/TexPos:: VGen is in the Image Sampling section.
+Scintillator offers a few different means to determine the position of the current fragment shader relative to the geometry being rendered, or the onscreen pixel dimensions. The link::Classes/VTexPos:: VGen is in the Image Sampling section.
 
 table::
 ## strong::VGen:: || strong::Rates:: || strong::Dimensions:: || strong::Description::
-## link::Classes/NormPos::code::.fr():: || shape, pixel || table::
+## link::Classes/VNormPos::code::.pr():: || shape, pixel || table::
 ## strong::input:: || strong::output::
 ## - || 2
 :: || Normalized fragment position
 
-## link::Classes/TexPos::code::.fr():: || shape, pixel || table::
+## link::Classes/VTexPos::code::.pr():: || shape, pixel || table::
 ## strong::input:: || strong::output::
 ## - || 2
 :: || Texture Sampler position
 
-## link::Classes/FragCoord::code::.fr():: || pixel || table::
+## link::Classes/VFragCoord::code::.pr():: || pixel || table::
 ## strong::input:: || strong::output::
 ## - || 2
 :: || Onscreen coordinates of current fragment in pixels
@@ -72,48 +72,48 @@ table::
 
 section::Vector Manipulation
 
-These utility UGens allow the grouping of one-dimensional elements into vectors, access to individual elements within vectors, and lastly a convenience function to repeat (or emphasis::splat::) a single element across all elements within a vector.
+These utility VGens allow the grouping of one-dimensional elements into vectors, access to individual elements within vectors, and lastly a convenience function to repeat (or emphasis::splat::) a single element across all elements within a vector.
 
-subsection::Building Vectors
+subsection::Vector Building
 
 Some VGens require inputs that are higher-dimensional vectors. To construct those inputs from single-dimensional components, Scintillator provides the code::VecN:: classes.
 
 table::
 ## strong::VGen:: || strong::Rates:: || strong::Dimensions:: || strong::Description::
-## link::Classes/Vec2::code::.fr(x, y):: || frame, shape, pixel || table::
+## link::Classes/VVec2::code::.fr(x, y):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1, 1 || 2
 :: || Construct a 2D vector from individual elements code::x:: and code::y::
 
-## link::Classes/Vec3::code::.fr(x, y, z):: || frame, shape, pixel || table::
+## link::Classes/VVec3::code::.fr(x, y, z):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1 || 3
 :: || Construct a 3D vector from individual elements code::x:: and code::y::
 
-## link::Classes/Vec4::code::.fr(x, y, z, w):: || frame, shape, pixel || table::
+## link::Classes/VVec4::code::.fr(x, y, z, w):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1, 1 || 4
 :: || Construct a 4D vector from individual elements code::x:: and code::y::
 
-## link::Classes/Splat2::code::.fr(x):: || frame, shape, pixel || table::
+## link::Classes/VSplat2::code::.fr(x):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1 || 2
 :: || Construct a 2D vector from a single element copied into both
 
-## link::Classes/Splat3::code::.fr(x):: || frame, shape, pixel || table::
+## link::Classes/VSplat3::code::.fr(x):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1 || 3
 :: || Construct a 3D vector from a single element copied into both
 
-## link::Classes/Splat4::code::.fr(x):: || frame, shape, pixel || table::
+## link::Classes/VSplat4::code::.fr(x):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1 || 4
 :: || Construct a 4D vector from a single element copied into both
 ::
 
-subsection::Accessing Elements Within Vectors
+subsection::Element Access
 
-To break out a single-dimensional signal from a higher-dimensional vector, use the code::VN:: classes. These follow the computer graphics naming conventions for elements within the vector, where the names emphasis::x, y, z, w:: are used to indicate the first through fourth element respectively.
+To break out a single-dimensional signal from a higher-dimensional vector, use the code::VX:: and related classes. These follow the computer graphics naming conventions for elements within the vector, where the names emphasis::x, y, z, w:: are used to indicate the first through fourth element respectively.
 
 table::
 ## strong::VGen:: || strong::Rates:: || strong::Dimensions:: || strong::Description::
@@ -144,26 +144,26 @@ table::
 :: || Return the fourth element in the vector.
 ::
 
-subsection::Video Output Convenience
+subsection::Color Output
 
-Any 4D output is considered valid link::Classes/ScinthDef:: output.
+Note that any vec4 output is considered valid link::Classes/ScinthDef:: output, but these can help with code clarity or with grouping of single-channel inputs into a vec4, sometimes with that fourth alpha component hard-coded to 1.0. In the future the server may perform opacity calling, so knowing an output is entirely opaque will allow VRGBOut and VBWOut to take advantage of that culling automatically.
 
 table::
 ## strong::VGen:: || strong::Rates:: || strong::Dimensions:: || strong::Description::
-## link::Classes/RGBOut::code::.fr(r, g, b):: || pixel || table::
+## link::Classes/VRGBOut::code::.pr(red, green, blue):: || pixel || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1 || 4
-:: || Convenience object for color output at full alpha
+:: || Convenience object for color output at full opacity
 
-## link::Classes/RGBAOut::code::.fr(r, g, b):: || pixel || table::
+## link::Classes/VRGBAOut::code::.pr(red, green, blue, alpha):: || pixel || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1, 1 || 4
 :: || Convenience object for color output with alpha channel
 
-## link::Classes/BWOut::code::.fr(x):: || pixel || table::
+## link::Classes/VBWOut::code::.pr(value):: || pixel || table::
 ## strong::input:: || strong::output::
 ## 1 || 4
-:: || Convenience object for black and white output at full alpha
+:: || Convenience object for black and white output at full opacity
 ::
 
 section::Mathematical Operations
@@ -174,15 +174,15 @@ subsection::Vector Operations
 
 table::
 ## strong::VGen:: || strong::Rates:: || strong::Dimensions:: || strong::Description::
-## link::Classes/Clamp::code::.fr(x, min, max):: || frame, shape, pixel || table::
+## link::Classes/VClamp::code::.pr(v, min, max):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1 || 1
 ## 2, 2, 2 || 2
 ## 3, 3, 3 || 3
 ## 4, 4, 4 || 4
-:: || Video equivalent of link::Classes/Clip:: UGen, piecewise bounds input code::x:: between code::[min, max]::
+:: || Video equivalent of link::Classes/Clip:: UGen, piecewise bounds input code::v:: between code::[min, max]::
 
-## link::Classes/Length::code::.fr(x):: || frame, shape, pixel || table::
+## link::Classes/VLength::code::.pr(v):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1 || 1
 ## 2 || 1
@@ -190,14 +190,14 @@ table::
 ## 4 || 1
 :: || Returns the length of the vector code::x::, or the square root of the sum of the squares
 
-## link::Classes/Distance::code::.fr(x, y):: || frame, shape, pixel || table::
+## link::Classes/VDistance::code::.pr(u, v):: || frame, shape, pixel || table::
 ## 1, 1 || 1
 ## 2, 2 || 1
 ## 3, 3 || 1
 ## 4, 4 || 1
-:: || Computes the distance between code::x:: and code::y::, which is the length of the vector code::x - y::
+:: || Computes the distance between code::u:: and code::v::, which is the length of the vector code::v - u::
 
-## link::Classes/Step::code::.fr(step, x):: || frame, shape, pixel || table::
+## link::Classes/VStep::code::.pr(step, x):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1, 1 || 1
 ## 2, 2 || 2
@@ -205,7 +205,7 @@ table::
 ## 4, 4 || 4
 :: || Just like the binary operator code::thresh::, returns code::0:: when code::x < step::, otherwise code::x::
 
-## link::Classes/VecMix::code::.fr(x, y, a):: || frame, shape, pixel || table::
+## link::Classes/VMix::code::.pr(v, u, a):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1, 1, 1 || 1
 ## 2, 2, 1 || 2
@@ -214,28 +214,28 @@ table::
 ## 3, 3, 3 || 3
 ## 4, 4, 1 || 4
 ## 4, 4, 4 || 4
-:: || Similar to the binary operator code::blend::, returns a linear mix of code::x, y:: with code::a:: between code::[0, 1]::. Supports piecewise comparison or a single blend argument to apply to all components
+:: || Similar to the binary operator code::blend::, returns a linear mix of code::v, u:: with code::a:: between code::[0, 1]::. Supports piecewise blend or a single blend argument to apply to all components
 
-## link::Classes/Dot::code::.fr(x, y):: || frame, shape, pixel || table::
+## link::Classes/VDot::code::.pr(u, v):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1, 1 || 1
 ## 2, 2 || 1
 ## 3, 3 || 1
 ## 4, 4 || 1
-:: || Returns the dot product between code::x:: and code::y::, or the sum of the product of each component in the vector
+:: || Returns the link::https://en.wikipedia.org/wiki/Dot_product##dot product:: between code::u:: and code::v::, or the sum of the product of each component in the vector
 
-## link::Classes/Cross::code::.fr(x, y):: || frame, shape, pixel || table::
+## link::Classes/VCross::code::.pr(u, v):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 3, 3 || 3
-:: || Returns the cross product of code::x:: and code::y::
+:: || Returns the link::https://en.wikipedia.org/wiki/Cross_product##cross product:: of code::u:: and code::v::
 
-## link::Classes/VNorm::code::.fr(x):: || frame, shape, pixel || table::
+## link::Classes/VNorm::code::.pr(v):: || frame, shape, pixel || table::
 ## strong::input:: || strong::output::
 ## 1, 1 || 1
 ## 2, 2 || 2
 ## 3, 3 || 3
 ## 4, 4 || 4
-:: || Returns a emphasis::normalized:: vector parallel to code::x:: with length code::1::
+:: || Returns a emphasis::normalized:: vector parallel to code::v:: with length code::1::
 
 ::
 
@@ -247,10 +247,10 @@ For documentation of these operators in base SuperCollider see the link::Overvie
 
 The following tables detail the current supported operations along with the ones that are not yet supported, the name of the VGen sent to the server to realize the operation, a brief explanation of their function and conceptual mathematical code. Since all numbers within a Scintillator link::Classes/ScinthDef:: must be floating-point, several of the integer operations like bit manipulation are marked as emphasis::not applicable::. If support is planned, but not yet implemented, the function is marked as emphasis::not yet implemented::.
 
-For higher-dimensional signals all operations happen emphasis::piecewise::, meaning the operator is applied to each component of the signal independently. For example if code::b = a.neg:: and both code::a:: and code::b:: are link::Classes/Vec4:: objects then:
+For higher-dimensional signals all operations happen emphasis::piecewise::, meaning the operator is applied to each component of the signal independently. For example if code::b = a.neg:: and both code::a:: and code::b:: are link::Classes/VVec4:: objects then:
 
 code::
-b = Vec4.fr(
+b = VVec4.fr(
 	VX.fr(a).neg,
 	VY.fr(a).neg,
 	VZ.fr(a).neg,
@@ -320,10 +320,10 @@ table::
 
 subsection::Built-In Binary Operations
 
-Binary operations also happen emphasis::piecewise::, meaning that the binary operator is applied to each individual component separately. Conceptually if code::c = a * b:: and both code::a:: and code::b:: are link::Classes/Vec4::s then:
+Binary operations also happen emphasis::piecewise::, meaning that the binary operator is applied to each individual component separately. Conceptually if code::c = a * b:: and both code::a:: and code::b:: are link::Classes/VVec4::s then:
 
 code::
-c = Vec4.fr(
+c = VVec4.fr(
 	VX.fr(a) * VX.fr(b),
 	VY.fr(a) * VY.fr(b),
 	VZ.fr(a) * VZ.fr(b),

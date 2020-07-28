@@ -1,0 +1,60 @@
+TITLE:: VClamp
+summary:: Video oscillator to constrain a value between two parameters
+categories:: Quarks>Scintillator>VGens>Mathematics>Signal Processing
+related:: Classes/Clip, Classes/VStep
+
+DESCRIPTION::
+
+Analogous to the audio link::Classes/Clip:: class. Returns the input emphasis::x:: if min < v < max, emphasis::min:: if v < min, emphasis::max:: if v > max.
+
+strong::Supported Rates: frame, shape, pixel::
+
+CLASSMETHODS::
+
+METHOD:: fr
+METHOD:: sr
+METHOD:: pr
+
+Make a VClamp VGen at requested rate.
+
+ARGUMENT:: v
+Input value to clamp.
+
+ARGUMENT:: min
+Minimum value to clamp v to.
+
+ARGUMENT:: max
+Maximum value to clamp v to.
+
+returns::
+emphasis::x:: if min < v < max, emphasis::min:: if v < min, emphasis::max:: if v > max.
+
+strong::Dimensions::
+table::
+## strong::input:: || strong::output::
+## 1, 1, 1, 1 || 1
+## 2, 2, 2, 2 || 2
+## 3, 3, 3, 3 || 3
+## 4, 4, 4, 4 || 4
+::
+
+INSTANCEMETHODS::
+private:: inputDimensions, outputDimensions
+
+EXAMPLES::
+
+code::
+(
+~t = ScinthDef.new(\t, {
+	var pos = VNormPos.pr;
+	var wave = (max(VX.pr(pos), VY.pr(pos)) * 25).sin;
+	VBWOut.pr(VClamp.pr(wave, 0.0, 0.5) * 2);
+}).add;
+)
+
+(
+~k = Scinth.new(\t);
+)
+::
+
+image::VClamp.png::

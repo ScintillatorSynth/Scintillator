@@ -2,7 +2,7 @@
 	name: "Scintillator",
 	summary: "A Vulkan-based video synthesizer for SuperCollider",
 	author: "Luke Nihlen",
-	version: "0.0.6",
+	version: "0.0.7",
 	schelp: "Guides/Scintillator-User-Guide",
 	license: "GPL",
 	copyright: "Luke Nihlen 2020",

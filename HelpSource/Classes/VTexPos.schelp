@@ -1,20 +1,28 @@
-TITLE:: TexPos
+TITLE:: VTexPos
 summary:: VGen providing geometry-specific texture coordinates for image sampling.
 categories:: Quarks>Scintillator>VGens>Intrinsics
-related:: Classes/NormPos, Classes/FragCoord, Classes/ImageBuffer, Classes/Sampler
+related:: Classes/VNormPos, Classes/VFragCoord, Classes/ScinImageBuffer, Classes/VSampler
 
 DESCRIPTION::
-TexPos provides a texture coordinate representing the position on the underlying rendered geometry (currently only a full-screen rectangle). Unlike vertex coordinates such as those provided by link::Classes/NormPos::, texture coordinates vary from [0, 1] with 0, 0 in the upper-left hand corner. When rendering the full-screen rectangle they can be thought of as link::Classes/FragCoord:: scaled to resolution-independent units. TexPos is most commonly seen as in input to the link::Classes/Sampler:: for rendering images.
+VTexPos provides a texture coordinate representing the position on the underlying rendered geometry (currently only a full-screen rectangle). Unlike vertex coordinates such as those provided by link::Classes/VNormPos::, texture coordinates vary from [0, 1] with 0, 0 in the upper-left hand corner. When rendering the full-screen rectangle they can be thought of as link::Classes/VFragCoord:: scaled to resolution-independent units. TexPos is most commonly seen as in input to the link::Classes/VSampler:: for rendering images.
+
+strong::Supported Rates: shape, pixel::
 
 CLASSMETHODS::
 
-METHOD:: fr
+METHOD:: sr
+METHOD:: pr
+
+Make a VTexPos VGen at requested rate.
 
 strong::dimensions::
 table::
 ## strong::input:: || strong::output::
 ## none || 2
 ::
+
+returns::
+A texture coordinate usable in a ScinSampler.
 
 INSTANCEMETHODS::
 private::inputDimensions, outputDimensions
@@ -33,12 +41,12 @@ code::
 )
 
 (
-~ib = ImageBuffer.read(path: "~/src/TestGoldImages/sourceMedia/molly.png".standardizePath);
+~ib = ScinImageBuffer.read(path: "~/src/TestGoldImages/sourceMedia/molly.png".standardizePath);
 )
 
 (
 ~f = ScinthDef.new(\f, {
-	Sampler.fr(~ib, TexPos.fr);
+	VSampler.pr(~ib, VTexPos.pr);
 }).add;
 )
 
@@ -47,7 +55,7 @@ code::
 )
 ::
 
-image::TexPosA.png::
+image::VTexPosA.png::
 
 code::
 // Molly doesn't appreciate being rendered in the wrong aspect ratio! It compromises
@@ -61,8 +69,8 @@ code::
 ~f = ScinthDef.new(\f, {
 	var screenAspect = ~o.width / ~o.height;
 	var imageAspect = ~ib.width / ~ib.height;
-	Sampler.fr(~ib,
-		TexPos.fr * Vec2.fr(screenAspect, 1.0) / Vec2.fr(imageAspect, 1.0));
+	VSampler.pr(~ib,
+		VTexPos.pr * VVec2.pr(screenAspect, 1.0) / VVec2.pr(imageAspect, 1.0));
 }).add;
 )
 
@@ -71,4 +79,4 @@ code::
 )
 ::
 
-image::TexPosB.png::
+image::VTexPosB.png::

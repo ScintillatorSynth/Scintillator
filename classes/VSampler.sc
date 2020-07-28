@@ -1,8 +1,7 @@
-// Base class for any VGen that samples pixel values outside of its own local value.
-Sampler : VGen {
-	var <>image;
-	// one of \constant, \parameter.
-	var <>imageArgType;
+VSampler : VGen {
+	var <image;
+	// Set internally by prSetupImageInput, one of \constant, \parameter.
+	var <imageArgType;
 
 	// one of \linear, \nearest.
 	var <>minFilterMode = \linear;
@@ -58,11 +57,11 @@ Sampler : VGen {
 			image = inImage.outputIndex;
 			imageArgType = \parameter;
 		}
-		{ Error.new("Unsupported argument type to Sampler image argument. Supported types are constants and parameters.").throw; };
+		{ Error.new("Unsupported argument type to VSampler image argument. Supported types are constants and parameters.").throw; };
 	}
 }
 
-TextureSize : Sampler {
+VTextureSize : VSampler {
 	*fr { |image|
 		^this.multiNew(\frame).prSetupImageInput(image);
 	}

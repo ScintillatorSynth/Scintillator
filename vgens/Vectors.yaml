@@ -1,4 +1,4 @@
-name: Vec2
+name: VVec2
 rates: [ frame, shape, pixel ]
 inputs:
     - x
@@ -10,7 +10,7 @@ dimensions:
       outputs: 2
 shader: "@out = vec2(@x, @y);"
 ---
-name: Vec3
+name: VVec3
 rates: [ frame, shape, pixel ]
 inputs:
     - x
@@ -23,7 +23,7 @@ dimensions:
       outputs: 3
 shader: "@out = vec3(@x, @y, @z);"
 ---
-name: Vec4
+name: VVec4
 rates: [ frame, shape, pixel ]
 inputs:
     - x
@@ -40,7 +40,7 @@ shader: "@out = vec4(@x, @y, @z, @w);"
 name: VX
 rates: [ frame, shape, pixel ]
 inputs:
-    - vec
+    - v
 outputs:
     - out
 dimensions:
@@ -52,12 +52,12 @@ dimensions:
       outputs: 1
     - inputs: 4
       outputs: 1
-shader: "@out = @vec.x;"
+shader: "@out = @v.x;"
 ---
 name: VY
 rates: [ frame, shape, pixel ]
 inputs:
-    - vec
+    - v
 outputs:
     - out
 dimensions:
@@ -67,12 +67,12 @@ dimensions:
       outputs: 1
     - inputs: 4
       outputs: 1
-shader: "@out = @vec.y;"
+shader: "@out = @v.y;"
 ---
 name: VZ
 rates: [ frame, shape, pixel ]
 inputs:
-    - vec
+    - v
 outputs:
     - out
 dimensions:
@@ -80,20 +80,20 @@ dimensions:
       outputs: 1
     - inputs: 4
       outputs: 1
-shader: "@out = @vec.z;"
+shader: "@out = @v.z;"
 ---
 name: VW
 rates: [ frame, shape, pixel ]
 inputs:
-    - vec
+    - v
 outputs:
     - out
 dimensions:
     - inputs: 4
       outputs: 1
-shader: "@out = @vec.w;"
+shader: "@out = @v.w;"
 ---
-name: Splat2
+name: VSplat2
 rates: [ frame, shape, pixel ]
 inputs:
     - x
@@ -104,7 +104,7 @@ dimensions:
       outputs: 2
 shader: "@out = vec2(@x, @x);"
 ---
-name: Splat3
+name: VSplat3
 rates: [ frame, shape, pixel ]
 inputs:
     - x
@@ -115,7 +115,7 @@ dimensions:
       outputs: 3
 shader: "@out = vec3(@x, @x, @x);"
 ---
-name: Splat4
+name: VSplat4
 rates: [ frame, shape, pixel ]
 inputs:
     - x

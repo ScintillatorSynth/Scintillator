@@ -27,7 +27,7 @@ table::
 
 subsection::Shape Dictionary Spec
 
-The sole required key for the shape dictionary is the code::name:: key, with the rest of the keys being dependent on the specific shape specified. Currently the only supported shape is the link::Classes/Quad::, which takes two optional additional keys, code::widthEdges:: and code::heightEdges::. Both have default values of 1 and indicate how many edges the quad should tesselate into.
+The sole required key for the shape dictionary is the code::name:: key, with the rest of the keys being dependent on the specific shape specified. Currently the only supported shape is the Quad, which takes two optional additional keys, code::widthEdges:: and code::heightEdges::. Both have default values of 1 and indicate how many edges the quad should tesselate into.
 
 subsection::Options Dictionary Spec
 

@@ -30,26 +30,26 @@ When constructing a ScinthDef the VGens are subject to a validation step called 
 code::
 (
 ~vquad = ScinthDef.new(\vquad, {
-	var length = Length.fr(NormPos.fr);
-	VSinOsc.fr(
-		Vec4.fr(1.0, 1.5, 2.0, 3.0),
-		Vec4.fr(length, length * 2, length * 4, length * 8),
-		Splat4.fr(0.5),
-		Splat4.fr(0.5));
+	var length = VLength.pr(VNormPos.pr);
+	VSinOsc.pr(
+		VVec4.pr(1.0, 1.5, 2.0, 3.0),
+		VVec4.pr(length, length * 2, length * 4, length * 8),
+		VSplat4.pr(0.5),
+		VSplat4.pr(0.5));
 }).add;
 )
 ::
 
-From the top, the link::Classes/NormPos:: VGen takes no inputs and produces a single two-dimensional output, which is the sole input to the link::Classes/Length:: VGen. The Length VGen can accept inputs with dimesions from 1 to 4, and always produces a single-dimensional output, the scalar length of the input vector, in this case stored in the code::length:: variable.
+From the top, the link::Classes/VNormPos:: VGen takes no inputs and produces a single two-dimensional output, which is the sole input to the link::Classes/VLength:: VGen. The VLength VGen can accept inputs with dimesions from 1 to 4, and always produces a single-dimensional output, the scalar length of the input vector, in this case stored in the code::length:: variable.
 
-The link::Classes/VSinOsc:: VGen takes four inputs, just like its analagous audio class link::Classes/SinOsc::, and they are code::freq::, code::phase::, code::mul::, and code::add::. The default values of code::mul:: and code::add:: are adjusted to reflect the fact that VGens produce output within the range of [0.0, 1.0] instead of the audio [-1.0, 1.0] range. Like Length, VSinOsc can accept inputs from 1 to 4 dimensions, but unlike Length, it will produce a single output of the same dimension as the inputs. So, a VSinOsc with 4 four-dimensional inputs, like in this case, will produce a single four-dimensional output.
+The link::Classes/VSinOsc:: VGen takes four inputs, just like its analagous audio class link::Classes/SinOsc::, and they are code::freq::, code::phase::, code::mul::, and code::add::. The default values of code::mul:: and code::add:: are adjusted to reflect the fact that VGens produce output within the range of [0.0, 1.0] instead of the audio [-1.0, 1.0] range. Like VLength, VSinOsc can accept inputs from 1 to 4 dimensions, but unlike VLength, it will produce a single output of the same dimension as the inputs. So, a VSinOsc with 4 four-dimensional inputs, like in this case, will produce a single four-dimensional output.
 
-The code::freq:: and code::phase:: arguments to VSinOsc here use the link::Classes/Vec4:: VGen, which takes 4 one-dimensional inputs and merges those into a single four-dimensional output. The code::mul:: and code::add:: arguments are left to defaults, but because VSinOsc requires that all of its inputs are the same dimension, we use the link::Classes/Splat4:: VGen to make a four-dimensional vector out of a single one-dimensional input. Because the default arguments to code::mul:: and code::add:: are single-dimensional, we have to explicitly specify the higher-dimensional inputs to the VSinOsc, or it will fail dimensional analysis.
+The code::freq:: and code::phase:: arguments to VSinOsc here use the link::Classes/VVec4:: VGen, which takes 4 one-dimensional inputs and merges those into a single four-dimensional output. The code::mul:: and code::add:: arguments are left to defaults, but because VSinOsc requires that all of its inputs are the same dimension, we use the link::Classes/VSplat4:: VGen to make a four-dimensional vector out of a single one-dimensional input. Because the default arguments to code::mul:: and code::add:: are single-dimensional, we have to explicitly specify the higher-dimensional inputs to the VSinOsc, or it will fail dimensional analysis.
 
 This VGen will perform a single sine computation per pixel in the output, producing the four-dimensional output signal with is interpreted by the graphics hardware as the red, blue, green, and alpha color values at each pixel to produce an image.
 
 note::
-A planned "quality of life" improvement for ScinthDef dimensional analysis is called "autosplat", which would detect a dimension mismatch with constant inputs and add appropriate Splats to fix as needed. But, for now, they must be specified manually.
+A planned "quality of life" improvement for ScinthDef dimensional analysis is called "autosplat", which would detect a dimension mismatch with constant inputs and add appropriate VSplats to fix as needed. But, for now, they must be specified manually.
 ::
 
 classmethods::
@@ -60,7 +60,7 @@ strong::A symbol.:: The name to associate with this ScinthDef, for creating link
 argument::vGenGraphFunc
 strong::A function.:: The graph function defining the how the link::Classes/VGen:: objects are connected.
 argument::shape
-strong::An optional Shape object.:: Describes the geometry to render the ScinthDef with. See the link::Classes/Shape:: documentation for more details.
+strong::An optional ScinShape object.:: Describes the geometry to render the ScinthDef with, currently only a full-screen quad is supported.
 argument::renderOptions
 strong::An optional IndentityDictionary.:: The contents detail render options for this ScinthDef. Supported keys are as follows:
 
@@ -105,8 +105,8 @@ examples::
 code::
 (
 ~t = ScinthDef.new(\t, {
-	BWOut.fr(VSinOsc.fr(1.0, Length.fr(NormPos.fr)));
-});
+	VBWOut.pr(VSinOsc.pr(1.0, VLength.pr(VNormPos.pr)));
+}).add;
 )
 
 (

@@ -1,6 +1,6 @@
-RGBOut : VGen {
-	*pr { |r, g, b|
-		^this.multiNew(\pixel, r, g, b);
+VRGBOut : VGen {
+	*pr { |red, green, blue|
+		^this.multiNew(\pixel, red, green, blue);
 	}
 
 	inputDimensions {
@@ -12,9 +12,9 @@ RGBOut : VGen {
 	}
 }
 
-BWOut : VGen {
-	*pr { |v|
-		^this.multiNew(\pixel, v);
+VBWOut : VGen {
+	*pr { |value|
+		^this.multiNew(\pixel, value);
 	}
 
 	inputDimensions {
@@ -26,9 +26,9 @@ BWOut : VGen {
 	}
 }
 
-RGBAOut : VGen {
-	*pr { |r, g, b, a|
-		^this.multiNew(\pixel, r, g, b, a);
+VRGBAOut : VGen {
+	*pr { |red, green, blue, alpha|
+		^this.multiNew(\pixel, red, green, blue, alpha);
 	}
 
 	inputDimensions {

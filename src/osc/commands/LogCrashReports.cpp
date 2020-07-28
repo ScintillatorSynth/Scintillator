@@ -14,8 +14,12 @@ LogCrashReports::LogCrashReports(osc::Dispatcher* dispatcher): Command(dispatche
 LogCrashReports::~LogCrashReports() {}
 
 void LogCrashReports::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
-    m_dispatcher->crashReporter()->logCrashReports();
-    m_dispatcher->crashReporter()->closeDatabase();
+    if (m_dispatcher->crashReporter()) {
+        m_dispatcher->crashReporter()->logCrashReports();
+        m_dispatcher->crashReporter()->closeDatabase();
+    } else {
+        spdlog::warn("Crash reporting disabled.");
+    }
     m_dispatcher->respond(address, "/scin_done", "/scin_logCrashReports");
 }
 

@@ -1,8 +1,8 @@
 # VGens that wrap GLSL built-in functions or variables. This is not an exhaustive list, adding things as needed.
 ---
-name: Distance
+name: VDistance
 rates: [ frame, shape, pixel ]
-inputs: [ x, y ]
+inputs: [ u, v ]
 outputs: [ out ]
 dimensions:
     - inputs: 1
@@ -13,11 +13,11 @@ dimensions:
       outputs: 1
     - inputs: 4
       outputs: 1
-shader: "@out = distance(@x, @y);"
+shader: "@out = distance(@u, @v);"
 ---
-name: Dot
+name: VDot
 rates: [ frame, shape, pixel ]
-inputs: [ x, y ]
+inputs: [ v, u ]
 outputs: [ out ]
 dimensions:
     - inputs: 1
@@ -28,11 +28,11 @@ dimensions:
       outputs: 1
     - inputs: 4
       outputs: 1
-shader: "@out = dot(@x, @y);"
+shader: "@out = dot(@v, @u);"
 ---
-name: Clamp
+name: VClamp
 rates: [ frame, shape, pixel ]
-inputs: [ x, min, max ]
+inputs: [ v, min, max ]
 outputs: [ out ]
 dimensions:
     - inputs: 1
@@ -43,27 +43,27 @@ dimensions:
       outputs: 3
     - inputs: 4
       outputs: 4
-shader: "@out = clamp(@x, @min, @max);"
+shader: "@out = clamp(@v, @min, @max);"
 ---
-name: Cross
+name: VCross
 rates: [ frame, shape, pixel ]
-inputs: [ x, y ]
+inputs: [ u, v ]
 outputs: [ out ]
 dimensions:
     - inputs: 3
       outputs: 3
-shader: "@out = cross(@x, @y);"
+shader: "@out = cross(@u, @v);"
 ---
-name: FragCoord
+name: VFragCoord
 rates: [ frame, shape, pixel ]
 outputs: [ out ]
 dimensions:
     - outputs: 2
-shader: "@out = vec2(@fragCoord.x, @fragCoord.y);"
+shader: "@out = vec2(@vFragCoord.x, @vFragCoord.y);"
 ---
-name: Length
+name: VLength
 rates: [ frame, shape, pixel ]
-inputs: [ in ]
+inputs: [ v ]
 outputs: [ out ]
 dimensions:
     - inputs: 1
@@ -74,11 +74,11 @@ dimensions:
       outputs: 1
     - inputs: 4
       outputs: 1
-shader: "@out = length(@in);"
+shader: "@out = length(@v);"
 ---
-name: Step
+name: VStep
 rates: [ frame, shape, pixel ]
-inputs: [ edge, x ]
+inputs: [ edge, v ]
 outputs: [ out ]
 dimensions:
     - inputs: 1
@@ -89,9 +89,9 @@ dimensions:
       outputs: 3
     - inputs: 4
       outputs: 4
-shader: "@out = step(@edge, @x);"
+shader: "@out = step(@edge, @v);"
 ---
-name: TextureSize
+name: VTextureSize
 rates: [ frame, shape, pixel ]
 sampler: true
 outputs: [ out ]
@@ -99,9 +99,9 @@ dimensions:
     - outputs: 2
 shader: "@out = vec2(textureSize(@sampler, 0));"
 ---
-name: VecMix
+name: VMix
 rates: [ frame, shape, pixel ]
-inputs: [ x, y, a ]
+inputs: [ v, u, a ]
 outputs: [ out ]
 dimensions:
     - inputs: 1
@@ -118,11 +118,11 @@ dimensions:
       outputs: 3
     - inputs: [4, 4, 1]
       outputs: 4
-shader: "@out = mix(@x, @y, @a);"
+shader: "@out = mix(@v, @u, @a);"
 ---
 name: VNorm
 rates: [ frame, shape, pixel ]
-inputs: [ x ]
+inputs: [ v ]
 outputs: [ out ]
 dimensions:
     - inputs: 1
@@ -133,4 +133,4 @@ dimensions:
       outputs: 3
     - inputs: 4
       outputs: 4
-shader: "@out = normalize(@x);"
+shader: "@out = normalize(@v);"
