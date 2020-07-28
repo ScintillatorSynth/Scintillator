@@ -12,7 +12,7 @@ matrix:
     env:
     - DO_COVERAGE=false
   - os: osx
-    osx_image: xcode11
+    osx_image: xcode11.6
     env:
     - DO_COVERAGE=false
   - os: windows
