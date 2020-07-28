@@ -12,7 +12,7 @@ CLASSMETHODS::
 
 METHOD:: pr
 
-Make a VRGBAOut VGen at requested rate.
+Make a VRGBAOut VGen at pixel rate.
 
 ARGUMENT:: red
 The red color component value, between 0 and 1.
@@ -41,7 +41,44 @@ private::inputDimensions, outputDimensions
 EXAMPLES::
 
 code::
+// Demonstration of alpha blending between two Scinths. First we load two images:
 (
-(TODO)
+~molly = ScinImageBuffer.read(path: "~/src/TestGoldImages/sourceMedia/molly.png".standardizePath);
+~storm = ScinImageBuffer.read(path: "~/src/TestGoldImages/sourceMedia/storm.png".standardizePath);
+)
+
+// Then render the first image in a Scinth:
+(
+~m = ScinthDef.new(\m, {
+	VSampler.pr(~molly, VTexPos.pr);
+}).add;
+)
+
+(
+~p = Scinth.new(\m);
+)
+
+// Then use VRGBAOut to render a second image on top, using the flower pattern
+// described in the VDot example. Areas inside the flower will render opaque,
+// there's a transition border with width controllable by the "bleed" parameter,
+// and then areas outside of the flower render with clear alpha, showing the
+// image from the first Scinth underneath.
+(
+~flower = ScinthDef.new(\flower, { |lobes=5, rad=1, bleed=9|
+	var pos = VNormPos.pr;
+	var posNorm = VNorm.pr(pos);
+	var xaxis = VVec2.pr(1.0, 0.0);
+	var theta = VDot.pr(posNorm, xaxis).acos;
+	var r = abs(sin(theta * lobes)) * rad;
+	var storm = VSampler.pr(~storm, VTexPos.pr);
+	VRGBAOut.pr(VX.pr(storm), VY.pr(storm), VZ.pr(storm),
+		1.0 - VClamp.pr(bleed * (VLength.pr(pos) - r), 0.0, 1.0));
+}).add;
+)
+
+(
+~k = Scinth.new(\flower);
 )
 ::
+
+image::VRGBAOut.png::

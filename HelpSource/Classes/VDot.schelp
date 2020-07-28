@@ -41,5 +41,26 @@ private:: inputDimensions, outputDimensions
 EXAMPLES::
 
 code::
-(TODO)
+// Demonstration of the use of dot product identity
+// a dot b = mag(a) * mag(b) * cos(theta) to compute
+// the angle between the x axis and the fragment
+// position. This is compared against the position
+// of a flower radial function and that drives the
+// output value.
+(
+~flower = ScinthDef.new(\flower, { |l=5, k=1|
+	var pos = VNormPos.pr;
+	var posNorm = VNorm.pr(pos);
+	var xaxis = VVec2.pr(1.0, 0.0);
+	var theta = VDot.pr(posNorm, xaxis).acos;
+	var r = abs(sin(theta * l)) * k;
+	VBWOut.pr((1.0 - VDistance.pr(pos, r * posNorm)).abs);
+}).add;
+)
+
+(
+~k = Scinth.new(\flower);
+)
 ::
+
+image::VDot.png::

@@ -38,7 +38,36 @@ private::inputDimensions, outputDimensions
 EXAMPLES::
 
 code::
+// Building off VCross example for triangle-within-point
+// detection, this example attempts to recreate the first
+// image rendered by Scintillator of a RGB triangle.
 (
-(TODO)
+~rgbTri = ScinthDef.new(\rgbTri, { |edgeLength = 2.0|
+	// sqrt(3) / 2
+	var height = 0.866025404 * edgeLength;
+	var a = VVec3.pr(-0.5 * height, 0.5 * height, 0);
+	var b = VVec3.pr(0.0, -0.5 * height, 0);
+	var c = VVec3.pr(0.5 * height, 0.5 * height, 0);
+	var ab = b - a;
+	var ca = a - c;
+	var bc = c - b;
+
+	var pos = VNormPos.pr;
+	var p = VVec3.pr(VX.pr(pos), VY.pr(pos), 0.0);
+	var mask =
+	VClamp.pr(VZ.pr(VCross.pr(ab, p - a)).sign, 0.0, 1.0) *
+	VClamp.pr(VZ.pr(VCross.pr(ca, p - c)).sign, 0.0, 1.0) *
+	VClamp.pr(VZ.pr(VCross.pr(bc, p - b)).sign, 0.0, 1.0);
+	mask * VRGBOut.pr(
+		1 - VDistance.pr(p, a),
+		1 - VDistance.pr(p, b),
+		1 - VDistance.pr(p, c));
+}).add;
+)
+
+(
+~rgb = Scinth.new(\rgbTri);
 )
 ::
+
+image::VRGBOut.png::

@@ -46,12 +46,12 @@ code::
 // the magnitude of the magnetic flux vector at each point,
 // to generate the black and white image.
 ~k = ScinthDef.new(\k, {
-	var pos = NormPos.fr;
-	var r = Vec3.fr(VX.fr(pos), VY.fr(pos), 0.0);
-	var magR = Length.fr(r);
-	var m = Vec3.fr(0.0, 0.1, 0.0);
-	var flux = Cross.fr(m, r) / magR.cubed;
-	BWOut.fr(Clamp.fr(Length.fr(flux), 0.0, 1.0));
+	var pos = VNormPos.pr;
+	var r = VVec3.pr(VX.pr(pos), VY.pr(pos), 0.0);
+	var magR = VLength.pr(r);
+	var m = VVec3.pr(0.0, 0.1, 0.0);
+	var flux = VCross.pr(m, r) / magR.cubed;
+	VBWOut.pr(VClamp.pr(VLength.pr(flux), 0.0, 1.0));
 }).add;
 )
 

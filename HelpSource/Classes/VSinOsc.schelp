@@ -52,10 +52,10 @@ code::
 // Scintillator currently can't "autosplat" defaults to
 // higher-dimensional arguments.
 ~k = ScinthDef.new(\k, { |dot = 0.5|
-	var r = VLength.pr(NormPos.pr);
-	var rgb = VSinOsc.pr(Vec3.pr(r, 2.0 * r, 3.0 * r),
-		Vec3.pr, Splat3.pr(0.5), Splat3.pr(0.5));
-	RGBOut.pr(VX.pr(rgb), VY.pr(rgb), VZ.pr(rgb));
+	var r = VLength.pr(VNormPos.pr);
+	var rgb = VSinOsc.pr(VVec3.pr(r, 2.0 * r, 3.0 * r),
+		VVec3.pr, VSplat3.pr(0.5), VSplat3.pr(0.5));
+	VRGBOut.pr(VX.pr(rgb), VY.pr(rgb), VZ.pr(rgb));
 }).add;
 )
 

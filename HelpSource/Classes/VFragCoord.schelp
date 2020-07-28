@@ -23,18 +23,17 @@ EXAMPLES::
 
 code::
 (
-~o = ScinServerOptions.new;
-~v = ScinServer.new(~o).boot;
+~v = ScinServer.new.boot;
 )
 
 // Note this ScinthDef uses the ScinServerOptions object defined above
-// to provide screen width and height as constants to the Scinth.
+// in the ScinServer to provide screen width and height as constants to the Scinth.
 (
 ~f = ScinthDef.new(\f, {
 	VRGBOut.pr(
-		VX.pr(FragCoord.pr) / ~o.width,
+		VX.pr(VFragCoord.pr) / ~v.options.width,
 		0.0,
-		VY.pr(FragCoord.pr) / ~o.height);
+		VY.pr(VFragCoord.pr) / ~v.options.height);
 }).add;
 )
 

@@ -37,7 +37,19 @@ private::inputDimensions, outputDimensions
 EXAMPLES::
 
 code::
+// This example draws the unit circle by using VStep to only draw white
+// when the distance between the position and the normalized position is
+// within 0.1.
 (
-(TODO)
+~normDist = ScinthDef.new(\normDist, {
+	var pos = VNormPos.pr;
+	VBWOut.pr(VStep.pr(0.9, 1.0 - VDistance.pr(pos, VNorm.pr(pos))));
+}).add;
+)
+
+(
+~k = Scinth.new(\normDist);
 )
 ::
+
+image::VNorm.png::
