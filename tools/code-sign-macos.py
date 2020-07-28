@@ -14,8 +14,8 @@ import time
 
 def main(argv):
     if len(argv) != 3:
-        printf('usage:')
-        printf('  python3 tools/code-sign-macos.py <apple dev username> <app-specific password> <signing identity>')
+        print('usage:')
+        print('  python3 tools/code-sign-macos.py <apple dev username> <app-specific password> <signing identity>')
         sys.exit(1)
 
     appleDevID = argv[0]

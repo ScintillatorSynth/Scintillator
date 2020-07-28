@@ -1,5 +1,5 @@
 language: cpp
-matrix:
+jobs:
   include:
   - os: linux
     dist: bionic
@@ -12,7 +12,7 @@ matrix:
     env:
     - DO_COVERAGE=false
   - os: osx
-    osx_image: xcode11
+    osx_image: xcode11.6
     env:
     - DO_COVERAGE=false
   - os: windows
@@ -31,9 +31,8 @@ deploy:
   access_key_id: "$AWS_KEY"
   secret_access_key: "$AWS_SECRET"
   bucket: scintillator-synth-coverage
-  local-dir: "$HOME/artifacts"
-  upload-dir: artifacts/$TRAVIS_COMMIT
-  verbose: true
+  local_dir: "$HOME/artifacts"
+  upload_dir: artifacts/$TRAVIS_COMMIT
   edge: true
   cleanup: false
   acl: public_read
@@ -44,9 +43,8 @@ deploy:
   access_key_id: "$AWS_KEY"
   secret_access_key: "$AWS_SECRET"
   bucket: scintillator-synth-coverage
-  local-dir: "$HOME/builds"
-  upload-dir: builds
-  verbose: true
+  local_dir: "$HOME/builds"
+  upload_dir: builds
   edge: true
   cleanup: false
   acl: public_read
@@ -57,9 +55,8 @@ deploy:
   access_key_id: "$AWS_KEY"
   secret_access_key: "$AWS_SECRET"
   bucket: scintillator-synth-coverage
-  local-dir: "$HOME/releases"
-  upload-dir: releases
-  verbose: true
+  local_dir: "$HOME/releases"
+  upload_dir: releases
   edge: true
   cleanup: false
   acl: public_read
@@ -72,8 +69,7 @@ deploy:
   secret_access_key: "$GCS_SYMBOL_KEY"
   bucket: scintillator-gargamelle-symbols
   cleanup: false
-  local-dir: "$HOME/symbols"
-  verbose: true
+  local_dir: "$HOME/symbols"
   on:
     condition: "$DO_COVERAGE = false"
     all_branches: true
