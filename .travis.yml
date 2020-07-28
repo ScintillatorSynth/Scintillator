@@ -33,7 +33,6 @@ deploy:
   bucket: scintillator-synth-coverage
   local_dir: "$HOME/artifacts"
   upload_dir: artifacts/$TRAVIS_COMMIT
-  verbose: true
   edge: true
   cleanup: false
   acl: public_read
@@ -46,7 +45,6 @@ deploy:
   bucket: scintillator-synth-coverage
   local_dir: "$HOME/builds"
   upload_dir: builds
-  verbose: true
   edge: true
   cleanup: false
   acl: public_read
@@ -59,7 +57,6 @@ deploy:
   bucket: scintillator-synth-coverage
   local_dir: "$HOME/releases"
   upload_dir: releases
-  verbose: true
   edge: true
   cleanup: false
   acl: public_read
@@ -73,7 +70,6 @@ deploy:
   bucket: scintillator-gargamelle-symbols
   cleanup: false
   local_dir: "$HOME/symbols"
-  verbose: true
   on:
     condition: "$DO_COVERAGE = false"
     all_branches: true
