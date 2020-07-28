@@ -1,5 +1,5 @@
 language: cpp
-matrix:
+jobs:
   include:
   - os: linux
     dist: bionic
@@ -31,8 +31,8 @@ deploy:
   access_key_id: "$AWS_KEY"
   secret_access_key: "$AWS_SECRET"
   bucket: scintillator-synth-coverage
-  local-dir: "$HOME/artifacts"
-  upload-dir: artifacts/$TRAVIS_COMMIT
+  local_dir: "$HOME/artifacts"
+  upload_dir: artifacts/$TRAVIS_COMMIT
   verbose: true
   edge: true
   cleanup: false
@@ -44,8 +44,8 @@ deploy:
   access_key_id: "$AWS_KEY"
   secret_access_key: "$AWS_SECRET"
   bucket: scintillator-synth-coverage
-  local-dir: "$HOME/builds"
-  upload-dir: builds
+  local_dir: "$HOME/builds"
+  upload_dir: builds
   verbose: true
   edge: true
   cleanup: false
@@ -57,8 +57,8 @@ deploy:
   access_key_id: "$AWS_KEY"
   secret_access_key: "$AWS_SECRET"
   bucket: scintillator-synth-coverage
-  local-dir: "$HOME/releases"
-  upload-dir: releases
+  local_dir: "$HOME/releases"
+  upload_dir: releases
   verbose: true
   edge: true
   cleanup: false
@@ -72,7 +72,7 @@ deploy:
   secret_access_key: "$GCS_SYMBOL_KEY"
   bucket: scintillator-gargamelle-symbols
   cleanup: false
-  local-dir: "$HOME/symbols"
+  local_dir: "$HOME/symbols"
   verbose: true
   on:
     condition: "$DO_COVERAGE = false"
