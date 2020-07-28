@@ -31,6 +31,7 @@ deploy:
   access_key_id: "$AWS_KEY"
   secret_access_key: "$AWS_SECRET"
   bucket: scintillator-synth-coverage
+  region:  us-west-1
   local_dir: "$HOME/artifacts"
   upload_dir: artifacts/$TRAVIS_COMMIT
   edge: true
@@ -43,18 +44,21 @@ deploy:
   access_key_id: "$AWS_KEY"
   secret_access_key: "$AWS_SECRET"
   bucket: scintillator-synth-coverage
+  region:  us-west-1
   local_dir: "$HOME/builds"
   upload_dir: builds
   edge: true
   cleanup: false
   acl: public_read
   on:
+    tags: false
     condition: "$DO_COVERAGE = false"
     branch: master
 - provider: s3
   access_key_id: "$AWS_KEY"
   secret_access_key: "$AWS_SECRET"
   bucket: scintillator-synth-coverage
+  region:  us-west-1
   local_dir: "$HOME/releases"
   upload_dir: releases
   edge: true
@@ -67,8 +71,9 @@ deploy:
 - provider: gcs
   access_key_id: "$GCS_SYMBOL_ID"
   secret_access_key: "$GCS_SYMBOL_KEY"
+  detect_encoding: true
   bucket: scintillator-gargamelle-symbols
-  cleanup: false
+  skip_cleanup: true
   local_dir: "$HOME/symbols"
   on:
     condition: "$DO_COVERAGE = false"

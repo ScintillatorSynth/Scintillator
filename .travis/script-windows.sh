@@ -3,6 +3,7 @@
 cd $TRAVIS_BUILD_DIR/build
 cmake --build . --config RelWithDebInfo
 cmake --build . --config RelWithDebInfo --target dump_symbols
+ls -lah symbols-scinsynth-*.gz
 cmake --install . --config RelWithDebInfo
 
 echo "Configuring host machine to use Swiftshader as a Vulkan device"

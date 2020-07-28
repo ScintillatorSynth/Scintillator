@@ -183,7 +183,7 @@ ScinServer {
 		Platform.case(
 			\osx, {
 				commandLine = scinBinaryPath.shellQuote + options.asOptionsString() + '--crashpadHandlerPath='
-				++ Scintillator.binDir +/+ "scinsynth.app" +/+ "Contents" +/+ "MacOS" +/+ "crashpad_handler";
+				++ (Scintillator.binDir +/+ "scinsynth.app" +/+ "Contents" +/+ "MacOS" +/+ "crashpad_handler").shellQuote;
 			},
 			\linux, {
 				commandLine = scinBinaryPath.shellQuote + options.asOptionsString();
