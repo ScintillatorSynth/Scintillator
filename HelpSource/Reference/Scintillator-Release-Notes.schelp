@@ -5,6 +5,17 @@ related:: Guides/Scintillator-User-Guide
 
 section:: Release Notes
 
+subsection:: 0.0.7 27 July 2020
+
+list::
+## Updates documentation and examples, moves to a consistent naming convention for all objects. [link::https://github.com/ScintillatorSynth/Scintillator/pull/142##142::]
+## Adds automatic server crash reporting, fixes a long-standing intermittent server crash (link::https://github.com/ScintillatorSynth/Scintillator/issues/115##115::) [link::https://github.com/ScintillatorSynth/Scintillator/pull/137##137::, link::https://github.com/ScintillatorSynth/Scintillator/pull/138##138::, link::https://github.com/ScintillatorSynth/Scintillator/pull/140##140::]
+## Adds support for shape-rate and frame-rate VGens [link::https://github.com/ScintillatorSynth/Scintillator/pull/131##131::, link::https://github.com/ScintillatorSynth/Scintillator/pull/135##135::]
+## Renames fragment-rate VGens to "pixel-rate" to avoid ambiguity with frame-rate VGens [link::https://github.com/ScintillatorSynth/Scintillator/pull/129##129::]
+## Adds preliminary support for realtime audio input via PortAudio [link::https://github.com/ScintillatorSynth/Scintillator/pull/125##125::, link::https://github.com/ScintillatorSynth/Scintillator/pull/126##126::, link::https://github.com/ScintillatorSynth/Scintillator/pull/127##127::]
+## Adds an automatic installer for the Windows binary [link::https://github.com/ScintillatorSynth/Scintillator/pull/122##122::]
+::
+
 subsection:: 0.0.6 9 May 2020
 
 Adds the Windows scinsynth binary.
