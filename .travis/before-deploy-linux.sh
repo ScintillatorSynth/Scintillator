@@ -16,7 +16,7 @@ else
     mkdir -p $HOME/releases/$TRAVIS_TAG
     cp $TRAVIS_BUILD_DIR/bin/scinsynth-x86_64.AppImage $HOME/releases/$TRAVIS_TAG/.
     cd $HOME/releases/$TRAVIS_TAG
-    gzip scinsynth-x86_64.AppImage
+    gzip -f scinsynth-x86_64.AppImage
     shasum -a 256 -b scinsynth-x86_64.AppImage.gz > scinsynth-x86_64.AppImage.gz.sha256
 fi
 
