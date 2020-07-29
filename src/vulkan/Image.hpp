@@ -111,10 +111,18 @@ public:
     HostImage& operator=(const HostImage&) = delete;
 
     bool create(uint32_t width, uint32_t height) override;
+    bool createWithStride(uint32_t width, uint32_t height, uint32_t stride);
 
     void* mappedAddress() { return m_info.pMappedData; }
 
+    /*! HostImages can support a larger width in memory than the width of the image, to account for image alignment
+     * requirements for some encoders. This value reflects the stride, which can be set by the createWithStride()
+     * function. If not specified it will be equal to the width of the buffer.
+     */
+    uint32_t stride() const { return m_stride; }
+
 protected:
+    uint32_t m_stride;
 };
 
 

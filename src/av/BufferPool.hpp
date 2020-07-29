@@ -19,10 +19,17 @@ public:
 
     std::shared_ptr<Buffer> getBuffer();
 
+    /*! Some codecs have a pixel row alignment requirement for rows of pixels. BufferPool assumes all codecs will, and
+     * so may add to the width of each row to allow for that alignment. This byte pixel width is the stride and is
+     * accessed here.
+     */
+    int stride() const { return m_stride; }
+
 private:
     AVBufferPool* m_bufferPool;
     int m_width;
     int m_height;
+    int m_stride;
 };
 
 } // namespace av

@@ -18,7 +18,7 @@ bool Frame::createFromBuffer(std::shared_ptr<Buffer> buffer) {
     }
     m_buffer = buffer;
     m_frame->data[0] = m_buffer->data();
-    m_frame->linesize[0] = m_buffer->width() * 4;
+    m_frame->linesize[0] = m_buffer->stride() * 4;
     m_frame->extended_data = m_frame->data;
     m_frame->width = m_buffer->width();
     m_frame->height = m_buffer->height();

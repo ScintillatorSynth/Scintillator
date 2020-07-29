@@ -67,25 +67,11 @@ bool Offscreen::create(size_t numberOfImages) {
     // the framebuffer to those readback images, and building command buffers to do the actual readback.
     for (auto i = 0; i < m_numberOfImages; ++i) {
         std::shared_ptr<vk::HostImage> image(new vk::HostImage(m_device));
-        if (!image->create(m_width, m_height)) {
+        if (!image->createWithStride(m_width, m_height, m_bufferPool->stride())) {
             spdlog::error("Offscreen failed to create {} readback images.", m_numberOfImages);
             return false;
         }
         m_readbackImages.push_back(image);
-    }
-
-    // Check if the physical device supports from and to the required formats.
-    m_readbackSupportsBlit = true;
-    VkFormatProperties format;
-    vkGetPhysicalDeviceFormatProperties(m_device->physical(), m_framebuffer->format(), &format);
-    if (!(format.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT)) {
-        spdlog::warn("Offscreen swapchain surface doesn't support blit source, readback will be slow.");
-        m_readbackSupportsBlit = false;
-    }
-    vkGetPhysicalDeviceFormatProperties(m_device->physical(), m_readbackImages[0]->format(), &format);
-    if (!(format.linearTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT)) {
-        spdlog::warn("Offscreen readback image format doesn't support blit destination, readback will be slow.");
-        m_readbackSupportsBlit = false;
     }
 
     // Build the readback commands.
@@ -98,20 +84,10 @@ bool Offscreen::create(size_t numberOfImages) {
         spdlog::error("Offscreen failed to create command buffers.");
         return false;
     }
-    if (m_readbackSupportsBlit) {
-        for (auto i = 0; i < m_numberOfImages; ++i) {
-            if (!writeBlitCommands(m_readbackCommands, i, m_framebuffer->image(i), m_readbackImages[i]->get(),
-                                   VK_IMAGE_LAYOUT_UNDEFINED)) {
-                spdlog::error("Offscreen failed to create readback command buffers.");
-                return false;
-            }
-        }
-    } else {
-        for (auto i = 0; i < m_numberOfImages; ++i) {
-            if (!writeCopyCommands(m_readbackCommands, i, m_framebuffer->image(i), m_readbackImages[i]->get())) {
-                spdlog::error("Offscreen failed to create readback command buffers.");
-                return false;
-            }
+    for (auto i = 0; i < m_numberOfImages; ++i) {
+        if (!writeCopyCommands(m_readbackCommands, i, m_framebuffer->image(i), m_readbackImages[i]->get())) {
+            spdlog::error("Offscreen failed to create readback command buffers.");
+            return false;
         }
     }
 

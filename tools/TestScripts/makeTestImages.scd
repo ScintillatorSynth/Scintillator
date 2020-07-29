@@ -23,8 +23,9 @@ fork {
 	options.logLevel = 2;
 	options.createWindow = false;
 	options.frameRate = 0;
-	options.width = 400;
-	options.height = 400;
+	// Use prime numbers for image dimensions, to test any image alignment/padding assumptions.
+	options.width = 397;
+	options.height = 389;
 	options.swiftshader = true;
 	options.vulkanValidation = true;
 	options.onServerError = { |exitCode|

@@ -143,7 +143,6 @@ private:
     std::vector<std::shared_ptr<vk::CommandBuffer>> m_drawCommands;
     std::vector<std::vector<scin::av::Encoder::SendBuffer>> m_pendingEncodes;
     std::vector<std::shared_ptr<vk::HostImage>> m_readbackImages;
-    bool m_readbackSupportsBlit;
     // The index of this vector is the frameIndex, so the index of the pipelined framebuffer. The value is -1 if no
     // swapchain blit was requested, or the index of the swapchain source image (so 0 or 1).
     std::vector<int> m_pendingSwapchainBlits;
