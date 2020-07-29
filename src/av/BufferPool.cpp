@@ -17,7 +17,6 @@ BufferPool::BufferPool(int width, int height): m_bufferPool(nullptr), m_width(wi
     if (!m_bufferPool) {
         spdlog::error("failed to create BufferPool.");
     }
-
 }
 
 BufferPool::~BufferPool() { av_buffer_pool_uninit(&m_bufferPool); }

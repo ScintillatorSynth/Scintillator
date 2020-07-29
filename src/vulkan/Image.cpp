@@ -125,9 +125,7 @@ HostImage::HostImage(std::shared_ptr<Device> device): AllocatedImage(device, VK_
 
 HostImage::~HostImage() {}
 
-bool HostImage::create(uint32_t width, uint32_t height) {
-    return createWithStride(width, height, width);
-}
+bool HostImage::create(uint32_t width, uint32_t height) { return createWithStride(width, height, width); }
 
 bool HostImage::createWithStride(uint32_t width, uint32_t height, uint32_t stride) {
     m_extent.width = width;
