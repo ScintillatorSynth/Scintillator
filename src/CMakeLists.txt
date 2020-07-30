@@ -202,6 +202,8 @@ set(scintillator_synth_files
     osc/commands/DumpOSC.hpp
     osc/commands/Echo.cpp
     osc/commands/Echo.hpp
+    osc/commands/GroupFreeAll.cpp
+    osc/commands/GroupFreeAll.hpp
     osc/commands/ImageBufferAllocRead.cpp
     osc/commands/ImageBufferAllocRead.hpp
     osc/commands/ImageBufferQuery.cpp

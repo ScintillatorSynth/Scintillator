@@ -38,6 +38,9 @@ public:
         // Scinth Commands
         kSNew = 9,
 
+        // Group Commands
+        kGroupFreeAll = 24,
+
         // ImageBuffer Commands
         kIBAllocRead = 29,
         kIBQuery = 47,

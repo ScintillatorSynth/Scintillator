@@ -86,6 +86,10 @@ public:
      */
     void freeNodes(const std::vector<int>& nodeIDs);
 
+    /*! Free all nodes within the default group.
+     */
+    void groupFreeAll();
+
     /*! Sets the pause/play status of provided nodeID in the provided list of pairs.
      *
      * \param pairs A pair of integers, with the first element as a nodeID and the second as a run value. A value of

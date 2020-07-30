@@ -194,6 +194,13 @@ void Compositor::freeNodes(const std::vector<int>& nodeIDs) {
     }
 }
 
+void Compositor::groupFreeAll() {
+    std::lock_guard<std::mutex> lock(m_scinthMutex);
+    m_scinths.clear();
+    m_scinthMap.clear();
+    m_commandBufferDirty = true;
+}
+
 void Compositor::setRun(const std::vector<std::pair<int, int>>& pairs) {
     std::lock_guard<std::mutex> lock(m_scinthMutex);
     for (const auto& pair : pairs) {
