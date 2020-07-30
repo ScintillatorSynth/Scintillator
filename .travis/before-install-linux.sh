@@ -29,7 +29,7 @@ sudo apt-get install --yes      \
     clang-format-8              \
     clang-tools-8               \
     libc++1-8                   \
-    libc++-abi1                 \
+    libc++abi1                  \
     llvm-8                      \
 
 cd $TRAVIS_BUILD_DIR
