@@ -12,7 +12,7 @@ class Buffer {
 public:
     /*! Typically Buffers are allocated by BufferPool, which uses this constructor.
      */
-    Buffer(AVBufferRef* bufferRef, int width, int height);
+    Buffer(AVBufferRef* bufferRef, int width, int height, int stride);
     ~Buffer();
 
     AVBufferRef* addReference();
@@ -21,11 +21,13 @@ public:
     int size() { return m_bufferRef->size; }
     int width() const { return m_width; }
     int height() const { return m_height; }
+    int stride() const { return m_stride; }
 
 private:
     AVBufferRef* m_bufferRef;
     int m_width;
     int m_height;
+    int m_stride;
 };
 
 } // namespace av
