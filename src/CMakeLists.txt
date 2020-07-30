@@ -14,6 +14,12 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDeb
     add_definitions(-DSCIN_RELEASE)
 endif()
 
+if (SCIN_USE_LIBCXX)
+    set(SCIN_FS_LIB c++fs)
+else
+    set(SCIN_FS_LIB stdc++fs)
+endif()
+
 #### "Core" files (without external dependencies)
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/base")
 
@@ -65,7 +71,7 @@ if(APPLE)
     )
 elseif(UNIX)
     target_link_libraries(scintillator_base
-        stdc++fs
+        ${SCIN_FS_LIB}
     )
 elseif(WIN32)
     set_property(TARGET scintillator_base PROPERTY
@@ -94,7 +100,7 @@ target_link_libraries(run_unittests
 )
 if (UNIX AND NOT APPLE)
     target_link_libraries(run_unittests
-        stdc++fs
+        ${SCIN_FS_LIB}
     )
 elseif(WIN32)
     set_property(TARGET run_unittests PROPERTY
@@ -384,7 +390,7 @@ target_include_directories(scinsynth PRIVATE
 
 if(UNIX AND NOT APPLE)
     target_link_libraries(scinsynth
-        stdc++fs
+        ${SCIN_FS_LIB}
     )
 endif()
 
