@@ -33,6 +33,8 @@ if [ $DO_COVERAGE = true ]; then
         llvm-8-dev              \
         python3-distutils
 else
+    sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
+    sudo apt-get update
     sudo apt-get install --yes  \
         gcc-6                   \
         g++-6
