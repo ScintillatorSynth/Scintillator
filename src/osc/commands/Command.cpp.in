@@ -31,6 +31,7 @@ n_free,             scin::osc::commands::Command::Number::kNFree
 n_run,              scin::osc::commands::Command::Number::kNRun
 n_set,              scin::osc::commands::Command::Number::kNSet
 s_new,              scin::osc::commands::Command::Number::kSNew
+g_freeAll,          scin::osc::commands::Command::Number::kGroupFreeAll
 ib_allocRead,       scin::osc::commands::Command::Number::kIBAllocRead
 ib_query,           scin::osc::commands::Command::Number::kIBQuery
 nrt_screenShot,     scin::osc::commands::Command::Number::kNRTScreenShot

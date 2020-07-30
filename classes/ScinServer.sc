@@ -146,6 +146,8 @@ ScinServer {
 	}
 
 	init {
+		CmdPeriod.add(this);
+
 		if (options.isNil, {
 			options = ScinServerOptions.new;
 		});
@@ -165,6 +167,12 @@ ScinServer {
 		);
 
 		statusPoller = ScinServerStatusPoller.new(this);
+	}
+
+	cmdPeriod {
+		if (addr.notNil, {
+			addr.sendMsg('/scin_g_freeAll');
+		});
 	}
 
 	boot {

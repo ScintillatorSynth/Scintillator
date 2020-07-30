@@ -217,6 +217,20 @@ Sets the background color for the provided group.
 
 TODO
 
+subsection::/scin_g_freeAll
+
+Deletes all nodes in a group.
+
+table::
+## N * strong::int:: || group ID(s)
+::
+
+Frees all nodes in the group. A list of groups may be specified.
+
+note::
+Since only the default group is supported right now the group ID arguments are ignored.
+::
+
 section::ImageBuffer Commands
 
 The server leaves designation of unique image buffer numbers to the client. Allocation of an image buffer with a number already associated with another image buffer will result in the prior image buffer being deallocated.
