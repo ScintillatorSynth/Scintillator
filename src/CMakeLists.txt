@@ -16,7 +16,7 @@ endif()
 
 if (SCIN_USE_LIBCXX)
     set(SCIN_FS_LIB c++fs)
-else
+else()
     set(SCIN_FS_LIB stdc++fs)
 endif()
 
