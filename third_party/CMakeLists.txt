@@ -1,6 +1,6 @@
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CXX_EXTENSIONS OFF)
+#set(CXX_EXTENSIONS OFF)
 
 include(ExternalProject)
 set(SCIN_EXT_INSTALL_DIR "${PROJECT_BINARY_DIR}/install-ext" CACHE PATH "Scintallor External Dependencies")
