@@ -11,13 +11,13 @@ jobs:
     env:
     - CC=clang-8 CXX=clang++-8
     - DO_COVERAGE=false
-  - os: osx
-    osx_image: xcode11.6
-    env:
-    - DO_COVERAGE=false
-  - os: windows
-    env:
-    - DO_COVERAGE=false
+      #  - os: osx
+      #osx_image: xcode11.6
+      #env:
+      #- DO_COVERAGE=false
+      #- os: windows
+      #env:
+      #- DO_COVERAGE=false
 before_install:
 - "$TRAVIS_BUILD_DIR/.travis/before-install-$TRAVIS_OS_NAME.sh"
 before_script:
