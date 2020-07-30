@@ -19,7 +19,6 @@ sudo apt-get install --yes      \
     libxinerama-dev             \
     libxrandr-dev               \
     pkg-config                  \
-    python3-distutils           \
     python3-yaml                \
     supercollider-ide           \
     xvfb                        \
