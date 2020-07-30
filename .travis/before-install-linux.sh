@@ -18,7 +18,6 @@ sudo apt-get install --yes      \
     libxi-dev                   \
     libxinerama-dev             \
     libxrandr-dev               \
-    llvm-toolchain-8            \
     pkg-config                  \
     python3-yaml                \
     supercollider-ide           \
@@ -30,7 +29,7 @@ sudo apt-get install --yes      \
     clang-format-8              \
     clang-tools-8               \
     libc++1-8                   \
-    libc++-abi1-8               \
+    libc++-abi1                 \
     llvm-8                      \
 
 cd $TRAVIS_BUILD_DIR
