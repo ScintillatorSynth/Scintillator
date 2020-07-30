@@ -2,16 +2,14 @@ language: cpp
 jobs:
   include:
   - os: linux
-    dist: xenial
+    dist: bionic
     compiler: clang
     env:
     - CC=clang-8 CXX=clang++-8
     - DO_COVERAGE=true
   - os: linux
     dist: xenial
-    compiler: clang
     env:
-    - CC=clang-8 CXX=clang++-8
     - DO_COVERAGE=false
       #  - os: osx
       #osx_image: xcode11.6

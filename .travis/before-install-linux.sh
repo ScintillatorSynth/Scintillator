@@ -24,16 +24,15 @@ sudo apt-get install --yes      \
     xvfb                        \
     zlib1g
 
-sudo apt-get install --yes      \
-    clang-8                     \
-    clang-format-8              \
-    clang-tools-8               \
-    libc++1-8                   \
-    libc++abi1-8                \
-    llvm-8                      \
-    libc++-8-dev                \
-    libc++abi-8-dev             \
-    llvm-8-dev
+if [ $DO_COVERAGE = true ]; then
+    sudo apt-get install --yes  \
+        clang-8                 \
+        clang-format-8          \
+        libc++-8-dev            \
+        libc++abi-8-dev         \
+        llvm-8-dev              \
+        python3-distutils
+fi
 
 cd $TRAVIS_BUILD_DIR
 python3 tools/fetch-binary-deps.py
