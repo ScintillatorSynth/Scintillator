@@ -18,19 +18,12 @@ sudo apt-get install --yes      \
     libxi-dev                   \
     libxinerama-dev             \
     libxrandr-dev               \
+    llvm-toolchain-8            \
     pkg-config                  \
     python3-yaml                \
     supercollider-ide           \
     xvfb                        \
     zlib1g
-
-sudo apt-get install --yes      \
-    clang-8                     \
-    clang-format-8              \
-    libc++-8-dev                \
-    libc++abi-8-dev             \
-    libc++abi-8-dev             \
-    llvm-8-dev
 
 cd $TRAVIS_BUILD_DIR
 python3 tools/fetch-binary-deps.py
