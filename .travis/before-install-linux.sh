@@ -32,6 +32,10 @@ if [ $DO_COVERAGE = true ]; then
         libc++abi-8-dev         \
         llvm-8-dev              \
         python3-distutils
+else
+    sudo apt-get install --yes  \
+        gcc-6                   \
+        g++-6
 fi
 
 cd $TRAVIS_BUILD_DIR
