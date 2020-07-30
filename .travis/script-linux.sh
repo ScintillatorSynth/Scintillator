@@ -2,7 +2,7 @@
 
 cd $TRAVIS_BUILD_DIR/build
 
-make install || exit 1
+VERBOSE=1 make install || exit 1
 make dump_symbols || exit 2
 
 if [ $DO_COVERAGE = true ]; then
