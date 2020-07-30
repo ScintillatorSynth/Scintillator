@@ -34,7 +34,6 @@ sudo apt-get install --yes      \
     libc++-8-dev                \
     libc++abi-8-dev
 
-
 cd $TRAVIS_BUILD_DIR
 python3 tools/fetch-binary-deps.py
 
