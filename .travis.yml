@@ -73,7 +73,7 @@ deploy:
   secret_access_key: "$GCS_SYMBOL_KEY"
   detect_encoding: true
   bucket: scintillator-gargamelle-symbols
-  skip_cleanup: true
+  cleanup: false
   local_dir: "$HOME/symbols"
   on:
     condition: "$DO_COVERAGE = false"
