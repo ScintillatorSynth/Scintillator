@@ -8,6 +8,6 @@ if [ $DO_COVERAGE = true ]; then
         -DPYTHON_EXECUTABLE=`which python3` -DSCIN_SCLANG=`which sclang` ..
 else
     cmake -DSCIN_BUILD_DOCS=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPYTHON_EXECUTABLE=`which python3`                  \
-        -DSCIN_SCLANG=`which sclang` -DCMAKE_C_COMPILER="gcc-7" -DCMAKE_CXX_COMPILER="g++-7" ..
+        -DSCIN_SCLANG=`which sclang` ..
 fi
 

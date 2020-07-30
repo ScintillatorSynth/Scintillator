@@ -10,10 +10,6 @@ include_directories(
     ${SCIN_EXT_INSTALL_DIR}/include
 )
 
-if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    add_definitions(-DSCIN_RELEASE)
-endif()
-
 #### "Core" files (without external dependencies)
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/base")
 
