@@ -11,6 +11,11 @@ if [ $DO_COVERAGE = true ]; then
     make lintall || exit 5
     make docs || exit 6
 else
+    # The SuperCollider PPA provides SuperCollider 3.6.6 for Xenial, which is too old to support unit tests. We delete
+    # the unit tests from the quark so that the library can compile. The unit tests are run on the coverage build, which
+    # is on Bionic and has a newer version of SC. We still want to "smoke test" the built binary, so we run the image
+    # comparison tests only.
+    rm -rf $TRAVIS_BUILD_DIR/tests
     make compare_images || make log_crashes || exit 3
 fi
 
