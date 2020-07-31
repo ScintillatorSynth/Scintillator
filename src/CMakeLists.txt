@@ -540,9 +540,6 @@ elseif(UNIX)
     install(PROGRAMS "${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/crashpad_handler"
         DESTINATION "${SCIN_APPDIR}/usr/bin"
     )
-    install(FILES "${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/libssl.so"
-        DESTINATION "${SCIN_APPDIR}/usr/lib"
-    )
     # Now invoke linuxdeploy to assemble AppImage. Need to provide a path to LD_LIBRARY_PATH environment variable so the
     # tool knows where to look for the dependent libraries.
     install(CODE "
