@@ -46,6 +46,19 @@ else
     sudo update-alternatives --set c++ /usr/bin/g++
 fi
 
+# Newer version of SSL than what is available on Xenial needed for installing crashpad
+sudo apt-get remove --yes libssl-dev
+cd /usr/local/src
+sudo wget https://www.openssl.org/source/openssl-1.1.1g.tar.gz
+sudo tar -xzf openssl-1.1.1g.tar.gz
+cd openssl-1.1.1g
+sudo ./config --prefix=/usr/local/ssl --openssldir=/usr/local/ssl shared zlib || exit 1
+sudo make || exit 2
+sudo make test || exit 3
+sudo make install || exit 4
+sudo echo "/usr/local/ssl/lib" > /etc/ld.so.conf.d/openssl-1.1.1g.conf
+sudo ldconfig -v || exit 5
+
 cd $TRAVIS_BUILD_DIR
 python3 tools/fetch-binary-deps.py
 

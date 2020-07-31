@@ -17,4 +17,4 @@ cd build
 cmake ..
 make
 
-
+If on Xenial Linux you're going to need to build your own SSL from sources.
