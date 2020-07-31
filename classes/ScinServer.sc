@@ -256,7 +256,7 @@ ScinServer {
 				if (msg[1] == fileName.asSymbol, {
 					var status = msg[2];
 					// Older versions of sclang do not cast 'T' and 'F' to booleans.
-					if (status.class == 'T'.class, {
+					if (status.class === $T.class, {
 						status = (status == $T);
 					});
 					ready.free;
@@ -269,7 +269,7 @@ ScinServer {
 				if (msg[1] == '/scin_nrt_screenShot' and: {
 					msg[2] == fileName.asSymbol }, {
 					var status = msg[3];
-					if (status.class == 'T'.class, {
+					if (status.class === $T.class, {
 						status = (status == $T);
 					});
 					complete.free;
