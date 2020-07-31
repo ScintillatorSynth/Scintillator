@@ -95,7 +95,8 @@ def main(argv):
             if results.stderr != 'inf' and results.stderr != '0' and results.stderr != '1.#INF':
                 status = '<strong>DIFERENT</strong>'
                 diffCount += 1
-                print("difference detected in {category}/{filename}".format(category=category, filename=imageFileName))
+                print("**  difference detected in {category}/{filename}, results:'{results}'".format(
+                    category=category, filename=imageFileName, results=results.stderr))
             # write out table row
             outFile.write("""
 <tr><td>{status}</td><td>{t}</td><td><img src="images/ref/{category}/{name}" /></td><td><img src="images/test/{category}/{name} " /></td><td><img src="images/diff/{category}/{name}" /></td></tr>""".format(
