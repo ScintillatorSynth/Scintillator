@@ -24,6 +24,10 @@ sudo apt-get install --yes      \
     xvfb                        \
     zlib1g
 
+# fetch pre-built binary dependencies
+cd $TRAVIS_BUILD_DIR
+python3 tools/fetch-binary-deps.py
+
 if [ $DO_COVERAGE = true ]; then
     sudo apt-get install --yes  \
         clang-8                 \
@@ -44,14 +48,13 @@ else
     sudo update-alternatives --install /usr/bin/g++ g++ `which g++-7` 10
     sudo update-alternatives --set cc /usr/bin/gcc
     sudo update-alternatives --set c++ /usr/bin/g++
+
+    # Crashpad requires SSLv1.1 but Xenial offers 1.0 only. So we build SSLv1.1 from sources as part of the crashpad-ext
+    # build, and install it locally on this machine, so it will be available at AppDir linking time, to include in the
+    # Scintillator binary.
+    sudo cp -R $TRAVIS_BUILD_DIR/build/install-ext/ssl /usr/local/ssl || exit 1
+    echo "/usr/local/ssl/lib" > $TRAVIS_HOME/openssl-1.1.1g.conf || exit 2
+    sudo mv $TRAVIS_HOME/openssl-1.1.1g.conf /etc/ld.so.conf.d/. || exit 3
+    sudo ldconfig -v || exit 4
 fi
 
-cd $TRAVIS_BUILD_DIR
-python3 tools/fetch-binary-deps.py
-
-# Crashpad requires SSLv1.1 but Xenial offers 1.0 only. So we build SSLv1.1 from sources as part of the crashpad-ext
-# build, and install it locally on this machine, so it will be available at AppDir linking time, to include in the
-# Scintillator binary.
-sudo cp -R $TRAVIS_BUILD_DIR/build/install-ext/ssl /usr/local/ssl
-sudo echo "/usr/local/ssl/lib" > /etc/ld.so.conf.d/openssl-1.1.1g.conf
-sudo ldconfig -v || exit 5
