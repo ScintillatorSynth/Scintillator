@@ -72,7 +72,7 @@ fork {
 		// and, if so, then assert if it is not the case.
 		if (def["assertAllFree"].notNil, {
 			if (keptScinths.isEmpty.not, {
-				"*** Kepth Scinths not empty, but test requires that it is.".postln;
+				"*** Kept Scinths not empty, but test requires that it is.".postln;
 				"*** SCRIPT FAILED ***".postln;
 				1.exit;
 			});
