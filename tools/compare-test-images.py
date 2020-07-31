@@ -78,11 +78,18 @@ def main(argv):
                 os.path.join(testOutDir, imageFileName),
                 os.path.join(diffOutDir, imageFileName)])
             # now capture result from separate computation TODO: is there a way to get both from one run of compare?
-            results = subprocess.run(["compare",
-                os.path.join(refOutDir, imageFileName),
-                os.path.join(testOutDir, imageFileName),
-                "-metric", "PSNR", "-format", "'%[fx:mean*100]'", "info:"],
-                encoding="utf-8", stderr=subprocess.PIPE)
+            if sys.version_info.minor > 5:
+                results = subprocess.run(["compare",
+                    os.path.join(refOutDir, imageFileName),
+                    os.path.join(testOutDir, imageFileName),
+                    "-metric", "PSNR", "-format", "'%[fx:mean*100]'", "info:"],
+                    encoding="utf-8", stderr=subprocess.PIPE)
+            else:
+                results = subprocess.run(["compare",
+                    os.path.join(refOutDir, imageFileName),
+                    os.path.join(testOutDir, imageFileName),
+                    "-metric", "PSNR", "-format", "'%[fx:mean*100]'", "info:"],
+                    stderr=subprocess.PIPE)
             status = 'OK'
             # some versions of compare are returning inf and some return zero for identical images so we check for both.
             if results.stderr != 'inf' and results.stderr != '0' and results.stderr != '1.#INF':
