@@ -39,7 +39,6 @@ nrt_advanceFrame,   scin::osc::commands::Command::Number::kNRTAdvanceFrame
 echo,               scin::osc::commands::Command::Number::kEcho
 logAppend,          scin::osc::commands::Command::Number::kLogAppend
 sleepFor,           scin::osc::commands::Command::Number::kSleepFor
-createCrashReport,  scin::osc::commands::Command::Number::kCreateCrashReport
 logCrashReports,    scin::osc::commands::Command::Number::kLogCrashReports
 uploadCrashReport,  scin::osc::commands::Command::Number::kUploadCrashReport
 %%

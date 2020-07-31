@@ -53,7 +53,6 @@ public:
         kEcho = 69,
         kLogAppend = 70,
         kSleepFor = 71,
-        kCreateCrashReport = 72,
         kLogCrashReports = 73,
         kUploadCrashReport = 74,
 

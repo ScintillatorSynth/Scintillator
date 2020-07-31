@@ -349,10 +349,6 @@ definitionList::
 ## Asynchronous. || Replies to the sender on wakeup with strong::/scin_awake::.
 ::
 
-subsection::/scin_createCrashReport
-
-Generate a crash report without crashing and save to the crash report database. Not supported on MacOS.
-
 subsection::/scin_logCrashReports
 
 Prints a complete list of crash reports in the log, at the informational log level (2).

@@ -184,8 +184,6 @@ set(scintillator_synth_files
     osc/commands/AdvanceFrame.cpp
     osc/commands/AdvanceFrame.hpp
     osc/commands/Command.hpp
-    osc/commands/CreateCrashReport.cpp
-    osc/commands/CreateCrashReport.hpp
     osc/commands/DefFree.cpp
     osc/commands/DefFree.hpp
     osc/commands/DefLoad.cpp
@@ -541,6 +539,9 @@ elseif(UNIX)
     # Copy the crash report handler binary
     install(PROGRAMS "${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/crashpad_handler"
         DESTINATION "${SCIN_APPDIR}/usr/bin"
+    )
+    install(FILES "${SCIN_EXT_INSTALL_DIR}/crashpad/out/Default/libssl.so"
+        DESTINATION "${SCIN_APPDIR}/usr/lib"
     )
     # Now invoke linuxdeploy to assemble AppImage. Need to provide a path to LD_LIBRARY_PATH environment variable so the
     # tool knows where to look for the dependent libraries.
