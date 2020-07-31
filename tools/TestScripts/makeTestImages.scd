@@ -85,10 +85,12 @@ fork {
 			ScinthDef.new(shortName, def["scinthDef"].interpret).add;
 			server.sync;
 			if (params[0].class == Dictionary, {
-				var pairs = params[0].asPairs.collect({ |item, j| if ((j % 2) == 1, { item.asFloat; }, { item }) });
+				var pairs = [];
+				// .asPairs not supported in older sclang versions
+				params[0].keys.do({ |k| pairs = pairs.add(k); pairs = pairs.add(params[0].at(k).asFloat); });
 				scinth = Scinth.new(shortName, args: pairs);
 			}, {
-				scinth = Scinth.new(shortName, 1);
+				scinth = Scinth.new(shortName);
 			});
 		});
 		keep = false;
@@ -101,7 +103,8 @@ fork {
 		def["captureTimes"].do({ |dt, i|
 			d.test = false;
 			if (i > 0 and: { params[i].class == Dictionary }, {
-				var pairs = params[i].asPairs.collect({ |item, j| if ((j % 2) == 1, { item.asFloat; }, { item }) });
+				var pairs = [];
+				params[i].keys.do({ |k| pairs = pairs.add(k); pairs = pairs.add(params[i].at(k).asFloat); });
 				scinth.set(*pairs);
 			});
 			dt = dt.asInteger;
