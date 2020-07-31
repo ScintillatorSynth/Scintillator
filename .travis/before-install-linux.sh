@@ -46,19 +46,12 @@ else
     sudo update-alternatives --set c++ /usr/bin/g++
 fi
 
-# Newer version of SSL than what is available on Xenial needed for installing crashpad
-sudo apt-get remove --yes libssl-dev
-cd /usr/local/src
-sudo wget https://www.openssl.org/source/openssl-1.1.1g.tar.gz
-sudo tar -xzf openssl-1.1.1g.tar.gz
-cd openssl-1.1.1g
-sudo ./config --prefix=/usr/local/ssl --openssldir=/usr/local/ssl shared zlib || exit 1
-sudo make || exit 2
-sudo make test || exit 3
-sudo make install || exit 4
-sudo echo "/usr/local/ssl/lib" > /etc/ld.so.conf.d/openssl-1.1.1g.conf
-sudo ldconfig -v || exit 5
-
 cd $TRAVIS_BUILD_DIR
 python3 tools/fetch-binary-deps.py
 
+# Crashpad requires SSLv1.1 but Xenial offers 1.0 only. So we build SSLv1.1 from sources as part of the crashpad-ext
+# build, and install it locally on this machine, so it will be available at AppDir linking time, to include in the
+# Scintillator binary.
+sudo cp -R $TRAVIS_BUILD_DIR/build/install-ext/ssl /usr/local/ssl
+sudo echo "/usr/local/ssl/lib" > /etc/ld.so.conf.d/openssl-1.1.1g.conf
+sudo ldconfig -v || exit 5
