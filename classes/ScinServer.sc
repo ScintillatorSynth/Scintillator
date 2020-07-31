@@ -255,6 +255,7 @@ ScinServer {
 			ready = OSCFunc.new({ |msg|
 				if (msg[1] == fileName.asSymbol, {
 					ready.free;
+					"screenshot ready value: %, class: %".format(msg[2], msg[2].class).postln;
 					onReady.value(msg[2]);
 				});
 			}, '/scin_nrt_screenShot.ready');
@@ -264,6 +265,7 @@ ScinServer {
 				if (msg[1] == '/scin_nrt_screenShot' and: {
 					msg[2] == fileName.asSymbol }, {
 					complete.free;
+					"screenshot complete value: %, class: %".format(msg[3], msg[3].class).postln;
 					onComplete.value(msg[3]);
 				});
 			}, '/scin_done');
