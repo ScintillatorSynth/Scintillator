@@ -312,8 +312,8 @@ bool Scinth::allocateDescriptors() {
             ++binding;
         }
 
-        vkUpdateDescriptorSets(m_device->get(), static_cast<uint32_t>(descriptorWrites.size()),
-            descriptorWrites.data(), 0, nullptr);
+        vkUpdateDescriptorSets(m_device->get(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(),
+                               0, nullptr);
     }
 
     return true;
@@ -371,8 +371,8 @@ bool Scinth::updateDescriptors() {
             descriptorWrites.emplace_back(imageWrite);
         }
 
-        vkUpdateDescriptorSets(m_device->get(), static_cast<uint32_t>(descriptorWrites.size()),
-            descriptorWrites.data(), 0, nullptr);
+        vkUpdateDescriptorSets(m_device->get(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(),
+                               0, nullptr);
     }
 
     return true;
@@ -418,10 +418,9 @@ bool Scinth::rebuildBuffers() {
 
             // Write parameters as push constants.
             if (m_numberOfParameters) {
-                vkCmdPushConstants(m_computeCommands->buffer(i), m_scinthDef->computePipeline()->layout(),
-                                   VK_SHADER_STAGE_COMPUTE_BIT, 0,
-                                   static_cast<uint32_t>(m_numberOfParameters * sizeof(float)),
-                                   m_parameterValues.get());
+                vkCmdPushConstants(
+                    m_computeCommands->buffer(i), m_scinthDef->computePipeline()->layout(), VK_SHADER_STAGE_COMPUTE_BIT,
+                    0, static_cast<uint32_t>(m_numberOfParameters * sizeof(float)), m_parameterValues.get());
             }
 
             // Bind compute pipeline.

@@ -2,7 +2,7 @@
 #define SRC_OSC_LO_INCLUDES_HPP_
 
 #if __GNUC__ || __clang__
-#pragma GCC system_header
+#    pragma GCC system_header
 #endif
 
 extern "C" {
@@ -10,4 +10,3 @@ extern "C" {
 }
 
 #endif // SRC_OSC_LO_INCLUDES_HPP_
-

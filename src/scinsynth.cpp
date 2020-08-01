@@ -297,8 +297,9 @@ int main(int argc, char* argv[]) {
 
     // Chain async calls to load VGens, then ScinthDefs.
     async->vgenLoadDirectory(quarkPath / "vgens", [async, &quarkPath, compositor](size_t) {
-        async->scinthDefLoadDirectory(quarkPath / "scinthdefs",
-                                      [](size_t) { spdlog::info("finished loading predefined VGens and ScinthDefs."); });
+        async->scinthDefLoadDirectory(quarkPath / "scinthdefs", [](size_t) {
+            spdlog::info("finished loading predefined VGens and ScinthDefs.");
+        });
     });
 
     std::function<void()> quitHandler;

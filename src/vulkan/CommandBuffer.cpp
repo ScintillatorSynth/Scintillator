@@ -41,7 +41,7 @@ void CommandBuffer::destroy() {
 
     if (m_commandBuffers.size()) {
         vkFreeCommandBuffers(m_device->get(), m_commandPool->get(), static_cast<uint32_t>(m_commandBuffers.size()),
-            m_commandBuffers.data());
+                             m_commandBuffers.data());
         m_commandBuffers.clear();
     }
 }

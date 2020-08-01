@@ -2,8 +2,8 @@
 #define SRC_AV_AV_INCLUDES_HPP_
 
 #if _MSC_VER
-#pragma warning(push)
-#pragma warning(disable: 4244)
+#    pragma warning(push)
+#    pragma warning(disable : 4244)
 #endif
 
 extern "C" {
@@ -13,7 +13,7 @@ extern "C" {
 }
 
 #if _MSC_VER
-#pragma warning(pop)
+#    pragma warning(pop)
 #endif
 
 #endif // SRC_AV_INCLUDES_HPP_

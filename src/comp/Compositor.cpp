@@ -396,7 +396,7 @@ bool Compositor::rebuildCommandBuffer() {
                 commandBuffers.emplace_back(command->buffer(i));
             }
             vkCmdExecuteCommands(m_computePrimary->buffer(i), static_cast<uint32_t>(commandBuffers.size()),
-                commandBuffers.data());
+                                 commandBuffers.data());
 
             if (vkEndCommandBuffer(m_computePrimary->buffer(i)) != VK_SUCCESS) {
                 spdlog::error("Compositor failed ending primary compute command buffer.");
@@ -452,7 +452,7 @@ bool Compositor::rebuildCommandBuffer() {
                 commandBuffers.emplace_back(command->buffer(i));
             }
             vkCmdExecuteCommands(m_drawPrimary->buffer(i), static_cast<uint32_t>(commandBuffers.size()),
-                commandBuffers.data());
+                                 commandBuffers.data());
         } else {
             vkCmdBeginRenderPass(m_drawPrimary->buffer(i), &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
         }
