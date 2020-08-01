@@ -29,7 +29,7 @@ TEST(QuadTest, SingleEdgesInWidthAndHeight) {
     // Vertices should run from left to right, top to bottom, like reading a page of English text. So first vertex
     // should describe top left.
     const float* verts = vertexData.get();
-    for (auto i = 0; i < manifest.numberOfElements(); ++i) {
+    for (size_t i = 0; i < manifest.numberOfElements(); ++i) {
         switch (manifest.intrinsicForElement(i)) {
         case Intrinsic::kPosition:
             EXPECT_EQ(-1.0f, verts[0]);
@@ -44,6 +44,10 @@ TEST(QuadTest, SingleEdgesInWidthAndHeight) {
         case Intrinsic::kTexPos:
             EXPECT_EQ(0.0f, verts[0]);
             EXPECT_EQ(0.0f, verts[1]);
+            break;
+
+        default:
+            ASSERT_TRUE(false);
             break;
         }
 
@@ -52,7 +56,7 @@ TEST(QuadTest, SingleEdgesInWidthAndHeight) {
 
     // Second vertex should describe top right vertex.
     verts = vertexData.get() + (manifest.sizeInBytes() / sizeof(float));
-    for (auto i = 0; i < manifest.numberOfElements(); ++i) {
+    for (size_t i = 0; i < manifest.numberOfElements(); ++i) {
         switch (manifest.intrinsicForElement(i)) {
         case Intrinsic::kPosition:
             EXPECT_EQ(1.0f, verts[0]);
@@ -68,6 +72,10 @@ TEST(QuadTest, SingleEdgesInWidthAndHeight) {
             EXPECT_EQ(1.0f, verts[0]);
             EXPECT_EQ(0.0f, verts[1]);
             break;
+
+        default:
+            ASSERT_TRUE(false);
+            break;
         }
 
         verts += manifest.strideForElement(i) / sizeof(float);
@@ -75,7 +83,7 @@ TEST(QuadTest, SingleEdgesInWidthAndHeight) {
 
     // Third vertex should describe lower left vertex.
     verts = vertexData.get() + (2 * manifest.sizeInBytes() / sizeof(float));
-    for (auto i = 0; i < manifest.numberOfElements(); ++i) {
+    for (size_t i = 0; i < manifest.numberOfElements(); ++i) {
         switch (manifest.intrinsicForElement(i)) {
         case Intrinsic::kPosition:
             EXPECT_EQ(-1.0f, verts[0]);
@@ -91,6 +99,10 @@ TEST(QuadTest, SingleEdgesInWidthAndHeight) {
             EXPECT_EQ(0.0f, verts[0]);
             EXPECT_EQ(1.0f, verts[1]);
             break;
+
+        default:
+            ASSERT_TRUE(false);
+            break;
         }
 
         verts += manifest.strideForElement(i) / sizeof(float);
@@ -98,7 +110,7 @@ TEST(QuadTest, SingleEdgesInWidthAndHeight) {
 
     // Fourth vertex should describe lower right vertex.
     verts = vertexData.get() + (3 * manifest.sizeInBytes() / sizeof(float));
-    for (auto i = 0; i < manifest.numberOfElements(); ++i) {
+    for (size_t i = 0; i < manifest.numberOfElements(); ++i) {
         switch (manifest.intrinsicForElement(i)) {
         case Intrinsic::kPosition:
             EXPECT_EQ(1.0f, verts[0]);
@@ -113,6 +125,10 @@ TEST(QuadTest, SingleEdgesInWidthAndHeight) {
         case Intrinsic::kTexPos:
             EXPECT_EQ(1.0f, verts[0]);
             EXPECT_EQ(1.0f, verts[1]);
+            break;
+
+        default:
+            ASSERT_TRUE(false);
             break;
         }
 

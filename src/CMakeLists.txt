@@ -89,6 +89,13 @@ add_executable(run_unittests
     run_unittests.cpp
 )
 
+target_compile_options(run_unittests PRIVATE
+     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+     -Wall -Werror>
+     $<$<CXX_COMPILER_ID:MSVC>:
+     /W4 /WX>
+)
+
 target_link_libraries(run_unittests
     gflags
     glm

@@ -28,7 +28,6 @@ Shape::Topology Quad::topology() const { return kTriangleStrip; }
 
 bool Quad::storeVertexData(const Manifest& vertexManifest, const glm::vec2& normPosScale, float* store) const {
     glm::vec2 upperLeft { -1.0f, -1.0f };
-    glm::vec2 lowerRight { 1.0f, 1.0f };
 
     for (auto i = 0; i <= m_heightEdges; ++i) {
         float y = static_cast<float>(i) / static_cast<float>(m_heightEdges);

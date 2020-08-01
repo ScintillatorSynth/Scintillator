@@ -247,7 +247,7 @@ TEST_F(AbstractScinthDefTest, BuildWithNormPosPixelRate) {
     // Vertex manifest should contain the position and the NormPos.
     std::unordered_set<Intrinsic> vertexIntrinsics { Intrinsic::kPosition, Intrinsic::kNormPos };
     ASSERT_EQ(2, def->vertexManifest().numberOfElements());
-    for (auto i = 0; i < def->vertexManifest().numberOfElements(); ++i) {
+    for (size_t i = 0; i < def->vertexManifest().numberOfElements(); ++i) {
         vertexIntrinsics.erase(def->vertexManifest().intrinsicForElement(i));
     }
     EXPECT_EQ(0, vertexIntrinsics.size());
@@ -303,7 +303,7 @@ TEST_F(AbstractScinthDefTest, BuildWithTexPosPixelRate) {
     // Vertex manifest should contain the position and the NormPos.
     std::unordered_set<Intrinsic> vertexIntrinsics { Intrinsic::kPosition, Intrinsic::kTexPos };
     ASSERT_EQ(2, def->vertexManifest().numberOfElements());
-    for (auto i = 0; i < def->vertexManifest().numberOfElements(); ++i) {
+    for (size_t i = 0; i < def->vertexManifest().numberOfElements(); ++i) {
         vertexIntrinsics.erase(def->vertexManifest().intrinsicForElement(i));
     }
     EXPECT_EQ(0, vertexIntrinsics.size());
