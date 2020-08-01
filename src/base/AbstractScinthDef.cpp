@@ -83,10 +83,6 @@ bool AbstractScinthDef::groupVGens(size_t index, AbstractVGen::Rates maxRate, st
 
     // Extract image parameters if this is a sampling VGen.
     if (m_instances[index].abstractVGen()->isSampler()) {
-        if (m_instances[index].imageIndex() < 0) {
-            spdlog::error("AbstractScinthDef {} has VGen {} with bad image index.", m_name, index);
-            return false;
-        }
         if (m_instances[index].imageArgType() == VGen::InputType::kConstant) {
             if (vgenRate == AbstractVGen::Rates::kFrame) {
                 m_computeFixedImages.insert({ m_instances[index].sampler().key(), m_instances[index].imageIndex() });

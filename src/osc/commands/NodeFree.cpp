@@ -13,7 +13,7 @@ NodeFree::NodeFree(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 NodeFree::~NodeFree() {}
 
-void NodeFree::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
+void NodeFree::processMessage(int argc, lo_arg** argv, const char* types, lo_address /* address */) {
     std::vector<int> nodes;
     for (int i = 0; i < argc; ++i) {
         if (types[i] == LO_INT32) {

@@ -2,9 +2,17 @@
 
 #include "infra/Version.hpp"
 
+#if __GNUC__ || __clang__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
 #include <client/crash_report_database.h>
 #include <client/crashpad_client.h>
 #include <client/settings.h>
+#if __GNUC__ || __clang__
+#    pragma GCC diagnostic pop
+#endif
+
 #include <fmt/core.h>
 #include <spdlog/spdlog.h>
 #include <util/misc/capture_context.h>

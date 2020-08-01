@@ -13,7 +13,7 @@ LogCrashReports::LogCrashReports(osc::Dispatcher* dispatcher): Command(dispatche
 
 LogCrashReports::~LogCrashReports() {}
 
-void LogCrashReports::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
+void LogCrashReports::processMessage(int /* argc */, lo_arg** /* argv */, const char* /* types */, lo_address address) {
     if (m_dispatcher->crashReporter()) {
         m_dispatcher->crashReporter()->logCrashReports();
         m_dispatcher->crashReporter()->closeDatabase();

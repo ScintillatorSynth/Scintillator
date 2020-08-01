@@ -9,7 +9,10 @@
 // Disable MSVC warning on generated code.
 #pragma warning(push)
 #pragma warning(disable: 4267)
-#endif // _MSC_VER
+#elif __GNUC__ || __clang__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
 
 namespace {
 
@@ -32,7 +35,9 @@ vTexPos,    scin::base::Intrinsic::kTexPos
 
 #if _MSC_VER
 #pragma warning(pop)
-#endif // _MSC_VER
+#elif __GNUC__ || __clang__
+#pragma GCC diagnostic pop
+#endif
 
 namespace scin { namespace base {
 

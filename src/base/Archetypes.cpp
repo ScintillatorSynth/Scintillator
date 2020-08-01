@@ -12,15 +12,15 @@
 
 #if _MSC_VER
 // Disable MSVC warning on included yaml-cpp headers
-#pragma warning(push)
-#pragma warning(disable: 4996)
+#    pragma warning(push)
+#    pragma warning(disable : 4996)
 #endif // _MSC_VER
 
 #include "yaml-cpp/exceptions.h"
 #include "yaml-cpp/yaml.h"
 
 #if _MSC_VER
-#pragma warning(pop)
+#    pragma warning(pop)
 #endif // _MSC_VER
 
 namespace scin { namespace base {
@@ -453,13 +453,13 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
                         return nullptr;
                     }
                     size_t vgenIndex = input["vgenIndex"].as<size_t>();
-                    if (vgenIndex < 0 || vgenIndex > instances.size()) {
+                    if (vgenIndex > instances.size()) {
                         spdlog::error("ScinthDef {} has VGen {} vgen input with invalid index {}.", name, className,
                                       vgenIndex);
                         return nullptr;
                     }
                     size_t outputIndex = input["outputIndex"].as<size_t>();
-                    if (outputIndex < 0 || outputIndex >= instances[vgenIndex].abstractVGen()->outputs().size()) {
+                    if (outputIndex >= instances[vgenIndex].abstractVGen()->outputs().size()) {
                         spdlog::error("ScinthDef {} has VGen {} vgen input with invalid output index {}.", name,
                                       className, outputIndex);
                         return nullptr;

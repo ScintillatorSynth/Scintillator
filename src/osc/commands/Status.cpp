@@ -12,7 +12,7 @@ Status::Status(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 Status::~Status() {}
 
-void Status::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
+void Status::processMessage(int /* argc */, lo_arg** /* argv */, const char* /* types */, lo_address address) {
     size_t numberOfWarnings = 0;
     size_t numberOfErrors = 0;
     size_t graphicsBytesUsed = 0;

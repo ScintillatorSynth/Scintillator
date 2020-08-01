@@ -34,9 +34,9 @@ void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
 const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT severity,
-                                                    VkDebugUtilsMessageTypeFlagsEXT type,
+                                                    VkDebugUtilsMessageTypeFlagsEXT /* type */,
                                                     const VkDebugUtilsMessengerCallbackDataEXT* callbackData,
-                                                    void* userData) {
+                                                    void* /* userData */) {
     // The Severity bits can be combined, so we key log severity off of the most severe bit.
     if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
         spdlog::error("Vulkan: {}", callbackData->pMessage);

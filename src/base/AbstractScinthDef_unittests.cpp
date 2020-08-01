@@ -379,8 +379,9 @@ TEST_F(AbstractScinthDefTest, BuildPixelRateParams) {
     ASSERT_EQ(1, def->parameters().size());
     EXPECT_EQ("a", def->parameters()[0].name());
     EXPECT_EQ(0.5, def->parameters()[0].defaultValue());
-    EXPECT_EQ(0, def->indexForParameterName("a"));
-
+    size_t indexOfA = 1;
+    EXPECT_TRUE(def->indexForParameterName("a", indexOfA));
+    EXPECT_EQ(0, indexOfA);
     EXPECT_EQ(1, def->instances().size());
     EXPECT_EQ(0, def->computeFixedImages().size());
     EXPECT_EQ(0, def->drawFixedImages().size());

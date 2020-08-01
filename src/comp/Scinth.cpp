@@ -106,8 +106,8 @@ bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
 }
 
 void Scinth::setParameterByName(const std::string& name, float value) {
-    int index = m_scinthDef->abstract()->indexForParameterName(name);
-    if (index >= 0) {
+    size_t index = 0;
+    if (m_scinthDef->abstract()->indexForParameterName(name, index)) {
         m_parameterValues[index] = value;
         m_commandBuffersDirty = true;
     } else {

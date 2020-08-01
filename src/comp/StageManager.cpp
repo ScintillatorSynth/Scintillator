@@ -168,8 +168,8 @@ bool StageManager::submitTransferCommands(VkQueue queue) {
     VkCommandBuffer commandBuffers[] = { wait.commands->buffer(0) };
     submitInfo.pCommandBuffers = commandBuffers;
 
-    if (vkQueueSubmit(m_device->graphicsQueue(), 1, &submitInfo, m_fences[wait.fenceIndex]) != VK_SUCCESS) {
-        spdlog::error("StageManager failed to submit transfer command buffer to graphics queue.");
+    if (vkQueueSubmit(queue, 1, &submitInfo, m_fences[wait.fenceIndex]) != VK_SUCCESS) {
+        spdlog::error("StageManager failed to submit transfer command buffer to provided queue.");
         return false;
     }
 

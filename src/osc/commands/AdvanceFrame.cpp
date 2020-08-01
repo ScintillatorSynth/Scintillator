@@ -18,7 +18,7 @@ void AdvanceFrame::processMessage(int argc, lo_arg** argv, const char* types, lo
         m_dispatcher->respond(address, "/scin_done", "/scin_nrt_advanceFrame");
         return;
     }
-    if (std::strncmp(types, "ii", 2) != 0) {
+    if (argc < 2 || std::strncmp(types, "ii", 2) != 0) {
         spdlog::error("AdvanceFrame got wrong argument types {}", types);
         m_dispatcher->respond(address, "/scin_done", "/scin_nrt_advanceFrame");
         return;
@@ -28,7 +28,7 @@ void AdvanceFrame::processMessage(int argc, lo_arg** argv, const char* types, lo
     int32_t denominator = *reinterpret_cast<int32_t*>(argv[1]);
     double dt = static_cast<double>(numerator) / static_cast<double>(denominator);
     std::shared_ptr<Address> origin(new Address(address));
-    m_dispatcher->offscreen()->advanceFrame(dt, [this, origin](size_t frameNumber) {
+    m_dispatcher->offscreen()->advanceFrame(dt, [this, origin](size_t /* frameNumber */) {
         spdlog::info("got callback from advanceFrame");
         m_dispatcher->respond(origin->get(), "/scin_done", "/scin_nrt_advanceFrame");
     });

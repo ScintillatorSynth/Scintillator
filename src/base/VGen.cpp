@@ -47,14 +47,14 @@ bool VGen::validate() const {
 }
 
 VGen::InputType VGen::getInputType(size_t index) const {
-    if (index >= 0 && index < numberOfInputs()) {
+    if (index < numberOfInputs()) {
         return m_inputs[index].type;
     }
     return kInvalid;
 }
 
 bool VGen::getInputConstantValue(size_t index, float& outValue) const {
-    if (index >= 0 && index < numberOfInputs()) {
+    if (index < numberOfInputs()) {
         if (m_inputs[index].type == kConstant && m_inputs[index].dimension == 1) {
             outValue = m_inputs[index].value.constant1;
             return true;
@@ -64,7 +64,7 @@ bool VGen::getInputConstantValue(size_t index, float& outValue) const {
 }
 
 bool VGen::getInputConstantValue(size_t index, glm::vec2& outValue) const {
-    if (index >= 0 && index < numberOfInputs()) {
+    if (index < numberOfInputs()) {
         if (m_inputs[index].type == kConstant && m_inputs[index].dimension == 2) {
             outValue = m_inputs[index].value.constant2;
             return true;
@@ -74,7 +74,7 @@ bool VGen::getInputConstantValue(size_t index, glm::vec2& outValue) const {
 }
 
 bool VGen::getInputConstantValue(size_t index, glm::vec3& outValue) const {
-    if (index >= 0 && index < numberOfInputs()) {
+    if (index < numberOfInputs()) {
         if (m_inputs[index].type == kConstant && m_inputs[index].dimension == 3) {
             outValue = m_inputs[index].value.constant3;
             return true;
@@ -84,7 +84,7 @@ bool VGen::getInputConstantValue(size_t index, glm::vec3& outValue) const {
 }
 
 bool VGen::getInputConstantValue(size_t index, glm::vec4& outValue) const {
-    if (index >= 0 && index < numberOfInputs()) {
+    if (index < numberOfInputs()) {
         if (m_inputs[index].type == kConstant && m_inputs[index].dimension == 4) {
             outValue = m_inputs[index].value.constant4;
             return true;
@@ -94,7 +94,7 @@ bool VGen::getInputConstantValue(size_t index, glm::vec4& outValue) const {
 }
 
 bool VGen::getInputParameterIndex(size_t index, size_t& outIndex) const {
-    if (index >= 0 && index < numberOfInputs()) {
+    if (index < numberOfInputs()) {
         if (m_inputs[index].type == kParameter) {
             outIndex = m_inputs[index].value.parameterIndex;
             return true;
@@ -104,7 +104,7 @@ bool VGen::getInputParameterIndex(size_t index, size_t& outIndex) const {
 }
 
 bool VGen::getInputVGenIndex(size_t index, size_t& outIndex, size_t& outOutput) const {
-    if (index >= 0 && index < numberOfInputs()) {
+    if (index < numberOfInputs()) {
         if (m_inputs[index].type == kVGen) {
             outIndex = m_inputs[index].value.vgenIndex;
             outOutput = m_inputs[index].vgenOutputIndex;
