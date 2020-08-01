@@ -34,7 +34,7 @@ bool Quad::storeVertexData(const Manifest& vertexManifest, const glm::vec2& norm
         float y = static_cast<float>(i) / static_cast<float>(m_heightEdges);
         for (auto j = 0; j <= m_widthEdges; ++j) {
             glm::vec2 v { static_cast<float>(j) / static_cast<float>(m_widthEdges), y };
-            for (auto k = 0; k < vertexManifest.numberOfElements(); ++k) {
+            for (size_t k = 0; k < vertexManifest.numberOfElements(); ++k) {
                 switch (vertexManifest.intrinsicForElement(k)) {
                 case kNormPos: {
                     glm::vec2 normPos = (upperLeft + (v * 2.0f)) * normPosScale;

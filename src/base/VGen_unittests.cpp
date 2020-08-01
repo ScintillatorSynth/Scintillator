@@ -44,8 +44,8 @@ TEST(VGenTest, InputValuesAndTypesRetained) {
     allConstants.addConstantInput(2.0f);
     allConstants.addConstantInput(45.0f);
     float constantValue = 0.0f;
-    int vgenIndex = 0;
-    int outputIndex = 0;
+    size_t vgenIndex = 0;
+    size_t outputIndex = 0;
     EXPECT_TRUE(allConstants.getInputConstantValue(0, constantValue));
     EXPECT_EQ(-1.0f, constantValue);
     EXPECT_FALSE(allConstants.getInputVGenIndex(0, vgenIndex, outputIndex));

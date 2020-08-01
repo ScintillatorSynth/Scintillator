@@ -338,13 +338,13 @@ TEST(ArchetypesTest, ValidYAMLStrings) {
     EXPECT_EQ("OneInput", scinthDef->instances()[0].abstractVGen()->name());
     ASSERT_EQ(1, scinthDef->instances()[0].numberOfInputs());
     float inputValue = 0.0f;
-    int vgenIndex = -1;
-    int outputIndex = -2;
+    size_t vgenIndex = 0xfffff;
+    size_t outputIndex = 0xffffe;
     EXPECT_TRUE(scinthDef->instances()[0].getInputConstantValue(0, inputValue));
     EXPECT_FALSE(scinthDef->instances()[0].getInputVGenIndex(0, vgenIndex, outputIndex));
     EXPECT_EQ(-123.0f, inputValue);
-    EXPECT_EQ(-1, vgenIndex); // vgenIndex should remain unmodified as the input is a constant.
-    EXPECT_EQ(-2, outputIndex);
+    EXPECT_EQ(0xfffff, vgenIndex); // vgenIndex should remain unmodified as the input is a constant.
+    EXPECT_EQ(0xffffe, outputIndex);
     EXPECT_EQ("TwoInput", scinthDef->instances()[1].abstractVGen()->name());
     ASSERT_EQ(2, scinthDef->instances()[1].numberOfInputs());
     EXPECT_FALSE(scinthDef->instances()[1].getInputConstantValue(0, inputValue));

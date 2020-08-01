@@ -112,13 +112,13 @@ private:
      *        graph.
      * \return true if successful, false on error.
      */
-    bool groupVGens(int index, AbstractVGen::Rates rate, std::set<int>& computeVGens, std::set<int>& vertexVGens,
-                    std::set<int>& fragmentVGens);
+    bool groupVGens(int index, AbstractVGen::Rates rate, std::set<size_t>& computeVGens, std::set<size_t>& vertexVGens,
+                    std::set<size_t>& fragmentVGens);
 
-    bool buildComputeStage(const std::set<int>& computeVGens);
-    bool buildDrawStage(const std::set<int>& vertexVGens, const std::set<int>& fragmentVGens);
-    bool finalizeShaders(const std::set<int>& computeVGens, const std::set<int>& vertexVGens,
-                         const std::set<int>& fragmentVGens);
+    bool buildComputeStage(const std::set<size_t>& computeVGens);
+    bool buildDrawStage(const std::set<size_t>& vertexVGens, const std::set<size_t>& fragmentVGens);
+    bool finalizeShaders(const std::set<size_t>& computeVGens, const std::set<size_t>& vertexVGens,
+                         const std::set<size_t>& fragmentVGens);
 
     std::string m_name;
     std::unique_ptr<Shape> m_shape;

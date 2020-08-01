@@ -29,13 +29,13 @@ bool AbstractScinthDef::build() {
     m_fragmentOutputName = m_prefix + "_outColor";
 
     // Pre-process parameter indices map, for quick lookup of parameter index by name.
-    for (auto i = 0; i < m_parameters.size(); ++i) {
+    for (size_t i = 0; i < m_parameters.size(); ++i) {
         m_parameterIndices[m_parameters[i].name()] = i;
     }
 
-    std::set<int> computeVGens;
-    std::set<int> vertexVGens;
-    std::set<int> fragmentVGens;
+    std::set<size_t> computeVGens;
+    std::set<size_t> vertexVGens;
+    std::set<size_t> fragmentVGens;
     if (!groupVGens(m_instances.size() - 1, AbstractVGen::Rates::kPixel, computeVGens, vertexVGens, fragmentVGens)) {
         return false;
     }
@@ -52,8 +52,8 @@ bool AbstractScinthDef::build() {
     return true;
 }
 
-bool AbstractScinthDef::groupVGens(int index, AbstractVGen::Rates maxRate, std::set<int>& computeVGens,
-                                   std::set<int>& vertexVGens, std::set<int>& fragmentVGens) {
+bool AbstractScinthDef::groupVGens(int index, AbstractVGen::Rates maxRate, std::set<size_t>& computeVGens,
+                                   std::set<size_t>& vertexVGens, std::set<size_t>& fragmentVGens) {
     AbstractVGen::Rates vgenRate = m_instances[index].rate();
 
     // Bucket VGen index and validate rate is supported value.
@@ -108,9 +108,9 @@ bool AbstractScinthDef::groupVGens(int index, AbstractVGen::Rates maxRate, std::
     }
 
     // Recurse up the graph, propagating any errors encountered.
-    for (auto i = 0; i < m_instances[index].numberOfInputs(); ++i) {
+    for (size_t i = 0; i < m_instances[index].numberOfInputs(); ++i) {
         if (m_instances[index].getInputType(i) == VGen::InputType::kVGen) {
-            int vgenIndex, vgenOutput;
+            size_t vgenIndex, vgenOutput;
             m_instances[index].getInputVGenIndex(i, vgenIndex, vgenOutput);
             if (!groupVGens(vgenIndex, vgenRate, computeVGens, vertexVGens, fragmentVGens)) {
                 return false;
@@ -121,12 +121,12 @@ bool AbstractScinthDef::groupVGens(int index, AbstractVGen::Rates maxRate, std::
     return true;
 }
 
-bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const std::set<int>& fragmentVGens) {
+bool AbstractScinthDef::buildDrawStage(const std::set<size_t>& vertexVGens, const std::set<size_t>& fragmentVGens) {
     m_fragmentShader = "";
     for (auto index : fragmentVGens) {
         // Build input names (for parameterization) and add to relevant manifests as needed.
         std::vector<std::string> inputs;
-        for (auto j = 0; j < m_instances[index].numberOfInputs(); ++j) {
+        for (size_t j = 0; j < m_instances[index].numberOfInputs(); ++j) {
             VGen::InputType type = m_instances[index].getInputType(j);
             switch (type) {
                 // TODO: support for higher-dimensional constants? VGen has it, but we drop it here.
@@ -138,13 +138,13 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
             } break;
 
             case VGen::InputType::kParameter: {
-                int parameterIndex;
+                size_t parameterIndex;
                 m_instances[index].getInputParameterIndex(j, parameterIndex);
                 inputs.emplace_back(fmt::format("{}_parameters.{}", m_prefix, m_parameters[parameterIndex].name()));
             } break;
 
             case VGen::InputType::kVGen: {
-                int vgenIndex, vgenOutput;
+                size_t vgenIndex, vgenOutput;
                 m_instances[index].getInputVGenIndex(j, vgenIndex, vgenOutput);
                 switch (m_instances[vgenIndex].rate()) {
                 case AbstractVGen::Rates::kPixel:
@@ -204,6 +204,10 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
                 intrinsics[Intrinsic::kPi] = "3.1415926535897932384626433832795f";
                 break;
 
+            case kPosition:
+                spdlog::error("Vertex position intrinsics not currently supported in fragment-rate VGens");
+                return false;
+
             case kSampler: {
                 if (m_instances[index].imageArgType() == VGen::InputType::kConstant) {
                     intrinsics[Intrinsic::kSampler] =
@@ -231,8 +235,8 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
         }
 
         std::vector<std::string> outputs;
-        std::vector<int> outputDimensions;
-        for (auto j = 0; j < m_instances[index].numberOfOutputs(); ++j) {
+        std::vector<size_t> outputDimensions;
+        for (size_t j = 0; j < m_instances[index].numberOfOutputs(); ++j) {
             if (index < m_instances.size() - 1 || j > 0) {
                 outputs.emplace_back(fmt::format("{}_out_{}_{}", m_prefix, index, j));
             } else {
@@ -256,7 +260,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
 
     for (auto index : vertexVGens) {
         std::vector<std::string> inputs;
-        for (auto j = 0; j < m_instances[index].numberOfInputs(); ++j) {
+        for (size_t j = 0; j < m_instances[index].numberOfInputs(); ++j) {
             VGen::InputType type = m_instances[index].getInputType(j);
             switch (type) {
             // same as fragment-rate
@@ -268,13 +272,13 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
 
             // same as fragment rate
             case VGen::InputType::kParameter: {
-                int parameterIndex;
+                size_t parameterIndex;
                 m_instances[index].getInputParameterIndex(j, parameterIndex);
                 inputs.emplace_back(fmt::format("{}_parameters.{}", m_prefix, m_parameters[parameterIndex].name()));
             } break;
 
             case VGen::InputType::kVGen: {
-                int vgenIndex, vgenOutput;
+                size_t vgenIndex, vgenOutput;
                 m_instances[index].getInputVGenIndex(j, vgenIndex, vgenOutput);
                 switch (m_instances[vgenIndex].rate()) {
                 case AbstractVGen::Rates::kPixel:
@@ -328,6 +332,10 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
                 intrinsics[Intrinsic::kPi] = "3.1415926535897932384626433832795f";
                 break;
 
+            case kPosition:
+                intrinsics[Intrinsic::kPosition] = "gl_Position";
+                break;
+
             // same as fragment rate
             case kSampler:
                 if (m_instances[index].imageArgType() == VGen::InputType::kConstant) {
@@ -355,8 +363,8 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
         }
 
         std::vector<std::string> outputs;
-        std::vector<int> outputDimensions;
-        for (auto j = 0; j < m_instances[index].numberOfOutputs(); ++j) {
+        std::vector<size_t> outputDimensions;
+        for (size_t j = 0; j < m_instances[index].numberOfOutputs(); ++j) {
             outputs.emplace_back(fmt::format("{}_out_{}_{}", m_prefix, index, j));
             outputDimensions.push_back(m_instances[index].outputDimension(j));
         }
@@ -372,7 +380,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<int>& vertexVGens, const s
     return true;
 }
 
-bool AbstractScinthDef::buildComputeStage(const std::set<int>& computeVGens) {
+bool AbstractScinthDef::buildComputeStage(const std::set<size_t>& computeVGens) {
     // It's possible we have no frame-rate VGens, in which case we can elide the compute stage entirely.
     m_hasComputeStage = computeVGens.size() > 0;
     if (!m_hasComputeStage) {
@@ -381,7 +389,7 @@ bool AbstractScinthDef::buildComputeStage(const std::set<int>& computeVGens) {
 
     for (auto index : computeVGens) {
         std::vector<std::string> inputs;
-        for (auto j = 0; j < m_instances[index].numberOfInputs(); ++j) {
+        for (size_t j = 0; j < m_instances[index].numberOfInputs(); ++j) {
             VGen::InputType type = m_instances[index].getInputType(j);
             switch (type) {
             // same as fragment
@@ -393,13 +401,13 @@ bool AbstractScinthDef::buildComputeStage(const std::set<int>& computeVGens) {
 
             // same as fragment
             case VGen::InputType::kParameter: {
-                int parameterIndex;
+                size_t parameterIndex;
                 m_instances[index].getInputParameterIndex(j, parameterIndex);
                 inputs.emplace_back(fmt::format("{}_parameters.{}", m_prefix, m_parameters[parameterIndex].name()));
             } break;
 
             case VGen::InputType::kVGen: {
-                int vgenIndex, vgenOutput;
+                size_t vgenIndex, vgenOutput;
                 m_instances[index].getInputVGenIndex(j, vgenIndex, vgenOutput);
                 switch (m_instances[vgenIndex].rate()) {
                 case AbstractVGen::Rates::kPixel:
@@ -459,6 +467,7 @@ bool AbstractScinthDef::buildComputeStage(const std::set<int>& computeVGens) {
             case kFragCoord:
             case kTexPos:
             case kNormPos:
+            case kPosition:
                 spdlog::error("ScinthDef Unsupported intrinsics in frame-rate VGen index {}.");
                 break;
             }
@@ -466,8 +475,8 @@ bool AbstractScinthDef::buildComputeStage(const std::set<int>& computeVGens) {
 
         // same as fragment
         std::vector<std::string> outputs;
-        std::vector<int> outputDimensions;
-        for (auto j = 0; j < m_instances[index].numberOfOutputs(); ++j) {
+        std::vector<size_t> outputDimensions;
+        for (size_t j = 0; j < m_instances[index].numberOfOutputs(); ++j) {
             outputs.emplace_back(fmt::format("{}_out_{}_{}", m_prefix, index, j));
             outputDimensions.push_back(m_instances[index].outputDimension(j));
         }
@@ -483,8 +492,8 @@ bool AbstractScinthDef::buildComputeStage(const std::set<int>& computeVGens) {
     return true;
 }
 
-bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const std::set<int>& vertexVGens,
-                                        const std::set<int>& fragmentVGens) {
+bool AbstractScinthDef::finalizeShaders(const std::set<size_t>& computeVGens, const std::set<size_t>& vertexVGens,
+                                        const std::set<size_t>& fragmentVGens) {
     // Pack all the manifests as we have analyzed all VGens so they should all be final now.
     m_fragmentManifest.pack();
     m_uniformManifest.pack();
@@ -498,7 +507,7 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
 
     vertexHeader += "\n// --- vertex shader inputs from vertex format\n";
     // Describe all inputs to the vertex shader via vertex data.
-    for (auto i = 0; i < m_vertexManifest.numberOfElements(); ++i) {
+    for (size_t i = 0; i < m_vertexManifest.numberOfElements(); ++i) {
         // NOTE: hard-coded assumption that all inputs take 1 slot likely won't work for matrices
         vertexHeader +=
             fmt::format("layout(location = {}) in {} {}_in_{};\n", i, m_vertexManifest.typeNameForElement(i), m_prefix,
@@ -510,7 +519,7 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
         // outputs and pass-through intrinsics, as inputs to the fragment shader.
         vertexHeader += "\n// -- vertex shader outputs to fragment shader\n";
         fragmentHeader += "\n// --- fragment shader inputs from vertex shader\n";
-        for (auto i = 0; i < m_fragmentManifest.numberOfElements(); ++i) {
+        for (size_t i = 0; i < m_fragmentManifest.numberOfElements(); ++i) {
             if (m_fragmentManifest.intrinsicForElement(i) != Intrinsic::kPosition) {
                 fragmentHeader +=
                     fmt::format("layout(location = {}) in {} {}_in_{};\n", i, m_fragmentManifest.typeNameForElement(i),
@@ -550,7 +559,7 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
     int binding = 0;
     if (m_uniformManifest.numberOfElements()) {
         std::string uboBody;
-        for (auto i = 0; i < m_uniformManifest.numberOfElements(); ++i) {
+        for (size_t i = 0; i < m_uniformManifest.numberOfElements(); ++i) {
             uboBody += fmt::format("    {} {};\n", m_uniformManifest.typeNameForElement(i),
                                    m_uniformManifest.nameForElement(i));
         }
@@ -602,7 +611,7 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
 
     if (m_computeManifest.numberOfElements()) {
         std::string bufferBody;
-        for (auto i = 0; i < m_computeManifest.numberOfElements(); ++i) {
+        for (size_t i = 0; i < m_computeManifest.numberOfElements(); ++i) {
             bufferBody += fmt::format("    {} {};\n", m_computeManifest.typeNameForElement(i),
                                       m_computeManifest.nameForElement(i));
         }
@@ -688,7 +697,7 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
         binding = 0;
         if (m_uniformManifest.numberOfElements()) {
             std::string uboBody;
-            for (auto i = 0; i < m_uniformManifest.numberOfElements(); ++i) {
+            for (size_t i = 0; i < m_uniformManifest.numberOfElements(); ++i) {
                 uboBody += fmt::format("    {} {};\n", m_uniformManifest.typeNameForElement(i),
                                        m_uniformManifest.nameForElement(i));
 
@@ -735,7 +744,7 @@ bool AbstractScinthDef::finalizeShaders(const std::set<int>& computeVGens, const
 
         // Compute shader outputs in an output buffer, add copy instructions at the same time.
         std::string bufferBody;
-        for (auto i = 0; i < m_computeManifest.numberOfElements(); ++i) {
+        for (size_t i = 0; i < m_computeManifest.numberOfElements(); ++i) {
             bufferBody += fmt::format("    {} {};\n", m_computeManifest.typeNameForElement(i),
                                       m_computeManifest.nameForElement(i));
             m_computeShader += fmt::format("\n    // -- export compute VGen output to uniform buffer"

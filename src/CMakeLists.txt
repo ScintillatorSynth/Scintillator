@@ -49,6 +49,13 @@ add_library(scintillator_base STATIC
     base/VGen.hpp
 )
 
+target_compile_options(scintillator_base PRIVATE
+     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+     -Wall -Werror>
+     $<$<CXX_COMPILER_ID:MSVC>:
+     /W4 /WX>
+)
+
 target_link_libraries(scintillator_base
     fmt
     glm
