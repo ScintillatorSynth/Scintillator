@@ -4,7 +4,7 @@ export HOMEBREW_NO_ANALYTICS=1
 
 brew update
 brew unlink python@2
-brew install ccache doxygen shtool imagemagick
+brew install ccache doxygen shtool imagemagick gperf
 python3 -m pip install pyyaml
 
 # according to https://docs.travis-ci.com/user/caching#ccache-cache
