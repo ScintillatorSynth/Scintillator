@@ -32,7 +32,7 @@ public:
 
     /*! Returns most recent statistics about timing. Thread-safe, callable from anywhere.
      */
-    void getStats(int& targetFrameRateOut, double& meanFrameRateOut, size_t lateFramesOut) const;
+    void getStats(int& targetFrameRateOut, double& meanFrameRateOut, size_t& lateFramesOut) const;
 
 private:
     void updateStats(double meanPeriod);

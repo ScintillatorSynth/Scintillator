@@ -12,8 +12,8 @@ DumpOSC::DumpOSC(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 DumpOSC::~DumpOSC() {}
 
-void DumpOSC::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
-    if (std::strncmp(types, "i", 1) != 0) {
+void DumpOSC::processMessage(int argc, lo_arg** argv, const char* types, lo_address /* address */) {
+    if (argc < 1 || std::strncmp(types, "i", 1) != 0) {
         spdlog::error("DumpOSC got wrong argument types {}", types);
         return;
     }

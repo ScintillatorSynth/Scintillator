@@ -62,7 +62,7 @@ public:
      * \param completion The function to call on completion of loading. The completion argument is the number of valid
      *        VGens loaded.
      */
-    void vgenLoadDirectory(fs::path path, std::function<void(int)> completion);
+    void vgenLoadDirectory(fs::path path, std::function<void(size_t)> completion);
 
     /*! Async load all ScinthDef yaml files at path.
      *
@@ -70,7 +70,7 @@ public:
      * \param completion The function to call on completion of loading. The completion argument is the number of valid
      *        ScinthDefs loaded.
      */
-    void scinthDefLoadDirectory(fs::path path, std::function<void(int)> completion);
+    void scinthDefLoadDirectory(fs::path path, std::function<void(size_t)> completion);
 
     /*! Async load ScinthDefs from a file.
      *
@@ -78,7 +78,7 @@ public:
      * \param completion The function to call on completion of loading. The completion argument is the number of valid
      *        ScinthDefs loaded.
      */
-    void scinthDefLoadFile(fs::path path, std::function<void(int)> completion);
+    void scinthDefLoadFile(fs::path path, std::function<void(size_t)> completion);
 
     /*! Async parse a ScinthDef yaml string.
      *
@@ -86,7 +86,7 @@ public:
      * \param completion The function to call on completion of parsing. The completion argument is the number of valid
      *        ScinthDefs parsed.
      */
-    void scinthDefParseString(std::string yaml, std::function<void(int)> completion);
+    void scinthDefParseString(std::string yaml, std::function<void(size_t)> completion);
 
     /*! Puts on of the async worker threads to sleep for the provided number of seconds. Useful for testing.
      *
@@ -109,11 +109,11 @@ private:
     void workerThreadMain(std::string threadName);
     void syncThreadMain();
 
-    void asyncVGenLoadDirectory(fs::path path, std::function<void(int)> completion);
+    void asyncVGenLoadDirectory(fs::path path, std::function<void(size_t)> completion);
 
-    void asyncScinthDefLoadDirectory(fs::path path, std::function<void(int)> completion);
-    void asyncScinthDefLoadFile(fs::path path, std::function<void(int)> completion);
-    void asyncScinthDefParseString(std::string yaml, std::function<void(int)> completion);
+    void asyncScinthDefLoadDirectory(fs::path path, std::function<void(size_t)> completion);
+    void asyncScinthDefLoadFile(fs::path path, std::function<void(size_t)> completion);
+    void asyncScinthDefParseString(std::string yaml, std::function<void(size_t)> completion);
 
     void asyncSleepFor(int seconds, std::function<void()> completion);
 

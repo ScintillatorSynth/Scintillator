@@ -11,7 +11,7 @@ LogLevel::LogLevel(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 LogLevel::~LogLevel() {}
 
-void LogLevel::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
+void LogLevel::processMessage(int argc, lo_arg** argv, const char* types, lo_address /* address */) {
     if (argc < 1 || types[0] != LO_INT32) {
         spdlog::error("OSC LogLevel got invalid or absent level argument in message.");
         return;

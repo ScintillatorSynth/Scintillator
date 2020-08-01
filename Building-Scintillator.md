@@ -17,5 +17,10 @@ cd build
 cmake ..
 make
 
-If on Xenial Linux you're going to need to build your own SSL from sources, or consider re-using the one built inside of
-install-ext
+
+Xenial
+------
+
+Requires gperf 3.1, which will need to be built from sources.
+Requires openssl 1.1, which will need to be built from sources, or copied from the install-ext/ssl directory.
+

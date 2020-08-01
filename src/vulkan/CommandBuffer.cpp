@@ -24,7 +24,7 @@ bool CommandBuffer::create(size_t count, bool isPrimary) {
     } else {
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
     }
-    allocInfo.commandBufferCount = count;
+    allocInfo.commandBufferCount = static_cast<uint32_t>(count);
 
     if (vkAllocateCommandBuffers(m_device->get(), &allocInfo, m_commandBuffers.data()) != VK_SUCCESS) {
         spdlog::error("error allocating command buffers.");
@@ -40,7 +40,8 @@ void CommandBuffer::destroy() {
     m_secondaryCommands.clear();
 
     if (m_commandBuffers.size()) {
-        vkFreeCommandBuffers(m_device->get(), m_commandPool->get(), m_commandBuffers.size(), m_commandBuffers.data());
+        vkFreeCommandBuffers(m_device->get(), m_commandPool->get(), static_cast<uint32_t>(m_commandBuffers.size()),
+                             m_commandBuffers.data());
         m_commandBuffers.clear();
     }
 }

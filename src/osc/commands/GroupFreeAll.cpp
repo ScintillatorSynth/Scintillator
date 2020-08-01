@@ -13,7 +13,8 @@ GroupFreeAll::GroupFreeAll(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 GroupFreeAll::~GroupFreeAll() {}
 
-void GroupFreeAll::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
+void GroupFreeAll::processMessage(int /* argc */, lo_arg** /* argv */, const char* /* types */,
+                                  lo_address /* address */) {
     m_dispatcher->compositor()->groupFreeAll();
 }
 

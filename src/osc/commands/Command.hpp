@@ -1,7 +1,7 @@
 #ifndef SRC_OSC_COMMANDS_COMMAND_HPP_
 #define SRC_OSC_COMMANDS_COMMAND_HPP_
 
-#include "lo/lo.h"
+#include "osc/LOIncludes.hpp"
 
 #include <string>
 
@@ -13,7 +13,7 @@ namespace commands {
 
 class Command {
 public:
-    enum Number : int {
+    enum Number : size_t {
         // Master Controls
         kNone = 0,
         kNotify = 1,

@@ -9,8 +9,19 @@
 #include "base/VGen.hpp"
 
 #include "spdlog/spdlog.h"
+
+#if _MSC_VER
+// Disable MSVC warning on included yaml-cpp headers
+#    pragma warning(push)
+#    pragma warning(disable : 4996)
+#endif // _MSC_VER
+
 #include "yaml-cpp/exceptions.h"
 #include "yaml-cpp/yaml.h"
+
+#if _MSC_VER
+#    pragma warning(pop)
+#endif // _MSC_VER
 
 namespace scin { namespace base {
 
@@ -193,13 +204,13 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
     }
     auto shapeName = shapeNode["name"].as<std::string>();
     if (shapeName == "Quad") {
-        int widthEdges = 1;
-        int heightEdges = 1;
+        uint16_t widthEdges = 1;
+        uint16_t heightEdges = 1;
         if (shapeNode["widthEdges"] && shapeNode["widthEdges"].IsScalar()) {
-            widthEdges = shapeNode["widthEdges"].as<int>();
+            widthEdges = shapeNode["widthEdges"].as<uint16_t>();
         }
         if (shapeNode["heightEdges"] && shapeNode["heightEdges"].IsScalar()) {
-            heightEdges = shapeNode["heightEdges"].as<int>();
+            heightEdges = shapeNode["heightEdges"].as<uint16_t>();
         }
         shape.reset(new Quad(widthEdges, heightEdges));
     } else {
@@ -441,14 +452,14 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
                                       className);
                         return nullptr;
                     }
-                    int vgenIndex = input["vgenIndex"].as<int>();
-                    if (vgenIndex < 0 || vgenIndex > instances.size()) {
+                    size_t vgenIndex = input["vgenIndex"].as<size_t>();
+                    if (vgenIndex > instances.size()) {
                         spdlog::error("ScinthDef {} has VGen {} vgen input with invalid index {}.", name, className,
                                       vgenIndex);
                         return nullptr;
                     }
-                    int outputIndex = input["outputIndex"].as<int>();
-                    if (outputIndex < 0 || outputIndex >= instances[vgenIndex].abstractVGen()->outputs().size()) {
+                    size_t outputIndex = input["outputIndex"].as<size_t>();
+                    if (outputIndex >= instances[vgenIndex].abstractVGen()->outputs().size()) {
                         spdlog::error("ScinthDef {} has VGen {} vgen input with invalid output index {}.", name,
                                       className, outputIndex);
                         return nullptr;
@@ -459,7 +470,7 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
                         spdlog::error("ScinthDef {} has VGen {} parameter input with no index key.", name, className);
                         return nullptr;
                     }
-                    int parameterIndex = input["index"].as<int>();
+                    size_t parameterIndex = input["index"].as<size_t>();
                     instance.addParameterInput(parameterIndex);
                 }
             }
@@ -553,8 +564,8 @@ int Archetypes::extractAbstractVGensFromNodes(const std::vector<YAML::Node>& nod
             spdlog::error("VGen {} dimensions tag absent or not a sequence.", name);
             continue;
         }
-        std::vector<std::vector<int>> inputDimensions;
-        std::vector<std::vector<int>> outputDimensions;
+        std::vector<std::vector<size_t>> inputDimensions;
+        std::vector<std::vector<size_t>> outputDimensions;
         for (auto dim : node["dimensions"]) {
             if (!dim.IsMap()) {
                 spdlog::error("VGen {} has dimensions list element that is not a map.", name);
@@ -562,14 +573,14 @@ int Archetypes::extractAbstractVGensFromNodes(const std::vector<YAML::Node>& nod
             }
 
             // The input tag is optional for those VGens that don't have inputs.
-            std::vector<int> inputDims;
+            std::vector<size_t> inputDims;
             if (dim["inputs"]) {
                 // If only a single number provided use that as dimension for all inputs.
                 if (dim["inputs"].IsScalar()) {
-                    inputDims.insert(inputDims.begin(), inputs.size(), dim["inputs"].as<int>());
+                    inputDims.insert(inputDims.begin(), inputs.size(), dim["inputs"].as<size_t>());
                 } else if (dim["inputs"].IsSequence()) {
                     for (auto inDim : dim["inputs"]) {
-                        inputDims.push_back(inDim.as<int>());
+                        inputDims.push_back(inDim.as<size_t>());
                     }
                 } else {
                     spdlog::error("VGen {} has malformed inputs tag inside of dimension list.", name);
@@ -583,12 +594,12 @@ int Archetypes::extractAbstractVGensFromNodes(const std::vector<YAML::Node>& nod
                 spdlog::error("VGen {} missing output tag inside of dimension list.", name);
                 break;
             }
-            std::vector<int> outputDims;
+            std::vector<size_t> outputDims;
             if (dim["outputs"].IsScalar()) {
-                outputDims.insert(outputDims.begin(), outputs.size(), dim["outputs"].as<int>());
+                outputDims.insert(outputDims.begin(), outputs.size(), dim["outputs"].as<size_t>());
             } else if (dim["outputs"].IsSequence()) {
                 for (auto outDim : dim["outputs"]) {
-                    outputDims.push_back(outDim.as<int>());
+                    outputDims.push_back(outDim.as<size_t>());
                 }
             } else {
                 spdlog::error("VGen {} has malformed outputs tag inside of dimension list.", name);
@@ -605,7 +616,7 @@ int Archetypes::extractAbstractVGensFromNodes(const std::vector<YAML::Node>& nod
         }
         // Each entry in input dimensions list should match the number of inputs, and same with outputs.
         bool dimensionsValid = true;
-        for (auto i = 0; i < outputDimensions.size(); ++i) {
+        for (size_t i = 0; i < outputDimensions.size(); ++i) {
             if (outputDimensions[i].size() != outputs.size()) {
                 spdlog::error("VGen {} has output dimensions list of unequal size to the number of outputs.", name);
                 dimensionsValid = false;

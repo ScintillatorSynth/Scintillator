@@ -52,7 +52,7 @@ public:
  */
 class Quad : public Shape {
 public:
-    Quad(int widthEdges, int heightEdges);
+    Quad(uint16_t widthEdges, uint16_t heightEdges);
     virtual ~Quad();
 
     Manifest::ElementType elementType() const override;
@@ -64,8 +64,8 @@ public:
     bool storeIndexData(uint16_t* store) const override;
 
 private:
-    int m_widthEdges;
-    int m_heightEdges;
+    uint16_t m_widthEdges;
+    uint16_t m_heightEdges;
 };
 
 } // namespace base

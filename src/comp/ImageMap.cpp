@@ -4,12 +4,12 @@
 
 namespace scin { namespace comp {
 
-void ImageMap::addImage(int imageID, std::shared_ptr<vk::DeviceImage> image) {
+void ImageMap::addImage(size_t imageID, std::shared_ptr<vk::DeviceImage> image) {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_images[imageID] = image;
 }
 
-std::shared_ptr<vk::DeviceImage> ImageMap::getImage(int imageID) {
+std::shared_ptr<vk::DeviceImage> ImageMap::getImage(size_t imageID) {
     std::lock_guard<std::mutex> lock(m_mutex);
     std::shared_ptr<vk::DeviceImage> image;
     auto it = m_images.find(imageID);
@@ -19,7 +19,7 @@ std::shared_ptr<vk::DeviceImage> ImageMap::getImage(int imageID) {
     return image;
 }
 
-void ImageMap::removeImage(int imageID) {
+void ImageMap::removeImage(size_t imageID) {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_images.erase(imageID);
 }

@@ -11,8 +11,9 @@
 #endif
 
 namespace {
-int portAudioCallback(const void* input, void* output, unsigned long frameCount,
-                      const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void* userData) {
+int portAudioCallback(const void* input, void* /* output */, unsigned long frameCount,
+                      const PaStreamCallbackTimeInfo* /* timeInfo */, PaStreamCallbackFlags /* statusFlags */,
+                      void* userData) {
     scin::audio::PortAudio* audio = static_cast<scin::audio::PortAudio*>(userData);
     if (input && audio->inputChannels()) {
         audio->ingress()->ingestSamples(static_cast<const float*>(input), frameCount);

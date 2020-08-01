@@ -1,23 +1,18 @@
 #include "audio/PortAudio.hpp"
-#include "av/AVIncludes.hpp"
 #include "base/Archetypes.hpp"
 #include "base/FileSystem.hpp"
-#include "comp/Async.hpp" // TODO: audit includes
+#include "comp/Async.hpp"
 #include "comp/Compositor.hpp"
 #include "comp/FrameTimer.hpp"
 #include "comp/Offscreen.hpp"
-#include "comp/Pipeline.hpp"
 #include "comp/Window.hpp"
 #include "infra/CrashReporter.hpp"
 #include "infra/Logger.hpp"
 #include "infra/Version.hpp"
 #include "osc/Dispatcher.hpp"
-#include "vulkan/Buffer.hpp"
-#include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/DeviceChooser.hpp"
 #include "vulkan/Instance.hpp"
-#include "vulkan/Shader.hpp"
 #include "vulkan/Vulkan.hpp"
 
 #include <fmt/core.h>
@@ -247,7 +242,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    if (!device && chooser.bestDeviceIndex() >= 0) {
+    if (!device && chooser.bestDeviceIndex() < chooser.devices().size()) {
         auto info = chooser.devices().at(chooser.bestDeviceIndex());
         if (FLAGS_createWindow && !info.supportsWindow()) {
             spdlog::error("Automatically chosen device {} doesn't support window rendering.", info.name());
@@ -301,9 +296,10 @@ int main(int argc, char* argv[]) {
     async->run(FLAGS_asyncWorkerThreads);
 
     // Chain async calls to load VGens, then ScinthDefs.
-    async->vgenLoadDirectory(quarkPath / "vgens", [async, &quarkPath, compositor](int) {
-        async->scinthDefLoadDirectory(quarkPath / "scinthdefs",
-                                      [](int) { spdlog::info("finished loading predefined VGens and ScinthDefs."); });
+    async->vgenLoadDirectory(quarkPath / "vgens", [async, &quarkPath, compositor](size_t) {
+        async->scinthDefLoadDirectory(quarkPath / "scinthdefs", [](size_t) {
+            spdlog::info("finished loading predefined VGens and ScinthDefs.");
+        });
     });
 
     std::function<void()> quitHandler;

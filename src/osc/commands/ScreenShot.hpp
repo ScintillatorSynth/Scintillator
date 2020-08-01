@@ -25,7 +25,7 @@ public:
 private:
     std::mutex m_mutex;
     size_t m_encodersSerial;
-    std::unordered_map<int, std::shared_ptr<av::ImageEncoder>> m_encoders;
+    std::unordered_map<size_t, std::shared_ptr<av::ImageEncoder>> m_encoders;
 };
 
 } // namespace commands

@@ -39,8 +39,8 @@ public:
      */
     AbstractVGen(const std::string& name, unsigned supportedRates, bool isSampler,
                  const std::vector<std::string>& inputs, const std::vector<std::string>& outputs,
-                 const std::vector<std::vector<int>> inputDimensions,
-                 const std::vector<std::vector<int>> outputDimensions, const std::string& shader);
+                 const std::vector<std::vector<size_t>> inputDimensions,
+                 const std::vector<std::vector<size_t>> outputDimensions, const std::string& shader);
     ~AbstractVGen();
 
     /*! Evaluate the provided shader and parameters, prepare for requests for parameterization.
@@ -62,7 +62,7 @@ public:
      */
     std::string parameterize(const std::vector<std::string>& inputs,
                              const std::unordered_map<Intrinsic, std::string>& intrinsics,
-                             const std::vector<std::string>& outputs, const std::vector<int>& outputDimensions,
+                             const std::vector<std::string>& outputs, const std::vector<size_t>& outputDimensions,
                              const std::unordered_set<std::string>& alreadyDefined) const;
 
     const std::string& name() const { return m_name; }
@@ -71,8 +71,8 @@ public:
     const std::vector<std::string>& inputs() const { return m_inputs; }
     const std::unordered_set<Intrinsic>& intrinsics() const { return m_intrinsics; }
     const std::vector<std::string>& outputs() const { return m_outputs; }
-    const std::vector<std::vector<int>>& inputDimensions() const { return m_inputDimensions; }
-    const std::vector<std::vector<int>>& outputDimensions() const { return m_outputDimensions; }
+    const std::vector<std::vector<size_t>>& inputDimensions() const { return m_inputDimensions; }
+    const std::vector<std::vector<size_t>>& outputDimensions() const { return m_outputDimensions; }
     const std::string& shader() const { return m_shader; }
     bool valid() const { return m_valid; }
 
@@ -94,8 +94,8 @@ private:
     bool m_isSampler;
     std::vector<std::string> m_inputs;
     std::vector<std::string> m_outputs;
-    std::vector<std::vector<int>> m_inputDimensions;
-    std::vector<std::vector<int>> m_outputDimensions;
+    std::vector<std::vector<size_t>> m_inputDimensions;
+    std::vector<std::vector<size_t>> m_outputDimensions;
     std::string m_shader;
 
     bool m_valid;

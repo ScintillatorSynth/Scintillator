@@ -12,7 +12,7 @@ namespace scin { namespace audio {
 // system when there's new data available and what that data might be.
 class Ingress {
 public:
-    Ingress(int channels, int sampleRate);
+    Ingress(int channels, double sampleRate);
     ~Ingress();
 
     bool create();
@@ -31,11 +31,11 @@ public:
     unsigned long extractSamples(float* output, unsigned long frameCount);
 
     int channels() const { return m_channels; }
-    int sampleRate() const { return m_sampleRate; }
+    double sampleRate() const { return m_sampleRate; }
 
 private:
     int m_channels;
-    int m_sampleRate;
+    double m_sampleRate;
 
     std::unique_ptr<PaUtilRingBuffer> m_ringBuffer;
     std::unique_ptr<float[]> m_buffer;

@@ -56,5 +56,13 @@ else
     echo "/usr/local/ssl/lib" > $TRAVIS_HOME/openssl-1.1.1g.conf || exit 2
     sudo mv $TRAVIS_HOME/openssl-1.1.1g.conf /etc/ld.so.conf.d/. || exit 3
     sudo ldconfig -v || exit 4
+
+    cd $TRAVIS_HOME
+    wget http://ftp.gnu.org/pub/gnu/gperf/gperf-3.1.tar.gz
+    tar xzf gperf-3.1.tar.gz
+    cd gperf-3.1
+    ./configure --prefix=/usr/local
+    make
+    sudo make install
 fi
 

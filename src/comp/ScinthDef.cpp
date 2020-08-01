@@ -143,7 +143,7 @@ bool ScinthDef::buildDescriptorLayout() {
     std::vector<VkDescriptorSetLayoutBinding> bindings;
     if (m_abstract->uniformManifest().sizeInBytes()) {
         VkDescriptorSetLayoutBinding uniformBinding = {};
-        uniformBinding.binding = bindings.size();
+        uniformBinding.binding = static_cast<uint32_t>(bindings.size());
         uniformBinding.descriptorCount = 1;
         uniformBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         uniformBinding.stageFlags =
@@ -152,9 +152,9 @@ bool ScinthDef::buildDescriptorLayout() {
     }
 
     auto totalSamplers = m_abstract->drawFixedImages().size() + m_abstract->drawParameterizedImages().size();
-    for (auto i = 0; i < totalSamplers; ++i) {
+    for (size_t i = 0; i < totalSamplers; ++i) {
         VkDescriptorSetLayoutBinding imageBinding = {};
-        imageBinding.binding = bindings.size();
+        imageBinding.binding = static_cast<uint32_t>(bindings.size());
         imageBinding.descriptorCount = 1;
         imageBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         imageBinding.stageFlags =
@@ -164,7 +164,7 @@ bool ScinthDef::buildDescriptorLayout() {
 
     if (m_abstract->computeManifest().sizeInBytes()) {
         VkDescriptorSetLayoutBinding bufferBinding = {};
-        bufferBinding.binding = bindings.size();
+        bufferBinding.binding = static_cast<uint32_t>(bindings.size());
         bufferBinding.descriptorCount = 1;
         bufferBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         bufferBinding.stageFlags =
@@ -175,7 +175,7 @@ bool ScinthDef::buildDescriptorLayout() {
     if (bindings.size()) {
         VkDescriptorSetLayoutCreateInfo layoutInfo = {};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = bindings.size();
+        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
         layoutInfo.pBindings = bindings.data();
         if (vkCreateDescriptorSetLayout(m_device->get(), &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS) {
             return false;

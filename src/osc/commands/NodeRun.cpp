@@ -13,7 +13,7 @@ NodeRun::NodeRun(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 NodeRun::~NodeRun() {}
 
-void NodeRun::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
+void NodeRun::processMessage(int argc, lo_arg** argv, const char* types, lo_address /* address */) {
     std::vector<std::pair<int, int>> pairs;
     if (argc % 2) {
         spdlog::warn("OSC NodeRun got odd number of arguments, ignoring last value.");

@@ -97,7 +97,7 @@ private:
     std::vector<std::shared_ptr<vk::HostBuffer>> m_uniformBuffers;
     std::vector<std::shared_ptr<vk::DeviceBuffer>> m_computeBuffers;
     // The parameter index and the currently bound image Ids for parameterized images.
-    std::vector<std::pair<int, int>> m_parameterizedImageIDs;
+    std::vector<std::pair<size_t, size_t>> m_parameterizedImageIDs;
     std::shared_ptr<vk::CommandBuffer> m_computeCommands;
     std::shared_ptr<vk::CommandBuffer> m_drawCommands;
     bool m_running;

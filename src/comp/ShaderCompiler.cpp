@@ -46,6 +46,10 @@ std::unique_ptr<vk::Shader> ShaderCompiler::compile(std::shared_ptr<vk::Device> 
     case vk::Shader::kFragment:
         shaderKind = shaderc_fragment_shader;
         break;
+
+    default:
+        spdlog::error("Unknown kind of shader in ShaderCompiler");
+        return std::unique_ptr<vk::Shader>();
     }
 
     shaderc_compile_options_t options = shaderc_compile_options_initialize();
@@ -62,7 +66,7 @@ std::unique_ptr<vk::Shader> ShaderCompiler::compile(std::shared_ptr<vk::Device> 
     if (status == shaderc_compilation_status_success) {
         const char* spv_bytes = shaderc_result_get_bytes(result);
         size_t byte_size = shaderc_result_get_length(result);
-        shader.reset(new vk::Shader(kind, device, entryPoint));
+        shader.reset(new vk::Shader(device, entryPoint));
         if (!shader->create(spv_bytes, byte_size)) {
             spdlog::error("error creating shader from compiled source {}.", name);
             shader.reset(nullptr);

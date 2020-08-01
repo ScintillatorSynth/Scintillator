@@ -6,7 +6,7 @@
 
 namespace scin { namespace vk {
 
-DeviceChooser::DeviceChooser(std::shared_ptr<Instance> instance): m_instance(instance), m_bestDeviceIndex(-1) {}
+DeviceChooser::DeviceChooser(std::shared_ptr<Instance> instance): m_instance(instance), m_bestDeviceIndex(0ull) {}
 
 DeviceChooser::~DeviceChooser() {}
 

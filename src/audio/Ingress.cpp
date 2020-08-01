@@ -7,7 +7,7 @@ namespace scin { namespace audio {
 
 const int kSamplesPerChannel = 8192;
 
-Ingress::Ingress(int channels, int sampleRate):
+Ingress::Ingress(int channels, double sampleRate):
     m_channels(channels),
     m_sampleRate(sampleRate),
     m_ringBuffer(new PaUtilRingBuffer),
@@ -34,7 +34,7 @@ void Ingress::ingestSamples(const float* input, unsigned long frameCount) {
         // Clobber oldest elements if needed.
         dropSamples(elementCount - writeAvailable);
     }
-    unsigned long framesWritten = PaUtil_WriteRingBuffer(m_ringBuffer.get(), input, elementCount);
+    PaUtil_WriteRingBuffer(m_ringBuffer.get(), input, elementCount);
 }
 
 unsigned long Ingress::availableFrames() { return PaUtil_GetRingBufferReadAvailable(m_ringBuffer.get()) / m_channels; }

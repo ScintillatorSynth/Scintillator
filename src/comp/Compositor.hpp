@@ -129,7 +129,7 @@ public:
 
     void setClearColor(glm::vec3 color) { m_clearColor = color; }
 
-    int numberOfRunningScinths();
+    size_t numberOfRunningScinths();
 
     /*! Relayed from the graphics device, convenience method.
      */
@@ -143,7 +143,7 @@ public:
      * \param imageBuffer The bytes of the image in RGBA format.
      * \param completion A function to call once the image has been staged.
      */
-    void stageImage(int imageID, int width, int height, std::shared_ptr<vk::HostBuffer> imageBuffer,
+    void stageImage(int imageID, uint32_t width, uint32_t height, std::shared_ptr<vk::HostBuffer> imageBuffer,
                     std::function<void()> completion);
 
     /*! Returns basic information about a compositor image associated with imageID, if it exists.
@@ -154,7 +154,7 @@ public:
      * \param heightOut Will store the height of the image buffer in pixels
      * \return True if the image was found and the output values have been written, false otherwise.
      */
-    bool queryImage(int imageID, int& sizeOut, int& widthOut, int& heightOut);
+    bool queryImage(int imageID, size_t& sizeOut, uint32_t& widthOut, uint32_t& heightOut);
 
     /*! Adds an audio Ingress object for provision of audio data to the GPU.
      *

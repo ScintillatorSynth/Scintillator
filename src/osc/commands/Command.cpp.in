@@ -4,9 +4,14 @@
 
 #include <cstring>
 
-// Some of the gperf generated code uses the register keyword, which is deprecated in C++17.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wregister"
+#if _MSC_VER
+// Disable MSVC warning on generated code.
+#pragma warning(push)
+#pragma warning(disable: 4267)
+#elif __GNUC__ || __clang__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
 
 namespace {
 
@@ -45,7 +50,11 @@ uploadCrashReport,  scin::osc::commands::Command::Number::kUploadCrashReport
 
 } // namespace
 
-#pragma clang diagnostic pop
+#if _MSC_VER
+#pragma warning(pop)
+#elif __GNUC__ || __clang__
+#pragma GCC diagnostic pop
+#endif
 
 namespace scin { namespace osc { namespace commands {
 

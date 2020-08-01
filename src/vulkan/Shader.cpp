@@ -6,8 +6,7 @@
 
 namespace scin { namespace vk {
 
-Shader::Shader(Kind kind, std::shared_ptr<Device> device, const std::string& entryPoint):
-    m_kind(kind),
+Shader::Shader(std::shared_ptr<Device> device, const std::string& entryPoint):
     m_device(device),
     m_entryPoint(entryPoint),
     m_shaderModule(VK_NULL_HANDLE) {}

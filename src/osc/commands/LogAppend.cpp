@@ -12,8 +12,8 @@ LogAppend::LogAppend(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 LogAppend::~LogAppend() {}
 
-void LogAppend::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
-    if (std::strncmp(types, "is", 2) != 0) {
+void LogAppend::processMessage(int argc, lo_arg** argv, const char* types, lo_address /* address */) {
+    if (argc < 2 || std::strncmp(types, "is", 2) != 0) {
         spdlog::error("OSC LogAppend got invalid or absent arguments in message.");
         return;
     }

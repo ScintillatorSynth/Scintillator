@@ -55,7 +55,7 @@ double FrameTimer::elapsedTime() {
     return std::chrono::duration<double, std::chrono::seconds::period>(m_lastFrameTime - m_startTime).count();
 }
 
-void FrameTimer::getStats(int& targetFrameRateOut, double& meanFrameRateOut, size_t lateFramesOut) const {
+void FrameTimer::getStats(int& targetFrameRateOut, double& meanFrameRateOut, size_t& lateFramesOut) const {
     std::lock_guard<std::mutex> lock(m_statsMutex);
     targetFrameRateOut = m_targetFrameRate;
     meanFrameRateOut = m_meanFrameRate;

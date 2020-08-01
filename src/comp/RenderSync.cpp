@@ -22,7 +22,7 @@ bool RenderSync::create(size_t inFlightFrames, bool makeSwapchainSemaphore) {
     m_renderFinished.resize(inFlightFrames);
     m_frameRendering.resize(inFlightFrames);
 
-    for (auto i = 0; i < inFlightFrames; ++i) {
+    for (size_t i = 0; i < inFlightFrames; ++i) {
         VkSemaphoreCreateInfo semaphoreInfo = {};
         semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
         if (makeSwapchainSemaphore) {
@@ -54,22 +54,22 @@ bool RenderSync::create(size_t inFlightFrames, bool makeSwapchainSemaphore) {
 }
 
 void RenderSync::destroy() {
-    for (auto i = 0; i < m_imageAvailable.size(); ++i) {
+    for (size_t i = 0; i < m_imageAvailable.size(); ++i) {
         vkDestroySemaphore(m_device->get(), m_imageAvailable[i], nullptr);
     }
     m_imageAvailable.clear();
 
-    for (auto i = 0; i < m_computeFinished.size(); ++i) {
+    for (size_t i = 0; i < m_computeFinished.size(); ++i) {
         vkDestroySemaphore(m_device->get(), m_computeFinished[i], nullptr);
     }
     m_computeFinished.clear();
 
-    for (auto i = 0; i < m_renderFinished.size(); ++i) {
+    for (size_t i = 0; i < m_renderFinished.size(); ++i) {
         vkDestroySemaphore(m_device->get(), m_renderFinished[i], nullptr);
     }
     m_renderFinished.clear();
 
-    for (auto i = 0; i < m_frameRendering.size(); ++i) {
+    for (size_t i = 0; i < m_frameRendering.size(); ++i) {
         vkDestroyFence(m_device->get(), m_frameRendering[i], nullptr);
     }
     m_frameRendering.clear();

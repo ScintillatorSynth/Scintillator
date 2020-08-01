@@ -15,7 +15,7 @@ ScinthNew::ScinthNew(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 ScinthNew::~ScinthNew() {}
 
-void ScinthNew::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
+void ScinthNew::processMessage(int argc, lo_arg** argv, const char* types, lo_address /* address */) {
     if (std::strncmp(types, "si", 2) != 0) {
         spdlog::error("OSC ScinthNew got incomplete or incorrect types");
         return;

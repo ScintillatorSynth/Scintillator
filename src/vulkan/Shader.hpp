@@ -13,7 +13,7 @@ class Device;
 class Shader {
 public:
     enum Kind { kCompute, kVertex, kFragment };
-    Shader(Kind kind, std::shared_ptr<Device> device, const std::string& entryPoint);
+    Shader(std::shared_ptr<Device> device, const std::string& entryPoint);
     ~Shader();
 
     bool create(const char* spvBytes, size_t byteSize);
@@ -23,7 +23,6 @@ public:
     const char* entryPoint() const { return m_entryPoint.data(); }
 
 private:
-    Kind m_kind;
     std::shared_ptr<Device> m_device;
     std::string m_entryPoint;
     std::unique_ptr<uint32_t[]> m_spvBytes;
