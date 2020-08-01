@@ -82,6 +82,7 @@ add_executable(run_unittests
     base/AbstractScinthDef_unittests.cpp
     base/AbstractVGen_unittests.cpp
     base/Archetypes_unittests.cpp
+    base/GTestIncludes.hpp
     base/Manifest_unittests.cpp
     base/Shape_unittests.cpp
     base/VGen_unittests.cpp

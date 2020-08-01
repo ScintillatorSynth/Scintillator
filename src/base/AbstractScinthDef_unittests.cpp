@@ -1,4 +1,4 @@
-#include "gtest/gtest.h"
+#include "base/GTestIncludes.hpp"
 
 #include "base/AbstractScinthDef.hpp"
 #include "base/Archetypes.hpp"

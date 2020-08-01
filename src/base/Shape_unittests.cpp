@@ -1,4 +1,4 @@
-#include "gtest/gtest.h"
+#include "base/GTestIncludes.hpp"
 
 #include "base/Manifest.hpp"
 #include "base/Shape.hpp"

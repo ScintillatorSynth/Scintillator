@@ -1,4 +1,4 @@
-#include "gtest/gtest.h"
+#include "base/GTestIncludes.hpp"
 
 #include "base/AbstractVGen.hpp"
 #include "base/Intrinsic.hpp"
@@ -76,64 +76,56 @@ TEST(VGenTest, InputValuesAndTypesRetained) {
     allVGens.addVGenInput(3, 4, 2);
     allVGens.addVGenInput(0, 0, 3);
     constantValue = 0.0f;
-    vgenIndex = -1;
-    outputIndex = -2;
     EXPECT_FALSE(allVGens.getInputConstantValue(0, constantValue));
     EXPECT_EQ(0.0f, constantValue);
     EXPECT_TRUE(allVGens.getInputVGenIndex(0, vgenIndex, outputIndex));
     EXPECT_EQ(2, vgenIndex);
     EXPECT_EQ(1, outputIndex);
-    vgenIndex = -1;
-    outputIndex = -2;
     EXPECT_FALSE(allVGens.getInputConstantValue(1, constantValue));
     EXPECT_EQ(0.0f, constantValue);
     EXPECT_TRUE(allVGens.getInputVGenIndex(1, vgenIndex, outputIndex));
     EXPECT_EQ(3, vgenIndex);
     EXPECT_EQ(4, outputIndex);
-    vgenIndex = -1;
-    outputIndex = -2;
     EXPECT_FALSE(allVGens.getInputConstantValue(2, constantValue));
     EXPECT_EQ(0.0f, constantValue);
     EXPECT_TRUE(allVGens.getInputVGenIndex(2, vgenIndex, outputIndex));
     EXPECT_EQ(0, vgenIndex);
     EXPECT_EQ(0, outputIndex);
-    vgenIndex = -1;
-    outputIndex = -2;
     EXPECT_FALSE(allVGens.getInputConstantValue(3, constantValue));
     EXPECT_EQ(0.0f, constantValue);
+    vgenIndex = 10;
+    outputIndex = 12;
     EXPECT_FALSE(allVGens.getInputVGenIndex(3, vgenIndex, outputIndex));
-    EXPECT_EQ(-1, vgenIndex);
-    EXPECT_EQ(-2, outputIndex);
+    EXPECT_EQ(10, vgenIndex);
+    EXPECT_EQ(12, outputIndex);
     EXPECT_TRUE(allVGens.validate());
 
     VGen pickAndMix(threeInputs, AbstractVGen::Rates::kPixel);
     pickAndMix.addConstantInput(-23.7f);
     pickAndMix.addVGenInput(14, 7, 3);
-    pickAndMix.addConstantInput(12224.3);
+    pickAndMix.addConstantInput(12224.3f);
     constantValue = 0.0f;
-    vgenIndex = -1;
-    outputIndex = -2;
+    vgenIndex = 11;
+    outputIndex = 13;
     EXPECT_TRUE(pickAndMix.getInputConstantValue(0, constantValue));
     EXPECT_EQ(-23.7f, constantValue);
     EXPECT_FALSE(pickAndMix.getInputVGenIndex(0, vgenIndex, outputIndex));
-    EXPECT_EQ(-1, vgenIndex);
-    EXPECT_EQ(-2, outputIndex);
+    EXPECT_EQ(11, vgenIndex);
+    EXPECT_EQ(13, outputIndex);
     constantValue = 0.0f;
-    vgenIndex = -1;
-    outputIndex = -2;
     EXPECT_FALSE(pickAndMix.getInputConstantValue(1, constantValue));
     EXPECT_EQ(0.0f, constantValue);
     EXPECT_TRUE(pickAndMix.getInputVGenIndex(1, vgenIndex, outputIndex));
     EXPECT_EQ(14, vgenIndex);
     EXPECT_EQ(7, outputIndex);
     constantValue = 0.0f;
-    vgenIndex = -1;
-    outputIndex = -2;
+    vgenIndex = 15;
+    outputIndex = 18;
     EXPECT_TRUE(pickAndMix.getInputConstantValue(2, constantValue));
     EXPECT_EQ(12224.3f, constantValue);
     EXPECT_FALSE(pickAndMix.getInputVGenIndex(2, vgenIndex, outputIndex));
-    EXPECT_EQ(-1, vgenIndex);
-    EXPECT_EQ(-2, outputIndex);
+    EXPECT_EQ(15, vgenIndex);
+    EXPECT_EQ(18, outputIndex);
     EXPECT_TRUE(pickAndMix.validate());
 }
 

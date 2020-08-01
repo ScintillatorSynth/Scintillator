@@ -1,5 +1,6 @@
+#include "base/GTestIncludes.hpp"
+
 #include "gflags/gflags.h"
-#include "gtest/gtest.h"
 #include "spdlog/spdlog.h"
 
 DEFINE_int32(logLevel, 6, "Verbosity of logs, 0 most verbose, 6 is off.");
