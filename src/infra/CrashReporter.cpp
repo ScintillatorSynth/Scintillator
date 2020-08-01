@@ -35,7 +35,11 @@ static const char* kGargamelleURL = "https://ggml.scintillatorsynth.org/api/dump
 
 void logReport(const crashpad::CrashReportDatabase::Report& report) {
     struct tm createTime;
+#if _MSC_VER
+    localtime_s(&createTime, &report.creation_time);
+#else
     localtime_r(&report.creation_time, &createTime);
+#endif
     std::array<char, 128> timeBuf;
     strftime(timeBuf.data(), sizeof(timeBuf), "%a %d %b %H:%M:%S %Y", &createTime);
     spdlog::info("    id: {}, on: {}, uploaded: {}", report.uuid.ToString(), timeBuf.data(),
