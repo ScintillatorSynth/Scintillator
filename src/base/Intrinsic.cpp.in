@@ -27,8 +27,7 @@ vTexPos,    scin::base::Intrinsic::kTexPos
 namespace scin { namespace base {
 
 Intrinsic getIntrinsicNamed(const std::string& name) {
-    unsigned int length = static_cast<unsigned int>(name.size());
-    const IntrinsicPair* pair = Perfect_Hash::in_word_set(name.data(), length);
+    const IntrinsicPair* pair = Perfect_Hash::in_word_set(name.data(), name.size());
     if (!pair) {
         return Intrinsic::kNotFound;
     }
