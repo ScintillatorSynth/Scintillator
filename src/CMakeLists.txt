@@ -51,7 +51,7 @@ add_library(scintillator_base STATIC
 
 target_compile_options(scintillator_base PRIVATE
      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-     -Wall -Wextra -Werror>
+     -Wall -Wextra -Wpedantic -Werror>
      $<$<CXX_COMPILER_ID:MSVC>:
      /W4 /WX>
 )
@@ -91,7 +91,7 @@ add_executable(run_unittests
 
 target_compile_options(run_unittests PRIVATE
      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-     -Wall -Wextra -Werror>
+     -Wall -Wextra -Wpedantic -Werror>
      $<$<CXX_COMPILER_ID:MSVC>:
      /W4 /WX>
 )
@@ -246,6 +246,7 @@ set(scintillator_synth_files
     osc/commands/Sync.hpp
     osc/commands/UploadCrashReport.cpp
     osc/commands/UploadCrashReport.hpp
+    osc/LOIncludes.hpp
 
     vulkan/Buffer.cpp
     vulkan/Buffer.hpp
@@ -305,7 +306,7 @@ endif()
 
 target_compile_options(scinsynth PRIVATE
      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-     -Wall -Wextra -Werror>
+     -Wall -Wextra -Wpedantic -Werror>
      $<$<CXX_COMPILER_ID:MSVC>:
      /W4 /WX>
 )

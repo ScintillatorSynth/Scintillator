@@ -1,7 +1,7 @@
 #ifndef SRC_OSC_COMMANDS_COMMAND_HPP_
 #define SRC_OSC_COMMANDS_COMMAND_HPP_
 
-#include "lo/lo.h"
+#include "osc/LOIncludes.hpp"
 
 #include <string>
 

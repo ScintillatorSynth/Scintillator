@@ -3,7 +3,7 @@
 
 #include "osc/commands/Command.hpp"
 
-#include "lo/lo.h"
+#include "osc/LOIncludes.hpp"
 
 #include <array>
 #include <functional>
