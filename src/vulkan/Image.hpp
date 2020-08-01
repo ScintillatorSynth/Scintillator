@@ -66,7 +66,7 @@ public:
     virtual bool create(uint32_t width, uint32_t height) = 0;
     void destroy();
 
-    int size() const { return m_info.size; }
+    size_t size() const { return m_info.size; }
 
 protected:
     VmaAllocation m_allocation;

@@ -247,7 +247,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    if (!device && chooser.bestDeviceIndex() >= 0) {
+    if (!device && chooser.bestDeviceIndex() < chooser.devices().size()) {
         auto info = chooser.devices().at(chooser.bestDeviceIndex());
         if (FLAGS_createWindow && !info.supportsWindow()) {
             spdlog::error("Automatically chosen device {} doesn't support window rendering.", info.name());

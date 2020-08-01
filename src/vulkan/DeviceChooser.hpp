@@ -26,14 +26,14 @@ public:
 
     const std::vector<DeviceInfo>& devices() const { return m_devices; }
 
-    /*! Returns the index of the most performant device, or -1 if no devices were found.
+    /*! Returns the index of the highest performance device, or zero if there are no devices detected.
      */
-    int bestDeviceIndex() const { return m_bestDeviceIndex; }
+    size_t bestDeviceIndex() const { return m_bestDeviceIndex; }
 
 private:
     std::shared_ptr<Instance> m_instance;
     std::vector<DeviceInfo> m_devices;
-    int m_bestDeviceIndex;
+    size_t m_bestDeviceIndex;
 };
 
 } // namespace vk

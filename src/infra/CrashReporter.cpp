@@ -2,14 +2,19 @@
 
 #include "infra/Version.hpp"
 
-#if __GNUC__ || __clang__
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4100)
+#elif __GNUC__ || __clang__
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 #include <client/crash_report_database.h>
 #include <client/crashpad_client.h>
 #include <client/settings.h>
-#if __GNUC__ || __clang__
+#if _MSC_VER
+#pragma warning(pop)
+#elif __GNUC__ || __clang__
 #    pragma GCC diagnostic pop
 #endif
 
