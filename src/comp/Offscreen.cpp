@@ -210,7 +210,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
 
     double time = 0.0;
     size_t frameNumber = 0;
-    size_t frameIndex = 0;
+    uint32_t frameIndex = 0;
 
     m_computeCommands.resize(m_numberOfImages);
     m_drawCommands.resize(m_numberOfImages);
@@ -365,7 +365,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
 
         m_renderSync->resetFrame(frameIndex);
 
-        drawSubmitInfo.commandBufferCount = drawCommandBuffers.size();
+        drawSubmitInfo.commandBufferCount = static_cast<uint32_t>(drawCommandBuffers.size());
         drawSubmitInfo.pCommandBuffers = drawCommandBuffers.data();
 
         if (vkQueueSubmit(m_device->graphicsQueue(), 1, &drawSubmitInfo, m_renderSync->frameRendering(frameIndex))
@@ -383,7 +383,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
 
         time += deltaTime;
         ++frameNumber;
-        frameIndex = frameNumber % m_numberOfImages;
+        frameIndex = static_cast<uint32_t>(frameNumber % m_numberOfImages);
     }
 
     vkDeviceWaitIdle(m_device->get());

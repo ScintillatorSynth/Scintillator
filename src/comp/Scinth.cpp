@@ -133,7 +133,7 @@ bool Scinth::allocateDescriptors() {
     if (uniformSize) {
         VkDescriptorPoolSize uniformPoolSize = {};
         uniformPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uniformPoolSize.descriptorCount = numberOfImages;
+        uniformPoolSize.descriptorCount = static_cast<uint32_t>(numberOfImages);
         poolSizes.emplace_back(uniformPoolSize);
 
         for (size_t i = 0; i < numberOfImages; ++i) {
@@ -152,7 +152,7 @@ bool Scinth::allocateDescriptors() {
     if (totalSamplers) {
         VkDescriptorPoolSize samplerPoolSize = {};
         samplerPoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerPoolSize.descriptorCount = numberOfImages * totalSamplers;
+        samplerPoolSize.descriptorCount = static_cast<uint32_t>(numberOfImages * totalSamplers);
         poolSizes.emplace_back(samplerPoolSize);
     }
 
@@ -160,7 +160,7 @@ bool Scinth::allocateDescriptors() {
     if (computeBufferSize) {
         VkDescriptorPoolSize bufferPoolSize = {};
         bufferPoolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        bufferPoolSize.descriptorCount = numberOfImages;
+        bufferPoolSize.descriptorCount = static_cast<uint32_t>(numberOfImages);
         poolSizes.emplace_back(bufferPoolSize);
 
         for (size_t i = 0; i < numberOfImages; ++i) {
@@ -177,9 +177,9 @@ bool Scinth::allocateDescriptors() {
 
     VkDescriptorPoolCreateInfo poolInfo = {};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = poolSizes.size();
+    poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = numberOfImages;
+    poolInfo.maxSets = static_cast<uint32_t>(numberOfImages);
     if (vkCreateDescriptorPool(m_device->get(), &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS) {
         spdlog::error("Scinth {} failed to create Vulkan descriptor pool.", m_nodeID);
         return false;
@@ -189,7 +189,7 @@ bool Scinth::allocateDescriptors() {
     VkDescriptorSetAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfo.descriptorPool = m_descriptorPool;
-    allocInfo.descriptorSetCount = numberOfImages;
+    allocInfo.descriptorSetCount = static_cast<uint32_t>(numberOfImages);
     allocInfo.pSetLayouts = layouts.data();
     m_descriptorSets.resize(numberOfImages);
     if (vkAllocateDescriptorSets(m_device->get(), &allocInfo, m_descriptorSets.data()) != VK_SUCCESS) {

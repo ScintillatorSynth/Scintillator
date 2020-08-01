@@ -19,16 +19,21 @@ void ImageBufferQuery::processMessage(int argc, lo_arg** argv, const char* types
             return;
         }
         int imageID = *reinterpret_cast<int32_t*>(argv[i]);
-        int size = 0;
-        int width = -1;
-        int height = -1;
-        if (!m_dispatcher->compositor()->queryImage(imageID, size, width, height)) {
+        size_t size = 0;
+        uint32_t width = 0;
+        uint32_t height = 0;
+        if (m_dispatcher->compositor()->queryImage(imageID, size, width, height)) {
+            lo_message_add_int32(message, imageID);
+            lo_message_add_int32(message, static_cast<int32_t>(size));
+            lo_message_add_int32(message, width);
+            lo_message_add_int32(message, height);
+        } else {
             spdlog::warn("OSC imageBufferQuery got query for unknown imageID {}.", imageID);
+            lo_message_add_int32(message, imageID);
+            lo_message_add_int32(message, -1);
+            lo_message_add_int32(message, -1);
+            lo_message_add_int32(message, -1);
         }
-        lo_message_add_int32(message, imageID);
-        lo_message_add_int32(message, size);
-        lo_message_add_int32(message, width);
-        lo_message_add_int32(message, height);
     }
 
     // The dispatcher will free the message.

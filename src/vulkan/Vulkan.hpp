@@ -3,6 +3,7 @@
 
 #if _MSC_VER
 #define VK_USE_PLATFORM_WIN32_KHR
+#define WIN32_LEAN_AND_MEAN
 #endif
 
 #define GLFW_INCLUDE_NONE // Keep GLFW from including GL headers

@@ -7,7 +7,7 @@ namespace scin { namespace audio {
 
 const int kSamplesPerChannel = 8192;
 
-Ingress::Ingress(int channels, int sampleRate):
+Ingress::Ingress(int channels, double sampleRate):
     m_channels(channels),
     m_sampleRate(sampleRate),
     m_ringBuffer(new PaUtilRingBuffer),

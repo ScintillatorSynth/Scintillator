@@ -308,7 +308,7 @@ void Compositor::destroy() {
     }
 }
 
-int Compositor::numberOfRunningScinths() {
+size_t Compositor::numberOfRunningScinths() {
     std::lock_guard<std::mutex> lock(m_scinthMutex);
     return m_scinths.size();
 }
@@ -317,7 +317,7 @@ bool Compositor::getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudg
     return m_device->getGraphicsMemoryBudget(bytesUsedOut, bytesBudgetOut);
 }
 
-void Compositor::stageImage(int imageID, int width, int height, std::shared_ptr<vk::HostBuffer> imageBuffer,
+void Compositor::stageImage(int imageID, uint32_t width, uint32_t height, std::shared_ptr<vk::HostBuffer> imageBuffer,
                             std::function<void()> completion) {
     std::shared_ptr<vk::DeviceImage> targetImage(new vk::DeviceImage(m_device, VK_FORMAT_R8G8B8A8_UNORM));
     if (!targetImage->create(width, height)) {
@@ -341,7 +341,7 @@ void Compositor::stageImage(int imageID, int width, int height, std::shared_ptr<
     }
 }
 
-bool Compositor::queryImage(int imageID, int& sizeOut, int& widthOut, int& heightOut) {
+bool Compositor::queryImage(int imageID, size_t& sizeOut, uint32_t& widthOut, uint32_t& heightOut) {
     std::shared_ptr<vk::DeviceImage> image = m_imageMap->getImage(imageID);
     if (!image) {
         return false;
@@ -395,7 +395,8 @@ bool Compositor::rebuildCommandBuffer() {
             for (auto command : m_computeSecondary) {
                 commandBuffers.emplace_back(command->buffer(i));
             }
-            vkCmdExecuteCommands(m_computePrimary->buffer(i), commandBuffers.size(), commandBuffers.data());
+            vkCmdExecuteCommands(m_computePrimary->buffer(i), static_cast<uint32_t>(commandBuffers.size()),
+                commandBuffers.data());
 
             if (vkEndCommandBuffer(m_computePrimary->buffer(i)) != VK_SUCCESS) {
                 spdlog::error("Compositor failed ending primary compute command buffer.");
@@ -450,7 +451,8 @@ bool Compositor::rebuildCommandBuffer() {
             for (auto command : m_drawSecondary) {
                 commandBuffers.emplace_back(command->buffer(i));
             }
-            vkCmdExecuteCommands(m_drawPrimary->buffer(i), commandBuffers.size(), commandBuffers.data());
+            vkCmdExecuteCommands(m_drawPrimary->buffer(i), static_cast<uint32_t>(commandBuffers.size()),
+                commandBuffers.data());
         } else {
             vkCmdBeginRenderPass(m_drawPrimary->buffer(i), &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
         }

@@ -13,7 +13,7 @@ namespace commands {
 
 class Command {
 public:
-    enum Number : int {
+    enum Number : size_t {
         // Master Controls
         kNone = 0,
         kNotify = 1,

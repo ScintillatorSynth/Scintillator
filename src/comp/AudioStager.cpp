@@ -16,7 +16,7 @@ AudioStager::~AudioStager() {}
 
 bool AudioStager::createBuffers(std::shared_ptr<vk::Device> device) {
     // TODO: fix hard-coded assumptions about 60Hz sample rate and stereo channels.
-    m_bufferFrameSize = m_ingress->sampleRate() / 60;
+    m_bufferFrameSize = static_cast<unsigned long>(m_ingress->sampleRate() / 60.0);
     m_buffer.reset(new vk::HostBuffer(device, vk::Buffer::Kind::kStaging, m_bufferFrameSize * 8));
     if (!m_buffer->create()) {
         spdlog::error("AudioStager failed to create HostBuffer of {} bytes", m_bufferFrameSize * 8);
@@ -42,9 +42,9 @@ void AudioStager::destroy() {
 
 void AudioStager::stageAudio(std::shared_ptr<StageManager> stageManager) {
     // Drop samples greater than two buffer sizes.
-    auto framesAvailable = m_ingress->availableFrames();
+    unsigned long framesAvailable = m_ingress->availableFrames();
     if (framesAvailable > 2 * m_bufferFrameSize) {
-        auto dropSize = framesAvailable - (2 * m_bufferFrameSize);
+        unsigned long dropSize = framesAvailable - (2 * m_bufferFrameSize);
         m_ingress->dropSamples(dropSize);
     }
     if (framesAvailable > m_bufferFrameSize) {

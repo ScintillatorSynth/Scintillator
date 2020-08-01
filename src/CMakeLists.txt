@@ -53,7 +53,7 @@ target_compile_options(scintillator_base PRIVATE
      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
      -Wall -Wextra -Wpedantic -Werror>
      $<$<CXX_COMPILER_ID:MSVC>:
-     /W4 /WX>
+     /W4 /WX /DNOMINMAX>
 )
 
 target_link_libraries(scintillator_base
@@ -94,7 +94,7 @@ target_compile_options(run_unittests PRIVATE
      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
      -Wall -Wextra -Wpedantic -Werror>
      $<$<CXX_COMPILER_ID:MSVC>:
-     /W4 /WX>
+     /W4 /WX /DNOMINMAX>
 )
 
 target_link_libraries(run_unittests
@@ -309,7 +309,7 @@ target_compile_options(scinsynth PRIVATE
      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
      -Wall -Wextra -Wpedantic -Werror>
      $<$<CXX_COMPILER_ID:MSVC>:
-     /W4 /WX>
+     /W4 /WX /DNOMINMAX>
 )
 
 # Force using the locally sourced libraries as opposed to system libs

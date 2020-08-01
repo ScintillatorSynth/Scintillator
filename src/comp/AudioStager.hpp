@@ -34,7 +34,7 @@ public:
 
 private:
     std::shared_ptr<audio::Ingress> m_ingress;
-    size_t m_bufferFrameSize;
+    unsigned long m_bufferFrameSize;
     std::shared_ptr<vk::HostBuffer> m_buffer;
     std::shared_ptr<vk::DeviceImage> m_image;
 };
