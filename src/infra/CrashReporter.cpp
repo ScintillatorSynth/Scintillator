@@ -77,22 +77,6 @@ bool CrashReporter::openDatabase() {
 
 void CrashReporter::closeDatabase() { m_database = nullptr; }
 
-#if __linux__
-void CrashReporter::dumpWithoutCrash() {
-    spdlog::info("generating linux minidump without crash.");
-    crashpad::NativeCPUContext context;
-    crashpad::CaptureContext(&context);
-    m_client->DumpWithoutCrash(&context);
-}
-#elif (WIN32)
-void CrashReporter::dumpWithoutCrash() {
-    spdlog::info("generating windows minidump without crash.");
-    CONTEXT context;
-    crashpad::CaptureContext(&context);
-    m_client->DumpWithoutCrash(context);
-}
-#endif
-
 int CrashReporter::logCrashReports() {
     if (!openDatabase())
         return -1;

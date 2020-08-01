@@ -12,7 +12,6 @@
 #include "osc/Address.hpp"
 #include "osc/BlobMessage.hpp"
 #include "osc/commands/AdvanceFrame.hpp"
-#include "osc/commands/CreateCrashReport.hpp"
 #include "osc/commands/DefFree.hpp"
 #include "osc/commands/DefLoad.hpp"
 #include "osc/commands/DefLoadDir.hpp"
@@ -111,7 +110,6 @@ bool Dispatcher::create(const std::string& bindPort, bool dumpOSC) {
     m_commands[commands::Command::kEcho].reset(new commands::Echo(this));
     m_commands[commands::Command::kLogAppend].reset(new commands::LogAppend(this));
     m_commands[commands::Command::kSleepFor].reset(new commands::SleepFor(this));
-    m_commands[commands::Command::kCreateCrashReport].reset(new commands::CreateCrashReport(this));
     m_commands[commands::Command::kLogCrashReports].reset(new commands::LogCrashReports(this));
     m_commands[commands::Command::kUploadCrashReport].reset(new commands::UploadCrashReport(this));
 

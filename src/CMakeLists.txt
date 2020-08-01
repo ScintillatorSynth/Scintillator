@@ -10,10 +10,6 @@ include_directories(
     ${SCIN_EXT_INSTALL_DIR}/include
 )
 
-if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    add_definitions(-DSCIN_RELEASE)
-endif()
-
 #### "Core" files (without external dependencies)
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/base")
 
@@ -188,8 +184,6 @@ set(scintillator_synth_files
     osc/commands/AdvanceFrame.cpp
     osc/commands/AdvanceFrame.hpp
     osc/commands/Command.hpp
-    osc/commands/CreateCrashReport.cpp
-    osc/commands/CreateCrashReport.hpp
     osc/commands/DefFree.cpp
     osc/commands/DefFree.hpp
     osc/commands/DefLoad.cpp

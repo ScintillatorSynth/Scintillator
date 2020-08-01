@@ -8,7 +8,7 @@ jobs:
     - CC=clang-8 CXX=clang++-8
     - DO_COVERAGE=true
   - os: linux
-    dist: bionic
+    dist: xenial
     env:
     - DO_COVERAGE=false
   - os: osx
@@ -73,7 +73,7 @@ deploy:
   secret_access_key: "$GCS_SYMBOL_KEY"
   detect_encoding: true
   bucket: scintillator-gargamelle-symbols
-  skip_cleanup: true
+  cleanup: false
   local_dir: "$HOME/symbols"
   on:
     condition: "$DO_COVERAGE = false"

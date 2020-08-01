@@ -55,13 +55,6 @@ public:
      */
     int logCrashReports();
 
-#if __linux__ || WIN32
-    /*! Requests the handler to generate a minidump stack trace and all accessory information in a crash report.
-     * Useful for testing the crash reporting system. Linux only.
-     */
-    void dumpWithoutCrash();
-#endif
-
     /*! Mark the provided crash report as ready for upload by the handler process.
      *
      * \param reuprtUUID The UUID of the crash report to upload. These can be extracted from the log.

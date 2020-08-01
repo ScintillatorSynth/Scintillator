@@ -78,17 +78,27 @@ def main(argv):
                 os.path.join(testOutDir, imageFileName),
                 os.path.join(diffOutDir, imageFileName)])
             # now capture result from separate computation TODO: is there a way to get both from one run of compare?
-            results = subprocess.run(["compare",
-                os.path.join(refOutDir, imageFileName),
-                os.path.join(testOutDir, imageFileName),
-                "-metric", "PSNR", "-format", "'%[fx:mean*100]'", "info:"],
-                encoding="utf-8", stderr=subprocess.PIPE)
+            if sys.version_info.minor > 5:
+                results = subprocess.run(["compare",
+                    os.path.join(refOutDir, imageFileName),
+                    os.path.join(testOutDir, imageFileName),
+                    "-metric", "PSNR", "-format", "'%[fx:mean*100]'", "info:"],
+                    encoding="utf-8", stderr=subprocess.PIPE)
+                out = results.stderr
+            else:
+                results = subprocess.run(["compare",
+                    os.path.join(refOutDir, imageFileName),
+                    os.path.join(testOutDir, imageFileName),
+                    "-metric", "PSNR", "-format", "'%[fx:mean*100]'", "info:"],
+                    stderr=subprocess.PIPE)
+                out = results.stderr.decode('utf-8')
             status = 'OK'
             # some versions of compare are returning inf and some return zero for identical images so we check for both.
-            if results.stderr != 'inf' and results.stderr != '0' and results.stderr != '1.#INF':
+            if out != 'inf' and out != '0' and out != '1.#INF':
                 status = '<strong>DIFERENT</strong>'
                 diffCount += 1
-                print("difference detected in {category}/{filename}".format(category=category, filename=imageFileName))
+                print("**  difference detected in {category}/{filename}, results:'{results}'".format(
+                    category=category, filename=imageFileName, results=out))
             # write out table row
             outFile.write("""
 <tr><td>{status}</td><td>{t}</td><td><img src="images/ref/{category}/{name}" /></td><td><img src="images/test/{category}/{name} " /></td><td><img src="images/diff/{category}/{name}" /></td></tr>""".format(
