@@ -4,10 +4,6 @@
 
 #include <cstring>
 
-// Some of the gperf generated code uses the register keyword, which is deprecated in C++17.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wregister"
-
 namespace {
 
 %}
@@ -44,8 +40,6 @@ uploadCrashReport,  scin::osc::commands::Command::Number::kUploadCrashReport
 %%
 
 } // namespace
-
-#pragma clang diagnostic pop
 
 namespace scin { namespace osc { namespace commands {
 

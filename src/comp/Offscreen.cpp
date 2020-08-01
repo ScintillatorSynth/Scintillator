@@ -65,7 +65,7 @@ bool Offscreen::create(size_t numberOfImages) {
 
     // Prepare for readback by allocating GPU memory for readback images, checking for efficient copy operations from
     // the framebuffer to those readback images, and building command buffers to do the actual readback.
-    for (auto i = 0; i < m_numberOfImages; ++i) {
+    for (size_t i = 0; i < m_numberOfImages; ++i) {
         std::shared_ptr<vk::HostImage> image(new vk::HostImage(m_device));
         if (!image->createWithStride(m_width, m_height, m_bufferPool->stride())) {
             spdlog::error("Offscreen failed to create {} readback images.", m_numberOfImages);
@@ -84,7 +84,7 @@ bool Offscreen::create(size_t numberOfImages) {
         spdlog::error("Offscreen failed to create command buffers.");
         return false;
     }
-    for (auto i = 0; i < m_numberOfImages; ++i) {
+    for (size_t i = 0; i < m_numberOfImages; ++i) {
         if (!writeCopyCommands(m_readbackCommands, i, m_framebuffer->image(i), m_readbackImages[i]->get())) {
             spdlog::error("Offscreen failed to create readback command buffers.");
             return false;
@@ -99,14 +99,14 @@ bool Offscreen::supportSwapchain(std::shared_ptr<Swapchain> swapchain, std::shar
     m_swapRenderSync = swapRenderSync;
 
     // Build the transfer from framebuffer to swapchain images command buffers.
-    for (auto i = 0; i < m_numberOfImages; ++i) {
+    for (size_t i = 0; i < m_numberOfImages; ++i) {
         std::shared_ptr<vk::CommandBuffer> buffer(new vk::CommandBuffer(m_device, m_commandPool));
         if (!buffer->create(swapchain->numberOfImages(), true)) {
             spdlog::error("Offscreen failed creating swapchain source blit command buffers.");
             return false;
         }
         // The jth command buffer will blit from the ith framebuffer image to the jth swapchain image.
-        for (auto j = 0; j < swapchain->numberOfImages(); ++j) {
+        for (size_t j = 0; j < swapchain->numberOfImages(); ++j) {
             if (!writeBlitCommands(buffer, j, m_framebuffer->image(i), swapchain->images()[j]->get(),
                                    VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)) {
                 spdlog::error("Offscreen failed writing swapchain source blit command buffers.");
@@ -214,7 +214,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
 
     m_computeCommands.resize(m_numberOfImages);
     m_drawCommands.resize(m_numberOfImages);
-    for (auto i = 0; i < m_numberOfImages; ++i) {
+    for (size_t i = 0; i < m_numberOfImages; ++i) {
         m_pendingSwapchainBlits.push_back(-1);
     }
     m_pendingEncodes.resize(m_numberOfImages);

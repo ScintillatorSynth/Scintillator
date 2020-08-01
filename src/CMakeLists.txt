@@ -303,6 +303,13 @@ elseif(WIN32)
     )
 endif()
 
+target_compile_options(scinsynth PRIVATE
+     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+     -Wall -Werror>
+     $<$<CXX_COMPILER_ID:MSVC>:
+     /W4 /WX>
+)
+
 # Force using the locally sourced libraries as opposed to system libs
 find_library(SHADERC_LIBRARY
     NAMES shaderc_combined

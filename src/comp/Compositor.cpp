@@ -380,7 +380,7 @@ bool Compositor::rebuildCommandBuffer() {
         spdlog::debug("rebuilding Compositor compute command buffer with {} secondary command buffers",
                       m_computeSecondary.size());
 
-        for (auto i = 0; i < m_canvas->numberOfImages(); ++i) {
+        for (size_t i = 0; i < m_canvas->numberOfImages(); ++i) {
             VkCommandBufferBeginInfo beginInfo = {};
             beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
             beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -422,7 +422,7 @@ bool Compositor::rebuildCommandBuffer() {
     spdlog::debug("rebuilding Compositor draw command buffer with {} secondary command buffers",
                   m_drawSecondary.size());
 
-    for (auto i = 0; i < m_canvas->numberOfImages(); ++i) {
+    for (size_t i = 0; i < m_canvas->numberOfImages(); ++i) {
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;

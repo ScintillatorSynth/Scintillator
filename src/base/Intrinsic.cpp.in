@@ -13,13 +13,13 @@ namespace {
 %struct-type
 struct IntrinsicPair { const char* name; scin::base::Intrinsic intrinsic; };
 %%
-vFragCoord,  scin::base::Intrinsic::kFragCoord
-vNormPos,    scin::base::Intrinsic::kNormPos
+vFragCoord, scin::base::Intrinsic::kFragCoord
+vNormPos,   scin::base::Intrinsic::kNormPos
 pi,         scin::base::Intrinsic::kPi
 position,   scin::base::Intrinsic::kPosition
 sampler,    scin::base::Intrinsic::kSampler
 time,       scin::base::Intrinsic::kTime
-vTexPos,     scin::base::Intrinsic::kTexPos
+vTexPos,    scin::base::Intrinsic::kTexPos
 %%
 
 } // namespace
@@ -27,7 +27,8 @@ vTexPos,     scin::base::Intrinsic::kTexPos
 namespace scin { namespace base {
 
 Intrinsic getIntrinsicNamed(const std::string& name) {
-    const IntrinsicPair* pair = Perfect_Hash::in_word_set(name.data(), name.size());
+    unsigned int length = static_cast<unsigned int>(name.size());
+    const IntrinsicPair* pair = Perfect_Hash::in_word_set(name.data(), length);
     if (!pair) {
         return Intrinsic::kNotFound;
     }

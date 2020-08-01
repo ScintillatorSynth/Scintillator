@@ -152,7 +152,7 @@ bool ScinthDef::buildDescriptorLayout() {
     }
 
     auto totalSamplers = m_abstract->drawFixedImages().size() + m_abstract->drawParameterizedImages().size();
-    for (auto i = 0; i < totalSamplers; ++i) {
+    for (size_t i = 0; i < totalSamplers; ++i) {
         VkDescriptorSetLayoutBinding imageBinding = {};
         imageBinding.binding = bindings.size();
         imageBinding.descriptorCount = 1;

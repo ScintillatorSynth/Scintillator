@@ -28,7 +28,7 @@ bool StageManager::create(size_t numberOfImages) {
         return false;
     }
 
-    for (auto i = 0; i < numberOfImages; ++i) {
+    for (size_t i = 0; i < numberOfImages; ++i) {
         VkFenceCreateInfo fenceInfo = {};
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;

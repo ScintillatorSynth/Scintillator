@@ -79,13 +79,13 @@ public:
     const std::vector<VGen>& instances() const { return m_instances; }
 
     // First element in pair is sampler key, second element is the imageID.
-    const std::set<std::pair<uint32_t, int>>& computeFixedImages() const { return m_computeFixedImages; }
-    const std::set<std::pair<uint32_t, int>>& drawFixedImages() const { return m_drawFixedImages; }
+    const std::set<std::pair<uint32_t, size_t>>& computeFixedImages() const { return m_computeFixedImages; }
+    const std::set<std::pair<uint32_t, size_t>>& drawFixedImages() const { return m_drawFixedImages; }
     // First element in pair is sampler key, second is parameter index.
-    const std::set<std::pair<uint32_t, int>>& computeParameterizedImages() const {
+    const std::set<std::pair<uint32_t, size_t>>& computeParameterizedImages() const {
         return m_computeParameterizedImages;
     }
-    const std::set<std::pair<uint32_t, int>>& drawParameterizedImages() const { return m_drawParameterizedImages; }
+    const std::set<std::pair<uint32_t, size_t>>& drawParameterizedImages() const { return m_drawParameterizedImages; }
 
     bool hasComputeStage() const { return m_hasComputeStage; }
 
@@ -127,10 +127,10 @@ private:
     std::vector<VGen> m_instances;
 
     // These are pairs of sampler config, image or parameter index, grouped into sets to de-dupe the pairs.
-    std::set<std::pair<uint32_t, int>> m_computeFixedImages;
-    std::set<std::pair<uint32_t, int>> m_computeParameterizedImages;
-    std::set<std::pair<uint32_t, int>> m_drawFixedImages;
-    std::set<std::pair<uint32_t, int>> m_drawParameterizedImages;
+    std::set<std::pair<uint32_t, size_t>> m_computeFixedImages;
+    std::set<std::pair<uint32_t, size_t>> m_computeParameterizedImages;
+    std::set<std::pair<uint32_t, size_t>> m_drawFixedImages;
+    std::set<std::pair<uint32_t, size_t>> m_drawParameterizedImages;
 
     // To avoid collision with any VGen code we attach a ScinthDef name and random number prefix to most global names.
     std::string m_prefix;

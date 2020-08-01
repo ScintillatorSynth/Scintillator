@@ -30,7 +30,7 @@ bool Pipeline::create(const base::Manifest& vertexManifest, const base::Shape* s
     vertexBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
     std::vector<VkVertexInputAttributeDescription> vertexAttributes(vertexManifest.numberOfElements());
-    for (auto i = 0; i < vertexManifest.numberOfElements(); ++i) {
+    for (size_t i = 0; i < vertexManifest.numberOfElements(); ++i) {
         vertexAttributes[i].binding = 0;
         vertexAttributes[i].location = i;
         VkFormat format;
@@ -50,6 +50,10 @@ bool Pipeline::create(const base::Manifest& vertexManifest, const base::Shape* s
         case base::Manifest::ElementType::kVec4:
             format = VK_FORMAT_R32G32B32A32_SFLOAT;
             break;
+
+        default:
+            spdlog::error("unsupported vertex format in Pipeline creation");
+            return false;
         }
         vertexAttributes[i].format = format;
         vertexAttributes[i].offset = vertexManifest.offsetForElement(i);

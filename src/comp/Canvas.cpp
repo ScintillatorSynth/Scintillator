@@ -71,7 +71,7 @@ bool Canvas::create(const std::vector<std::shared_ptr<vk::Image>>& images) {
 
     // Lastly create the Framebuffers, one per image.
     m_framebuffers.resize(m_numberOfImages);
-    for (auto i = 0; i < m_numberOfImages; ++i) {
+    for (size_t i = 0; i < m_numberOfImages; ++i) {
         VkImageView attachments[] = { images[i]->view() };
 
         VkFramebufferCreateInfo framebufferInfo = {};

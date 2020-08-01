@@ -61,7 +61,7 @@ else
     wget http://ftp.gnu.org/pub/gnu/gperf/gperf-3.1.tar.gz
     tar xzf gperf-3.1.tar.gz
     cd gperf-3.1
-    ./configure --prefix=/usr/local/bin
+    ./configure --prefix=/usr/local
     make
     sudo make install
 fi

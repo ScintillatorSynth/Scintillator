@@ -49,7 +49,7 @@ bool Scinth::create() {
     m_numberOfParameters = m_scinthDef->abstract()->parameters().size();
     if (m_numberOfParameters) {
         m_parameterValues.reset(new float[m_numberOfParameters]);
-        for (auto i = 0; i < m_numberOfParameters; ++i) {
+        for (size_t i = 0; i < m_numberOfParameters; ++i) {
             m_parameterValues[i] = m_scinthDef->abstract()->parameters()[i].defaultValue();
         }
     }
@@ -74,7 +74,7 @@ bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
     // Update the Uniform buffer at imageIndex, if needed.
     if (m_uniformBuffers.size()) {
         float* uniform = static_cast<float*>(m_uniformBuffers[imageIndex]->mappedAddress());
-        for (auto i = 0; i < m_scinthDef->abstract()->uniformManifest().numberOfElements(); ++i) {
+        for (size_t i = 0; i < m_scinthDef->abstract()->uniformManifest().numberOfElements(); ++i) {
             switch (m_scinthDef->abstract()->uniformManifest().intrinsicForElement(i)) {
             case base::Intrinsic::kTime:
                 *uniform = static_cast<float>(frameTime - m_startTime);
@@ -84,6 +84,7 @@ bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
             case base::Intrinsic::kNormPos:
             case base::Intrinsic::kNotFound:
             case base::Intrinsic::kPi:
+            case base::Intrinsic::kPosition:
             case base::Intrinsic::kSampler:
             case base::Intrinsic::kTexPos:
                 spdlog::error("Unknown or invalid uniform Intrinsic in Scinth {}", m_nodeID);
@@ -135,7 +136,7 @@ bool Scinth::allocateDescriptors() {
         uniformPoolSize.descriptorCount = numberOfImages;
         poolSizes.emplace_back(uniformPoolSize);
 
-        for (auto i = 0; i < numberOfImages; ++i) {
+        for (size_t i = 0; i < numberOfImages; ++i) {
             std::shared_ptr<vk::HostBuffer> uniformBuffer(
                 new vk::HostBuffer(m_device, vk::Buffer::Kind::kUniform, uniformSize));
             if (!uniformBuffer->create()) {
@@ -162,7 +163,7 @@ bool Scinth::allocateDescriptors() {
         bufferPoolSize.descriptorCount = numberOfImages;
         poolSizes.emplace_back(bufferPoolSize);
 
-        for (auto i = 0; i < numberOfImages; ++i) {
+        for (size_t i = 0; i < numberOfImages; ++i) {
             std::shared_ptr<vk::DeviceBuffer> computeBuffer(
                 new vk::DeviceBuffer(m_device, vk::Buffer::Kind::kStorage, computeBufferSize));
             if (!computeBuffer->create()) {
@@ -196,7 +197,7 @@ bool Scinth::allocateDescriptors() {
         return false;
     }
 
-    for (auto i = 0; i < numberOfImages; ++i) {
+    for (size_t i = 0; i < numberOfImages; ++i) {
         std::vector<VkWriteDescriptorSet> descriptorWrites;
         VkDescriptorBufferInfo uniformBufferInfo = {};
         int32_t binding = 0;
@@ -320,8 +321,8 @@ bool Scinth::allocateDescriptors() {
 bool Scinth::updateDescriptors() {
     // This pair is sampler index, new image and we build it by running through parameter values and current bound ids.
     std::vector<std::pair<int, std::shared_ptr<vk::DeviceImage>>> newBindings;
-    for (auto i = 0; i < m_parameterizedImageIDs.size(); ++i) {
-        int parameterIndex = m_parameterizedImageIDs[i].first;
+    for (size_t i = 0; i < m_parameterizedImageIDs.size(); ++i) {
+        size_t parameterIndex = m_parameterizedImageIDs[i].first;
         int imageID = static_cast<int>(m_parameterValues[parameterIndex]);
         if (imageID != m_parameterizedImageIDs[i].second) {
             std::shared_ptr<vk::DeviceImage> image = m_imageMap->getImage(imageID);
@@ -341,7 +342,7 @@ bool Scinth::updateDescriptors() {
     int32_t bindingStart = m_scinthDef->abstract()->uniformManifest().sizeInBytes() ? 1 : 0;
     bindingStart += m_scinthDef->abstract()->drawFixedImages().size();
 
-    for (auto i = 0; i < m_scinthDef->canvas()->numberOfImages(); ++i) {
+    for (size_t i = 0; i < m_scinthDef->canvas()->numberOfImages(); ++i) {
         std::vector<VkWriteDescriptorSet> descriptorWrites;
         std::vector<VkDescriptorImageInfo> imageInfos;
         for (auto pair : newBindings) {
@@ -383,7 +384,7 @@ bool Scinth::rebuildBuffers() {
             return false;
         }
 
-        for (auto i = 0; i < m_scinthDef->canvas()->numberOfImages(); ++i) {
+        for (size_t i = 0; i < m_scinthDef->canvas()->numberOfImages(); ++i) {
             VkCommandBufferBeginInfo beginInfo = {};
             beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
             beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -463,7 +464,7 @@ bool Scinth::rebuildBuffers() {
         return false;
     }
 
-    for (auto i = 0; i < m_scinthDef->canvas()->numberOfImages(); ++i) {
+    for (size_t i = 0; i < m_scinthDef->canvas()->numberOfImages(); ++i) {
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags =

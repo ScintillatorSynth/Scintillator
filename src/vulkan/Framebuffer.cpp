@@ -13,7 +13,7 @@ Framebuffer::Framebuffer(std::shared_ptr<Device> device): m_device(device), m_ca
 Framebuffer::~Framebuffer() { destroy(); }
 
 bool Framebuffer::create(int width, int height, size_t numberOfImages) {
-    for (auto i = 0; i < numberOfImages; ++i) {
+    for (size_t i = 0; i < numberOfImages; ++i) {
         std::shared_ptr<FramebufferImage> image(new FramebufferImage(m_device));
         if (!image->create(width, height)) {
             spdlog::error("framebuffer failed to create images.");
