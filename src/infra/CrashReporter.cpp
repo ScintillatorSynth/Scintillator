@@ -34,9 +34,10 @@ namespace {
 static const char* kGargamelleURL = "https://ggml.scintillatorsynth.org/api/dump";
 
 void logReport(const crashpad::CrashReportDatabase::Report& report) {
-    tm* createTime = localtime(&report.creation_time);
+    struct tm createTime;
+    localtime_s(&createTime, &report.creation_time);
     std::array<char, 128> timeBuf;
-    strftime(timeBuf.data(), sizeof(timeBuf), "%a %d %b %H:%M:%S %Y", createTime);
+    strftime(timeBuf.data(), sizeof(timeBuf), "%a %d %b %H:%M:%S %Y", &createTime);
     spdlog::info("    id: {}, on: {}, uploaded: {}", report.uuid.ToString(), timeBuf.data(),
                  report.uploaded ? "yes" : "no");
 }
@@ -105,7 +106,7 @@ int CrashReporter::logCrashReports() {
         return -1;
     }
 
-    auto notUploaded = pendingReports.size();
+    int notUploaded = static_cast<int>(pendingReports.size());
     if (pendingReports.size() + completedReports.size()) {
         spdlog::info("Crash report database contains {} reports:", pendingReports.size() + completedReports.size());
         for (auto report : pendingReports) {

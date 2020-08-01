@@ -256,8 +256,8 @@ bool Scinth::allocateDescriptors() {
         samplerIndex = 0;
         for (const auto pair : m_scinthDef->abstract()->drawParameterizedImages()) {
             // Look up default value of parameter using parameter index, provided as second value in the pair.
-            int parameterIndex = pair.second;
-            int imageID = static_cast<int>(m_scinthDef->abstract()->parameters()[parameterIndex].defaultValue());
+            size_t parameterIndex = pair.second;
+            size_t imageID = static_cast<int>(m_scinthDef->abstract()->parameters()[parameterIndex].defaultValue());
             std::shared_ptr<vk::DeviceImage> image = m_imageMap->getImage(imageID);
             std::shared_ptr<vk::Sampler> sampler = m_scinthDef->parameterizedSamplers()[samplerIndex];
             // We record these decisions on the first run through, for comparison against later parameter updates.
@@ -312,7 +312,8 @@ bool Scinth::allocateDescriptors() {
             ++binding;
         }
 
-        vkUpdateDescriptorSets(m_device->get(), descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+        vkUpdateDescriptorSets(m_device->get(), static_cast<uint32_t>(descriptorWrites.size()),
+            descriptorWrites.data(), 0, nullptr);
     }
 
     return true;
@@ -320,10 +321,10 @@ bool Scinth::allocateDescriptors() {
 
 bool Scinth::updateDescriptors() {
     // This pair is sampler index, new image and we build it by running through parameter values and current bound ids.
-    std::vector<std::pair<int, std::shared_ptr<vk::DeviceImage>>> newBindings;
+    std::vector<std::pair<size_t, std::shared_ptr<vk::DeviceImage>>> newBindings;
     for (size_t i = 0; i < m_parameterizedImageIDs.size(); ++i) {
         size_t parameterIndex = m_parameterizedImageIDs[i].first;
-        int imageID = static_cast<int>(m_parameterValues[parameterIndex]);
+        size_t imageID = static_cast<size_t>(m_parameterValues[parameterIndex]);
         if (imageID != m_parameterizedImageIDs[i].second) {
             std::shared_ptr<vk::DeviceImage> image = m_imageMap->getImage(imageID);
             // Note image can be null, we'll use the empty image in the actual update.
@@ -340,7 +341,7 @@ bool Scinth::updateDescriptors() {
 
     // Compute index where parameterized images binding starts.
     int32_t bindingStart = m_scinthDef->abstract()->uniformManifest().sizeInBytes() ? 1 : 0;
-    bindingStart += m_scinthDef->abstract()->drawFixedImages().size();
+    bindingStart += static_cast<int32_t>(m_scinthDef->abstract()->drawFixedImages().size());
 
     for (size_t i = 0; i < m_scinthDef->canvas()->numberOfImages(); ++i) {
         std::vector<VkWriteDescriptorSet> descriptorWrites;
@@ -362,7 +363,7 @@ bool Scinth::updateDescriptors() {
             VkWriteDescriptorSet imageWrite = {};
             imageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             imageWrite.dstSet = m_descriptorSets[i];
-            imageWrite.dstBinding = bindingStart + pair.first;
+            imageWrite.dstBinding = static_cast<uint32_t>(bindingStart + pair.first);
             imageWrite.dstArrayElement = 0;
             imageWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             imageWrite.descriptorCount = 1;
@@ -370,7 +371,8 @@ bool Scinth::updateDescriptors() {
             descriptorWrites.emplace_back(imageWrite);
         }
 
-        vkUpdateDescriptorSets(m_device->get(), descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+        vkUpdateDescriptorSets(m_device->get(), static_cast<uint32_t>(descriptorWrites.size()),
+            descriptorWrites.data(), 0, nullptr);
     }
 
     return true;
@@ -417,7 +419,8 @@ bool Scinth::rebuildBuffers() {
             // Write parameters as push constants.
             if (m_numberOfParameters) {
                 vkCmdPushConstants(m_computeCommands->buffer(i), m_scinthDef->computePipeline()->layout(),
-                                   VK_SHADER_STAGE_COMPUTE_BIT, 0, m_numberOfParameters * sizeof(float),
+                                   VK_SHADER_STAGE_COMPUTE_BIT, 0,
+                                   static_cast<uint32_t>(m_numberOfParameters * sizeof(float)),
                                    m_parameterValues.get());
             }
 
@@ -484,7 +487,7 @@ bool Scinth::rebuildBuffers() {
         if (m_numberOfParameters) {
             vkCmdPushConstants(m_drawCommands->buffer(i), m_scinthDef->drawPipeline()->layout(),
                                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-                               m_numberOfParameters * sizeof(float), m_parameterValues.get());
+                               static_cast<uint32_t>(m_numberOfParameters * sizeof(float)), m_parameterValues.get());
         }
 
         vkCmdBindPipeline(m_drawCommands->buffer(i), VK_PIPELINE_BIND_POINT_GRAPHICS,

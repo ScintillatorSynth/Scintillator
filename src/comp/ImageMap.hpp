@@ -19,9 +19,9 @@ public:
     ~ImageMap() = default;
 
     // Will overwrite any existing image associated with imageID.
-    void addImage(int imageID, std::shared_ptr<vk::DeviceImage> image);
-    std::shared_ptr<vk::DeviceImage> getImage(int imageID);
-    void removeImage(int imageID);
+    void addImage(size_t imageID, std::shared_ptr<vk::DeviceImage> image);
+    std::shared_ptr<vk::DeviceImage> getImage(size_t imageID);
+    void removeImage(size_t imageID);
 
     // Returns a 1x1 transparent black image.
     std::shared_ptr<vk::DeviceImage> getEmptyImage() const { return m_emptyImage; }
@@ -30,7 +30,7 @@ public:
 
 private:
     std::mutex m_mutex;
-    std::unordered_map<int, std::shared_ptr<vk::DeviceImage>> m_images;
+    std::unordered_map<size_t, std::shared_ptr<vk::DeviceImage>> m_images;
     std::shared_ptr<vk::DeviceImage> m_emptyImage;
 };
 
