@@ -9,8 +9,19 @@
 #include "base/VGen.hpp"
 
 #include "spdlog/spdlog.h"
+
+#if _MSC_VER
+// Disable MSVC warning on included yaml-cpp headers
+#pragma warning(push)
+#pragma warning(disable: 4996)
+#endif // _MSC_VER
+
 #include "yaml-cpp/exceptions.h"
 #include "yaml-cpp/yaml.h"
+
+#if _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
 
 namespace scin { namespace base {
 
@@ -193,13 +204,13 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
     }
     auto shapeName = shapeNode["name"].as<std::string>();
     if (shapeName == "Quad") {
-        int widthEdges = 1;
-        int heightEdges = 1;
+        uint16_t widthEdges = 1;
+        uint16_t heightEdges = 1;
         if (shapeNode["widthEdges"] && shapeNode["widthEdges"].IsScalar()) {
-            widthEdges = shapeNode["widthEdges"].as<int>();
+            widthEdges = shapeNode["widthEdges"].as<uint16_t>();
         }
         if (shapeNode["heightEdges"] && shapeNode["heightEdges"].IsScalar()) {
-            heightEdges = shapeNode["heightEdges"].as<int>();
+            heightEdges = shapeNode["heightEdges"].as<uint16_t>();
         }
         shape.reset(new Quad(widthEdges, heightEdges));
     } else {

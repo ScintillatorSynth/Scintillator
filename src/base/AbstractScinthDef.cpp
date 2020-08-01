@@ -45,14 +45,14 @@ bool AbstractScinthDef::build() {
     if (!buildComputeStage(computeVGens)) {
         return false;
     }
-    if (!finalizeShaders(computeVGens, vertexVGens, fragmentVGens)) {
+    if (!finalizeShaders()) {
         return false;
     }
 
     return true;
 }
 
-bool AbstractScinthDef::groupVGens(int index, AbstractVGen::Rates maxRate, std::set<size_t>& computeVGens,
+bool AbstractScinthDef::groupVGens(size_t index, AbstractVGen::Rates maxRate, std::set<size_t>& computeVGens,
                                    std::set<size_t>& vertexVGens, std::set<size_t>& fragmentVGens) {
     AbstractVGen::Rates vgenRate = m_instances[index].rate();
 
@@ -492,8 +492,7 @@ bool AbstractScinthDef::buildComputeStage(const std::set<size_t>& computeVGens) 
     return true;
 }
 
-bool AbstractScinthDef::finalizeShaders(const std::set<size_t>& computeVGens, const std::set<size_t>& vertexVGens,
-                                        const std::set<size_t>& fragmentVGens) {
+bool AbstractScinthDef::finalizeShaders() {
     // Pack all the manifests as we have analyzed all VGens so they should all be final now.
     m_fragmentManifest.pack();
     m_uniformManifest.pack();
@@ -786,12 +785,13 @@ bool AbstractScinthDef::finalizeShaders(const std::set<size_t>& computeVGens, co
     return true;
 }
 
-int AbstractScinthDef::indexForParameterName(const std::string& name) const {
+bool AbstractScinthDef::indexForParameterName(const std::string& name, size_t& indexOut) const {
     auto it = m_parameterIndices.find(name);
     if (it == m_parameterIndices.end()) {
-        return -1;
+        return false;
     }
-    return it->second;
+    indexOut = it->second;
+    return true;
 }
 
 } // namespace base

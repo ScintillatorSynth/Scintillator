@@ -67,10 +67,11 @@ public:
 
     /*! Returns the index for a given parameter name, or -1 if name not found.
      *
-     * \name The name of the parameter to look up.
-     * \return The index of the parameter with the supplied name or -1 if not found.
+     * \param name The name of the parameter to look up.
+     * \param indexOut The output index if found.
+     * \return True if index found, false if not.
      */
-    int indexForParameterName(const std::string& name) const;
+    bool indexForParameterName(const std::string& name, size_t& indexOut) const;
 
     const std::string& name() const { return m_name; }
     const Shape* shape() const { return m_shape.get(); }
@@ -112,13 +113,12 @@ private:
      *        graph.
      * \return true if successful, false on error.
      */
-    bool groupVGens(int index, AbstractVGen::Rates rate, std::set<size_t>& computeVGens, std::set<size_t>& vertexVGens,
-                    std::set<size_t>& fragmentVGens);
+    bool groupVGens(size_t index, AbstractVGen::Rates rate, std::set<size_t>& computeVGens,
+                    std::set<size_t>& vertexVGens, std::set<size_t>& fragmentVGens);
 
     bool buildComputeStage(const std::set<size_t>& computeVGens);
     bool buildDrawStage(const std::set<size_t>& vertexVGens, const std::set<size_t>& fragmentVGens);
-    bool finalizeShaders(const std::set<size_t>& computeVGens, const std::set<size_t>& vertexVGens,
-                         const std::set<size_t>& fragmentVGens);
+    bool finalizeShaders();
 
     std::string m_name;
     std::unique_ptr<Shape> m_shape;
@@ -155,7 +155,7 @@ private:
 
     bool m_hasComputeStage;
 
-    std::unordered_map<std::string, int> m_parameterIndices;
+    std::unordered_map<std::string, size_t> m_parameterIndices;
 };
 
 } // namespace base

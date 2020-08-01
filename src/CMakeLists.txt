@@ -51,7 +51,7 @@ add_library(scintillator_base STATIC
 
 target_compile_options(scintillator_base PRIVATE
      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-     -Wall -Werror>
+     -Wall -Wextra -Werror>
      $<$<CXX_COMPILER_ID:MSVC>:
      /W4 /WX>
 )
@@ -91,7 +91,7 @@ add_executable(run_unittests
 
 target_compile_options(run_unittests PRIVATE
      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-     -Wall -Werror>
+     -Wall -Wextra -Werror>
      $<$<CXX_COMPILER_ID:MSVC>:
      /W4 /WX>
 )
@@ -305,7 +305,7 @@ endif()
 
 target_compile_options(scinsynth PRIVATE
      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-     -Wall -Werror>
+     -Wall -Wextra -Werror>
      $<$<CXX_COMPILER_ID:MSVC>:
      /W4 /WX>
 )

@@ -9,7 +9,7 @@ namespace scin { namespace base {
 Shape::Shape() {}
 Shape::~Shape() {}
 
-Quad::Quad(int widthEdges, int heightEdges): m_widthEdges(widthEdges), m_heightEdges(heightEdges) {}
+Quad::Quad(uint16_t widthEdges, uint16_t heightEdges): m_widthEdges(widthEdges), m_heightEdges(heightEdges) {}
 Quad::~Quad() {}
 
 Manifest::ElementType Quad::elementType() const { return Manifest::ElementType::kVec2; }
@@ -66,9 +66,9 @@ bool Quad::storeVertexData(const Manifest& vertexManifest, const glm::vec2& norm
 
 bool Quad::storeIndexData(uint16_t* store) const {
     uint16_t widthVerts = m_widthEdges + 1;
-    for (auto i = 0; i < m_heightEdges; ++i) {
+    for (uint16_t i = 0; i < m_heightEdges; ++i) {
         uint16_t rowStart = i * widthVerts;
-        for (auto j = 0; j <= m_widthEdges; ++j) {
+        for (uint16_t j = 0; j <= m_widthEdges; ++j) {
             uint16_t topIndex = j + rowStart;
             store[0] = topIndex;
             store[1] = topIndex + widthVerts;
