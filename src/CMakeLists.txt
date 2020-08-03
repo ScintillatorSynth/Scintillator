@@ -162,14 +162,20 @@ set(scintillator_synth_files
     comp/Compositor.hpp
     comp/FrameTimer.cpp
     comp/FrameTimer.hpp
+    comp/Group.cpp
+    comp/Group.hpp
     comp/ImageMap.cpp
     comp/ImageMap.hpp
+    comp/Node.cpp
+    comp/Node.hpp
     comp/Offscreen.cpp
     comp/Offscreen.hpp
     comp/Pipeline.cpp
     comp/Pipeline.hpp
     comp/RenderSync.cpp
     comp/RenderSync.hpp
+    comp/RootNode.cpp
+    comp/RootNode.hpp
     comp/SamplerFactory.cpp
     comp/SamplerFactory.hpp
     comp/Scinth.cpp
