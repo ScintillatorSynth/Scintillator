@@ -1,10 +1,10 @@
 #include "comp/Window.hpp"
 
 #include "comp/Canvas.hpp"
-#include "comp/Compositor.hpp"
 #include "comp/FrameTimer.hpp"
 #include "comp/Offscreen.hpp"
 #include "comp/RenderSync.hpp"
+#include "comp/RootNode.hpp"
 #include "comp/StageManager.hpp"
 #include "comp/Swapchain.hpp"
 #include "infra/Logger.hpp"
@@ -78,11 +78,11 @@ bool Window::create() {
     return true;
 }
 
-void Window::run(std::shared_ptr<comp::Compositor> compositor) {
+void Window::run(std::shared_ptr<comp::RootNode> rootNode) {
     if (m_directRendering) {
-        runDirectRendering(compositor);
+        runDirectRendering(rootNode);
     } else {
-        runFixedFrameRate(compositor);
+        runFixedFrameRate(rootNode);
     }
 }
 
@@ -114,7 +114,7 @@ std::shared_ptr<const FrameTimer> Window::frameTimer() {
     return m_offscreen->frameTimer();
 }
 
-void Window::runDirectRendering(std::shared_ptr<comp::Compositor> compositor) {
+void Window::runDirectRendering(std::shared_ptr<comp::RootNode> rootNode) {
     infra::Logger::logVulkanThreadID("Windows direct rendering loop");
     m_frameTimer->start();
 
@@ -130,7 +130,7 @@ void Window::runDirectRendering(std::shared_ptr<comp::Compositor> compositor) {
 
         m_frameTimer->markFrame();
 
-        if (!compositor->prepareFrame(imageIndex, m_frameTimer->elapsedTime())) {
+        if (!rootNode->prepareFrame(imageIndex, m_frameTimer->elapsedTime())) {
             spdlog::critical("Failed to prepare frame, terminating");
             break;
         }

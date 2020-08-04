@@ -21,6 +21,7 @@ class HostBuffer;
 
 namespace comp {
 
+class FrameContext;
 class ImageMap;
 class ScinthDef;
 
@@ -37,42 +38,25 @@ public:
      *
      * \return true if successful, false if not.
      */
-    bool create();
+    bool create() override;
 
-    void destroy();
+    void destroy() override;
 
     /*! Prepare for the next frame to render.
      *
      * Update the Uniform buffer associated with the imageIndex, if present, and any other operations to prepare a
      * frame to render at the provided time.
      *
-     * \param imageIndex which of the images to prepare to render.
-     * \param frameTime the time the frame is being prepared for.
-     * \return true if Scinth should continue running for this frame, false otherwise.
      */
-    bool prepareFrame(size_t imageIndex, double frameTime);
-
-
-    /*! Sets a parameter value by name. Will cause a command buffer rebuild on next call to prepareFrame().
-     *
-     * \param name The name of the parameter to set.
-     * \param value The value of the parameter.
-     */
-    void setParameterByName(const std::string& name, float value);
-
-    /*! Sets a parameter value by index. Will cause a command buffer rebuild on next call to prepareFrame().
-     *
-     * \param index The index of the parameter to set.
-     * \param value The new value of the parameter.
-     */
-    void setParameterByIndex(int index, float value);
+    bool prepareFrame(std::shared_ptr<FrameContext> context) override;
+    void setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
+                       const std::vector<std::pair<int, float>> indexedValues) override;
 
 private:
     bool allocateDescriptors();
-    bool updateDescriptors();
-    bool rebuildBuffers();
+    void updateDescriptors();
+    void rebuildBuffers();
 
-    std::shared_ptr<vk::Device> m_device;
     bool m_cueued;
     double m_startTime;
 
@@ -84,8 +68,8 @@ private:
     std::vector<VkDescriptorSet> m_descriptorSets;
     std::vector<std::shared_ptr<vk::DeviceImage>> m_fixedImages;
     std::vector<std::shared_ptr<vk::DeviceImage>> m_parameterizedImages;
-    std::vector<std::shared_ptr<vk::HostBuffer>> m_uniformBuffers;
-    std::vector<std::shared_ptr<vk::DeviceBuffer>> m_computeBuffers;
+    std::vector<std::unique_ptr<vk::HostBuffer>> m_uniformBuffers;
+    std::vector<std::unique_ptr<vk::DeviceBuffer>> m_computeBuffers;
     // The parameter index and the currently bound image Ids for parameterized images.
     std::vector<std::pair<size_t, size_t>> m_parameterizedImageIDs;
     std::shared_ptr<vk::CommandBuffer> m_computeCommands;

@@ -8,10 +8,13 @@
 namespace scin {
 
 namespace vk {
+class CommandBuffer;
 class Device;
 }
 
 namespace comp {
+
+class FrameContext;
 
 /*! Abstract base class for the individual elements within a rendering tree. Descendants are RootNode, Group, and
  *  Scinth.
@@ -27,11 +30,12 @@ public:
     /*! Prepare the CommandBuffers that when executed in order will render the current frame. Updates the values
      * returned by computeCommands() and drawCommands().
      *
-     * \param imageIndex The index of the imageView in the Canvas we will be rendering in to.
-     * \param frameTime The point in time at which to build this frame for.
-     * \return A boolean indicating success in frame preparation.
+     * \param context The frame context for rendering this frame. Will receive command buffers and other resources that
+     *        need to survive at least as long as the frame is being pipelined.
+     * \return If true the primary command buffers will need to be rebuilt because of a change in one more of the cached
+     *         secondary command buffers.
      */
-    virtual bool prepareFrame(size_t imageIndex, double frameTime) = 0;
+    virtual bool prepareFrame(std::shared_ptr<FrameContext> context) = 0;
 
     /*! Change the parameter values for this node. If this node is a group, sets the parameter values for every node in
      * this group.
@@ -49,10 +53,20 @@ public:
      */
     void setRunning(bool run) { m_running = run; }
 
+    typedef std::list<std::shared_ptr<Node>> NodeList;
+    // might not be needed anymore given that rootnode is keeping the whole map of them - but only pointers
+    // directly to the child...
+    typedef std::unordered_map<int, ScinthList::iterator> NodeMap;
+
+    const NodeList& children() { return m_children; }
+
 protected:
     std::shared_ptr<vk::Device> m_device;
     int m_nodeID;
     bool m_running;
+
+    std::list<std::shared_ptr<Node>> m_children;
+
 };
 
 } // namespace comp

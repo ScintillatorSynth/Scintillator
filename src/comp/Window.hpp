@@ -22,10 +22,10 @@ class Instance;
 namespace comp {
 
 class Canvas;
-class Compositor;
 class FrameTimer;
 class Offscreen;
 class RenderSync;
+class RootNode;
 class Swapchain;
 
 /* While technically more a GLFW object than a Vulkan one, Window also maintains a VkSurfaceKHR handle, so lives with
@@ -43,7 +43,7 @@ public:
      *
      * \param compositor The root compositor to use for rendering.
      */
-    void run(std::shared_ptr<Compositor> compositor);
+    void run(std::shared_ptr<RootNode> rootNode);
 
     void destroy();
 
@@ -66,8 +66,8 @@ public:
     std::shared_ptr<const FrameTimer> frameTimer();
 
 private:
-    void runDirectRendering(std::shared_ptr<Compositor> compositor);
-    void runFixedFrameRate(std::shared_ptr<Compositor> compositor);
+    void runDirectRendering(std::shared_ptr<RootNode> compositor);
+    void runFixedFrameRate(std::shared_ptr<RootNode> compositor);
 
     std::shared_ptr<vk::Instance> m_instance;
     std::shared_ptr<vk::Device> m_device;

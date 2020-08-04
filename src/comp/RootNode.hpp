@@ -16,6 +16,7 @@ class Device;
 namespace comp {
 
 class Canvas;
+class FrameContext;
 class ImageMap;
 class SamplerFactory;
 class ShaderCompiler;
@@ -35,7 +36,11 @@ public:
 
     bool create() override;
     bool destroy() override;
-    bool prepareFrame(size_t imageIndex, double frameTime) override;
+
+    /*! In this case returns true if the primary command buffer had to be rebuilt, which can be useful for tracking
+     * statistics about effectiveness of caching command buffers.
+     */
+    bool prepareFrame(std::shared_ptr<FrameContext> context) override;
 
     /*! Construct a ScinthDef designed to render into this RootNode and add to the local ScinthDef map.
      *
@@ -81,6 +86,8 @@ public:
     bool addAudioIngress(std::shared_ptr<audio::Ingress> ingress, int imageID);
 
 protected:
+    void rebuildCommandBuffer(std::shared_ptr<FrameContext> context);
+
     std::shared_ptr<Canvas> m_canvas;
     std::unique_ptr<ShaderCompiler> m_shaderCompiler;
     std::shared_ptr<vk::CommandPool> m_computeCommandPool;
@@ -90,6 +97,9 @@ protected:
     std::shared_ptr<ImageMap> m_imageMap;
     std::atomic<bool> m_commandBufferDirty;
     std::atomic<int> m_nodeSerial;
+
+    std::shared_ptr<vk::CommandBuffer> m_computePrimary;
+    std::shared_ptr<vk::CommandBuffer> m_drawPrimary;
 
     // Flat map of every node in the tree, for O(1) access to individual nodes by ID and maintaining guarantee that each
     // nodeID uniquely identifies a single node in the tree.
