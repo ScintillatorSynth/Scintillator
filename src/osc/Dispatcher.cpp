@@ -3,9 +3,9 @@
 #include "av/ImageEncoder.hpp"
 #include "base/Archetypes.hpp"
 #include "comp/Async.hpp"
-#include "comp/Compositor.hpp"
 #include "comp/FrameTimer.hpp"
 #include "comp/Offscreen.hpp"
+#include "comp/RootNode.hpp"
 #include "infra/CrashReporter.hpp"
 #include "infra/Logger.hpp"
 #include "infra/Version.hpp"
@@ -45,13 +45,13 @@
 namespace scin { namespace osc {
 
 Dispatcher::Dispatcher(std::shared_ptr<infra::Logger> logger, std::shared_ptr<comp::Async> async,
-                       std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<comp::Compositor> compositor,
+                       std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<comp::RootNode> rootNode,
                        std::shared_ptr<comp::Offscreen> offscreen, std::shared_ptr<const comp::FrameTimer> frameTimer,
                        std::function<void()> quitHandler, std::shared_ptr<infra::CrashReporter> crashReporter):
     m_logger(logger),
     m_async(async),
     m_archetypes(archetypes),
-    m_compositor(compositor),
+    m_rootNode(rootNode),
     m_offscreen(offscreen),
     m_frameTimer(frameTimer),
     m_quitHandler(quitHandler),

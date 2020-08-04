@@ -2,9 +2,9 @@
 #include "base/Archetypes.hpp"
 #include "base/FileSystem.hpp"
 #include "comp/Async.hpp"
-#include "comp/Compositor.hpp"
 #include "comp/FrameTimer.hpp"
 #include "comp/Offscreen.hpp"
+#include "comp/RootNode.hpp"
 #include "comp/Window.hpp"
 #include "infra/CrashReporter.hpp"
 #include "infra/Logger.hpp"
@@ -285,14 +285,14 @@ int main(int argc, char* argv[]) {
         frameTimer = offscreen->frameTimer();
     }
 
-    std::shared_ptr<scin::comp::Compositor> compositor(new scin::comp::Compositor(device, canvas));
-    if (!compositor->create()) {
-        spdlog::error("unable to create Compositor.");
+    std::shared_ptr<scin::comp::RootNode> rootNode(new scin::comp::RootNode(device, canvas));
+    if (!rootNode->create()) {
+        spdlog::error("unable to create root node.");
         return EXIT_FAILURE;
     }
 
     std::shared_ptr<scin::base::Archetypes> archetypes(new scin::base::Archetypes());
-    std::shared_ptr<scin::comp::Async> async(new scin::comp::Async(archetypes, compositor, device));
+    std::shared_ptr<scin::comp::Async> async(new scin::comp::Async(archetypes, rootNode, device));
     async->run(FLAGS_asyncWorkerThreads);
 
     // Chain async calls to load VGens, then ScinthDefs.
@@ -308,7 +308,7 @@ int main(int argc, char* argv[]) {
     } else {
         quitHandler = [offscreen] { offscreen->stop(); };
     }
-    scin::osc::Dispatcher dispatcher(logger, async, archetypes, compositor, offscreen, frameTimer, quitHandler,
+    scin::osc::Dispatcher dispatcher(logger, async, archetypes, rootNode, offscreen, frameTimer, quitHandler,
                                      crashReporter);
     if (!dispatcher.create(FLAGS_portNumber, FLAGS_dumpOSC)) {
         spdlog::error("Failed creating OSC command dispatcher.");
@@ -326,9 +326,9 @@ int main(int argc, char* argv[]) {
 
     // ========== Main loop.
     if (FLAGS_createWindow) {
-        window->run(compositor);
+        window->run(rootNode);
     } else {
-        offscreen->run(compositor);
+        offscreen->run(rootNode);
     }
 
     // ========== OSC cleanup
@@ -337,7 +337,7 @@ int main(int argc, char* argv[]) {
 
     // ========== Vulkan cleanup.
     async->stop();
-    compositor->destroy();
+    rootNode->destroy();
     if (FLAGS_createWindow) {
         window->destroy();
     } else {

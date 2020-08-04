@@ -67,11 +67,6 @@ public:
      */
     void setParameterByIndex(int index, float value);
 
-    std::shared_ptr<vk::CommandBuffer> computeCommands() { return m_computeCommands; }
-    std::shared_ptr<vk::CommandBuffer> drawCommands() { return m_drawCommands; }
-    int nodeID() const { return m_nodeID; }
-    bool running() const { return m_running; }
-
 private:
     bool allocateDescriptors();
     bool updateDescriptors();
