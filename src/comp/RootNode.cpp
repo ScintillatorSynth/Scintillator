@@ -77,8 +77,8 @@ void RootNode::destroy() {
     {
         std::lock_guard<std::mutex> lock(m_scinthMutex);
         m_scinthMap.clear();
-        for (auto scinth : m_scinths) {
-            scinth->destroy();
+        for (auto child : m_children) {
+            child->destroy();
         }
         m_scinths.clear();
         m_audioStagers.clear();

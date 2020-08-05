@@ -101,9 +101,10 @@ protected:
     std::shared_ptr<vk::CommandBuffer> m_computePrimary;
     std::shared_ptr<vk::CommandBuffer> m_drawPrimary;
 
-    // Flat map of every node in the tree, for O(1) access to individual nodes by ID and maintaining guarantee that each
-    // nodeID uniquely identifies a single node in the tree.
-    std::unordered_map<int, std::shared_ptr<Node>> m_nodeMap;
+    // Flat map of every node in the tree, for (amortized) O(1) access to individual nodes by ID and maintaining
+    // guarantee that each nodeID uniquely identifies a single node in the tree. The value is an iterator from the child
+    // list of the parent Node containing this one.
+    std::unordered_map<int, std::list<std::shared_ptr<Node>>::iterator> m_nodeMap;
 };
 
 } // namespace comp

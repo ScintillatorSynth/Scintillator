@@ -53,20 +53,12 @@ public:
      */
     void setRunning(bool run) { m_running = run; }
 
-    typedef std::list<std::shared_ptr<Node>> NodeList;
-    // might not be needed anymore given that rootnode is keeping the whole map of them - but only pointers
-    // directly to the child...
-    typedef std::unordered_map<int, ScinthList::iterator> NodeMap;
-
-    const NodeList& children() { return m_children; }
-
 protected:
     std::shared_ptr<vk::Device> m_device;
     int m_nodeID;
     bool m_running;
 
     std::list<std::shared_ptr<Node>> m_children;
-
 };
 
 } // namespace comp
