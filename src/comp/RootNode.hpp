@@ -3,14 +3,28 @@
 
 #include "comp/Node.hpp"
 
+#include <atomic>
+#include <functional>
 #include <memory>
+#include <mutex>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace scin {
+
+namespace audio {
+class Ingress;
+}
+
+namespace base {
+class AbstractScinthDef;
+}
 
 namespace vk {
 class CommandPool;
 class Device;
+class HostBuffer;
 }
 
 namespace comp {
@@ -19,7 +33,9 @@ class Canvas;
 class FrameContext;
 class ImageMap;
 class SamplerFactory;
+class ScinthDef;
 class ShaderCompiler;
+class StageManager;
 
 /*! Root object of the render tree. Maintains global objects for the render tree such as currently defined ScinthDefs
  * and image buffers. Creates the primary command buffers and render passes. Renders to a Canvas.
@@ -35,7 +51,7 @@ public:
     virtual ~RootNode() = default;
 
     bool create() override;
-    bool destroy() override;
+    void destroy() override;
 
     /*! In this case returns true if the primary command buffer had to be rebuilt, which can be useful for tracking
      * statistics about effectiveness of caching command buffers.
@@ -85,6 +101,8 @@ public:
      */
     bool addAudioIngress(std::shared_ptr<audio::Ingress> ingress, int imageID);
 
+    std::shared_ptr<StageManager> stageManager() { return m_stageManager; }
+
 protected:
     void rebuildCommandBuffer(std::shared_ptr<FrameContext> context);
 
@@ -98,9 +116,13 @@ protected:
     std::atomic<bool> m_commandBufferDirty;
     std::atomic<int> m_nodeSerial;
 
+    std::mutex m_scinthDefMutex;
+    std::unordered_map<std::string, std::shared_ptr<ScinthDef>> m_scinthDefs;
+
     std::shared_ptr<vk::CommandBuffer> m_computePrimary;
     std::shared_ptr<vk::CommandBuffer> m_drawPrimary;
 
+    std::mutex m_nodeMutex;
     // Flat map of every node in the tree, for (amortized) O(1) access to individual nodes by ID and maintaining
     // guarantee that each nodeID uniquely identifies a single node in the tree. The value is an iterator from the child
     // list of the parent Node containing this one.

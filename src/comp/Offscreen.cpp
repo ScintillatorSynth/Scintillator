@@ -3,9 +3,10 @@
 #include "av/Buffer.hpp"
 #include "av/BufferPool.hpp"
 #include "av/Encoder.hpp"
-#include "comp/Compositor.hpp"
+#include "comp/FrameContext.hpp"
 #include "comp/FrameTimer.hpp"
 #include "comp/RenderSync.hpp"
+#include "comp/RootNode.hpp"
 #include "comp/StageManager.hpp"
 #include "comp/Swapchain.hpp"
 #include "vulkan/CommandBuffer.hpp"
@@ -120,16 +121,16 @@ bool Offscreen::supportSwapchain(std::shared_ptr<Swapchain> swapchain, std::shar
     return true;
 }
 
-void Offscreen::runThreaded(std::shared_ptr<Compositor> compositor) {
+void Offscreen::runThreaded(std::shared_ptr<RootNode> rootNode) {
     m_render = true;
-    m_renderThread = std::thread(&Offscreen::threadMain, this, compositor);
+    m_renderThread = std::thread(&Offscreen::threadMain, this, rootNode);
     m_renderCondition.notify_one();
 }
 
-void Offscreen::run(std::shared_ptr<Compositor> compositor) {
+void Offscreen::run(std::shared_ptr<RootNode> rootNode) {
     m_render = true;
     m_renderCondition.notify_one();
-    threadMain(compositor);
+    threadMain(rootNode);
 }
 
 void Offscreen::addEncoder(std::shared_ptr<scin::av::Encoder> encoder) {
@@ -182,8 +183,6 @@ void Offscreen::destroy() {
     m_swapchain = nullptr;
     m_swapBlitCommands.clear();
 
-    m_computeCommands.clear();
-    m_drawCommands.clear();
     m_pendingEncodes.clear();
     m_readbackImages.clear();
     m_encoders.clear();
@@ -197,10 +196,10 @@ void Offscreen::destroy() {
 
 std::shared_ptr<Canvas> Offscreen::canvas() { return m_framebuffer->canvas(); }
 
-void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
+void Offscreen::threadMain(std::shared_ptr<RootNode> rootNode) {
     spdlog::info("Offscreen render thread starting up.");
 
-    compositor->stageManager()->setStagingRequested([this] {
+    rootNode->stageManager()->setStagingRequested([this] {
         {
             std::lock_guard<std::mutex> lock(m_renderMutex);
             m_stagingRequested = true;
@@ -212,10 +211,10 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
     size_t frameNumber = 0;
     uint32_t frameIndex = 0;
 
-    m_computeCommands.resize(m_numberOfImages);
-    m_drawCommands.resize(m_numberOfImages);
+    std::vector<std::shared_ptr<FrameContext>> contexts;
     for (size_t i = 0; i < m_numberOfImages; ++i) {
-        m_pendingSwapchainBlits.push_back(-1);
+        m_pendingSwapchainBlits.emplace_back(-1);
+        contexts.emplace_back(std::shared_ptr<FrameContext>(new FrameContext(i)));
     }
     m_pendingEncodes.resize(m_numberOfImages);
 
@@ -263,7 +262,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
         }
 
         if (stage) {
-            compositor->stageManager()->submitTransferCommands(m_device->graphicsQueue());
+            rootNode->stageManager()->submitTransferCommands(m_device->graphicsQueue());
         }
         if (swapBlit) {
             blitAndPresent(frameIndex, swapImageIndex);
@@ -280,14 +279,13 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
 
         processPendingEncodes(frameIndex);
 
+        contexts[frameIndex]->reset(time);
+
         // OK, we now consider the contents of the framebuffer (and any blit targets) as subject to GPU mutation.
-        if (!compositor->prepareFrame(frameIndex, time)) {
+        if (!rootNode->prepareFrame(contexts[frameIndex])) {
             spdlog::critical("Failed to prepare frame, terminating.");
             break;
         }
-
-        m_computeCommands[frameIndex] = compositor->computeCommands();
-        m_drawCommands[frameIndex] = compositor->drawCommands();
 
         VkSubmitInfo drawSubmitInfo = {};
         drawSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -297,14 +295,14 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
         VkPipelineStageFlags computeWaitStage[] = { VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT };
         VkPipelineStageFlags colorWaitStage[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
-        if (m_computeCommands[frameIndex]) {
+        if (contexts[frameIndex]->computeCommands().size()) {
             VkSubmitInfo computeSubmitInfo = {};
             computeSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
             computeSubmitInfo.waitSemaphoreCount = 1;
             computeSubmitInfo.pWaitSemaphores = renderFinished;
             computeSubmitInfo.pWaitDstStageMask = computeWaitStage;
             computeSubmitInfo.commandBufferCount = 1;
-            VkCommandBuffer computeCommandBuffers[] = { m_computeCommands[frameIndex]->buffer(frameIndex) };
+            VkCommandBuffer computeCommandBuffers[] = { contexts[frameIndex]->computePrimary()->buffer(frameIndex) };
             computeSubmitInfo.pCommandBuffers = computeCommandBuffers;
             computeSubmitInfo.signalSemaphoreCount = 1;
             computeSubmitInfo.pSignalSemaphores = computeFinished;
@@ -338,7 +336,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
         drawSubmitInfo.pSignalSemaphores = renderFinished;
 
         std::vector<VkCommandBuffer> drawCommandBuffers;
-        drawCommandBuffers.push_back(m_drawCommands[frameIndex]->buffer(frameIndex));
+        drawCommandBuffers.push_back(contexts[frameIndex]->drawPrimary()->buffer(frameIndex));
 
         // Build list of active encoder frames we need to fill, if any. If we are flushing this frame we will process
         // this list before starting another render. If pipelined, we add this to the list of destinations once we

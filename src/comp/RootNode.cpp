@@ -1,7 +1,17 @@
 #include "comp/RootNode.hpp"
 
+#include "audio/Ingress.hpp"
 #include "comp/Canvas.hpp"
+#include "comp/FrameContext.hpp"
+#include "comp/ImageMap.hpp"
+#include "comp/SamplerFactory.hpp"
+#include "comp/ScinthDef.hpp"
+#include "comp/ShaderCompiler.hpp"
+#include "comp/StageManager.hpp"
+#include "vulkan/Buffer.hpp"
+#include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
+#include "vulkan/Image.hpp"
 
 #include <spdlog/spdlog.h>
 
@@ -17,10 +27,7 @@ RootNode::RootNode(std::shared_ptr<vk::Device> device, std::shared_ptr<Canvas> c
     m_samplerFactory(new SamplerFactory(device)),
     m_imageMap(new ImageMap()),
     m_commandBufferDirty(true),
-    m_nodeSerial(-2) {
-    m_computeCommands.resize(m_canvas->numberOfImages());
-    m_drawCommands.resize(m_canvas->numberOfImages());
-}
+    m_nodeSerial(-2) {}
 
 bool RootNode::create() {
     if (!m_shaderCompiler->loadCompiler()) {
@@ -68,19 +75,18 @@ bool RootNode::create() {
         return false;
     }
 
-    rebuildCommandBuffer();
     return true;
 }
 
 void RootNode::destroy() {
     // Delete all command buffers outstanding first, which means emptying the Scinth map and list.
     {
-        std::lock_guard<std::mutex> lock(m_scinthMutex);
-        m_scinthMap.clear();
+        std::lock_guard<std::mutex> lock(m_nodeMutex);
+        m_nodeMap.clear();
         for (auto child : m_children) {
             child->destroy();
         }
-        m_scinths.clear();
+        m_children.clear();
         m_audioStagers.clear();
     }
     m_computePrimary.reset();
@@ -105,7 +111,7 @@ void RootNode::destroy() {
 
 bool RootNode::prepareFrame(std::shared_ptr<FrameContext> context) {
     {
-        std::lock_guard<std::mutex> lock(m_scinthMutex);
+        std::lock_guard<std::mutex> lock(m_nodeMutex);
         for (auto stager : m_audioStagers) {
             stager->stageAudio(m_stageManager);
         }

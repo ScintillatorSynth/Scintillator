@@ -2,10 +2,9 @@
 
 namespace scin { namespace comp {
 
-FrameContext::FrameContext(): m_imageIndex(0), m_frameTime(0) {}
+FrameContext::FrameContext(size_t imageIndex): m_imageIndex(imageIndex), m_frameTime(0) {}
 
-void FrameContext::reset(size_t imageIndex, double frameTime) {
-    m_imageIndex = imageIndex;
+void FrameContext::reset(double frameTime) {
     m_frameTime = frameTime;
     m_nodes.clear();
     m_computeCommands.clear();

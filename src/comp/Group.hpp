@@ -3,8 +3,8 @@
 
 #include "comp/Node.hpp"
 
-#include <list>
 #include <memory>
+#include <vector>
 
 namespace scin {
 
@@ -22,13 +22,13 @@ class FrameContext;
 class Group : public Node {
 public:
     Group(std::shared_ptr<vk::Device> device, int nodeID);
-    virtual ~Group;
+    virtual ~Group();
 
     bool create() override;
     void destroy() override;
     bool prepareFrame(std::shared_ptr<FrameContext> context) override;
     void setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
-                       const std::vector<std::pair<int, float>> * indexedValues) override;
+                       const std::vector<std::pair<int, float>>& indexedValues) override;
 
 protected:
 };

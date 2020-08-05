@@ -1,6 +1,7 @@
 #ifndef SRC_COMP_NODE_HPP_
 #define SRC_COMP_NODE_HPP_
 
+#include <list>
 #include <memory>
 #include <string>
 #include <vector>
@@ -44,7 +45,7 @@ public:
      * \param indexedValues A vector of pairs of parameter indexes and new values.
      */
     virtual void setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
-                               const std::vector<std::pair<int, float>> indexedValues) = 0;
+                               const std::vector<std::pair<int, float>>& indexedValues) = 0;
 
     /*! Determines the paused or playing status of the Node. TODO: should paused nodes still render? Unlike in audio,
      * a paused VGen can still produce a still frame.

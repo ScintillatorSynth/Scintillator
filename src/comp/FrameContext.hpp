@@ -9,10 +9,11 @@ namespace scin {
 namespace vk {
 class CommandBuffer;
 class Image;
-class Node;
 }
 
 namespace comp {
+
+class Node;
 
 /*! Encapsulates all of the Vulkan resources needed to capture a single frame of rendering. Populated by the Node tree,
  * and then retained by the requesting rendering object until render is complete. This helps to ensure that even if the
@@ -21,21 +22,23 @@ namespace comp {
  */
 class FrameContext {
 public:
-    FrameContext();
-    ~FrameContext() = default;
-
-    /*! Resets the FrameContext object to be reused in a new frame render. Clears all internal references to old
-     * objects, meaning that some Vulkan or other resources might be deleted.
-     *
+    /*!
      * \param imageIndex The index of the imageView in the Canvas we will be rendering in to. Renders are often
      *        pipelined, requiring copies of some modifiable resources to be made for each possible simultaneous render.
      *        The maximum depth of the pipeline is the number of output framebuffers that are configured. The imageIndex
      *        indicates which of the framebuffers to render this frame to, and so which corresponding set of resources
      *        to use.
+     */
+    FrameContext(size_t imageIndex);
+    ~FrameContext() = default;
+
+    /*! Resets the FrameContext object to be reused in a new frame render. Clears all internal references to old
+     * objects, meaning that some Vulkan or other resources might be deleted.
+     *
      * \param frameTime The point in time at which to build this frame for, measured in seconds from the first frame
      *        rendered.
      */
-    void reset(size_t imageIndex, double frameTime);
+    void reset(double frameTime);
 
     /*! Append a Node to the list of nodes. Keeping a reference to every Node used in the rendering of the frame ensures
      * that nodes (and their associated Vulkan resources) won't be deleted until every pipelined render that they have
@@ -68,6 +71,8 @@ public:
     double frameTime() const { return m_frameTime; }
     const std::vector<std::shared_ptr<vk::CommandBuffer>>& computeCommands() const { return m_computeCommands; }
     const std::vector<std::shared_ptr<vk::CommandBuffer>>& drawCommands() const { return m_drawCommands; }
+    std::shared_ptr<vk::CommandBuffer> computePrimary() { return m_computePrimary; }
+    std::shared_ptr<vk::CommandBuffer> drawPrimary() { return m_drawPrimary; }
 
 private:
     size_t m_imageIndex;
@@ -75,10 +80,10 @@ private:
     std::vector<std::shared_ptr<Node>> m_nodes;
     std::vector<std::shared_ptr<vk::CommandBuffer>> m_computeCommands;
     std::vector<std::shared_ptr<vk::CommandBuffer>> m_drawCommands;
-    std::vector<std::shared_ptr<vk::Image> m_images;
+    std::vector<std::shared_ptr<vk::Image>> m_images;
     std::shared_ptr<vk::CommandBuffer> m_computePrimary;
     std::shared_ptr<vk::CommandBuffer> m_drawPrimary;
-}
+};
 
 } // namespace comp
 } // namespace scin

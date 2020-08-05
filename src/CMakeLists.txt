@@ -158,8 +158,6 @@ set(scintillator_synth_files
     comp/AudioStager.hpp
     comp/Canvas.cpp
     comp/Canvas.hpp
-    comp/Compositor.cpp
-    comp/Compositor.hpp
     comp/FrameContext.cpp
     comp/FrameContext.hpp
     comp/FrameTimer.cpp
