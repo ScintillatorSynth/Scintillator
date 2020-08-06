@@ -132,12 +132,10 @@ public:
                    const std::vector<std::pair<int, float>>& indexedValues);
 
     /*! Recursively frees all nodes within each nodeID specified in the list. Note that both groups and nodes can be
-     * freed this way. The SuperCollider server command reference refers to this function as groupFreeAll, but since
-     * groupIDs and nodeIDs come from the same space we allow for both to be freed with this function.
      *
      * \param nodeIDs The list of nodeIDs to free.
      */
-    void nodeFreeAll(const std::vector<int>& nodeIDs);
+    void nodeFree(const std::vector<int>& nodeIDs);
 
     std::shared_ptr<StageManager> stageManager() { return m_stageManager; }
 

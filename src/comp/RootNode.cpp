@@ -264,7 +264,7 @@ void RootNode::addScinth(const std::string& scinthDefName, int nodeID, AddAction
     m_commandBufferDirty = true;
 }
 
-void RootNode::nodeFreeAll(const std::vector<int>& nodeIDs) {
+void RootNode::nodeFree(const std::vector<int>& nodeIDs) {
     std::lock_guard<std::mutex> lock(m_nodeMutex);
     for (auto node : nodeIDs) {
         removeNode(node);

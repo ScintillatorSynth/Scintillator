@@ -22,7 +22,7 @@ void NodeFree::processMessage(int argc, lo_arg** argv, const char* types, lo_add
             spdlog::warn("OSC NodeFree skipping non-integer type at index {}", i);
         }
     }
-    m_dispatcher->rootNode()->freeNodes(nodes);
+    m_dispatcher->rootNode()->nodeFree(nodes);
 }
 
 } // namespace commands
