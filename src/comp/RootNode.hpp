@@ -139,7 +139,7 @@ public:
     void nodeFree(const std::vector<int>& nodeIDs);
 
     void setNodeParameters(int nodeID, const std::vector<std::pair<std::string, float>>& namedValues,
-            const std::vector<std::pair<int, float>>& indexedValues);
+                           const std::vector<std::pair<int, float>>& indexedValues);
 
     /*! Sets the pause/play status of provided nodeID in the provided list of pairs.
      *
@@ -168,7 +168,7 @@ protected:
     std::shared_ptr<StageManager> m_stageManager;
     std::shared_ptr<SamplerFactory> m_samplerFactory;
     std::shared_ptr<ImageMap> m_imageMap;
-    bool m_commandBufferDirty;
+    bool m_commandBuffersDirty;
     std::atomic<int> m_nodeSerial;
 
     std::mutex m_scinthDefMutex;

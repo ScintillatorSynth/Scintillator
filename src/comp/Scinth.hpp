@@ -29,8 +29,8 @@ class ScinthDef;
  */
 class Scinth : public Node {
 public:
-    Scinth(std::shared_ptr<vk::Device> device, int nodeID,
-           std::shared_ptr<ScinthDef> scinthDef, std::shared_ptr<ImageMap> imageMap);
+    Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef,
+           std::shared_ptr<ImageMap> imageMap);
     ~Scinth();
 
     /*! Do any one-time setup on this Scinth, including creating a uniform buffer, samplers, and descriptor sets as

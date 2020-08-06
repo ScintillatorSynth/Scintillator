@@ -88,7 +88,7 @@ bool Scinth::prepareFrame(std::shared_ptr<FrameContext> context) {
     }
 
     bool rebuildRequired = m_commandBuffersDirty;
-    if (m_commandBuffersDirty) {
+    if (rebuildRequired) {
         updateDescriptors();
         rebuildBuffers();
     }

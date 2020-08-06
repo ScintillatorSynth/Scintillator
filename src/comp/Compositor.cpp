@@ -30,8 +30,7 @@ Compositor::~Compositor() {}
 
 bool Compositor::cue(const std::string& scinthDefName, int nodeID,
                      const std::vector<std::pair<std::string, float>>& namedValues,
-                     const std::vector<std::pair<int, float>>& indexedValues) {
-}
+                     const std::vector<std::pair<int, float>>& indexedValues) {}
 
 void Compositor::freeNodes(const std::vector<int>& nodeIDs) {
     std::lock_guard<std::mutex> lock(m_scinthMutex);
@@ -105,8 +104,7 @@ size_t Compositor::numberOfRunningScinths() {
 
 
 // Needs to be called only from the same thread that calls prepareFrame. Assumes that m_drawSecondary is up-to-date.
-bool Compositor::rebuildCommandBuffer() {
-}
+bool Compositor::rebuildCommandBuffer() {}
 
 void Compositor::freeScinthLockAcquired(ScinthMap::iterator it) {
     // Remove from list first, then dictionary,

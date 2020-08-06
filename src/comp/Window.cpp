@@ -133,10 +133,7 @@ void Window::runDirectRendering(std::shared_ptr<comp::RootNode> rootNode) {
 
         m_frameTimer->markFrame();
         contexts[imageIndex]->reset(m_frameTimer->elapsedTime());
-        if (!rootNode->prepareFrame(contexts[imageIndex])) {
-            spdlog::critical("Failed to prepare frame, terminating");
-            break;
-        }
+        rootNode->prepareFrame(contexts[imageIndex]);
 
         VkSemaphore imageAvailable[] = { m_renderSync->imageAvailable(0) };
         VkPipelineStageFlags imageWaitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };

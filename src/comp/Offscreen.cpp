@@ -279,13 +279,10 @@ void Offscreen::threadMain(std::shared_ptr<RootNode> rootNode) {
 
         processPendingEncodes(frameIndex);
 
+        // OK, we now consider the contents of the framebuffer (and any blit targets) as subject to GPU mutation, so
+        // we can prepare the frame.
         contexts[frameIndex]->reset(time);
-
-        // OK, we now consider the contents of the framebuffer (and any blit targets) as subject to GPU mutation.
-        if (!rootNode->prepareFrame(contexts[frameIndex])) {
-            spdlog::critical("Failed to prepare frame, terminating.");
-            break;
-        }
+        rootNode->prepareFrame(contexts[frameIndex]);
 
         VkSubmitInfo drawSubmitInfo = {};
         drawSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

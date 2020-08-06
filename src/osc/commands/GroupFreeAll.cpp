@@ -13,8 +13,7 @@ GroupFreeAll::GroupFreeAll(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 GroupFreeAll::~GroupFreeAll() {}
 
-void GroupFreeAll::processMessage(int argc, lo_arg** argv, const char* types,
-                                  lo_address /* address */) {
+void GroupFreeAll::processMessage(int argc, lo_arg** argv, const char* types, lo_address /* address */) {
     std::vector<int> nodeIDs;
     for (auto i = 0; i < argc; ++i) {
         if (types[i] == LO_INT32) {

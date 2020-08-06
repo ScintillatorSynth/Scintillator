@@ -54,4 +54,3 @@ protected:
 } // namespace scin
 
 #endif // SRC_COMP_GROUP_HPP_
-

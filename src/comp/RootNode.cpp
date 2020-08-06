@@ -32,7 +32,7 @@ RootNode::RootNode(std::shared_ptr<vk::Device> device, std::shared_ptr<Canvas> c
     m_stageManager(new StageManager(device)),
     m_samplerFactory(new SamplerFactory(device)),
     m_imageMap(new ImageMap()),
-    m_commandBufferDirty(true),
+    m_commandBuffersDirty(true),
     m_nodeSerial(-2) {}
 
 bool RootNode::create() {
@@ -86,6 +86,8 @@ bool RootNode::create() {
 }
 
 bool RootNode::prepareFrame(std::shared_ptr<FrameContext> context) {
+    bool rebuildRequired = m_commandBuffersDirty;
+
     {
         std::lock_guard<std::mutex> lock(m_nodeMutex);
         for (auto stager : m_audioStagers) {
@@ -94,11 +96,10 @@ bool RootNode::prepareFrame(std::shared_ptr<FrameContext> context) {
 
         for (auto child : m_children) {
             context->appendNode(child);
-            m_commandBufferDirty |= child->prepareFrame(context);
+            rebuildRequired |= child->prepareFrame(context);
         }
     }
 
-    bool rebuildRequired = m_commandBufferDirty;
     if (rebuildRequired) {
         rebuildCommandBuffer(context);
     }
@@ -253,6 +254,10 @@ void RootNode::scinthNew(const std::string& scinthDefName, int nodeID, AddAction
 
     {
         std::lock_guard<std::mutex> lock(m_nodeMutex);
+        if (m_nodeMap.find(nodeID) != m_nodeMap.end()) {
+            spdlog::info("Clobbering existing nodeID {}", nodeID);
+            removeNode(nodeID);
+        }
         if (!insertNode(scinth, addAction, targetID)) {
             spdlog::error("Failed to add Scinth into render tree.");
             return;
@@ -262,7 +267,7 @@ void RootNode::scinthNew(const std::string& scinthDefName, int nodeID, AddAction
     spdlog::info("Scinth id {} from def {} cueued.", nodeID, scinthDefName);
 
     // Will need to rebuild command buffer on next frame to include the new scinths.
-    m_commandBufferDirty = true;
+    m_commandBuffersDirty = true;
 }
 
 void RootNode::nodeFree(const std::vector<int>& nodeIDs) {
@@ -270,10 +275,11 @@ void RootNode::nodeFree(const std::vector<int>& nodeIDs) {
     for (auto node : nodeIDs) {
         removeNode(node);
     }
+    m_commandBuffersDirty = true;
 }
 
 void RootNode::setNodeParameters(int nodeID, const std::vector<std::pair<std::string, float>>& namedValues,
-        const std::vector<std::pair<int, float>>& indexedValues) {
+                                 const std::vector<std::pair<int, float>>& indexedValues) {
     std::lock_guard<std::mutex> lock(m_nodeMutex);
     if (nodeID != 0) {
         Node* node;
@@ -300,7 +306,7 @@ void RootNode::setNodeRun(const std::vector<std::pair<int, int>>& pairs) {
         }
     }
 
-    m_commandBufferDirty = true;
+    m_commandBuffersDirty = true;
 }
 
 size_t RootNode::numberOfRunningNodes() {
@@ -401,7 +407,7 @@ void RootNode::rebuildCommandBuffer(std::shared_ptr<FrameContext> context) {
         }
     }
 
-    m_commandBufferDirty = false;
+    m_commandBuffersDirty = false;
 }
 
 bool RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int targetID) {
@@ -418,16 +424,16 @@ bool RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int t
         switch (targetID) {
         case kGroupHead: {
             node->setParent(target);
-            target->children().emplace_front(node);
-            m_nodeMap[node->nodeID()] = target->children().begin();
-        } break;
-
-        case kGroupTail: {
-            node->setParent(target);
             target->children().emplace_back(node);
             auto lastElement = target->children().end();
             --lastElement;
             m_nodeMap[node->nodeID()] = lastElement;
+        } break;
+
+        case kGroupTail: {
+            node->setParent(target);
+            target->children().emplace_front(node);
+            m_nodeMap[node->nodeID()] = target->children().begin();
         } break;
 
         // Replace does the same as insert before, and then removes the target node after insertion of the new node.
@@ -453,15 +459,15 @@ bool RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int t
 
         switch (targetID) {
         case kGroupHead: {
-            m_children.emplace_front(node);
-            m_nodeMap[node->nodeID()] = m_children.begin();
-        } break;
-
-        case kGroupTail: {
             m_children.emplace_back(node);
             auto endIter = m_children.end();
             --endIter;
             m_nodeMap[node->nodeID()] = endIter;
+        } break;
+
+        case kGroupTail: {
+            m_children.emplace_front(node);
+            m_nodeMap[node->nodeID()] = m_children.begin();
         } break;
 
         case kBeforeNode:

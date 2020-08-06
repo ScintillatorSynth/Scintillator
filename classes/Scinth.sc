@@ -9,7 +9,7 @@ Scinth {
 		if (args.notNil, {
 			server.sendMsg('/scin_s_new', defName, nodeID, 0, 0, *args);
 		}, {
-			server.sendMsg('/scin_s_new', defName, nodeID);
+			server.sendMsg('/scin_s_new', defName, nodeID, 0, 0);
 		});
 		^super.newCopyArgs(defName, nodeID, server);
 	}

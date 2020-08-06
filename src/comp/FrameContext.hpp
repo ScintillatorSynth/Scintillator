@@ -89,4 +89,3 @@ private:
 } // namespace scin
 
 #endif // SRC_COMP_FRAME_CONTEXT_HPP_
-
