@@ -1,6 +1,6 @@
 #include "osc/commands/ScinthNew.hpp"
 
-#include "comp/Compositor.hpp"
+#include "comp/RootNode.hpp"
 #include "osc/Dispatcher.hpp"
 
 #include "spdlog/spdlog.h"
@@ -54,7 +54,7 @@ void ScinthNew::processMessage(int argc, lo_arg** argv, const char* types, lo_ad
             }
         }
     }
-    m_dispatcher->compositor()->cue(scinthDef, node, namedValues, indexedValues);
+    m_dispatcher->rootNode()->cue(scinthDef, node, namedValues, indexedValues);
 }
 
 } // namespace commands

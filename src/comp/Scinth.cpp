@@ -56,10 +56,7 @@ bool Scinth::create() {
 }
 
 void Scinth::destroy() {
-    // Break circular references here so Scinth can be automatically reclaimed when referencing objects (namely the
-    // command buffer) go out of scope and are themselves deleted.
-    m_computeCommands.reset();
-    m_drawCommands.reset();
+    // no-op for Scinths, the destructor will remove our references
 }
 
 bool Scinth::prepareFrame(std::shared_ptr<FrameContext> context) {
@@ -113,18 +110,22 @@ bool Scinth::prepareFrame(std::shared_ptr<FrameContext> context) {
     return rebuildRequired;
 }
 
-void Scinth::setParameterByName(const std::string& name, float value) {
-    size_t index = 0;
-    if (m_scinthDef->abstract()->indexForParameterName(name, index)) {
-        m_parameterValues[index] = value;
-        m_commandBuffersDirty = true;
-    } else {
-        spdlog::warn("Scinth {} failed to find parameter named {}", m_nodeID, name);
+void Scinth::setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
+                           const std::vector<std::pair<int, float>>& indexedValues) {
+    for (auto namedPair : namedValues) {
+        size_t index = 0;
+        if (m_scinthDef->abstract()->indexForParameterName(namedPair.first, index)) {
+            m_parameterValues[index] = namedPair.value;
+            m_commandBuffersDirty = true;
+        } else {
+            spdlog::info("Scinth {} failed to find parameter named {}", m_nodeID, name);
+        }
     }
-}
 
-void Scinth::setParameterByIndex(int index, float value) {
-    m_parameterValues[index] = value;
+    for (auto indexPair : indexedValues) {
+        m_parameterValues[indexPair.first] = indexPair.second;
+    }
+
     m_commandBuffersDirty = true;
 }
 

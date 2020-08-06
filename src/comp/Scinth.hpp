@@ -29,8 +29,8 @@ class ScinthDef;
  */
 class Scinth : public Node {
 public:
-    Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef,
-           std::shared_ptr<ImageMap> imageMap);
+    Scinth(std::shared_ptr<vk::Device> device, int nodeID,
+           std::shared_ptr<ScinthDef> scinthDef, std::shared_ptr<ImageMap> imageMap);
     ~Scinth();
 
     /*! Do any one-time setup on this Scinth, including creating a uniform buffer, samplers, and descriptor sets as
@@ -40,17 +40,27 @@ public:
      */
     bool create() override;
 
+    /*! Release references to any held graphics resources and destroy the Scinth.
+     */
     void destroy() override;
 
-    /*! Prepare for the next frame to render.
+    /*! Prepare for the next frame to render. In particular updates the uniform buffer associated with the context, if
+     * present, and any other operations to prepare a frame to render at the provided time.
      *
-     * Update the Uniform buffer associated with the imageIndex, if present, and any other operations to prepare a
-     * frame to render at the provided time.
-     *
+     * \params context The shared state object for the current frame render.
+     * \return true if a command buffer rebuild happened, false if not.
      */
     bool prepareFrame(std::shared_ptr<FrameContext> context) override;
+
+    /*! Set parameters on this Scinth, causing a command buffer rebuild on the next call to prepareFrame.
+     *  Parameters are set in order starting with the named values and followed by the indexed values, so any duplicate
+     *  settings will respect the last value written.
+     *
+     * \param namedValues The pairs of parameter names and values to set
+     * \param indexedValues The pairs of parameter indices and values to set
+     */
     void setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
-                       const std::vector<std::pair<int, float>> indexedValues) override;
+                       const std::vector<std::pair<int, float>>& indexedValues) override;
 
 private:
     bool allocateDescriptors();

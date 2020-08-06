@@ -31,47 +31,47 @@ RootNode::RootNode(std::shared_ptr<vk::Device> device, std::shared_ptr<Canvas> c
 
 bool RootNode::create() {
     if (!m_shaderCompiler->loadCompiler()) {
-        spdlog::error("Compositor unable to load shader compiler.");
+        spdlog::critical("RootNode unable to load shader compiler.");
         return false;
     }
 
     if (!m_computeCommandPool->create()) {
-        spdlog::error("Compositor failed creating compute command pool.");
+        spdlog::critical("RootNode failed creating compute command pool.");
     }
 
     if (!m_drawCommandPool->create()) {
-        spdlog::error("Compositor failed creating draw command pool.");
+        spdlog::critical("RootNode failed creating draw command pool.");
         return false;
     }
 
     if (!m_stageManager->create(m_canvas->numberOfImages())) {
-        spdlog::error("Compositor failed to create stage manager.");
+        spdlog::critical("RootNode failed to create stage manager.");
         return false;
     }
 
     // Create the empty image and stage.
     std::shared_ptr<vk::HostBuffer> emptyImageBuffer(new vk::HostBuffer(m_device, vk::Buffer::Kind::kStaging, 4));
     if (!emptyImageBuffer->create()) {
-        spdlog::error("Compositor failed to create empty staging image.");
+        spdlog::critical("RootNode failed to create empty staging image.");
         return false;
     }
     std::memset(emptyImageBuffer->mappedAddress(), 0, 4);
 
     std::shared_ptr<vk::DeviceImage> emptyImage(new vk::DeviceImage(m_device, VK_FORMAT_R8G8B8A8_UNORM));
     if (!emptyImage->create(1, 1)) {
-        spdlog::error("Compositor failed to create empty device image.");
+        spdlog::critical("RootNode failed to create empty device image.");
         return false;
     }
 
     if (!m_stageManager->stageImage(emptyImageBuffer, emptyImage, [this, emptyImage] {
             if (!emptyImage->createView()) {
-                spdlog::error("Compositor failed to create ImageView for empty image");
+                spdlog::critical("RootNode failed to create ImageView for empty image");
                 return false;
             }
             m_imageMap->setEmptyImage(emptyImage);
-            spdlog::info("Compositor finished staging the empty image");
+            spdlog::info("RootNode finished staging the empty image");
         })) {
-        spdlog::error("Compositor failed to stage the empty image.");
+        spdlog::critical("RootNode failed to stage the empty image.");
         return false;
     }
 
@@ -131,6 +131,152 @@ bool RootNode::prepareFrame(std::shared_ptr<FrameContext> context) {
     context->setDrawPrimaryCommands(m_drawPrimary);
 
     return rebuildRequired;
+}
+
+void RootNode::setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
+                             const std::vector<std::pair<int, float>>& indexedValues) {
+    // Note it is assumed the node lock has already been acquired.
+    for (auto child : m_children) {
+        child->setParameters(namedValues, indexedValues);
+    }
+}
+
+bool RootNode::buildScinthDef(std::shared_ptr<const base::AbstractScinthDef> abstractScinthDef) {
+    std::shared_ptr<ScinthDef> scinthDef(new ScinthDef(m_device, m_canvas, m_computeCommandPool, m_drawCommandPool,
+                                                       m_samplerFactory, abstractScinthDef));
+    if (!scinthDef->build(m_shaderCompiler.get())) {
+        return false;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(m_scinthDefMutex);
+        m_scinthDefs.insert_or_assign(abstractScinthDef->name(), std::move(scinthDef));
+    }
+
+    return true;
+}
+
+void RootNode::freeScinthDefs(const std::vector<std::string>& names) {
+    std::lock_guard<std::mutex> lock(m_scinthDefMutex);
+    for (auto name : names) {
+        auto it = m_scinthDefs.find(name);
+        if (it != m_scinthDefs.end()) {
+            m_scinthDefs.erase(it);
+        } else {
+            spdlog::warn("Unable to free ScinthDef {}, name not found.", name);
+        }
+    }
+}
+
+void RootNode::stageImage(int imageID, uint32_t width, uint32_t height, std::shared_ptr<vk::HostBuffer> imageBuffer,
+                          std::function<void()> completion) {
+    std::shared_ptr<vk::DeviceImage> targetImage(new vk::DeviceImage(m_device, VK_FORMAT_R8G8B8A8_UNORM));
+    if (!targetImage->create(width, height)) {
+        spdlog::error("Compositor failed to create staging target image {}.", imageID);
+        completion();
+        return;
+    }
+
+    if (!m_stageManager->stageImage(imageBuffer, targetImage, [this, imageID, targetImage, completion] {
+            if (!targetImage->createView()) {
+                spdlog::error("Compositor failed to create ImageView for image {}", imageID);
+                completion();
+                return;
+            }
+            m_imageMap->addImage(imageID, targetImage);
+            spdlog::info("Compositor finished staging image id {}", imageID);
+            completion();
+        })) {
+        spdlog::error("Compositor encountered error while staging image {}.", imageID);
+        completion();
+    }
+}
+
+bool RootNode::queryImage(int imageID, size_t& sizeOut, uint32_t& widthOut, uint32_t& heightOut) {
+    std::shared_ptr<vk::DeviceImage> image = m_imageMap->getImage(imageID);
+    if (!image) {
+        return false;
+    }
+    sizeOut = image->size();
+    widthOut = image->width();
+    heightOut = image->height();
+    return true;
+}
+
+bool RootNode::addAudioIngress(std::shared_ptr<audio::Ingress> ingress, int imageID) {
+    std::shared_ptr<AudioStager> stager(new AudioStager(ingress));
+    if (!stager->createBuffers(m_device)) {
+        spdlog::error("Compositor failed to create AudioStager buffers.");
+        return false;
+    }
+    m_imageMap->addImage(imageID, stager->image());
+
+    {
+        std::lock_guard<std::mutex> lock(m_scinthMutex);
+        m_audioStagers.push_back(stager);
+    }
+    return true;
+}
+
+void RootNode::addScinth(const std::string& scinthDefName, int nodeID, AddAction addAction, int targetID,
+                         const std::vector<std::pair<std::string, float>>& namedValues,
+                         const std::vector<std::pair<int, float>>& indexedValues) {
+    std::shared_ptr<ScinthDef> scinthDef;
+    {
+        std::lock_guard<std::mutex> lock(m_scinthDefMutex);
+        auto it = m_scinthDefs.find(scinthDefName);
+        if (it != m_scinthDefs.end()) {
+            scinthDef = it->second;
+        }
+    }
+    if (!scinthDef) {
+        spdlog::error("ScinthDef {} not found when building Scinth {}.", scinthDefName, nodeID);
+        return;
+    }
+
+    // Generate a unique negative nodeID if the one provided was negative.
+    if (nodeID < 0) {
+        nodeID = m_nodeSerial.fetch_sub(1);
+    }
+    std::shared_ptr<Scinth> scinth(new Scinth(m_device, nodeID, scinthDef, m_imageMap));
+
+    if (!scinth->create()) {
+        spdlog::error("failed to build Scinth {} from ScinthDef {}.", nodeID, scinthDefName);
+        return;
+    }
+
+    scinth->setParameters(namedValues, indexedValues);
+
+    {
+        std::lock_guard<std::mutex> lock(m_scinthMutex);
+        if (!nodeInsert(scinth, addAction, targetID)) {
+            spdlog::error("Failed to add Scinth into render tree.");
+            return
+        }
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(m_scinthMutex);
+        auto oldNode = m_scinthMap.find(nodeID);
+        if (oldNode != m_scinthMap.end()) {
+            spdlog::info("clobbering existing Scinth {}", nodeID);
+            freeScinthLockAcquired(oldNode);
+        }
+        m_scinths.push_back(scinth);
+        auto it = m_scinths.end();
+        --it;
+        m_scinthMap.insert({ nodeID, it });
+    }
+
+    spdlog::info("Scinth id {} from def {} cueued.", nodeID, scinthDefName);
+
+    // Will need to rebuild command buffer on next frame to include the new scinths.
+    m_commandBufferDirty = true;
+    return true;
+}
+
+void RootNode::nodeFreeAll(const std::vector<int>& nodeIDs) {
+    std::lock_guard<std::mutex> lock(m_nodeMutex);
 }
 
 void RootNode::rebuildCommandBuffer(std::shared_ptr<FrameContext> context) {
@@ -229,6 +375,73 @@ void RootNode::rebuildCommandBuffer(std::shared_ptr<FrameContext> context) {
 
     m_commandBufferDirty = false;
     return true;
+}
+
+bool RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int targetID) {
+    if (targetID != 0) {
+        Node* target;
+        auto mapIter = m_nodeMap.find(targetID);
+        if (mapIter != m_nodeMap.end()) {
+            target = mapIter->second.get();
+        } else {
+            spdlog::error("failed to find node targetID {} on node insert", targetID);
+            return false;
+        }
+
+        switch (targetID) {
+        case kGroupHead: {
+            node->m_parent = target;
+            target->m_children.emplace_front(node);
+            m_nodeMap[node->m_nodeID] = target->m_children.front();
+        } break;
+
+        case kGroupTail: {
+            node->m_parent = target;
+            target->m_children.emplace_back(node);
+            auto lastElement = target->m_children.back();
+            --lastElement;
+            m_nodeMap[node->m_nodeID] = lastElement;
+        } break;
+
+        // Replace does the same as insert before, and then removes the target node after insertion of the new node.
+        case kReplace:
+        case kBeforeNode: {
+            node->m_parent = target->m_parent;
+            m_nodeMap[node->m_nodeID] = node->m_parent->m_children.emplace(mapIter->second, node);
+        } break;
+
+        case kAfterNode: {
+            node->m_parent = target->m_parent;
+            auto afterIter = mapIter->second;
+            ++afterIter;
+            m_nodeMap[node->m_nodeID] = node->m_parent->m_children.emplace(afterIter, node);
+        } break;
+        }
+
+        if (addAction == kReplace) {
+            removeNode(targetID);
+        }
+    } else {
+        switch (targetID) {
+        case kGroupHead:
+        case kGroupTail:
+
+        case kBeforeNode:
+        case kAfterNode:
+        case kReplace:
+            spdlog::error("Scinth AddAction {} not supported on root node.", static_cast<int>(addAction));
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void RootNode::removeNode(targetID) {
+    if (targetID == 0) {
+        spdlog::error("Can't remove root node from render tree.");
+        return;
+    }
 }
 
 

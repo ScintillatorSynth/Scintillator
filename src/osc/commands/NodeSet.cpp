@@ -1,6 +1,6 @@
 #include "osc/commands/NodeSet.hpp"
 
-#include "comp/Compositor.hpp"
+#include "comp/RootNode.hpp"
 #include "osc/Dispatcher.hpp"
 
 #include "spdlog/spdlog.h"
@@ -49,7 +49,7 @@ void NodeSet::processMessage(int argc, lo_arg** argv, const char* types, lo_addr
         }
     }
 
-    m_dispatcher->compositor()->setNodeParameters(nodeID, namedValues, indexedValues);
+    m_dispatcher->rootNode()->setNodeParameters(nodeID, namedValues, indexedValues);
 }
 
 } // namespace commands

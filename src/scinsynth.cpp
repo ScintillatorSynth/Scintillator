@@ -296,7 +296,7 @@ int main(int argc, char* argv[]) {
     async->run(FLAGS_asyncWorkerThreads);
 
     // Chain async calls to load VGens, then ScinthDefs.
-    async->vgenLoadDirectory(quarkPath / "vgens", [async, &quarkPath, compositor](size_t) {
+    async->vgenLoadDirectory(quarkPath / "vgens", [async, &quarkPath](size_t) {
         async->scinthDefLoadDirectory(quarkPath / "scinthdefs", [](size_t) {
             spdlog::info("finished loading predefined VGens and ScinthDefs.");
         });
@@ -319,9 +319,9 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    // Connect audio ingress to compositor if available.
+    // Connect audio ingress to render tree if available.
     if (portAudio->ingress()) {
-        compositor->addAudioIngress(portAudio->ingress(), 1);
+        rootNode->addAudioIngress(portAudio->ingress(), 1);
     }
 
     // ========== Main loop.

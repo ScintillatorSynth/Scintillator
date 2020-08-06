@@ -22,11 +22,32 @@ class FrameContext;
 class Group : public Node {
 public:
     Group(std::shared_ptr<vk::Device> device, int nodeID);
-    virtual ~Group();
+    virtual ~Group() = default;
 
+    /*! Creates the Group. As Groups do no rendering on their own this is essentially a no-op.
+     *
+     * \return Always true to indicate success.
+     */
     bool create() override;
+
+    /*! Destroys a group. Will call destroy() recursively on all children within the group.
+     */
     void destroy() override;
+
+    /*! Prepare to render the frame described in context. Will recursively call prepareFrame() on call children within
+     * the group.
+     *
+     * \param context The state container for the requested frame to render.
+     * \return true If any child of the group had to recreate their command buffers, meaning that the entire primary
+     *         buffer will also need to be recreated.
+     */
     bool prepareFrame(std::shared_ptr<FrameContext> context) override;
+
+    /*! Sets parameters on all children in the group.
+     *
+     * \namedValues Pairs of parameter names and values to set.
+     * \indexedValues Pairs of parameter indices and values to set.
+     */
     void setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
                        const std::vector<std::pair<int, float>>& indexedValues) override;
 

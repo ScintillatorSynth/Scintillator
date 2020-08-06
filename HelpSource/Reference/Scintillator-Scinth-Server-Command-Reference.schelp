@@ -194,15 +194,25 @@ Create a new Scinth.
 table::
 ## strong::string:: || scinth definition name
 ## strong::int:: || scinth ID
-## strong::int:: || add action (not yet supported)
-## strong::int:: || add target ID (not yet supported)
+## strong::int:: || add action
+## strong::int:: || add target ID
 ## N * || table::
 ## strong::int:: or strong::string:: || A control index or name
 ## strong::int:: or strong::float:: || A control value
 ::
 ::
 
-As Scintillator does not currently support groups, offscreen render targets, or scinth controls, only the first two fields are processed by the server. The server will add the Scinth to the default group and start playing it immediately.
+Create a new Scinth instance from the given ScinthDef, give it an ID, and add it to the tree of nodes. There are four ways to add the node to the tree as determined by the add action argument, with the same values as the SuperCollider audio synth server, defined as follows:
+
+definitionlist::
+## add actions: || table::
+    ## 0 || add the new node to the the head of the group specified by the add target ID.
+    ## 1 || add the new node to the the tail of the group specified by the add target ID.
+    ## 2 || add the new node just before the node specified by the add target ID.
+    ## 3 || add the new node just after the node specified by the add target ID.
+    ## 4 || the new node replaces the node specified by the add target ID. The target node is freed.
+    ::
+::
 
 note::
 The SuperCollider Synthesis Server command reference specifies if the provided ID number is -1, the server reserves all negative numbers for IDs, and so will assign a unique negative value to the Synth instance. Scintillator server is similar, but will treat emphasis::any:: negative value as a request for a unique ID to be assigned.
@@ -225,11 +235,7 @@ table::
 ## N * strong::int:: || group ID(s)
 ::
 
-Frees all nodes in the group. A list of groups may be specified.
-
-note::
-Since only the default group is supported right now the group ID arguments are ignored.
-::
+Recursively frees all nodes in the groups specified. Note that since Scinths and Groups share the same ID space individual Scinths can also be specified on the list of IDs and they will be deleted.
 
 section::ImageBuffer Commands
 

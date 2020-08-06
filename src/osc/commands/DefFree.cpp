@@ -1,6 +1,6 @@
 #include "osc/commands/DefFree.hpp"
 
-#include "comp/Compositor.hpp"
+#include "comp/RootNode.hpp"
 #include "base/Archetypes.hpp"
 #include "osc/Dispatcher.hpp"
 
@@ -25,7 +25,7 @@ void DefFree::processMessage(int argc, lo_arg** argv, const char* types, lo_addr
         }
     }
     m_dispatcher->archetypes()->freeAbstractScinthDefs(names);
-    m_dispatcher->compositor()->freeScinthDefs(names);
+    m_dispatcher->rootNode()->freeScinthDefs(names);
 }
 
 } // namespace commands

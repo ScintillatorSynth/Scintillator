@@ -38,7 +38,8 @@ class ShaderCompiler;
 class StageManager;
 
 /*! Root object of the render tree. Maintains global objects for the render tree such as currently defined ScinthDefs
- * and image buffers. Creates the primary command buffers and render passes. Renders to a Canvas.
+ * and image buffers. Creates the primary command buffers and render passes. Renders to a Canvas. Maintains a hard-coded
+ * nodeID of 0.
  */
 class RootNode : public Node {
 public:
@@ -50,13 +51,31 @@ public:
     RootNode(std::shared_ptr<vk::Device> device, std::shared_ptr<Canvas> canvas);
     virtual ~RootNode() = default;
 
+    bool setRoot(std::shared_ptr<Node> thisNode);
+
+    /*! Creates the root node, including setting up much of the shared resources like the empty image.
+     *
+     * \return true on success, false on failure.
+     */
     bool create() override;
+
+    /*! Destroy the root node and release all references to shared resources owned by the render tree.
+     */
     void destroy() override;
 
     /*! In this case returns true if the primary command buffer had to be rebuilt, which can be useful for tracking
      * statistics about effectiveness of caching command buffers.
      */
     bool prepareFrame(std::shared_ptr<FrameContext> context) override;
+
+    /*! Sets the supplied parameter values recursively to every Node in the render tree.
+     *
+     * The RootNode is not technically a Group, but is a Node and is addressible via nodeID 0. So it is unclear from
+     * the SuperCollider server spec if this is a valid use of setParameters via OSC. But this function recursively
+     * applies these parameters to all children.
+     */
+    virtual void setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
+                               const std::vector<std::pair<int, float>>& indexedValues) override;
 
     /*! Construct a ScinthDef designed to render into this RootNode and add to the local ScinthDef map.
      *
@@ -101,10 +120,33 @@ public:
      */
     bool addAudioIngress(std::shared_ptr<audio::Ingress> ingress, int imageID);
 
+    enum AddAction : int32_t {
+        kGroupHead = 0,
+        kGroupTail = 1,
+        kBeforeNode = 2,
+        kAfterNode = 3,
+        kReplace = 4,
+        kActionCount = 5
+    };
+    void addScinth(const std::string& scinthDefName, int nodeID, AddAction addAction, int targetID,
+                   const std::vector<std::pair<std::string, float>>& namedValues,
+                   const std::vector<std::pair<int, float>>& indexedValues);
+
+    /*! Recursively frees all nodes within each nodeID specified in the list. Note that both groups and nodes can be
+     * freed this way. The SuperCollider server command reference refers to this function as groupFreeAll, but since
+     * groupIDs and nodeIDs come from the same space we allow for both to be freed with this function.
+     *
+     * \param nodeIDs The list of nodeIDs to free.
+     */
+    void nodeFreeAll(const std::vector<int>& nodeIDs);
+
     std::shared_ptr<StageManager> stageManager() { return m_stageManager; }
 
 protected:
     void rebuildCommandBuffer(std::shared_ptr<FrameContext> context);
+
+    // assumes lock is acquired.
+    bool insertNode(std::shared_ptr<Node> node, AddAction addAction, int targetID);
 
     std::shared_ptr<Canvas> m_canvas;
     std::unique_ptr<ShaderCompiler> m_shaderCompiler;

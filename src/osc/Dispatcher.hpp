@@ -112,7 +112,7 @@ public:
     std::shared_ptr<infra::Logger> logger() { return m_logger; }
     std::shared_ptr<comp::Async> async() { return m_async; }
     std::shared_ptr<base::Archetypes> archetypes() { return m_archetypes; }
-    std::shared_ptr<comp::Compositor> rootNode() { return m_rootNode; }
+    std::shared_ptr<comp::RootNode> rootNode() { return m_rootNode; }
     std::shared_ptr<comp::Offscreen> offscreen() { return m_offscreen; }
     std::shared_ptr<const comp::FrameTimer> frameTimer() { return m_frameTimer; }
     std::shared_ptr<infra::CrashReporter> crashReporter() { return m_crashReporter; }

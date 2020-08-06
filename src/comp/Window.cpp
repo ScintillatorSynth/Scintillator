@@ -1,6 +1,7 @@
 #include "comp/Window.hpp"
 
 #include "comp/Canvas.hpp"
+#include "comp/FrameContext.hpp"
 #include "comp/FrameTimer.hpp"
 #include "comp/Offscreen.hpp"
 #include "comp/RenderSync.hpp"
@@ -117,6 +118,10 @@ std::shared_ptr<const FrameTimer> Window::frameTimer() {
 void Window::runDirectRendering(std::shared_ptr<comp::RootNode> rootNode) {
     infra::Logger::logVulkanThreadID("Windows direct rendering loop");
     m_frameTimer->start();
+    std::vector<std::shared_ptr<FrameContext>> contexts;
+    for (size_t i = 0; i < m_swapchain->numberOfImages(); ++i) {
+        contexts.emplace_back(std::shared_ptr<FrameContext>(new FrameContext(i)));
+    }
 
     while (!m_stop && !glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
@@ -129,14 +134,11 @@ void Window::runDirectRendering(std::shared_ptr<comp::RootNode> rootNode) {
         uint32_t imageIndex = m_renderSync->acquireNextImage(0, m_swapchain.get());
 
         m_frameTimer->markFrame();
-
-        if (!rootNode->prepareFrame(imageIndex, m_frameTimer->elapsedTime())) {
+        contexts[imageIndex]->reset(m_frameTimer->elapsedTime());
+        if (!rootNode->prepareFrame(contexts[imageIndex])) {
             spdlog::critical("Failed to prepare frame, terminating");
             break;
         }
-
-        m_computeCommands = compositor->computeCommands();
-        m_drawCommands = compositor->drawCommands();
 
         VkSemaphore imageAvailable[] = { m_renderSync->imageAvailable(0) };
         VkPipelineStageFlags imageWaitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
@@ -160,7 +162,7 @@ void Window::runDirectRendering(std::shared_ptr<comp::RootNode> rootNode) {
             computeSubmitInfo.pWaitDstStageMask = nullptr;
 
             computeSubmitInfo.commandBufferCount = 1;
-            VkCommandBuffer computeCommandBuffers[] = { m_computeCommands->buffer(imageIndex) };
+            VkCommandBuffer computeCommandBuffers[] = { contexts[imageIndex]->computePrimary()->buffer(imageIndex) };
             computeSubmitInfo.pCommandBuffers = computeCommandBuffers;
             computeSubmitInfo.signalSemaphoreCount = 1;
             VkSemaphore computeFinished[] = { m_renderSync->computeFinished(0) };
@@ -183,7 +185,7 @@ void Window::runDirectRendering(std::shared_ptr<comp::RootNode> rootNode) {
         }
 
         drawSubmitInfo.commandBufferCount = 1;
-        VkCommandBuffer drawCommandBuffers[] = { m_drawCommands->buffer(imageIndex) };
+        VkCommandBuffer drawCommandBuffers[] = { context[imageIndex]->drawPrimary()->buffer(imageIndex) };
         drawSubmitInfo.pCommandBuffers = drawCommandBuffers;
         drawSubmitInfo.signalSemaphoreCount = 1;
         VkSemaphore renderFinished[] = { m_renderSync->renderFinished(0) };
@@ -215,16 +217,16 @@ void Window::runDirectRendering(std::shared_ptr<comp::RootNode> rootNode) {
         vkQueuePresentKHR(m_device->presentQueue(), &presentInfo);
 
         // Submit any pending transfer operations.
-        compositor->stageManager()->submitTransferCommands(m_device->graphicsQueue());
+        rootNode->stageManager()->submitTransferCommands(m_device->graphicsQueue());
     }
 
     vkDeviceWaitIdle(m_device->get());
     spdlog::info("Window exiting direct rendering loop.");
 }
 
-void Window::runFixedFrameRate(std::shared_ptr<Compositor> compositor) {
+void Window::runFixedFrameRate(std::shared_ptr<Compositor> rootNode) {
     spdlog::info("Window starting offscreen rendering loop.");
-    m_offscreen->runThreaded(compositor);
+    m_offscreen->runThreaded(rootNode);
 
     std::chrono::high_resolution_clock::time_point lastFrame = std::chrono::high_resolution_clock::now();
     while (!m_stop && !glfwWindowShouldClose(m_window)) {

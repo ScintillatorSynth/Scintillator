@@ -41,7 +41,7 @@ public:
 
     /*! Takes over the thead, will run until stop() is called or the Window is closed.
      *
-     * \param compositor The root compositor to use for rendering.
+     * \param rootNode The root of the render tree that will render to the window swap chain.
      */
     void run(std::shared_ptr<RootNode> rootNode);
 
@@ -66,8 +66,8 @@ public:
     std::shared_ptr<const FrameTimer> frameTimer();
 
 private:
-    void runDirectRendering(std::shared_ptr<RootNode> compositor);
-    void runFixedFrameRate(std::shared_ptr<RootNode> compositor);
+    void runDirectRendering(std::shared_ptr<RootNode> rootNode);
+    void runFixedFrameRate(std::shared_ptr<RootNode> rootNode);
 
     std::shared_ptr<vk::Instance> m_instance;
     std::shared_ptr<vk::Device> m_device;
@@ -82,11 +82,6 @@ private:
     std::shared_ptr<RenderSync> m_renderSync;
     std::shared_ptr<FrameTimer> m_frameTimer;
 
-    // We keep the shared pointers to the command buffers until the frame is being re-rendered. This allows
-    // the Compositor to change command buffers arbitrarily, and they won't get reclaimed by the system until
-    // they are known finished rendering.
-    std::shared_ptr<vk::CommandBuffer> m_computeCommands;
-    std::shared_ptr<vk::CommandBuffer> m_drawCommands;
     std::atomic<bool> m_stop;
 
     // If in non realtime mode, we render to an offscreen framebuffer and blit the latest available image to the

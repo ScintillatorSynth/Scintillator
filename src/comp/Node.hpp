@@ -57,6 +57,7 @@ public:
 protected:
     std::shared_ptr<vk::Device> m_device;
     int m_nodeID;
+    Node* m_parent;
     bool m_running;
 
     std::list<std::shared_ptr<Node>> m_children;
