@@ -1,19 +1,25 @@
 #include "comp/RootNode.hpp"
 
 #include "audio/Ingress.hpp"
+#include "base/AbstractScinthDef.hpp"
+#include "comp/AudioStager.hpp"
 #include "comp/Canvas.hpp"
 #include "comp/FrameContext.hpp"
 #include "comp/ImageMap.hpp"
 #include "comp/SamplerFactory.hpp"
+#include "comp/Scinth.hpp"
 #include "comp/ScinthDef.hpp"
 #include "comp/ShaderCompiler.hpp"
 #include "comp/StageManager.hpp"
 #include "vulkan/Buffer.hpp"
+#include "vulkan/CommandBuffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/Image.hpp"
 
 #include <spdlog/spdlog.h>
+
+#include <stack>
 
 namespace scin { namespace comp {
 
@@ -78,14 +84,43 @@ bool RootNode::create() {
     return true;
 }
 
+bool RootNode::prepareFrame(std::shared_ptr<FrameContext> context) {
+    {
+        std::lock_guard<std::mutex> lock(m_nodeMutex);
+        for (auto stager : m_audioStagers) {
+            stager->stageAudio(m_stageManager);
+        }
+
+        for (auto child : m_children) {
+            context->appendNode(child);
+            m_commandBufferDirty |= child->prepareFrame(context);
+        }
+    }
+
+    bool rebuildRequired = m_commandBufferDirty;
+    if (rebuildRequired) {
+        rebuildCommandBuffer(context);
+    }
+
+    context->setComputePrimary(m_computePrimary);
+    context->setDrawPrimary(m_drawPrimary);
+
+    return rebuildRequired;
+}
+
+void RootNode::setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
+                             const std::vector<std::pair<int, float>>& indexedValues) {
+    // Note it is assumed the node lock has already been acquired.
+    for (auto child : m_children) {
+        child->setParameters(namedValues, indexedValues);
+    }
+}
+
 void RootNode::destroy() {
     // Delete all command buffers outstanding first, which means emptying the Scinth map and list.
     {
         std::lock_guard<std::mutex> lock(m_nodeMutex);
         m_nodeMap.clear();
-        for (auto child : m_children) {
-            child->destroy();
-        }
         m_children.clear();
         m_audioStagers.clear();
     }
@@ -106,38 +141,6 @@ void RootNode::destroy() {
     {
         std::lock_guard<std::mutex> lock(m_scinthDefMutex);
         m_scinthDefs.clear();
-    }
-}
-
-bool RootNode::prepareFrame(std::shared_ptr<FrameContext> context) {
-    {
-        std::lock_guard<std::mutex> lock(m_nodeMutex);
-        for (auto stager : m_audioStagers) {
-            stager->stageAudio(m_stageManager);
-        }
-
-        for (auto child : m_children) {
-            context->appendNode(child);
-            m_commandBufferDirty |= child->prepareFrame(context);
-        }
-    }
-
-    bool rebuildRequired = m_commandBufferDirty;
-    if (rebuildRequired) {
-        rebuildCommandBuffer(context);
-    }
-
-    context->setComputePrimaryCommands(m_computePrimary);
-    context->setDrawPrimaryCommands(m_drawPrimary);
-
-    return rebuildRequired;
-}
-
-void RootNode::setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
-                             const std::vector<std::pair<int, float>>& indexedValues) {
-    // Note it is assumed the node lock has already been acquired.
-    for (auto child : m_children) {
-        child->setParameters(namedValues, indexedValues);
     }
 }
 
@@ -212,7 +215,7 @@ bool RootNode::addAudioIngress(std::shared_ptr<audio::Ingress> ingress, int imag
     m_imageMap->addImage(imageID, stager->image());
 
     {
-        std::lock_guard<std::mutex> lock(m_scinthMutex);
+        std::lock_guard<std::mutex> lock(m_nodeMutex);
         m_audioStagers.push_back(stager);
     }
     return true;
@@ -248,35 +251,24 @@ void RootNode::addScinth(const std::string& scinthDefName, int nodeID, AddAction
     scinth->setParameters(namedValues, indexedValues);
 
     {
-        std::lock_guard<std::mutex> lock(m_scinthMutex);
-        if (!nodeInsert(scinth, addAction, targetID)) {
+        std::lock_guard<std::mutex> lock(m_nodeMutex);
+        if (!insertNode(scinth, addAction, targetID)) {
             spdlog::error("Failed to add Scinth into render tree.");
-            return
+            return;
         }
-    }
-
-    {
-        std::lock_guard<std::mutex> lock(m_scinthMutex);
-        auto oldNode = m_scinthMap.find(nodeID);
-        if (oldNode != m_scinthMap.end()) {
-            spdlog::info("clobbering existing Scinth {}", nodeID);
-            freeScinthLockAcquired(oldNode);
-        }
-        m_scinths.push_back(scinth);
-        auto it = m_scinths.end();
-        --it;
-        m_scinthMap.insert({ nodeID, it });
     }
 
     spdlog::info("Scinth id {} from def {} cueued.", nodeID, scinthDefName);
 
     // Will need to rebuild command buffer on next frame to include the new scinths.
     m_commandBufferDirty = true;
-    return true;
 }
 
 void RootNode::nodeFreeAll(const std::vector<int>& nodeIDs) {
     std::lock_guard<std::mutex> lock(m_nodeMutex);
+    for (auto node : nodeIDs) {
+        removeNode(node);
+    }
 }
 
 void RootNode::rebuildCommandBuffer(std::shared_ptr<FrameContext> context) {
@@ -284,11 +276,11 @@ void RootNode::rebuildCommandBuffer(std::shared_ptr<FrameContext> context) {
         m_computePrimary.reset(new vk::CommandBuffer(m_device, m_computeCommandPool));
         if (!m_computePrimary->create(m_canvas->numberOfImages(), true)) {
             spdlog::critical("failed creating primary compute command buffers for Compositor.");
-            return false;
+            return;
         }
 
         spdlog::debug("rebuilding Compositor compute command buffer with {} secondary command buffers",
-                      m_computeSecondary.size());
+                      context->computeCommands().size());
 
         for (size_t i = 0; i < m_canvas->numberOfImages(); ++i) {
             VkCommandBufferBeginInfo beginInfo = {};
@@ -297,8 +289,8 @@ void RootNode::rebuildCommandBuffer(std::shared_ptr<FrameContext> context) {
             beginInfo.pInheritanceInfo = nullptr;
 
             if (vkBeginCommandBuffer(m_computePrimary->buffer(i), &beginInfo) != VK_SUCCESS) {
-                spdlog::error("Compositor failed beginning primary compute command buffer.");
-                return false;
+                spdlog::critical("Compositor failed beginning primary compute command buffer.");
+                return;
             }
 
             std::vector<VkCommandBuffer> commandBuffers;
@@ -309,8 +301,8 @@ void RootNode::rebuildCommandBuffer(std::shared_ptr<FrameContext> context) {
                                  commandBuffers.data());
 
             if (vkEndCommandBuffer(m_computePrimary->buffer(i)) != VK_SUCCESS) {
-                spdlog::error("Compositor failed ending primary compute command buffer.");
-                return false;
+                spdlog::critical("Compositor failed ending primary compute command buffer.");
+                return;
             }
         }
     } else {
@@ -320,17 +312,16 @@ void RootNode::rebuildCommandBuffer(std::shared_ptr<FrameContext> context) {
     m_drawPrimary.reset(new vk::CommandBuffer(m_device, m_drawCommandPool));
     if (!m_drawPrimary->create(m_canvas->numberOfImages(), true)) {
         spdlog::critical("failed creating primary draw command buffers for Compositor.");
-        return false;
+        return;
     }
 
-    /*
-    VkClearColorValue clearColor = { { m_clearColor.x, m_clearColor.y, m_clearColor.z, 1.0f } };
+    // VkClearColorValue clearColor = { { m_clearColor.x, m_clearColor.y, m_clearColor.z, 1.0f } };
+    VkClearColorValue clearColor = { { 0.0, 0.0, 0.0, 1.0f } };
     VkClearValue clearValue = {};
     clearValue.color = clearColor;
-    */
 
     spdlog::debug("rebuilding Compositor draw command buffer with {} secondary command buffers",
-                  m_drawSecondary.size());
+                  context->drawCommands().size());
 
     for (size_t i = 0; i < m_canvas->numberOfImages(); ++i) {
         VkCommandBufferBeginInfo beginInfo = {};
@@ -339,8 +330,8 @@ void RootNode::rebuildCommandBuffer(std::shared_ptr<FrameContext> context) {
         beginInfo.pInheritanceInfo = nullptr;
 
         if (vkBeginCommandBuffer(m_drawPrimary->buffer(i), &beginInfo) != VK_SUCCESS) {
-            spdlog::error("Compositor failed beginning primary draw command buffer.");
-            return false;
+            spdlog::critical("Compositor failed beginning primary draw command buffer.");
+            return;
         }
 
         VkRenderPassBeginInfo renderPassInfo = {};
@@ -368,13 +359,12 @@ void RootNode::rebuildCommandBuffer(std::shared_ptr<FrameContext> context) {
 
         vkCmdEndRenderPass(m_drawPrimary->buffer(i));
         if (vkEndCommandBuffer(m_drawPrimary->buffer(i)) != VK_SUCCESS) {
-            spdlog::error("Compositor failed ending primary draw command buffer.");
-            return false;
+            spdlog::critical("Compositor failed ending primary draw command buffer.");
+            return;
         }
     }
 
     m_commandBufferDirty = false;
-    return true;
 }
 
 bool RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int targetID) {
@@ -382,7 +372,7 @@ bool RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int t
         Node* target;
         auto mapIter = m_nodeMap.find(targetID);
         if (mapIter != m_nodeMap.end()) {
-            target = mapIter->second.get();
+            target = mapIter->second->get();
         } else {
             spdlog::error("failed to find node targetID {} on node insert", targetID);
             return false;
@@ -390,31 +380,31 @@ bool RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int t
 
         switch (targetID) {
         case kGroupHead: {
-            node->m_parent = target;
-            target->m_children.emplace_front(node);
-            m_nodeMap[node->m_nodeID] = target->m_children.front();
+            node->setParent(target);
+            target->children().emplace_front(node);
+            m_nodeMap[node->nodeID()] = target->children().begin();
         } break;
 
         case kGroupTail: {
-            node->m_parent = target;
-            target->m_children.emplace_back(node);
-            auto lastElement = target->m_children.back();
+            node->setParent(target);
+            target->children().emplace_back(node);
+            auto lastElement = target->children().end();
             --lastElement;
-            m_nodeMap[node->m_nodeID] = lastElement;
+            m_nodeMap[node->nodeID()] = lastElement;
         } break;
 
         // Replace does the same as insert before, and then removes the target node after insertion of the new node.
         case kReplace:
         case kBeforeNode: {
-            node->m_parent = target->m_parent;
-            m_nodeMap[node->m_nodeID] = node->m_parent->m_children.emplace(mapIter->second, node);
+            node->setParent(target->parent());
+            m_nodeMap[node->nodeID()] = node->parent()->children().emplace(mapIter->second, node);
         } break;
 
         case kAfterNode: {
-            node->m_parent = target->m_parent;
+            node->setParent(target->parent());
             auto afterIter = mapIter->second;
             ++afterIter;
-            m_nodeMap[node->m_nodeID] = node->m_parent->m_children.emplace(afterIter, node);
+            m_nodeMap[node->nodeID()] = node->parent()->children().emplace(afterIter, node);
         } break;
         }
 
@@ -422,9 +412,20 @@ bool RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int t
             removeNode(targetID);
         }
     } else {
+        node->setParent(this);
+
         switch (targetID) {
-        case kGroupHead:
-        case kGroupTail:
+        case kGroupHead: {
+            m_children.emplace_front(node);
+            m_nodeMap[node->nodeID()] = m_children.begin();
+        } break;
+
+        case kGroupTail: {
+            m_children.emplace_back(node);
+            auto endIter = m_children.end();
+            --endIter;
+            m_nodeMap[node->nodeID()] = endIter;
+        } break;
 
         case kBeforeNode:
         case kAfterNode:
@@ -437,13 +438,33 @@ bool RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int t
     return true;
 }
 
-void RootNode::removeNode(targetID) {
+void RootNode::removeNode(int targetID) {
     if (targetID == 0) {
         spdlog::error("Can't remove root node from render tree.");
         return;
     }
-}
 
+    auto mapIter = m_nodeMap.find(targetID);
+    if (mapIter == m_nodeMap.end()) {
+        spdlog::error("failed to find node ID {} on node removal", targetID);
+        return;
+    }
+
+    // Now remove node and all contained nodes from the node map.
+    std::stack<Node*> removeNodes;
+    removeNodes.push(mapIter.second.get());
+    while (removeNodes.size()) {
+        Node* node = removeNodes.top();
+        removeNodes.pop();
+        m_nodeMap.erase(node->m_nodeID);
+        for (auto child : node->m_children) {
+            removeNodes.push(child.get());
+        }
+    }
+
+    // Remove node from parent's child list.
+    mapIter->second->m_parent.erase(mapIter.second);
+}
 
 } // namespace comp
 } // namespace scin

@@ -26,7 +26,6 @@ public:
     virtual ~Node() = default;
 
     virtual bool create() = 0;
-    virtual void destroy() = 0;
 
     /*! Prepare the CommandBuffers that when executed in order will render the current frame. Updates the values
      * returned by computeCommands() and drawCommands().
@@ -46,6 +45,11 @@ public:
      */
     virtual void setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
                                const std::vector<std::pair<int, float>>& indexedValues) = 0;
+
+    int nodeID() const { return m_nodeID; }
+    Node* parent() const { return m_parent; }
+    void setParent(Node* parent) { m_parent = parent; }
+    std::list<std::shared_ptr<Node>>& children() { return m_children; }
 
     /*! Determines the paused or playing status of the Node. TODO: should paused nodes still render? Unlike in audio,
      * a paused VGen can still produce a still frame.

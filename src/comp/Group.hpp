@@ -30,10 +30,6 @@ public:
      */
     bool create() override;
 
-    /*! Destroys a group. Will call destroy() recursively on all children within the group.
-     */
-    void destroy() override;
-
     /*! Prepare to render the frame described in context. Will recursively call prepareFrame() on call children within
      * the group.
      *

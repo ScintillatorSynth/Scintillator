@@ -91,8 +91,6 @@ void Window::destroy() {
     if (!m_directRendering) {
         m_offscreen->destroy();
     }
-    m_computeCommands = nullptr;
-    m_drawCommands = nullptr;
     m_renderSync->destroy();
     m_swapchain->destroy();
     vkDestroySurfaceKHR(m_instance->get(), m_surface, nullptr);
@@ -151,7 +149,7 @@ void Window::runDirectRendering(std::shared_ptr<comp::RootNode> rootNode) {
         VkSubmitInfo drawSubmitInfo = {};
         drawSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-        if (m_computeCommands) {
+        if (contexts[imageIndex]->computePrimary()) {
             VkSubmitInfo computeSubmitInfo = {};
             computeSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -185,7 +183,7 @@ void Window::runDirectRendering(std::shared_ptr<comp::RootNode> rootNode) {
         }
 
         drawSubmitInfo.commandBufferCount = 1;
-        VkCommandBuffer drawCommandBuffers[] = { context[imageIndex]->drawPrimary()->buffer(imageIndex) };
+        VkCommandBuffer drawCommandBuffers[] = { contexts[imageIndex]->drawPrimary()->buffer(imageIndex) };
         drawSubmitInfo.pCommandBuffers = drawCommandBuffers;
         drawSubmitInfo.signalSemaphoreCount = 1;
         VkSemaphore renderFinished[] = { m_renderSync->renderFinished(0) };
@@ -224,7 +222,7 @@ void Window::runDirectRendering(std::shared_ptr<comp::RootNode> rootNode) {
     spdlog::info("Window exiting direct rendering loop.");
 }
 
-void Window::runFixedFrameRate(std::shared_ptr<Compositor> rootNode) {
+void Window::runFixedFrameRate(std::shared_ptr<RootNode> rootNode) {
     spdlog::info("Window starting offscreen rendering loop.");
     m_offscreen->runThreaded(rootNode);
 

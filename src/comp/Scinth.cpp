@@ -4,6 +4,7 @@
 #include "base/Shape.hpp"
 #include "base/VGen.hpp"
 #include "comp/Canvas.hpp"
+#include "comp/FrameContext.hpp"
 #include "comp/ImageMap.hpp"
 #include "comp/Pipeline.hpp"
 #include "comp/SamplerFactory.hpp"
@@ -52,11 +53,7 @@ bool Scinth::create() {
         }
     }
 
-    return rebuildBuffers();
-}
-
-void Scinth::destroy() {
-    // no-op for Scinths, the destructor will remove our references
+    return true;
 }
 
 bool Scinth::prepareFrame(std::shared_ptr<FrameContext> context) {
@@ -68,11 +65,11 @@ bool Scinth::prepareFrame(std::shared_ptr<FrameContext> context) {
 
     // Update the Uniform buffer at imageIndex, if needed.
     if (m_uniformBuffers.size()) {
-        float* uniform = static_cast<float*>(m_uniformBuffers[imageIndex]->mappedAddress());
+        float* uniform = static_cast<float*>(m_uniformBuffers[context->imageIndex()]->mappedAddress());
         for (size_t i = 0; i < m_scinthDef->abstract()->uniformManifest().numberOfElements(); ++i) {
             switch (m_scinthDef->abstract()->uniformManifest().intrinsicForElement(i)) {
             case base::Intrinsic::kTime:
-                *uniform = static_cast<float>(frameTime - m_startTime);
+                *uniform = static_cast<float>(context->frameTime() - m_startTime);
                 break;
 
             case base::Intrinsic::kFragCoord:
@@ -92,7 +89,7 @@ bool Scinth::prepareFrame(std::shared_ptr<FrameContext> context) {
 
     bool rebuildRequired = m_commandBuffersDirty;
     if (m_commandBuffersDirty) {
-        updateDescriptors()
+        updateDescriptors();
         rebuildBuffers();
     }
 
@@ -115,10 +112,10 @@ void Scinth::setParameters(const std::vector<std::pair<std::string, float>>& nam
     for (auto namedPair : namedValues) {
         size_t index = 0;
         if (m_scinthDef->abstract()->indexForParameterName(namedPair.first, index)) {
-            m_parameterValues[index] = namedPair.value;
+            m_parameterValues[index] = namedPair.second;
             m_commandBuffersDirty = true;
         } else {
-            spdlog::info("Scinth {} failed to find parameter named {}", m_nodeID, name);
+            spdlog::info("Scinth {} failed to find parameter named {}", m_nodeID, namedPair.first);
         }
     }
 
@@ -146,7 +143,7 @@ bool Scinth::allocateDescriptors() {
         poolSizes.emplace_back(uniformPoolSize);
 
         for (size_t i = 0; i < numberOfImages; ++i) {
-            std::unique_ptr<vk::HostBuffer> uniformBuffer(
+            std::shared_ptr<vk::HostBuffer> uniformBuffer(
                 new vk::HostBuffer(m_device, vk::Buffer::Kind::kUniform, uniformSize));
             if (!uniformBuffer->create()) {
                 spdlog::error("Scinth {} failed to create uniform buffer of size {}", m_nodeID, uniformSize);
@@ -173,7 +170,7 @@ bool Scinth::allocateDescriptors() {
         poolSizes.emplace_back(bufferPoolSize);
 
         for (size_t i = 0; i < numberOfImages; ++i) {
-            std::unique_ptr<vk::DeviceBuffer> computeBuffer(
+            std::shared_ptr<vk::DeviceBuffer> computeBuffer(
                 new vk::DeviceBuffer(m_device, vk::Buffer::Kind::kStorage, computeBufferSize));
             if (!computeBuffer->create()) {
                 spdlog::error("Scinth {} failed to create compute storage buffer of size {}", m_nodeID,

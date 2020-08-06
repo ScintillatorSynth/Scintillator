@@ -40,10 +40,6 @@ public:
      */
     bool create() override;
 
-    /*! Release references to any held graphics resources and destroy the Scinth.
-     */
-    void destroy() override;
-
     /*! Prepare for the next frame to render. In particular updates the uniform buffer associated with the context, if
      * present, and any other operations to prepare a frame to render at the provided time.
      *
@@ -78,8 +74,8 @@ private:
     std::vector<VkDescriptorSet> m_descriptorSets;
     std::vector<std::shared_ptr<vk::DeviceImage>> m_fixedImages;
     std::vector<std::shared_ptr<vk::DeviceImage>> m_parameterizedImages;
-    std::vector<std::unique_ptr<vk::HostBuffer>> m_uniformBuffers;
-    std::vector<std::unique_ptr<vk::DeviceBuffer>> m_computeBuffers;
+    std::vector<std::shared_ptr<vk::HostBuffer>> m_uniformBuffers;
+    std::vector<std::shared_ptr<vk::DeviceBuffer>> m_computeBuffers;
     // The parameter index and the currently bound image Ids for parameterized images.
     std::vector<std::pair<size_t, size_t>> m_parameterizedImageIDs;
     std::shared_ptr<vk::CommandBuffer> m_computeCommands;

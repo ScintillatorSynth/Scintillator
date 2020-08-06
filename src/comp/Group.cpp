@@ -4,17 +4,10 @@
 
 namespace scin { namespace comp {
 
-Group::Group(std::shared_ptr<vk::Device> device, int nodeID, std::weak_ptr<Node> parent):
-    Node(device, nodeID, parent) {}
+Group::Group(std::shared_ptr<vk::Device> device, int nodeID):
+    Node(device, nodeID) {}
 
 bool Group::create() { return true; }
-
-void Group::destroy() {
-    for (auto child : m_children) {
-        child->destroy();
-    }
-    m_children.clear();
-}
 
 bool Group::prepareFrame(std::shared_ptr<FrameContext> context) {
     bool rebuildRequired = false;

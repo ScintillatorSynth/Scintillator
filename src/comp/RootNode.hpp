@@ -29,6 +29,7 @@ class HostBuffer;
 
 namespace comp {
 
+class AudioStager;
 class Canvas;
 class FrameContext;
 class ImageMap;
@@ -59,10 +60,6 @@ public:
      */
     bool create() override;
 
-    /*! Destroy the root node and release all references to shared resources owned by the render tree.
-     */
-    void destroy() override;
-
     /*! In this case returns true if the primary command buffer had to be rebuilt, which can be useful for tracking
      * statistics about effectiveness of caching command buffers.
      */
@@ -76,6 +73,8 @@ public:
      */
     virtual void setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
                                const std::vector<std::pair<int, float>>& indexedValues) override;
+
+    void destroy();
 
     /*! Construct a ScinthDef designed to render into this RootNode and add to the local ScinthDef map.
      *
@@ -147,6 +146,7 @@ protected:
 
     // assumes lock is acquired.
     bool insertNode(std::shared_ptr<Node> node, AddAction addAction, int targetID);
+    void removeNode(int nodeID);
 
     std::shared_ptr<Canvas> m_canvas;
     std::unique_ptr<ShaderCompiler> m_shaderCompiler;
@@ -155,7 +155,7 @@ protected:
     std::shared_ptr<StageManager> m_stageManager;
     std::shared_ptr<SamplerFactory> m_samplerFactory;
     std::shared_ptr<ImageMap> m_imageMap;
-    std::atomic<bool> m_commandBufferDirty;
+    bool m_commandBufferDirty;
     std::atomic<int> m_nodeSerial;
 
     std::mutex m_scinthDefMutex;
@@ -164,11 +164,13 @@ protected:
     std::shared_ptr<vk::CommandBuffer> m_computePrimary;
     std::shared_ptr<vk::CommandBuffer> m_drawPrimary;
 
+    // Protects m_nodeMap, m_children (from Node), and m_audioStagers
     std::mutex m_nodeMutex;
     // Flat map of every node in the tree, for (amortized) O(1) access to individual nodes by ID and maintaining
     // guarantee that each nodeID uniquely identifies a single node in the tree. The value is an iterator from the child
     // list of the parent Node containing this one.
     std::unordered_map<int, std::list<std::shared_ptr<Node>>::iterator> m_nodeMap;
+    std::vector<std::shared_ptr<AudioStager>> m_audioStagers;
 };
 
 } // namespace comp

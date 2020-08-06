@@ -2,7 +2,7 @@
 
 #include "av/ImageDecoder.hpp"
 #include "base/Archetypes.hpp"
-#include "comp/Compositor.hpp"
+#include "comp/RootNode.hpp"
 #include "comp/ScinthDef.hpp"
 #include "infra/Logger.hpp"
 #include "vulkan/Buffer.hpp"
@@ -17,10 +17,10 @@
 
 namespace scin { namespace comp {
 
-Async::Async(std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
+Async::Async(std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<RootNode> rootNode,
              std::shared_ptr<vk::Device> device):
     m_archetypes(archetypes),
-    m_compositor(compositor),
+    m_rootNode(rootNode),
     m_device(device),
     m_quit(false),
     m_numberOfActiveWorkers(0),
@@ -274,7 +274,7 @@ void Async::asyncScinthDefLoadDirectory(fs::path path, std::function<void(size_t
             std::vector<std::shared_ptr<const base::AbstractScinthDef>> scinthDefs =
                 m_archetypes->loadFromFile(p.string());
             for (auto scinthDef : scinthDefs) {
-                if (m_compositor->buildScinthDef(scinthDef)) {
+                if (m_rootNode->buildScinthDef(scinthDef)) {
                     ++parseCount;
                 }
             }
@@ -294,7 +294,7 @@ void Async::asyncScinthDefLoadFile(fs::path path, std::function<void(size_t)> co
     std::vector<std::shared_ptr<const base::AbstractScinthDef>> scinthDefs = m_archetypes->loadFromFile(path.string());
     size_t parseCount = 0;
     for (auto scinthDef : scinthDefs) {
-        if (m_compositor->buildScinthDef(scinthDef)) {
+        if (m_rootNode->buildScinthDef(scinthDef)) {
             ++parseCount;
         }
     }
@@ -305,7 +305,7 @@ void Async::asyncScinthDefLoadFile(fs::path path, std::function<void(size_t)> co
 void Async::asyncScinthDefParseString(std::string yaml, std::function<void(size_t)> completion) {
     std::vector<std::shared_ptr<const base::AbstractScinthDef>> scinthDefs = m_archetypes->parseFromString(yaml);
     for (auto scinthDef : scinthDefs) {
-        m_compositor->buildScinthDef(scinthDef);
+        m_rootNode->buildScinthDef(scinthDef);
     }
     completion(scinthDefs.size());
 }
@@ -364,7 +364,7 @@ void Async::asyncReadImageIntoNewBuffer(int bufferID, std::string filePath, int 
         m_activeStaging.insert(serial);
     }
 
-    m_compositor->stageImage(bufferID, textureWidth, textureHeight, imageBuffer, [this, serial, completion] {
+    m_rootNode->stageImage(bufferID, textureWidth, textureHeight, imageBuffer, [this, serial, completion] {
         {
             std::lock_guard<std::mutex> lock(m_stagingMutex);
             m_activeStaging.erase(serial);
