@@ -21,10 +21,10 @@ void Status::processMessage(int /* argc */, lo_arg** /* argv */, const char* /* 
     double meanFrameRate = 0;
     size_t lateFrames = 0;
     m_dispatcher->logger()->getCounts(numberOfWarnings, numberOfErrors);
-    m_dispatcher->rootNode()->getGraphicsMemoryBudget(graphicsBytesUsed, graphicsBytesAvailable);
+    m_dispatcher->frameTimer()->getGraphicsMemoryBudget(graphicsBytesUsed, graphicsBytesAvailable);
     m_dispatcher->frameTimer()->getStats(targetFrameRate, meanFrameRate, lateFrames);
     m_dispatcher->respond(address, "/scin_status.reply",
-                          static_cast<int32_t>(m_dispatcher->rootNode()->numberOfRunningScinths()), 1,
+                          static_cast<int32_t>(m_dispatcher->rootNode()->numberOfRunningNodes()), 1,
                           static_cast<int32_t>(m_dispatcher->archetypes()->numberOfAbstractScinthDefs()),
                           static_cast<int32_t>(numberOfWarnings), static_cast<int32_t>(numberOfErrors),
                           static_cast<double>(graphicsBytesUsed), static_cast<double>(graphicsBytesAvailable),

@@ -35,7 +35,7 @@ Window::Window(std::shared_ptr<vk::Instance> instance, std::shared_ptr<vk::Devic
     m_surface(VK_NULL_HANDLE),
     m_swapchain(new Swapchain(device)),
     m_renderSync(new RenderSync(device)),
-    m_frameTimer(new FrameTimer(frameRate)),
+    m_frameTimer(new FrameTimer(device, frameRate)),
     m_stop(false) {}
 
 Window::~Window() {}

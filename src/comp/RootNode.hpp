@@ -127,15 +127,30 @@ public:
         kReplace = 4,
         kActionCount = 5
     };
-    void addScinth(const std::string& scinthDefName, int nodeID, AddAction addAction, int targetID,
+    void scinthNew(const std::string& scinthDefName, int nodeID, AddAction addAction, int targetID,
                    const std::vector<std::pair<std::string, float>>& namedValues,
                    const std::vector<std::pair<int, float>>& indexedValues);
 
-    /*! Recursively frees all nodes within each nodeID specified in the list. Note that both groups and nodes can be
+    /*! Recursively frees all nodes within each nodeID specified in the list. Note that both Groups and Scinths are
+     * freed using this same method.
      *
      * \param nodeIDs The list of nodeIDs to free.
      */
     void nodeFree(const std::vector<int>& nodeIDs);
+
+    void setNodeParameters(int nodeID, const std::vector<std::pair<std::string, float>>& namedValues,
+            const std::vector<std::pair<int, float>>& indexedValues);
+
+    /*! Sets the pause/play status of provided nodeID in the provided list of pairs.
+     *
+     * \param pairs A pair of integers, with the first element as a nodeID and the second as a run value. A value of
+     *        zero for the run value will pause the nodeID, and a nonzero value will play it.
+     */
+    void setNodeRun(const std::vector<std::pair<int, int>>& pairs);
+
+    /*! Returns the size of the render tree in nodes.
+     */
+    size_t numberOfRunningNodes();
 
     std::shared_ptr<StageManager> stageManager() { return m_stageManager; }
 

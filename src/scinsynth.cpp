@@ -5,6 +5,7 @@
 #include "comp/FrameTimer.hpp"
 #include "comp/Offscreen.hpp"
 #include "comp/RootNode.hpp"
+#include "comp/ShaderCompiler.hpp"
 #include "comp/Window.hpp"
 #include "infra/CrashReporter.hpp"
 #include "infra/Logger.hpp"

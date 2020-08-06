@@ -32,14 +32,14 @@ public:
 
     void destroy();
 
-    /*! Query the grpahics memory allocator for current memory budget information. Uses a cheaper query but the
+    /*! Query the graphics memory allocator for current memory budget information. Uses a cheaper query but the
      * information is approximate.
      *
      * \param bytesUsedOut The number of graphics memory bytes consumed by scintillator.
      * \param bytesBudgetOut The maximum amount of graphics memory that scintillator can safely consume.
      * \return true on success, false on query falure.
      */
-    bool getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudgetOut);
+    bool getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudgetOut) const;
 
     VkDevice get() { return m_device; }
     VkPhysicalDevice physical() { return m_physicalDevice; }

@@ -26,8 +26,8 @@ Query the status. Replies to sender with the following message:
 
 definitionlist::
 ## /scin_status.reply || table::
-## strong::int:: || number of running Scinths.
-## strong::int:: || number of groups.
+## strong::int:: || number of nodes in the render tree.
+## strong::int:: || number of groups. TODO: fix so this number is accurate and the previous is number of Scinths
 ## strong::int:: || number of loaded Scinth defintions.
 ## strong::int:: || number of warnings in log.
 ## strong::int:: || number of errors in log.
@@ -153,7 +153,7 @@ table::
 ## N * strong::int:: || node ID
 ::
 
-Stops a node abruptly, removes it from its group, and frees its memory. More than one nodeID may be specified as additional integer arguments in the message.
+Stops a node abruptly, removes it from its group, and frees its memory. More than one nodeID may be specified as additional integer arguments in the message. Note that since Scinths and Groups share the same ID space Groups can also be specified on the list of IDs and they will be deleted. In Scintillator this command has same effect as calling teletype::/scin_g_freeAll::.
 
 subsection::/scin_n_run
 
@@ -218,7 +218,6 @@ note::
 The SuperCollider Synthesis Server command reference specifies if the provided ID number is -1, the server reserves all negative numbers for IDs, and so will assign a unique negative value to the Synth instance. Scintillator server is similar, but will treat emphasis::any:: negative value as a request for a unique ID to be assigned.
 ::
 
-
 section::Group Commands
 
 subsection::/scin_g_clearColor
@@ -235,7 +234,7 @@ table::
 ## N * strong::int:: || group ID(s)
 ::
 
-Recursively frees all nodes in the groups specified. Note that since Scinths and Groups share the same ID space individual Scinths can also be specified on the list of IDs and they will be deleted.
+Recursively frees all nodes in the groups specified. Note that since Scinths and Groups share the same ID space individual Scinths can also be specified on the list of IDs and they will be deleted. In Scintillator this command has same effect as calling teletype::/scin_n_free::.
 
 section::ImageBuffer Commands
 

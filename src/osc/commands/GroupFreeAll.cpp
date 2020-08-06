@@ -23,7 +23,7 @@ void GroupFreeAll::processMessage(int argc, lo_arg** argv, const char* types,
             spdlog::warn("OSC message groupFreeAll got non-integral type argument");
         }
     }
-    m_dispatcher->rootNode()->nodeFreeAll(nodeIDs);
+    m_dispatcher->rootNode()->nodeFree(nodeIDs);
 }
 
 } // namespace commands

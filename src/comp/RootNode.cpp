@@ -75,7 +75,8 @@ bool RootNode::create() {
                 return false;
             }
             m_imageMap->setEmptyImage(emptyImage);
-            spdlog::info("RootNode finished staging the empty image");
+            spdlog::debug("RootNode finished staging the empty image");
+            return true;
         })) {
         spdlog::critical("RootNode failed to stage the empty image.");
         return false;
@@ -221,7 +222,7 @@ bool RootNode::addAudioIngress(std::shared_ptr<audio::Ingress> ingress, int imag
     return true;
 }
 
-void RootNode::addScinth(const std::string& scinthDefName, int nodeID, AddAction addAction, int targetID,
+void RootNode::scinthNew(const std::string& scinthDefName, int nodeID, AddAction addAction, int targetID,
                          const std::vector<std::pair<std::string, float>>& namedValues,
                          const std::vector<std::pair<int, float>>& indexedValues) {
     std::shared_ptr<ScinthDef> scinthDef;
@@ -269,6 +270,42 @@ void RootNode::nodeFree(const std::vector<int>& nodeIDs) {
     for (auto node : nodeIDs) {
         removeNode(node);
     }
+}
+
+void RootNode::setNodeParameters(int nodeID, const std::vector<std::pair<std::string, float>>& namedValues,
+        const std::vector<std::pair<int, float>>& indexedValues) {
+    std::lock_guard<std::mutex> lock(m_nodeMutex);
+    if (nodeID != 0) {
+        Node* node;
+        auto mapIter = m_nodeMap.find(nodeID);
+        if (mapIter == m_nodeMap.end()) {
+            spdlog::error("setNodeParameters called on on unknown node ID {}", nodeID);
+            return;
+        }
+        node = mapIter->second->get();
+        node->setParameters(namedValues, indexedValues);
+    } else {
+        setParameters(namedValues, indexedValues);
+    }
+}
+
+void RootNode::setNodeRun(const std::vector<std::pair<int, int>>& pairs) {
+    std::lock_guard<std::mutex> lock(m_nodeMutex);
+    for (const auto& pair : pairs) {
+        auto mapIter = m_nodeMap.find(pair.first);
+        if (mapIter != m_nodeMap.end()) {
+            mapIter->second->get()->setRunning(pair.second != 0);
+        } else {
+            spdlog::warn("Compositor attempted to set pause/play on nonexistent nodeID {}", pair.first);
+        }
+    }
+
+    m_commandBufferDirty = true;
+}
+
+size_t RootNode::numberOfRunningNodes() {
+    std::lock_guard<std::mutex> lock(m_nodeMutex);
+    return m_nodeMap.size();
 }
 
 void RootNode::rebuildCommandBuffer(std::shared_ptr<FrameContext> context) {
@@ -452,18 +489,18 @@ void RootNode::removeNode(int targetID) {
 
     // Now remove node and all contained nodes from the node map.
     std::stack<Node*> removeNodes;
-    removeNodes.push(mapIter.second.get());
+    removeNodes.push(mapIter->second->get());
     while (removeNodes.size()) {
         Node* node = removeNodes.top();
         removeNodes.pop();
-        m_nodeMap.erase(node->m_nodeID);
-        for (auto child : node->m_children) {
+        m_nodeMap.erase(node->nodeID());
+        for (auto child : node->children()) {
             removeNodes.push(child.get());
         }
     }
 
     // Remove node from parent's child list.
-    mapIter->second->m_parent.erase(mapIter.second);
+    mapIter->second->get()->parent()->children().erase(mapIter->second);
 }
 
 } // namespace comp

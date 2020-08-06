@@ -103,9 +103,6 @@ size_t Compositor::numberOfRunningScinths() {
     return m_scinths.size();
 }
 
-bool Compositor::getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudgetOut) {
-    return m_device->getGraphicsMemoryBudget(bytesUsedOut, bytesBudgetOut);
-}
 
 // Needs to be called only from the same thread that calls prepareFrame. Assumes that m_drawSecondary is up-to-date.
 bool Compositor::rebuildCommandBuffer() {
