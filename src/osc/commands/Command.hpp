@@ -34,11 +34,14 @@ public:
         kNFree = 11,
         kNRun = 12,
         kNSet = 15,
+        kNBefore = 18,
+        kNAfter = 19,
 
         // Scinth Commands
         kSNew = 9,
 
         // Group Commands
+        kGroupNew = 21,
         kGroupFreeAll = 24,
 
         // ImageBuffer Commands

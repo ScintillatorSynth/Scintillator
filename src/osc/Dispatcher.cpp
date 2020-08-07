@@ -24,9 +24,13 @@
 #include "osc/commands/LogAppend.hpp"
 #include "osc/commands/LogCrashReports.hpp"
 #include "osc/commands/LogLevel.hpp"
+#include "osc/commands/NodeAfter.hpp"
+#include "osc/commands/NodeBefore.hpp"
 #include "osc/commands/NodeFree.hpp"
 #include "osc/commands/NodeRun.hpp"
 #include "osc/commands/NodeSet.hpp"
+#include "osc/commands/NodeBefore.hpp"
+#include "osc/commands/NodeAfter.hpp"
 #include "osc/commands/Notify.hpp"
 #include "osc/commands/Quit.hpp"
 #include "osc/commands/ScinVersion.hpp"
@@ -102,6 +106,8 @@ bool Dispatcher::create(const std::string& bindPort, bool dumpOSC) {
     m_commands[commands::Command::kNRun].reset(new commands::NodeRun(this));
     m_commands[commands::Command::kNSet].reset(new commands::NodeSet(this));
     m_commands[commands::Command::kSNew].reset(new commands::ScinthNew(this));
+    m_commands[commands::Command::kNodeBefore].reset(new commands::NodeBefore(this));
+    m_commands[commands::Command::kNodeAfter].reset(new commands::NodeAfter(this));
     m_commands[commands::Command::kGroupFreeAll].reset(new commands::GroupFreeAll(this));
     m_commands[commands::Command::kIBAllocRead].reset(new commands::ImageBufferAllocRead(this));
     m_commands[commands::Command::kIBQuery].reset(new commands::ImageBufferQuery(this));

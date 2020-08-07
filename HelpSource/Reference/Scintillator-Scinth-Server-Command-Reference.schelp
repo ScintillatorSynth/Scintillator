@@ -185,6 +185,37 @@ table::
 ::
 ::
 
+Takes a list of pairs of control indices and values and sets the controls to those values. If the node is a group, then it sets the controls of every node in the group.
+
+subsection::/scin_n_before
+
+Place a node before another.
+
+table::
+## strong::int:: || node ID
+## N * || table::
+## strong::int:: || the ID of the node to place (A)
+## strong::int:: || the ID of the node before which the above is placed (B)
+::
+::
+
+Places node A in the same group as node B, to execute immediately before node B.
+
+subsection::/scin_n_after
+
+Place a node after another.
+
+table::
+## strong::int:: || node ID
+## N * || table::
+## strong::int:: || the ID of the node to place (A)
+## strong::int:: || the ID of the node before which the above is placed (B)
+::
+::
+
+Places node A in the same group as node B, to execute immediately after node B.
+
+
 section::Scinth Commands
 
 subsection::/scin_s_new
@@ -220,11 +251,27 @@ The SuperCollider Synthesis Server command reference specifies if the provided I
 
 section::Group Commands
 
-subsection::/scin_g_clearColor
+subsection::/scin_g_new
 
-Sets the background color for the provided group.
+Create a new group.
 
-TODO
+table::
+## N* || table::
+## strong::int:: || new group ID
+## strong::int:: || add action (0, 1, 2, 3 or 4 see below)
+## strong::int:: || add target ID
+::
+::
+
+definitionlist::
+## add actions: || table::
+    ## 0 || add the new group to the the head of the group specified by the add target ID.
+    ## 1 || add the new group to the the tail of the group specified by the add target ID.
+    ## 2 || add the new group just before the node specified by the add target ID.
+    ## 3 || add the new group just after the node specified by the add target ID.
+    ## 4 || the new group replaces the node specified by the add target ID. The target node is freed.
+    ::
+::
 
 subsection::/scin_g_freeAll
 

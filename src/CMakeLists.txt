@@ -229,6 +229,10 @@ set(scintillator_synth_files
     osc/commands/LogCrashReports.hpp
     osc/commands/LogLevel.cpp
     osc/commands/LogLevel.hpp
+    osc/commands/NodeAfter.cpp
+    osc/commands/NodeAfter.hpp
+    osc/commands/NodeBefore.cpp
+    osc/commands/NodeBefore.hpp
     osc/commands/NodeFree.cpp
     osc/commands/NodeFree.hpp
     osc/commands/NodeRun.cpp
