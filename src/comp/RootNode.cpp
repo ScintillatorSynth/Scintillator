@@ -24,7 +24,7 @@
 namespace scin { namespace comp {
 
 RootNode::RootNode(std::shared_ptr<vk::Device> device, std::shared_ptr<Canvas> canvas):
-    Node(device, 0),
+    Group(device, 0),
     m_canvas(canvas),
     m_shaderCompiler(new ShaderCompiler()),
     m_computeCommandPool(new vk::CommandPool(device)),

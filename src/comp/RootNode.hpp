@@ -1,7 +1,7 @@
 #ifndef SRC_COMP_ROOT_NODE_HPP_
 #define SRC_COMP_ROOT_NODE_HPP_
 
-#include "comp/Node.hpp"
+#include "comp/Group.hpp"
 
 #include <atomic>
 #include <functional>
@@ -42,7 +42,7 @@ class StageManager;
  * and image buffers. Creates the primary command buffers and render passes. Renders to a Canvas. Maintains a hard-coded
  * nodeID of 0.
  */
-class RootNode : public Node {
+class RootNode : public Group {
 public:
     /*! Construct a root node. Root nodes assume a hard-coded nodeID of 0.
      *

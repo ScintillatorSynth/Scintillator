@@ -46,10 +46,12 @@ public:
     virtual void setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
                                const std::vector<std::pair<int, float>>& indexedValues) = 0;
 
+    virtual bool isGroup() const = 0;
+    virtual bool isScinth() const = 0;
+
     int nodeID() const { return m_nodeID; }
     Node* parent() const { return m_parent; }
     void setParent(Node* parent) { m_parent = parent; }
-    std::list<std::shared_ptr<Node>>& children() { return m_children; }
 
     /*! Determines the paused or playing status of the Node. TODO: should paused nodes still render? Unlike in audio,
      * a paused VGen can still produce a still frame.
@@ -63,8 +65,6 @@ protected:
     int m_nodeID;
     Node* m_parent;
     bool m_running;
-
-    std::list<std::shared_ptr<Node>> m_children;
 };
 
 } // namespace comp

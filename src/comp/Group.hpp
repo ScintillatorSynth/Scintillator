@@ -47,7 +47,13 @@ public:
     void setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
                        const std::vector<std::pair<int, float>>& indexedValues) override;
 
+    bool isGroup() const override { return true; }
+    bool isScinth() const override { return false; }
+
+    std::list<std::shared_ptr<Node>>& children() { return m_children; }
+
 protected:
+    std::list<std::shared_ptr<Node>> m_children;
 };
 
 } // namespace comp

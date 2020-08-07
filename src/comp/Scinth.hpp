@@ -58,6 +58,9 @@ public:
     void setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
                        const std::vector<std::pair<int, float>>& indexedValues) override;
 
+    bool isGroup() const override { return false; }
+    bool isScinth() const override { return true; }
+
 private:
     bool allocateDescriptors();
     void updateDescriptors();
