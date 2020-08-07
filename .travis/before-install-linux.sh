@@ -22,7 +22,6 @@ sudo apt-get install --yes      \
     python3-yaml                \
     supercollider-ide           \
     xvfb                        \
-    zlib1g
 
 # fetch pre-built binary dependencies
 cd $TRAVIS_BUILD_DIR
@@ -35,7 +34,8 @@ if [ $DO_COVERAGE = true ]; then
         libc++-8-dev            \
         libc++abi-8-dev         \
         llvm-8-dev              \
-        python3-distutils
+        python3-distutils       \
+        zlib1g
 else
     sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
     sudo apt-get update
@@ -55,8 +55,19 @@ else
     sudo cp -R $TRAVIS_BUILD_DIR/build/install-ext/ssl /usr/local/ssl || exit 1
     echo "/usr/local/ssl/lib" > $TRAVIS_HOME/openssl-1.1.1g.conf || exit 2
     sudo mv $TRAVIS_HOME/openssl-1.1.1g.conf /etc/ld.so.conf.d/. || exit 3
+
+    # need zlib 1.2.9
+    cd $TRAVIS_HOME
+    wget https://www.zlib.net/fossils/zlib-1.2.9.tar.gz
+    tar xzf zlib-1.2.9.tar.gz
+    cd zlib-1.2.9
+    ./configure
+    make
+    sudo make install
+
     sudo ldconfig -v || exit 4
 
+    # need a newer version of gperf than what's on Xenial
     cd $TRAVIS_HOME
     wget http://ftp.gnu.org/pub/gnu/gperf/gperf-3.1.tar.gz
     tar xzf gperf-3.1.tar.gz
