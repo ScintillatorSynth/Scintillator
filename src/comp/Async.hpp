@@ -29,13 +29,13 @@ class Device;
 
 namespace comp {
 
-class Compositor;
+class RootNode;
 
 /*! Maintains a thread pool and provides facilities to run all async functions on those threads.
  */
 class Async {
 public:
-    Async(std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
+    Async(std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<RootNode> rootNode,
           std::shared_ptr<vk::Device> device);
     ~Async();
 
@@ -121,7 +121,7 @@ private:
                                      std::function<void()> completion);
 
     std::shared_ptr<base::Archetypes> m_archetypes;
-    std::shared_ptr<Compositor> m_compositor;
+    std::shared_ptr<RootNode> m_rootNode;
     std::shared_ptr<vk::Device> m_device;
     std::atomic<bool> m_quit;
     std::vector<std::thread> m_workerThreads;

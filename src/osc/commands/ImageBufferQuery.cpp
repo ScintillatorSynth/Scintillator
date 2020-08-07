@@ -1,6 +1,6 @@
 #include "osc/commands/ImageBufferQuery.hpp"
 
-#include "comp/Compositor.hpp"
+#include "comp/RootNode.hpp"
 #include "osc/Dispatcher.hpp"
 
 #include "spdlog/spdlog.h"
@@ -22,7 +22,7 @@ void ImageBufferQuery::processMessage(int argc, lo_arg** argv, const char* types
         size_t size = 0;
         uint32_t width = 0;
         uint32_t height = 0;
-        if (m_dispatcher->compositor()->queryImage(imageID, size, width, height)) {
+        if (m_dispatcher->rootNode()->queryImage(imageID, size, width, height)) {
             lo_message_add_int32(message, imageID);
             lo_message_add_int32(message, static_cast<int32_t>(size));
             lo_message_add_int32(message, width);

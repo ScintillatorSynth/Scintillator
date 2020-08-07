@@ -4,6 +4,7 @@
 #include "base/Shape.hpp"
 #include "base/VGen.hpp"
 #include "comp/Canvas.hpp"
+#include "comp/FrameContext.hpp"
 #include "comp/ImageMap.hpp"
 #include "comp/Pipeline.hpp"
 #include "comp/SamplerFactory.hpp"
@@ -21,13 +22,11 @@ namespace scin { namespace comp {
 
 Scinth::Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef,
                std::shared_ptr<ImageMap> imageMap):
-    m_device(device),
-    m_nodeID(nodeID),
+    Node(device, nodeID),
     m_cueued(true),
     m_scinthDef(scinthDef),
     m_imageMap(imageMap),
     m_descriptorPool(VK_NULL_HANDLE),
-    m_running(false),
     m_numberOfParameters(0),
     m_commandBuffersDirty(true) {}
 
@@ -54,30 +53,23 @@ bool Scinth::create() {
         }
     }
 
-    return rebuildBuffers();
+    return true;
 }
 
-void Scinth::destroy() {
-    // Break circular references here so Scinth can be automatically reclaimed when referencing objects (namely the
-    // command buffer) go out of scope and are themselves deleted.
-    m_computeCommands.reset();
-    m_drawCommands.reset();
-}
-
-bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
+bool Scinth::prepareFrame(std::shared_ptr<FrameContext> context) {
     // If this is our first call to prepareFrame we treat this frameTime as our startTime.
     if (m_cueued) {
-        m_startTime = frameTime;
+        m_startTime = context->frameTime();
         m_cueued = false;
     }
 
     // Update the Uniform buffer at imageIndex, if needed.
     if (m_uniformBuffers.size()) {
-        float* uniform = static_cast<float*>(m_uniformBuffers[imageIndex]->mappedAddress());
+        float* uniform = static_cast<float*>(m_uniformBuffers[context->imageIndex()]->mappedAddress());
         for (size_t i = 0; i < m_scinthDef->abstract()->uniformManifest().numberOfElements(); ++i) {
             switch (m_scinthDef->abstract()->uniformManifest().intrinsicForElement(i)) {
             case base::Intrinsic::kTime:
-                *uniform = static_cast<float>(frameTime - m_startTime);
+                *uniform = static_cast<float>(context->frameTime() - m_startTime);
                 break;
 
             case base::Intrinsic::kFragCoord:
@@ -87,36 +79,50 @@ bool Scinth::prepareFrame(size_t imageIndex, double frameTime) {
             case base::Intrinsic::kPosition:
             case base::Intrinsic::kSampler:
             case base::Intrinsic::kTexPos:
-                spdlog::error("Unknown or invalid uniform Intrinsic in Scinth {}", m_nodeID);
-                return false;
+                spdlog::critical("Unknown or invalid uniform Intrinsic in Scinth {}", m_nodeID);
+                return true;
             }
 
             uniform += (m_scinthDef->abstract()->uniformManifest().strideForElement(i) / sizeof(float));
         }
     }
 
-    if (m_commandBuffersDirty) {
-        if (!updateDescriptors()) {
-            return false;
+    bool rebuildRequired = m_commandBuffersDirty;
+    if (rebuildRequired) {
+        updateDescriptors();
+        rebuildBuffers();
+    }
+
+    if (m_computeCommands) {
+        context->appendComputeCommands(m_computeCommands);
+    }
+    context->appendDrawCommands(m_drawCommands);
+    for (auto image : m_fixedImages) {
+        context->appendImage(image);
+    }
+    for (auto image : m_parameterizedImages) {
+        context->appendImage(image);
+    }
+
+    return rebuildRequired;
+}
+
+void Scinth::setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
+                           const std::vector<std::pair<int, float>>& indexedValues) {
+    for (auto namedPair : namedValues) {
+        size_t index = 0;
+        if (m_scinthDef->abstract()->indexForParameterName(namedPair.first, index)) {
+            m_parameterValues[index] = namedPair.second;
+            m_commandBuffersDirty = true;
+        } else {
+            spdlog::info("Scinth {} failed to find parameter named {}", m_nodeID, namedPair.first);
         }
-        return rebuildBuffers();
     }
 
-    return true;
-}
-
-void Scinth::setParameterByName(const std::string& name, float value) {
-    size_t index = 0;
-    if (m_scinthDef->abstract()->indexForParameterName(name, index)) {
-        m_parameterValues[index] = value;
-        m_commandBuffersDirty = true;
-    } else {
-        spdlog::warn("Scinth {} failed to find parameter named {}", m_nodeID, name);
+    for (auto indexPair : indexedValues) {
+        m_parameterValues[indexPair.first] = indexPair.second;
     }
-}
 
-void Scinth::setParameterByIndex(int index, float value) {
-    m_parameterValues[index] = value;
     m_commandBuffersDirty = true;
 }
 
@@ -319,7 +325,7 @@ bool Scinth::allocateDescriptors() {
     return true;
 }
 
-bool Scinth::updateDescriptors() {
+void Scinth::updateDescriptors() {
     // This pair is sampler index, new image and we build it by running through parameter values and current bound ids.
     std::vector<std::pair<size_t, std::shared_ptr<vk::DeviceImage>>> newBindings;
     for (size_t i = 0; i < m_parameterizedImageIDs.size(); ++i) {
@@ -336,7 +342,7 @@ bool Scinth::updateDescriptors() {
 
     // Early out for no binding updates needed.
     if (!newBindings.size()) {
-        return true;
+        return;
     }
 
     // Compute index where parameterized images binding starts.
@@ -374,16 +380,14 @@ bool Scinth::updateDescriptors() {
         vkUpdateDescriptorSets(m_device->get(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(),
                                0, nullptr);
     }
-
-    return true;
 }
 
-bool Scinth::rebuildBuffers() {
+void Scinth::rebuildBuffers() {
     if (m_scinthDef->abstract()->hasComputeStage()) {
         m_computeCommands.reset(new vk::CommandBuffer(m_device, m_scinthDef->computeCommandPool()));
         if (!m_computeCommands->create(m_scinthDef->canvas()->numberOfImages(), false)) {
-            spdlog::error("failed creating compute command buffers for Scinth {}", m_nodeID);
-            return false;
+            spdlog::critical("failed creating compute command buffers for Scinth {}", m_nodeID);
+            return;
         }
 
         for (size_t i = 0; i < m_scinthDef->canvas()->numberOfImages(); ++i) {
@@ -395,8 +399,8 @@ bool Scinth::rebuildBuffers() {
             beginInfo.pInheritanceInfo = &inheritanceInfo;
 
             if (vkBeginCommandBuffer(m_computeCommands->buffer(i), &beginInfo) != VK_SUCCESS) {
-                spdlog::error("failed beginning compute command buffer {} for Scinth {}", i, m_nodeID);
-                return false;
+                spdlog::critical("failed beginning compute command buffer {} for Scinth {}", i, m_nodeID);
+                return;
             }
 
             // If the compute and graphics queues are separate we insert execution barriers around the buffers to
@@ -454,16 +458,16 @@ bool Scinth::rebuildBuffers() {
             }
 
             if (vkEndCommandBuffer(m_computeCommands->buffer(i)) != VK_SUCCESS) {
-                spdlog::error("failed ending compute command buffer {} for Scinth {}", i, m_nodeID);
-                return false;
+                spdlog::critical("failed ending compute command buffer {} for Scinth {}", i, m_nodeID);
+                return;
             }
         }
     }
 
     m_drawCommands.reset(new vk::CommandBuffer(m_device, m_scinthDef->drawCommandPool()));
     if (!m_drawCommands->create(m_scinthDef->canvas()->numberOfImages(), false)) {
-        spdlog::error("failed creating draw command buffers for Scinth {}", m_nodeID);
-        return false;
+        spdlog::critical("failed creating draw command buffers for Scinth {}", m_nodeID);
+        return;
     }
 
     for (size_t i = 0; i < m_scinthDef->canvas()->numberOfImages(); ++i) {
@@ -479,8 +483,8 @@ bool Scinth::rebuildBuffers() {
         beginInfo.pInheritanceInfo = &inheritanceInfo;
 
         if (vkBeginCommandBuffer(m_drawCommands->buffer(i), &beginInfo) != VK_SUCCESS) {
-            spdlog::error("failed beginning draw command buffer {} for Scinth {}", i, m_nodeID);
-            return false;
+            spdlog::critical("failed beginning draw command buffer {} for Scinth {}", i, m_nodeID);
+            return;
         }
 
         if (m_numberOfParameters) {
@@ -504,13 +508,12 @@ bool Scinth::rebuildBuffers() {
         vkCmdDrawIndexed(m_drawCommands->buffer(i), m_scinthDef->abstract()->shape()->numberOfIndices(), 1, 0, 0, 0);
 
         if (vkEndCommandBuffer(m_drawCommands->buffer(i)) != VK_SUCCESS) {
-            spdlog::error("failed ending draw command buffer {} for Scinth {}", i, m_nodeID);
-            return false;
+            spdlog::critical("failed ending draw command buffer {} for Scinth {}", i, m_nodeID);
+            return;
         }
     }
 
     m_commandBuffersDirty = false;
-    return true;
 }
 
 } // namespace comp

@@ -1,6 +1,7 @@
 #ifndef SRC_COMP_SCINTH_HPP_
 #define SRC_COMP_SCINTH_HPP_
 
+#include "comp/Node.hpp"
 #include "vulkan/Vulkan.hpp"
 
 #include <memory>
@@ -20,12 +21,13 @@ class HostBuffer;
 
 namespace comp {
 
+class FrameContext;
 class ImageMap;
 class ScinthDef;
 
 /*! Represents a running, controllable instance of a ScinthDef.
  */
-class Scinth {
+class Scinth : public Node {
 public:
     Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef,
            std::shared_ptr<ImageMap> imageMap);
@@ -36,53 +38,31 @@ public:
      *
      * \return true if successful, false if not.
      */
-    bool create();
+    bool create() override;
 
-    void destroy();
-
-    /*! Prepare for the next frame to render.
+    /*! Prepare for the next frame to render. In particular updates the uniform buffer associated with the context, if
+     * present, and any other operations to prepare a frame to render at the provided time.
      *
-     * Update the Uniform buffer associated with the imageIndex, if present, and any other operations to prepare a
-     * frame to render at the provided time.
-     *
-     * \param imageIndex which of the images to prepare to render.
-     * \param frameTime the time the frame is being prepared for.
-     * \return true if Scinth should continue running for this frame, false otherwise.
+     * \params context The shared state object for the current frame render.
+     * \return true if a command buffer rebuild happened, false if not.
      */
-    bool prepareFrame(size_t imageIndex, double frameTime);
+    bool prepareFrame(std::shared_ptr<FrameContext> context) override;
 
-    /*! Determines the paused or playing status of the Scinth.
+    /*! Set parameters on this Scinth, causing a command buffer rebuild on the next call to prepareFrame.
+     *  Parameters are set in order starting with the named values and followed by the indexed values, so any duplicate
+     *  settings will respect the last value written.
      *
-     * \param run If false, will pause the Scinth. If true, will play it. Note this only sets the flag for the Scinth.
+     * \param namedValues The pairs of parameter names and values to set
+     * \param indexedValues The pairs of parameter indices and values to set
      */
-    void setRunning(bool run) { m_running = run; }
-
-    /*! Sets a parameter value by name. Will cause a command buffer rebuild on next call to prepareFrame().
-     *
-     * \param name The name of the parameter to set.
-     * \param value The value of the parameter.
-     */
-    void setParameterByName(const std::string& name, float value);
-
-    /*! Sets a parameter value by index. Will cause a command buffer rebuild on next call to prepareFrame().
-     *
-     * \param index The index of the parameter to set.
-     * \param value The new value of the parameter.
-     */
-    void setParameterByIndex(int index, float value);
-
-    std::shared_ptr<vk::CommandBuffer> computeCommands() { return m_computeCommands; }
-    std::shared_ptr<vk::CommandBuffer> drawCommands() { return m_drawCommands; }
-    int nodeID() const { return m_nodeID; }
-    bool running() const { return m_running; }
+    void setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
+                       const std::vector<std::pair<int, float>>& indexedValues) override;
 
 private:
     bool allocateDescriptors();
-    bool updateDescriptors();
-    bool rebuildBuffers();
+    void updateDescriptors();
+    void rebuildBuffers();
 
-    std::shared_ptr<vk::Device> m_device;
-    int m_nodeID;
     bool m_cueued;
     double m_startTime;
 
@@ -100,7 +80,6 @@ private:
     std::vector<std::pair<size_t, size_t>> m_parameterizedImageIDs;
     std::shared_ptr<vk::CommandBuffer> m_computeCommands;
     std::shared_ptr<vk::CommandBuffer> m_drawCommands;
-    bool m_running;
     std::unique_ptr<float[]> m_parameterValues;
     size_t m_numberOfParameters;
     bool m_commandBuffersDirty;

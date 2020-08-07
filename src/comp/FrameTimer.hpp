@@ -3,15 +3,22 @@
 
 #include <chrono>
 #include <deque>
+#include <memory>
 #include <mutex>
 
-namespace scin { namespace comp {
+namespace scin {
+
+namespace vk {
+class Device;
+}
+
+namespace comp {
 
 /*! Used to track average throughput and latency of frame rendering.
  */
 class FrameTimer {
 public:
-    FrameTimer(int targetFrameRate);
+    FrameTimer(std::shared_ptr<vk::Device> device, int targetFrameRate);
     ~FrameTimer();
 
     /*! Saves the start time and starts tracking frame-to-frame distances.
@@ -34,8 +41,15 @@ public:
      */
     void getStats(int& targetFrameRateOut, double& meanFrameRateOut, size_t& lateFramesOut) const;
 
+    /*! Relayed from the graphics device, convenience method.
+     */
+    bool getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudgetOut) const;
+
 private:
     void updateStats(double meanPeriod);
+
+    std::shared_ptr<vk::Device> m_device;
+    int m_targetFrameRate;
 
     typedef std::chrono::time_point<std::chrono::high_resolution_clock> TimePoint;
     std::deque<double> m_framePeriods;
@@ -47,7 +61,6 @@ private:
     TimePoint m_lastUpdateTime;
 
     mutable std::mutex m_statsMutex;
-    int m_targetFrameRate;
     double m_meanFrameRate;
     size_t m_totalLateFrames;
 };

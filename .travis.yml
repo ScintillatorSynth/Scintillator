@@ -38,8 +38,9 @@ deploy:
   cleanup: false
   acl: public_read
   on:
+    tags: false
     condition: "$DO_COVERAGE = true"
-    branch: master
+    all_branches: true
 - provider: s3
   access_key_id: "$AWS_KEY"
   secret_access_key: "$AWS_SECRET"
@@ -53,7 +54,7 @@ deploy:
   on:
     tags: false
     condition: "$DO_COVERAGE = false"
-    branch: master
+    all_branches: true
 - provider: s3
   access_key_id: "$AWS_KEY"
   secret_access_key: "$AWS_SECRET"
@@ -76,6 +77,7 @@ deploy:
   cleanup: false
   local_dir: "$HOME/symbols"
   on:
+    tags: false
     condition: "$DO_COVERAGE = false"
     all_branches: true
 
