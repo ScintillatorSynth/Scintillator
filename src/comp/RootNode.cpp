@@ -24,7 +24,7 @@
 namespace scin { namespace comp {
 
 RootNode::RootNode(std::shared_ptr<vk::Device> device, std::shared_ptr<Canvas> canvas):
-    Group(device, 0),
+    m_device(device),
     m_canvas(canvas),
     m_shaderCompiler(new ShaderCompiler()),
     m_computeCommandPool(new vk::CommandPool(device)),
@@ -89,14 +89,14 @@ bool RootNode::prepareFrame(std::shared_ptr<FrameContext> context) {
     bool rebuildRequired = m_commandBuffersDirty;
 
     {
-        std::lock_guard<std::mutex> lock(m_nodeMutex);
+        std::lock_guard<std::mutex> lock(m_treeMutex);
         for (auto stager : m_audioStagers) {
             stager->stageAudio(m_stageManager);
         }
 
-        for (auto child : m_children) {
-            context->appendNode(child);
-            rebuildRequired |= child->prepareFrame(context);
+        for (auto scinth : m_scinths) {
+            context->appendScinth(scinth);
+            rebuildRequired |= scinth->prepareFrame(context);
         }
     }
 
@@ -113,9 +113,11 @@ bool RootNode::prepareFrame(std::shared_ptr<FrameContext> context) {
 void RootNode::destroy() {
     // Delete all command buffers outstanding first, which means emptying the Scinth map and list.
     {
-        std::lock_guard<std::mutex> lock(m_nodeMutex);
-        m_nodeMap.clear();
-        m_children.clear();
+        std::lock_guard<std::mutex> lock(m_treeMutex);
+        m_scinthMap.clear();
+        m_scinths.clear();
+        m_groupMap.clear();
+        m_groups.clear();
         m_audioStagers.clear();
     }
     m_computePrimary.reset();
@@ -166,15 +168,34 @@ void RootNode::defFree(const std::vector<std::string>& names) {
 }
 
 void RootNode::nodeFree(const std::vector<int>& nodeIDs) {
-    std::lock_guard<std::mutex> lock(m_nodeMutex);
-    for (auto node : nodeIDs) {
-        removeNode(node);
+    std::lock_guard<std::mutex> lock(m_treeMutex);
+    for (auto id : nodeIDs) {
+        auto scinthMapIter = m_scinthMap.find(id);
+        if (scinthMapIter != m_scinthMap.end()) {
+            m_scinths.erase(scinthMapIter->second);
+            m_scinthMap.erase(scinthMapIter);
+        } else {
+            auto groupMapIter = m_groupMap.find(id);
+            if (groupMapIter != m_groupMap.end()) {
+                for (auto i = groupMapIter->second->groupBegin; i != groupMapIter->second->groupEnd; ++i) {
+                    m_groupMap.erase(i->groupID);
+                }
+                m_groups.erase(groupMapIter->second->groupBegin, groupMapIter->second->groupEnd);
+
+                for (auto i = groupMapIter->second->scinthBegin; i != groupMapIter->second->scinthEnd; ++i) {
+                    m_scinthMap.erase(i->scinthID());
+                }
+                m_scinths.erase(groupMapIter->second->scinthBegin, groupMapIter->second->scinthEnd);
+            } else {
+                spdlog::warn("nodeFree id {} not found", id);
+            }
+        }
     }
     m_commandBuffersDirty = true;
 }
 
 void RootNode::nodeRun(const std::vector<std::pair<int, int>>& pairs) {
-    std::lock_guard<std::mutex> lock(m_nodeMutex);
+    std::lock_guard<std::mutex> lock(m_treeMutex);
     for (const auto& pair : pairs) {
         auto mapIter = m_nodeMap.find(pair.first);
         if (mapIter != m_nodeMap.end()) {
@@ -189,7 +210,7 @@ void RootNode::nodeRun(const std::vector<std::pair<int, int>>& pairs) {
 
 void RootNode::nodeSet(int nodeID, const std::vector<std::pair<std::string, float>>& namedValues,
                        const std::vector<std::pair<int, float>>& indexedValues) {
-    std::lock_guard<std::mutex> lock(m_nodeMutex);
+    std::lock_guard<std::mutex> lock(m_treeMutex);
     if (nodeID != 0) {
         Node* node;
         auto mapIter = m_nodeMap.find(nodeID);
@@ -204,7 +225,35 @@ void RootNode::nodeSet(int nodeID, const std::vector<std::pair<std::string, floa
     }
 }
 
-
+void RootNode::groupNew(int groupID, AddAction addAction, int targetID) {
+    std::lock_guard<std::mutex> lock(m_treeMutex);
+    if (m_scinthMap.find(groupID) != m_scinthMap.end() || m_groupMap.find(groupID) != m_groupMap.end()) {
+        spdlog::error("Failed to create group ID {} as this number is already in use.");
+        return;
+    }
+    if (targetID != 0) {
+        switch (addAction) {
+        case kGroupHead: {
+            auto iter = m_groupMap.find(targetID);
+            if (iter == m_groupMap.end()) {
+                spdlog::error("Failed to create group ID {} as target group ID {} not found.");
+                return;
+            }
+            Group group {
+                iter->second->scinthBegin,
+                iter->second->scinthBegin,
+                iter->second,
+                iter->second
+            };
+        } break;
+        case kGroupTail:
+        case kBeforeNode:
+        case kAfterNode:
+        case kReplace:
+        }
+    } else {
+    }
+}
 
 void RootNode::stageImage(int imageID, uint32_t width, uint32_t height, std::shared_ptr<vk::HostBuffer> imageBuffer,
                           std::function<void()> completion) {
@@ -250,7 +299,7 @@ bool RootNode::addAudioIngress(std::shared_ptr<audio::Ingress> ingress, int imag
     m_imageMap->addImage(imageID, stager->image());
 
     {
-        std::lock_guard<std::mutex> lock(m_nodeMutex);
+        std::lock_guard<std::mutex> lock(m_treeMutex);
         m_audioStagers.push_back(stager);
     }
     return true;
@@ -286,7 +335,7 @@ void RootNode::scinthNew(const std::string& scinthDefName, int nodeID, AddAction
     scinth->setParameters(namedValues, indexedValues);
 
     {
-        std::lock_guard<std::mutex> lock(m_nodeMutex);
+        std::lock_guard<std::mutex> lock(m_treeMutex);
         if (m_nodeMap.find(nodeID) != m_nodeMap.end()) {
             spdlog::info("Clobbering existing nodeID {}", nodeID);
             removeNode(nodeID);
@@ -304,7 +353,7 @@ void RootNode::scinthNew(const std::string& scinthDefName, int nodeID, AddAction
 }
 
 size_t RootNode::numberOfRunningNodes() {
-    std::lock_guard<std::mutex> lock(m_nodeMutex);
+    std::lock_guard<std::mutex> lock(m_treeMutex);
     return m_nodeMap.size();
 }
 
@@ -404,6 +453,7 @@ void RootNode::rebuildCommandBuffer(std::shared_ptr<FrameContext> context) {
     m_commandBuffersDirty = false;
 }
 
+/*
 bool RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int targetID) {
     if (targetID != 0) {
         Node* target;
@@ -502,6 +552,7 @@ void RootNode::removeNode(int targetID) {
     // Remove node from parent's child list.
     mapIter->second->get()->parent()->children().erase(mapIter->second);
 }
+*/
 
 } // namespace comp
 } // namespace scin

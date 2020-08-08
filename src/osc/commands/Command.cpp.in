@@ -43,8 +43,8 @@ g_new,              scin::osc::commands::Command::Number::kGroupNew
 g_head,             scin::osc::commands::Command::Number::kGroupHead
 g_tail,             scin::osc::commands::Command::Number::kGroupTail
 g_freeAll,          scin::osc::commands::Command::Number::kGroupFreeAll
-g_deepFree,         scin::osc::commands::Command::Number::kDeepFree
-g_dumpTree,         scin::osc::commands::Command::Number::kGroupDumpFree
+g_deepFree,         scin::osc::commands::Command::Number::kGroupDeepFree
+g_dumpTree,         scin::osc::commands::Command::Number::kGroupDumpTree
 g_queryTree,        scin::osc::commands::Command::Number::kGroupQueryTree
 ib_allocRead,       scin::osc::commands::Command::Number::kImageBufferAllocRead
 ib_query,           scin::osc::commands::Command::Number::kImageBufferQuery

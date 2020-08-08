@@ -13,7 +13,7 @@ class Image;
 
 namespace comp {
 
-class Node;
+class Scinth;
 
 /*! Encapsulates all of the Vulkan resources needed to capture a single frame of rendering. Populated by the Node tree,
  * and then retained by the requesting rendering object until render is complete. This helps to ensure that even if the
@@ -44,7 +44,7 @@ public:
      * that nodes (and their associated Vulkan resources) won't be deleted until every pipelined render that they have
      * submitted commands to is done.
      */
-    void appendNode(std::shared_ptr<Node> node) { m_nodes.emplace_back(node); }
+    void appendScinth(std::shared_ptr<Scinth> scinth) { m_scinths.emplace_back(scinth); }
 
     /*! Append a secondary compute command buffer to the list of compute commands.
      *
@@ -77,7 +77,7 @@ public:
 private:
     size_t m_imageIndex;
     double m_frameTime;
-    std::vector<std::shared_ptr<Node>> m_nodes;
+    std::vector<std::shared_ptr<Scinth>> m_scinths;
     std::vector<std::shared_ptr<vk::CommandBuffer>> m_computeCommands;
     std::vector<std::shared_ptr<vk::CommandBuffer>> m_drawCommands;
     std::vector<std::shared_ptr<vk::Image>> m_images;

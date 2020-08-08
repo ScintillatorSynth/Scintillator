@@ -73,15 +73,15 @@ private:
 
     std::shared_ptr<vk::Device> m_device;
     int m_nodeID;
-    bool m_running;
-    bool m_cueued;
-    double m_startTime;
-
-    // Keep a reference to the ScinthDef, so that it does not get deleted until all referring Scinths have also been
-    // deleted.
     std::shared_ptr<ScinthDef> m_scinthDef;
     std::shared_ptr<ImageMap> m_imageMap;
+    bool m_cueued;
     VkDescriptorPool m_descriptorPool;
+    size_t m_numberOfParameters;
+    bool m_commandBuffersDirty;
+
+    bool m_running;
+    double m_startTime;
     std::vector<VkDescriptorSet> m_descriptorSets;
     std::vector<std::shared_ptr<vk::DeviceImage>> m_fixedImages;
     std::vector<std::shared_ptr<vk::DeviceImage>> m_parameterizedImages;
@@ -92,8 +92,6 @@ private:
     std::shared_ptr<vk::CommandBuffer> m_computeCommands;
     std::shared_ptr<vk::CommandBuffer> m_drawCommands;
     std::unique_ptr<float[]> m_parameterValues;
-    size_t m_numberOfParameters;
-    bool m_commandBuffersDirty;
 };
 
 } // namespace comp

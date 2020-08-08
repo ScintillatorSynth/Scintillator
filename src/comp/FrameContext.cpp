@@ -6,7 +6,7 @@ FrameContext::FrameContext(size_t imageIndex): m_imageIndex(imageIndex), m_frame
 
 void FrameContext::reset(double frameTime) {
     m_frameTime = frameTime;
-    m_nodes.clear();
+    m_scinths.clear();
     m_computeCommands.clear();
     m_drawCommands.clear();
     m_images.clear();

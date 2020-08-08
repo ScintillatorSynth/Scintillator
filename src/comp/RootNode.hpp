@@ -21,6 +21,7 @@ class AbstractScinthDef;
 }
 
 namespace vk {
+class CommandBuffer;
 class CommandPool;
 class Device;
 class HostBuffer;
@@ -33,6 +34,7 @@ class Canvas;
 class FrameContext;
 class ImageMap;
 class SamplerFactory;
+class Scinth;
 class ScinthDef;
 class ShaderCompiler;
 class StageManager;
@@ -167,9 +169,11 @@ public:
 
     /*! Create a new group.
      *
-     * \param groupID The ID to assign to the new group. Must be positive.
+     * \param groupID The ID to assign to the new group, must be unique
      * \param addAction Where to put the new group relative to targetID
      * \param targetID The nodeID relative to addAction
+     *
+     * groupID should either be unique or addAction should be replace and targetID == groupID
      */
     void groupNew(int groupID, AddAction addAction, int targetID);
 
@@ -238,8 +242,6 @@ public:
      */
     bool addAudioIngress(std::shared_ptr<audio::Ingress> ingress, int imageID);
 
-
-
     /*! Returns the size of the render tree in nodes.
      */
     size_t numberOfRunningNodes();
@@ -249,10 +251,7 @@ public:
 protected:
     void rebuildCommandBuffer(std::shared_ptr<FrameContext> context);
 
-    // assumes lock is acquired.
-    bool insertNode(std::shared_ptr<Node> node, AddAction addAction, int targetID);
-    void removeNode(int nodeID);
-
+    std::shared_ptr<vk::Device> m_device;
     std::shared_ptr<Canvas> m_canvas;
     std::unique_ptr<ShaderCompiler> m_shaderCompiler;
     std::shared_ptr<vk::CommandPool> m_computeCommandPool;
@@ -272,9 +271,12 @@ protected:
     // Protects m_scinths, m_scinthMap, m_groupMap and m_audioStagers
     std::mutex m_treeMutex;
     struct Group {
-        std::list<std::shared_ptr<Scinth>>::iterator begin;
-        std::list<std::shared_ptr<Scinth>>::iterator end;
-        size_t size;
+        // Range within list m_scinths
+        std::list<std::shared_ptr<Scinth>>::iterator scinthBegin;
+        std::list<std::shared_ptr<Scinth>>::iterator scinthEnd;
+        // Range within list m_groups
+        std::list<Group>::iterator groupBegin;
+        std::list<Group>::iterator groupEnd;
         int groupID;
     };
 
@@ -283,7 +285,9 @@ protected:
     // guarantee that each nodeID uniquely identifies a single node in the tree. The value is an iterator from the child
     // list of the parent Node containing this one.
     std::unordered_map<int, std::list<std::shared_ptr<Scinth>>::iterator> m_scinthMap;
-    std::unordered_map<int, Group> m_groupMap;
+
+    std::list<Group> m_groups;
+    std::unordered_map<int, std::list<Group>::iterator> m_groupMap;
 
     std::vector<std::shared_ptr<AudioStager>> m_audioStagers;
 };
