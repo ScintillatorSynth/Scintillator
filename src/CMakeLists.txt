@@ -162,12 +162,8 @@ set(scintillator_synth_files
     comp/FrameContext.hpp
     comp/FrameTimer.cpp
     comp/FrameTimer.hpp
-    comp/Group.cpp
-    comp/Group.hpp
     comp/ImageMap.cpp
     comp/ImageMap.hpp
-    comp/Node.cpp
-    comp/Node.hpp
     comp/Offscreen.cpp
     comp/Offscreen.hpp
     comp/Pipeline.cpp
@@ -217,8 +213,20 @@ set(scintillator_synth_files
     osc/commands/DumpOSC.hpp
     osc/commands/Echo.cpp
     osc/commands/Echo.hpp
+    osc/commands/GroupDeepFree.cpp
+    osc/commands/GroupDeepFree.hpp
+    osc/commands/GroupDumpTree.cpp
+    osc/commands/GroupDumpTree.hpp
     osc/commands/GroupFreeAll.cpp
     osc/commands/GroupFreeAll.hpp
+    osc/commands/GroupHead.cpp
+    osc/commands/GroupHead.hpp
+    osc/commands/GroupNew.cpp
+    osc/commands/GroupNew.hpp
+    osc/commands/GroupQueryTree.cpp
+    osc/commands/GroupQueryTree.hpp
+    osc/commands/GroupTail.cpp
+    osc/commands/GroupTail.hpp
     osc/commands/ImageBufferAllocRead.cpp
     osc/commands/ImageBufferAllocRead.hpp
     osc/commands/ImageBufferQuery.cpp

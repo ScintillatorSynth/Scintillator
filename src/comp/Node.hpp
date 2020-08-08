@@ -49,22 +49,10 @@ public:
     virtual bool isGroup() const = 0;
     virtual bool isScinth() const = 0;
 
-    int nodeID() const { return m_nodeID; }
     Node* parent() const { return m_parent; }
     void setParent(Node* parent) { m_parent = parent; }
 
-    /*! Determines the paused or playing status of the Node. TODO: should paused nodes still render? Unlike in audio,
-     * a paused VGen can still produce a still frame.
-     *
-     * \param run If false, will pause the Node. If true, will play it.
-     */
-    void setRunning(bool run) { m_running = run; }
-
 protected:
-    std::shared_ptr<vk::Device> m_device;
-    int m_nodeID;
-    Node* m_parent;
-    bool m_running;
 };
 
 } // namespace comp

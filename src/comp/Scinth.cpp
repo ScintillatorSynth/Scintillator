@@ -22,10 +22,11 @@ namespace scin { namespace comp {
 
 Scinth::Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef,
                std::shared_ptr<ImageMap> imageMap):
-    Node(device, nodeID),
-    m_cueued(true),
+    m_device(device),
+    m_nodeID(nodeID),
     m_scinthDef(scinthDef),
     m_imageMap(imageMap),
+    m_cueued(true),
     m_descriptorPool(VK_NULL_HANDLE),
     m_numberOfParameters(0),
     m_commandBuffersDirty(true) {}

@@ -1,7 +1,6 @@
 #ifndef SRC_COMP_SCINTH_HPP_
 #define SRC_COMP_SCINTH_HPP_
 
-#include "comp/Node.hpp"
 #include "vulkan/Vulkan.hpp"
 
 #include <memory>
@@ -27,7 +26,7 @@ class ScinthDef;
 
 /*! Represents a running, controllable instance of a ScinthDef.
  */
-class Scinth : public Node {
+class Scinth {
 public:
     Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef,
            std::shared_ptr<ImageMap> imageMap);
@@ -38,7 +37,7 @@ public:
      *
      * \return true if successful, false if not.
      */
-    bool create() override;
+    bool create();
 
     /*! Prepare for the next frame to render. In particular updates the uniform buffer associated with the context, if
      * present, and any other operations to prepare a frame to render at the provided time.
@@ -46,7 +45,7 @@ public:
      * \params context The shared state object for the current frame render.
      * \return true if a command buffer rebuild happened, false if not.
      */
-    bool prepareFrame(std::shared_ptr<FrameContext> context) override;
+    bool prepareFrame(std::shared_ptr<FrameContext> context);
 
     /*! Set parameters on this Scinth, causing a command buffer rebuild on the next call to prepareFrame.
      *  Parameters are set in order starting with the named values and followed by the indexed values, so any duplicate
@@ -56,16 +55,25 @@ public:
      * \param indexedValues The pairs of parameter indices and values to set
      */
     void setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
-                       const std::vector<std::pair<int, float>>& indexedValues) override;
+                       const std::vector<std::pair<int, float>>& indexedValues);
 
-    bool isGroup() const override { return false; }
-    bool isScinth() const override { return true; }
+    /*! Determines the paused or playing status of the Node. TODO: should paused nodes still render? Unlike in audio,
+     * a paused VGen can still produce a still frame.
+     *
+     * \param run If false, will pause the Node. If true, will play it.
+     */
+    void setRunning(bool run) { m_running = run; }
+
+    int nodeID() const { return m_nodeID; }
 
 private:
     bool allocateDescriptors();
     void updateDescriptors();
     void rebuildBuffers();
 
+    std::shared_ptr<vk::Device> m_device;
+    int m_nodeID;
+    bool m_running;
     bool m_cueued;
     double m_startTime;
 

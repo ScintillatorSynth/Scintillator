@@ -18,19 +18,25 @@
 #include "osc/commands/DefReceive.hpp"
 #include "osc/commands/DumpOSC.hpp"
 #include "osc/commands/Echo.hpp"
+#include "osc/commands/GroupDeepFree.hpp"
+#include "osc/commands/GroupDumpTree.hpp"
 #include "osc/commands/GroupFreeAll.hpp"
+#include "osc/commands/GroupHead.hpp"
+#include "osc/commands/GroupNew.hpp"
+#include "osc/commands/GroupQueryTree.hpp"
+#include "osc/commands/GroupTail.hpp"
 #include "osc/commands/ImageBufferAllocRead.hpp"
 #include "osc/commands/ImageBufferQuery.hpp"
 #include "osc/commands/LogAppend.hpp"
 #include "osc/commands/LogCrashReports.hpp"
 #include "osc/commands/LogLevel.hpp"
 #include "osc/commands/NodeAfter.hpp"
+#include "osc/commands/NodeAfter.hpp"
+#include "osc/commands/NodeBefore.hpp"
 #include "osc/commands/NodeBefore.hpp"
 #include "osc/commands/NodeFree.hpp"
 #include "osc/commands/NodeRun.hpp"
 #include "osc/commands/NodeSet.hpp"
-#include "osc/commands/NodeBefore.hpp"
-#include "osc/commands/NodeAfter.hpp"
 #include "osc/commands/Notify.hpp"
 #include "osc/commands/Quit.hpp"
 #include "osc/commands/ScinVersion.hpp"
@@ -98,21 +104,27 @@ bool Dispatcher::create(const std::string& bindPort, bool dumpOSC) {
     m_commands[commands::Command::kSync].reset(new commands::Sync(this));
     m_commands[commands::Command::kLogLevel].reset(new commands::LogLevel(this));
     m_commands[commands::Command::kVersion].reset(new commands::ScinVersion(this));
-    m_commands[commands::Command::kDRecv].reset(new commands::DefReceive(this));
-    m_commands[commands::Command::kDLoad].reset(new commands::DefLoad(this));
-    m_commands[commands::Command::kDLoadDir].reset(new commands::DefLoadDir(this));
-    m_commands[commands::Command::kDFree].reset(new commands::DefFree(this));
-    m_commands[commands::Command::kNFree].reset(new commands::NodeFree(this));
-    m_commands[commands::Command::kNRun].reset(new commands::NodeRun(this));
-    m_commands[commands::Command::kNSet].reset(new commands::NodeSet(this));
-    m_commands[commands::Command::kSNew].reset(new commands::ScinthNew(this));
+    m_commands[commands::Command::kDefRecv].reset(new commands::DefReceive(this));
+    m_commands[commands::Command::kDefLoad].reset(new commands::DefLoad(this));
+    m_commands[commands::Command::kDefLoadDir].reset(new commands::DefLoadDir(this));
+    m_commands[commands::Command::kDefFree].reset(new commands::DefFree(this));
+    m_commands[commands::Command::kNodeFree].reset(new commands::NodeFree(this));
+    m_commands[commands::Command::kNodeRun].reset(new commands::NodeRun(this));
+    m_commands[commands::Command::kNodeSet].reset(new commands::NodeSet(this));
     m_commands[commands::Command::kNodeBefore].reset(new commands::NodeBefore(this));
     m_commands[commands::Command::kNodeAfter].reset(new commands::NodeAfter(this));
+    m_commands[commands::Command::kScinthNew].reset(new commands::ScinthNew(this));
+    m_commands[commands::Command::kGroupNew].reset(new commands::GroupNew(this));
+    m_commands[commands::Command::kGroupHead].reset(new commands::GroupHead(this));
+    m_commands[commands::Command::kGroupTail].reset(new commands::GroupTail(this));
     m_commands[commands::Command::kGroupFreeAll].reset(new commands::GroupFreeAll(this));
-    m_commands[commands::Command::kIBAllocRead].reset(new commands::ImageBufferAllocRead(this));
-    m_commands[commands::Command::kIBQuery].reset(new commands::ImageBufferQuery(this));
-    m_commands[commands::Command::kNRTScreenShot].reset(new commands::ScreenShot(this));
-    m_commands[commands::Command::kNRTAdvanceFrame].reset(new commands::AdvanceFrame(this));
+    m_commands[commands::Command::kGroupDeepFree].reset(new commands::GroupDeepFree(this));
+    m_commands[commands::Command::kGroupDumpTree].reset(new commands::GroupDumpTree(this));
+    m_commands[commands::Command::kGroupQueryTree].reset(new commands::GroupQueryTree(this));
+    m_commands[commands::Command::kImageBufferAllocRead].reset(new commands::ImageBufferAllocRead(this));
+    m_commands[commands::Command::kImageBufferQuery].reset(new commands::ImageBufferQuery(this));
+    m_commands[commands::Command::kScreenShot].reset(new commands::ScreenShot(this));
+    m_commands[commands::Command::kAdvanceFrame].reset(new commands::AdvanceFrame(this));
     m_commands[commands::Command::kEcho].reset(new commands::Echo(this));
     m_commands[commands::Command::kLogAppend].reset(new commands::LogAppend(this));
     m_commands[commands::Command::kSleepFor].reset(new commands::SleepFor(this));

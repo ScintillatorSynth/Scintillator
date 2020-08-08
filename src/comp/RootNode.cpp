@@ -110,14 +110,6 @@ bool RootNode::prepareFrame(std::shared_ptr<FrameContext> context) {
     return rebuildRequired;
 }
 
-void RootNode::setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
-                             const std::vector<std::pair<int, float>>& indexedValues) {
-    // Note it is assumed the node lock has already been acquired.
-    for (auto child : m_children) {
-        child->setParameters(namedValues, indexedValues);
-    }
-}
-
 void RootNode::destroy() {
     // Delete all command buffers outstanding first, which means emptying the Scinth map and list.
     {
@@ -146,7 +138,7 @@ void RootNode::destroy() {
     }
 }
 
-bool RootNode::buildScinthDef(std::shared_ptr<const base::AbstractScinthDef> abstractScinthDef) {
+bool RootNode::defAdd(std::shared_ptr<const base::AbstractScinthDef> abstractScinthDef) {
     std::shared_ptr<ScinthDef> scinthDef(new ScinthDef(m_device, m_canvas, m_computeCommandPool, m_drawCommandPool,
                                                        m_samplerFactory, abstractScinthDef));
     if (!scinthDef->build(m_shaderCompiler.get())) {
@@ -161,7 +153,7 @@ bool RootNode::buildScinthDef(std::shared_ptr<const base::AbstractScinthDef> abs
     return true;
 }
 
-void RootNode::freeScinthDefs(const std::vector<std::string>& names) {
+void RootNode::defFree(const std::vector<std::string>& names) {
     std::lock_guard<std::mutex> lock(m_scinthDefMutex);
     for (auto name : names) {
         auto it = m_scinthDefs.find(name);
@@ -172,6 +164,47 @@ void RootNode::freeScinthDefs(const std::vector<std::string>& names) {
         }
     }
 }
+
+void RootNode::nodeFree(const std::vector<int>& nodeIDs) {
+    std::lock_guard<std::mutex> lock(m_nodeMutex);
+    for (auto node : nodeIDs) {
+        removeNode(node);
+    }
+    m_commandBuffersDirty = true;
+}
+
+void RootNode::nodeRun(const std::vector<std::pair<int, int>>& pairs) {
+    std::lock_guard<std::mutex> lock(m_nodeMutex);
+    for (const auto& pair : pairs) {
+        auto mapIter = m_nodeMap.find(pair.first);
+        if (mapIter != m_nodeMap.end()) {
+            mapIter->second->get()->setRunning(pair.second != 0);
+        } else {
+            spdlog::warn("Compositor attempted to set pause/play on nonexistent nodeID {}", pair.first);
+        }
+    }
+
+    m_commandBuffersDirty = true;
+}
+
+void RootNode::nodeSet(int nodeID, const std::vector<std::pair<std::string, float>>& namedValues,
+                       const std::vector<std::pair<int, float>>& indexedValues) {
+    std::lock_guard<std::mutex> lock(m_nodeMutex);
+    if (nodeID != 0) {
+        Node* node;
+        auto mapIter = m_nodeMap.find(nodeID);
+        if (mapIter == m_nodeMap.end()) {
+            spdlog::error("setNodeParameters called on on unknown node ID {}", nodeID);
+            return;
+        }
+        node = mapIter->second->get();
+        node->setParameters(namedValues, indexedValues);
+    } else {
+        setParameters(namedValues, indexedValues);
+    }
+}
+
+
 
 void RootNode::stageImage(int imageID, uint32_t width, uint32_t height, std::shared_ptr<vk::HostBuffer> imageBuffer,
                           std::function<void()> completion) {
@@ -267,45 +300,6 @@ void RootNode::scinthNew(const std::string& scinthDefName, int nodeID, AddAction
     spdlog::info("Scinth id {} from def {} cueued.", nodeID, scinthDefName);
 
     // Will need to rebuild command buffer on next frame to include the new scinths.
-    m_commandBuffersDirty = true;
-}
-
-void RootNode::nodeFree(const std::vector<int>& nodeIDs) {
-    std::lock_guard<std::mutex> lock(m_nodeMutex);
-    for (auto node : nodeIDs) {
-        removeNode(node);
-    }
-    m_commandBuffersDirty = true;
-}
-
-void RootNode::setNodeParameters(int nodeID, const std::vector<std::pair<std::string, float>>& namedValues,
-                                 const std::vector<std::pair<int, float>>& indexedValues) {
-    std::lock_guard<std::mutex> lock(m_nodeMutex);
-    if (nodeID != 0) {
-        Node* node;
-        auto mapIter = m_nodeMap.find(nodeID);
-        if (mapIter == m_nodeMap.end()) {
-            spdlog::error("setNodeParameters called on on unknown node ID {}", nodeID);
-            return;
-        }
-        node = mapIter->second->get();
-        node->setParameters(namedValues, indexedValues);
-    } else {
-        setParameters(namedValues, indexedValues);
-    }
-}
-
-void RootNode::setNodeRun(const std::vector<std::pair<int, int>>& pairs) {
-    std::lock_guard<std::mutex> lock(m_nodeMutex);
-    for (const auto& pair : pairs) {
-        auto mapIter = m_nodeMap.find(pair.first);
-        if (mapIter != m_nodeMap.end()) {
-            mapIter->second->get()->setRunning(pair.second != 0);
-        } else {
-            spdlog::warn("Compositor attempted to set pause/play on nonexistent nodeID {}", pair.first);
-        }
-    }
-
     m_commandBuffersDirty = true;
 }
 
