@@ -183,7 +183,7 @@ void RootNode::nodeFree(const std::vector<int>& nodeIDs) {
                 m_groups.erase(groupMapIter->second->groupBegin, groupMapIter->second->groupEnd);
 
                 for (auto i = groupMapIter->second->scinthBegin; i != groupMapIter->second->scinthEnd; ++i) {
-                    m_scinthMap.erase(i->scinthID());
+                    m_scinthMap.erase((*i)->scinthID());
                 }
                 m_scinths.erase(groupMapIter->second->scinthBegin, groupMapIter->second->scinthEnd);
             } else {
@@ -197,11 +197,18 @@ void RootNode::nodeFree(const std::vector<int>& nodeIDs) {
 void RootNode::nodeRun(const std::vector<std::pair<int, int>>& pairs) {
     std::lock_guard<std::mutex> lock(m_treeMutex);
     for (const auto& pair : pairs) {
-        auto mapIter = m_nodeMap.find(pair.first);
-        if (mapIter != m_nodeMap.end()) {
-            mapIter->second->get()->setRunning(pair.second != 0);
+        auto scinthMapIter = m_scinthMap.find(pair.first);
+        if (scinthMapIter != m_scinthMap.end()) {
+            (*scinthMapIter->second)->setRunning(pair.second != 0);
         } else {
-            spdlog::warn("Compositor attempted to set pause/play on nonexistent nodeID {}", pair.first);
+            auto groupMapIter = m_groupMap.find(pair.first);
+            if (groupMapIter != m_groupMap.end()) {
+                for (auto it = groupMapIter->second->scinthBegin; it != groupMapIter->second->scinthEnd; ++it) {
+                    (*it)->setRunning(pair.second != 0);
+                }
+            } else {
+                spdlog::warn("nodeRun id {} not found", pair.first);
+            }
         }
     }
 
@@ -211,47 +218,64 @@ void RootNode::nodeRun(const std::vector<std::pair<int, int>>& pairs) {
 void RootNode::nodeSet(int nodeID, const std::vector<std::pair<std::string, float>>& namedValues,
                        const std::vector<std::pair<int, float>>& indexedValues) {
     std::lock_guard<std::mutex> lock(m_treeMutex);
-    if (nodeID != 0) {
-        Node* node;
-        auto mapIter = m_nodeMap.find(nodeID);
-        if (mapIter == m_nodeMap.end()) {
-            spdlog::error("setNodeParameters called on on unknown node ID {}", nodeID);
-            return;
-        }
-        node = mapIter->second->get();
-        node->setParameters(namedValues, indexedValues);
+    auto scinthMapIter = m_scinthMap.find(nodeID);
+    if (scinthMapIter != m_scinthMap.end()) {
+        (*scinthMapIter->second)->setParameters(namedValues, indexedValues);
     } else {
-        setParameters(namedValues, indexedValues);
+        auto groupMapIter = m_groupMap.find(nodeID);
+        if (groupMapIter != m_groupMap.end()) {
+            for (auto it = groupMapIter->second->scinthBegin; it != groupMapIter->second->scinthEnd; ++it) {
+                (*it)->setParameters(namedValues, indexedValues);
+            }
+        } else {
+            spdlog::warn("nodeSet id {} not found", nodeID);
+        }
     }
+    m_commandBuffersDirty = true;
 }
 
-void RootNode::groupNew(int groupID, AddAction addAction, int targetID) {
+void RootNode::groupNew(const std::vector<std::tuple<int, AddAction, int>>& groups) {
     std::lock_guard<std::mutex> lock(m_treeMutex);
-    if (m_scinthMap.find(groupID) != m_scinthMap.end() || m_groupMap.find(groupID) != m_groupMap.end()) {
-        spdlog::error("Failed to create group ID {} as this number is already in use.");
-        return;
-    }
-    if (targetID != 0) {
-        switch (addAction) {
-        case kGroupHead: {
-            auto iter = m_groupMap.find(targetID);
-            if (iter == m_groupMap.end()) {
-                spdlog::error("Failed to create group ID {} as target group ID {} not found.");
-                return;
-            }
-            Group group {
-                iter->second->scinthBegin,
-                iter->second->scinthBegin,
-                iter->second,
-                iter->second
-            };
-        } break;
-        case kGroupTail:
-        case kBeforeNode:
-        case kAfterNode:
-        case kReplace:
+    for (auto tuple : groups) {
+        int groupID = std::get<0>(tuple);
+        AddAction addAction = std::get<1>(tuple);
+        int targetID = std::get<2>(tuple);
+
+        if (m_scinthMap.find(groupID) != m_scinthMap.end() || m_groupMap.find(groupID) != m_groupMap.end()) {
+            spdlog::warn("Failed to create group ID {} as this number is already in use.", groupID);
+            continue;
         }
-    } else {
+        if (targetID != 0) {
+            switch (addAction) {
+            case kGroupHead: {
+                auto target = m_groupMap.find(targetID);
+                if (target == m_groupMap.end()) {
+                    spdlog::warn("Failed to create group ID {} as target ID {} not found.", groupID, targetID);
+                    continue;
+                }
+                auto iter = m_groups.emplace(iter->second, Group{
+                    target->second->scinthBegin,
+                    target->second->scinthBegin,
+                    target->second,
+                    target->second,
+                    groupID });
+                m_groupMap[groupID] = iter;
+                target->second->groupBegin = iter;
+            } break;
+            case kGroupTail: {
+                auto iter = m_groupMap.find(targetID);
+                if (iter == m_groupMap.end()) {
+                    spdlog::warn("Failed to create group ID {} as target ID {} not found.", groupID, targetID);
+                    continue;
+                }
+            } break;
+            case kBeforeNode:
+            case kAfterNode:
+            case kReplace:
+                break;
+            }
+        } else {
+        }
     }
 }
 

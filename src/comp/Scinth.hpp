@@ -28,7 +28,7 @@ class ScinthDef;
  */
 class Scinth {
 public:
-    Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef,
+    Scinth(std::shared_ptr<vk::Device> device, int scinthID, std::shared_ptr<ScinthDef> scinthDef,
            std::shared_ptr<ImageMap> imageMap);
     ~Scinth();
 
@@ -64,7 +64,7 @@ public:
      */
     void setRunning(bool run) { m_running = run; }
 
-    int nodeID() const { return m_nodeID; }
+    int scinthID() const { return m_scinthID; }
 
 private:
     bool allocateDescriptors();
@@ -72,7 +72,7 @@ private:
     void rebuildBuffers();
 
     std::shared_ptr<vk::Device> m_device;
-    int m_nodeID;
+    int m_scinthID;
     std::shared_ptr<ScinthDef> m_scinthDef;
     std::shared_ptr<ImageMap> m_imageMap;
     bool m_cueued;

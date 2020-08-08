@@ -169,13 +169,10 @@ public:
 
     /*! Create a new group.
      *
-     * \param groupID The ID to assign to the new group, must be unique
-     * \param addAction Where to put the new group relative to targetID
-     * \param targetID The nodeID relative to addAction
-     *
-     * groupID should either be unique or addAction should be replace and targetID == groupID
+     * \param gruops A tuple <groupID, addAction, targetID>, with ID to assign to the new group (must be unique),
+     *        where to put the new group relative to targetID, and the nodeID relative to addAction
      */
-    void groupNew(int groupID, AddAction addAction, int targetID);
+    void groupNew(const std::vector<std::tuple<int, AddAction, int>>& groups);
 
     /*! Move nodes to the head of a group, for execution first in the group.
      *
