@@ -332,7 +332,7 @@ void RootNode::scinthNew(const std::string& scinthDefName, int nodeID, AddAction
     if (nodeID < 0) {
         nodeID = m_nodeSerial.fetch_sub(1);
     }
-    std::shared_ptr<Scinth> scinth(new Scinth(m_device, nodeID, scinthDef, m_imageMap));
+    auto scinth = std::make_shared<Scinth>(m_device, nodeID, scinthDef, m_imageMap);
 
     if (!scinth->create()) {
         spdlog::error("failed to build Scinth {} from ScinthDef {}.", nodeID, scinthDefName);
@@ -343,22 +343,7 @@ void RootNode::scinthNew(const std::string& scinthDefName, int nodeID, AddAction
 
     {
         std::lock_guard<std::mutex> lock(m_treeMutex);
-        auto existingNode = m_nodes.find(nodeID);
-        auto targetNode = m_nodes.find(nodeID);
-        if (targetNode != m_nodes.end()) {
-        switch (addAction) {
-        case kGroupHead: {
-            
-        } break;
-        case kGroupTail:
-        case kBeforeNode:
-        case kAfterNode:
-        case kReplace:
-        case kActionCount:
-        }
-        } else {
-            spdlog::warn("scinthNew couldn't find target node ID {}, ignoring", targetID);
-        }
+        insertNode(scinth, addAction, targetID);
     }
 
     spdlog::info("Scinth id {} from def {} cueued.", nodeID, scinthDefName);
@@ -374,7 +359,14 @@ void RootNode::groupNew(const std::vector<std::tuple<int, AddAction, int>>& grou
         int groupID = std::get<0>(tuple);
         AddAction addAction = std::get<1>(tuple);
         int targetID = std::get<2>(tuple);
+
+        auto group = std::make_shared<Group>(m_device, groupID);
+        insertNode(group, addAction, targetID);
     }
+}
+
+void RootNode::groupHead(const std::vector<std::pair<int, int>>& nodes) {
+
 }
 
 void RootNode::stageImage(int imageID, uint32_t width, uint32_t height, std::shared_ptr<vk::HostBuffer> imageBuffer,
@@ -528,6 +520,57 @@ void RootNode::rebuildCommandBuffer(std::shared_ptr<FrameContext> context) {
     m_commandBuffersDirty = false;
 }
 
+void RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int targetID) {
+    auto existingNode = m_nodes.find(node->nodeID());
+    // Remove existing node of same ID, unless the command is to replace existing node of same ID, as it will be
+    // removed as part of the replace operation.
+    if (existingNode != m_nodes.end() &&
+            ((addAction != kReplace) || (addAction == kReplace && nodeID != targetID))) {
+        spdlog::warn("clobbering existing nodeID {}");
+        existingNode->parent()->subNodeFree(node->nodeID());
+        m_nodes.erase(existingNode);
+    }
+    auto targetNode = m_nodes.find(node->nodeID());
+    if (targetNode != m_nodes.end()) {
+        switch (addAction) {
+        case kGroupHead: {
+            if (targetNode->second->isGroup()) {
+                Group* targetGroup = static_cast<Group*>(targetIt->second.get());
+                targetGroup->prepend(node);
+                m_nodeMap[nodeID] = node;
+            } else {
+                spdlog::error("add node {} to group head target {} not a group, ignoring", node->nodeID(), targetID);
+            }
+        } break;
+        case kGroupTail: {
+            if (targetNode->second->isGroup()) {
+                Group* targetGroup = static_cast<Group*>(targetIt->second.get());
+                targetGroup->append(node);
+                m_nodeMap[nodeID] = node;
+            } else {
+                spdlog::error("add node {} to group tail target {} not a group, ignoring", node->nodeID(), targetID);
+            }
+        } break;
+        case kBeforeNode: {
+            targetNode->second->parent()->insertBefore(node, targetID);
+            m_nodeMap[nodeID] = node;
+        } break;
+        case kAfterNode: {
+            targetNode->second->parent()->insertAfter(node, targetID);
+            m_nodeMap[nodeID] = node;
+        } break;
+        case kReplace: {
+            targetNode->second->parent()->replace(node, target);
+            m_nodeMap.erase(targetNode);
+            m_nodeMap[nodeID] = node;
+        } break;
+        case kActionCount:
+            spdlog::error("scinthNew got unknown addAction value, ignoring.");
+        }
+    } else {
+        spdlog::error("scinthNew couldn't find target node ID {}, ignoring", targetID);
+    }
+}
 
 } // namespace comp
 } // namespace scin

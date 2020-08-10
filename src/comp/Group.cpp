@@ -49,5 +49,22 @@ void Group::insertAfter(std::shared_ptr<Node> a, int nodeB) {
     m_nodeMap[a->nodeID()] = m_subNodes.emplace(listIt, a);
 }
 
+void Group::prepend(std::shared_ptr<Node> node) {
+    m_nodeMap[node->nodeID()] = m_subNodes.push_front(node);
+}
+
+void Group::append(std::shared_ptr<Node> node) {
+    m_nodeMap[node->nodeID()] = m_subNodes.push_back(node);
+}
+
+void Group::replace(std::shared_ptr<Node> node, int target) {
+    auto mapIt = m_nodeMap.find(target);
+    m_nodeMap[node->nodeID()] = m_subNodes.emplace(mapIt->second, a);
+    m_subNodes.erase(mapIt->second);
+    if (node->nodeID() != target) {
+        m_nodeMap.erase(mapIt);
+    }
+}
+
 } // namespace comp
 } // namespace scin

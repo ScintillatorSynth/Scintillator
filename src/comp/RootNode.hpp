@@ -229,6 +229,7 @@ public:
 
 protected:
     void rebuildCommandBuffer(std::shared_ptr<FrameContext> context);
+    void insertNode(std::shared_ptr<Node> node, AddAction addAction, int targetID);
 
     std::shared_ptr<vk::Device> m_device;
     std::shared_ptr<Canvas> m_canvas;

@@ -57,7 +57,8 @@ public:
     void insertAfter(std::shared_ptr<Node> a, int nodeB);
     void prepend(std::shared_ptr<Node> node);
     void append(std::shared_ptr<Node> node);
-
+    // nodeID can equal target
+    void replace(std::shared_ptr<Node> node, int target);
 
 protected:
     std::list<std::shared_ptr<Node>> m_subNodes;
