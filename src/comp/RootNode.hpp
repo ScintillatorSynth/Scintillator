@@ -32,32 +32,14 @@ namespace comp {
 class AudioStager;
 class Canvas;
 class FrameContext;
+class Group;
 class ImageMap;
+class Node;
 class SamplerFactory;
 class Scinth;
 class ScinthDef;
 class ShaderCompiler;
 class StageManager;
-
-/*
- * Things RootNode needs to be able to do:
- * a) quickly know the number of group and running scinths
- * b) quickly find groups and scinths by nodeID
- * c) delete only the scinths in a subTree
- * d) recursively delete everything in a subTree
- * e) move groups and scinths arbitrarily within the tree
- * f) quickly know if a given node is a group or a scinth
- *
- * Since at the end of the day the list needs to be completely flat, what if the groups were just an ordered pair
- * start/end of std::list<std::shared_ptr<Scinth>> iterators - we could get rid of this polymorphism nonsense and just
- * emulate it all with a few internal data structures here in rootNode. Kind of a fun full-circle programming gig where
- * we built the whole tree then just decided the first idea was the best - of a flat list of stuff. Groups then have
- * a start iterator, end iterator (which is one past the end), and a count (because you don't know how many there might
- * be). They are kept in their own unordered_map<int, Group> for quick access. There's some care required to make sure
- * that Groups don't overlap in the flat list of Scinths. But that should be fine. And the moving of a group or a
- * Scinth becomes different depending on which one is moving. Ah but that's the rub - if there's a subgroup do those
- * iterators get invalidated? No I say! Because iterators aren't themselves elements in the list. Ooh clever.
- */
 
 /*! Root object of the render tree. Maintains global objects for the render tree such as currently defined ScinthDefs
  * and image buffers. Creates the primary command buffers and render passes. Renders to a Canvas. Maintains a hard-coded
@@ -265,27 +247,10 @@ protected:
     std::shared_ptr<vk::CommandBuffer> m_computePrimary;
     std::shared_ptr<vk::CommandBuffer> m_drawPrimary;
 
-    // Protects m_scinths, m_scinthMap, m_groupMap and m_audioStagers
+    // Protects m_root, m_nodes, and m_audioStagers
     std::mutex m_treeMutex;
-    struct Group {
-        // Range within list m_scinths
-        std::list<std::shared_ptr<Scinth>>::iterator scinthBegin;
-        std::list<std::shared_ptr<Scinth>>::iterator scinthEnd;
-        // Range within list m_groups
-        std::list<Group>::iterator groupBegin;
-        std::list<Group>::iterator groupEnd;
-        int groupID;
-    };
-
-    std::list<std::shared_ptr<Scinth>> m_scinths;
-    // Flat map of every node in the tree, for (amortized) O(1) access to individual nodes by ID and maintaining
-    // guarantee that each nodeID uniquely identifies a single node in the tree. The value is an iterator from the child
-    // list of the parent Node containing this one.
-    std::unordered_map<int, std::list<std::shared_ptr<Scinth>>::iterator> m_scinthMap;
-
-    std::list<Group> m_groups;
-    std::unordered_map<int, std::list<Group>::iterator> m_groupMap;
-
+    std::shared_ptr<Group> m_root;
+    std::unordered_map<int, std::shared_ptr<Node>> m_nodes;
     std::vector<std::shared_ptr<AudioStager>> m_audioStagers;
 };
 

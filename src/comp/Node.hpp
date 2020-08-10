@@ -16,6 +16,7 @@ class Device;
 namespace comp {
 
 class FrameContext;
+class Group;
 
 /*! Abstract base class for the individual elements within a rendering tree. Descendants are RootNode, Group, and
  *  Scinth.
@@ -46,13 +47,18 @@ public:
     virtual void setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
                                const std::vector<std::pair<int, float>>& indexedValues) = 0;
 
+    virtual void setRun(bool run) = 0;
+
     virtual bool isGroup() const = 0;
     virtual bool isScinth() const = 0;
 
-    Node* parent() const { return m_parent; }
-    void setParent(Node* parent) { m_parent = parent; }
+    Group* parent() const { return m_parent; }
+    void setParent(Gruop* parent) { m_parent = parent; }
 
 protected:
+    std::shared_ptr<vk::Device> m_device;
+    int m_nodeID;
+    Group* m_parent;
 };
 
 } // namespace comp

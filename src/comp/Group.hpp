@@ -47,13 +47,21 @@ public:
     void setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
                        const std::vector<std::pair<int, float>>& indexedValues) override;
 
+    void setRun(bool run) override;
+
     bool isGroup() const override { return true; }
     bool isScinth() const override { return false; }
 
-    std::list<std::shared_ptr<Node>>& children() { return m_children; }
+    void subNodeFree(int nodeID);
+    void insertBefore(std::shared_ptr<Node> a, int nodeB);
+    void insertAfter(std::shared_ptr<Node> a, int nodeB);
+    void prepend(std::shared_ptr<Node> node);
+    void append(std::shared_ptr<Node> node);
+
 
 protected:
-    std::list<std::shared_ptr<Node>> m_children;
+    std::list<std::shared_ptr<Node>> m_subNodes;
+    std::unordered_map<int, std::list<std::shared_ptr<Node>::iterator> m_nodeMap;
 };
 
 } // namespace comp

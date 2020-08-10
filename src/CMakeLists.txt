@@ -162,8 +162,12 @@ set(scintillator_synth_files
     comp/FrameContext.hpp
     comp/FrameTimer.cpp
     comp/FrameTimer.hpp
+    comp/Group.cpp
+    comp/Group.hpp
     comp/ImageMap.cpp
     comp/ImageMap.hpp
+    comp/Node.cpp
+    comp/Node.hpp
     comp/Offscreen.cpp
     comp/Offscreen.hpp
     comp/Pipeline.cpp

@@ -20,9 +20,33 @@ bool Group::prepareFrame(std::shared_ptr<FrameContext> context) {
 
 void Group::setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
                           const std::vector<std::pair<int, float>>& indexedValues) {
-    for (auto child : m_children) {
-        child->setParameters(namedValues, indexedValues);
+    for (auto node : m_subNodes) {
+        node->setParameters(namedValues, indexedValues);
     }
+}
+
+void Group::setRun(bool run) {
+    for (auto node : m_subNodes) {
+        node->setRun(run);
+    }
+}
+
+void Group::subNodeFree(int nodeID) {
+    auto it = m_nodeMap.find(nodeID);
+    m_subNodes.erase(it->second);
+    m_nodeMap.erase(it);
+}
+
+void Group::insertBefore(std::shared_ptr<Node> a, int nodeB) {
+    auto mapIt = m_nodeMap.find(nodeB);
+    m_nodeMap[a->nodeID()] = m_subNodes.emplace(mapIt->second, a);
+}
+
+void Group::insertAfter(std::shared_ptr<Node> a, int nodeB) {
+    auto mapIt = m_nodeMap.find(nodeB);
+    auto listIt = mapIt->second;
+    ++listIt;
+    m_nodeMap[a->nodeID()] = m_subNodes.emplace(listIt, a);
 }
 
 } // namespace comp

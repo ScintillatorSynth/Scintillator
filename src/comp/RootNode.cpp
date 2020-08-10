@@ -5,7 +5,9 @@
 #include "comp/AudioStager.hpp"
 #include "comp/Canvas.hpp"
 #include "comp/FrameContext.hpp"
+#include "comp/Group.hpp"
 #include "comp/ImageMap.hpp"
+#include "comp/Node.hpp"
 #include "comp/SamplerFactory.hpp"
 #include "comp/Scinth.hpp"
 #include "comp/ScinthDef.hpp"
@@ -33,7 +35,11 @@ RootNode::RootNode(std::shared_ptr<vk::Device> device, std::shared_ptr<Canvas> c
     m_samplerFactory(new SamplerFactory(device)),
     m_imageMap(new ImageMap()),
     m_commandBuffersDirty(true),
-    m_nodeSerial(-2) {}
+    m_nodeSerial(-2),
+    m_root(new Group(device)) {
+    // Root of the tree is a group with ID 0, so set up that association now.
+    m_nodes[0] = m_root;
+}
 
 bool RootNode::create() {
     if (!m_shaderCompiler->loadCompiler()) {
@@ -94,10 +100,7 @@ bool RootNode::prepareFrame(std::shared_ptr<FrameContext> context) {
             stager->stageAudio(m_stageManager);
         }
 
-        for (auto scinth : m_scinths) {
-            context->appendScinth(scinth);
-            rebuildRequired |= scinth->prepareFrame(context);
-        }
+        rebuildRequired |= m_root->prepareFrame(context);
     }
 
     if (rebuildRequired) {
@@ -114,10 +117,8 @@ void RootNode::destroy() {
     // Delete all command buffers outstanding first, which means emptying the Scinth map and list.
     {
         std::lock_guard<std::mutex> lock(m_treeMutex);
-        m_scinthMap.clear();
-        m_scinths.clear();
-        m_groupMap.clear();
-        m_groups.clear();
+        m_nodes.clear();
+        m_root = nullptr;
         m_audioStagers.clear();
     }
     m_computePrimary.reset();
@@ -170,25 +171,12 @@ void RootNode::defFree(const std::vector<std::string>& names) {
 void RootNode::nodeFree(const std::vector<int>& nodeIDs) {
     std::lock_guard<std::mutex> lock(m_treeMutex);
     for (auto id : nodeIDs) {
-        auto scinthMapIter = m_scinthMap.find(id);
-        if (scinthMapIter != m_scinthMap.end()) {
-            m_scinths.erase(scinthMapIter->second);
-            m_scinthMap.erase(scinthMapIter);
+        auto it = m_nodes.find(id);
+        if (it != m_nodes.end()) {
+            it->second->parent()->subNodeFree(id);
+            m_nodes.erase(it);
         } else {
-            auto groupMapIter = m_groupMap.find(id);
-            if (groupMapIter != m_groupMap.end()) {
-                for (auto i = groupMapIter->second->groupBegin; i != groupMapIter->second->groupEnd; ++i) {
-                    m_groupMap.erase(i->groupID);
-                }
-                m_groups.erase(groupMapIter->second->groupBegin, groupMapIter->second->groupEnd);
-
-                for (auto i = groupMapIter->second->scinthBegin; i != groupMapIter->second->scinthEnd; ++i) {
-                    m_scinthMap.erase((*i)->scinthID());
-                }
-                m_scinths.erase(groupMapIter->second->scinthBegin, groupMapIter->second->scinthEnd);
-            } else {
-                spdlog::warn("nodeFree id {} not found", id);
-            }
+            spdlog::warn("unable to free node ID {}, node not found.", id);
         }
     }
     m_commandBuffersDirty = true;
@@ -197,42 +185,188 @@ void RootNode::nodeFree(const std::vector<int>& nodeIDs) {
 void RootNode::nodeRun(const std::vector<std::pair<int, int>>& pairs) {
     std::lock_guard<std::mutex> lock(m_treeMutex);
     for (const auto& pair : pairs) {
-        auto scinthMapIter = m_scinthMap.find(pair.first);
-        if (scinthMapIter != m_scinthMap.end()) {
-            (*scinthMapIter->second)->setRunning(pair.second != 0);
+        auto it = m_nodes.find(pair.first);
+        if (it != m_nodes.end()) {
+            it->second->setRun(pair.second != 0);
         } else {
-            auto groupMapIter = m_groupMap.find(pair.first);
-            if (groupMapIter != m_groupMap.end()) {
-                for (auto it = groupMapIter->second->scinthBegin; it != groupMapIter->second->scinthEnd; ++it) {
-                    (*it)->setRunning(pair.second != 0);
-                }
-            } else {
-                spdlog::warn("nodeRun id {} not found", pair.first);
-            }
+            spdlog::warn("unable to set run on node ID {}, node not found.", pair.first);
         }
     }
-
     m_commandBuffersDirty = true;
 }
 
 void RootNode::nodeSet(int nodeID, const std::vector<std::pair<std::string, float>>& namedValues,
                        const std::vector<std::pair<int, float>>& indexedValues) {
     std::lock_guard<std::mutex> lock(m_treeMutex);
-    auto scinthMapIter = m_scinthMap.find(nodeID);
-    if (scinthMapIter != m_scinthMap.end()) {
-        (*scinthMapIter->second)->setParameters(namedValues, indexedValues);
+    auto it = m_nodes.find(pair.first);
+    if (it != m_nodes.end()) {
+        it->second->setParameters(namedValues, indexedValues);
     } else {
-        auto groupMapIter = m_groupMap.find(nodeID);
-        if (groupMapIter != m_groupMap.end()) {
-            for (auto it = groupMapIter->second->scinthBegin; it != groupMapIter->second->scinthEnd; ++it) {
-                (*it)->setParameters(namedValues, indexedValues);
-            }
-        } else {
-            spdlog::warn("nodeSet id {} not found", nodeID);
-        }
+        spdlog::warn("unable to set parameters on node ID {}, node not found.", nodeID);
     }
     m_commandBuffersDirty = true;
 }
+
+void RootNode::nodeBefore(const std::vector<std::pair<int, int>>& nodes) {
+    std::lock_guard<std::mutex> lock(m_treeMutex);
+    for (auto pair : nodes) {
+        auto itA = m_nodes.find(pair.first);
+        if (itA != m_nodes.end()) {
+            auto itB = m_nodes.find(pair.second);
+            if (itB != m_nodes.end()) {
+                itA->second->parent()->subNodeFree(pair.first);
+                itB->second->parent()->insertBefore(itA->second, pair.second);
+            } else {
+                spdlog::warn("unable to insert node {} before node {}, node {} not found", pair.first, pair.second,
+                        pair.second);
+            }
+        } else {
+            spdlog::warn("unable to insert node {} before node {}, node {} not found", pair.first, pair.second,
+                    pair.first);
+        }
+    }
+}
+
+void RootNode::nodeAfter(const std::vector<std::pair<int, int>>& nodes) {
+    std::lock_guard<std::mutex> lock(m_treeMutex);
+    for (auto pair : nodes) {
+        auto itA = m_nodes.find(pair.first);
+        if (itA != m_nodes.end()) {
+            auto itB = m_nodes.find(pair.second);
+            if (itB != m_nodes.end()) {
+                itA->second->parent()->subNodeFree(pair.first);
+                itB->second->parent()->insertAfter(itA->second, pair.second);
+            } else {
+                spdlog::warn("unable to insert node {} after node {}, node {} not found", pair.first, pair.second,
+                        pair.second);
+            }
+        } else {
+            spdlog::warn("unable to insert node {} after node {}, node {} not found", pair.first, pair.second,
+                    pair.first);
+        }
+    }
+}
+
+void RootNode::nodeOrder(AddAction addAction, int targetID, const std::vector<int>& nodeIDs) {
+    std::lock_guard<std::mutex> lock(m_treeMutex);
+    auto targetIt = m_nodes.find(targetID);
+    if (targetIt != m_nodes.end()) {
+        std::list<std::shared_ptr<Node>> movingNodes;
+        // Build a list of pointers to the target nodes, silently ignoring any nonexistent nodes.
+        for (auto id : nodeIDs) {
+            if (it == targetID) {
+                spdlog::warn("nodeOrder ignoring order to move node ID {} as it is also the target ID", targetID);
+                continue;
+            }
+            auto it = m_nodes.find(id);
+            if (it != m_nodes.end()) {
+                // Pushing front reverses order of nodes in the list, so when traversed front-to-back it will reverse
+                // it again, allowing for us to preserve original order.
+                movingNodes.push_front(it->second);
+            }
+        }
+
+        switch (addAction) {
+        case kGroupHead: {
+            if (targetIt->second->isGroup()) {
+                Group* targetGroup = static_cast<Group*>(targetIt->second.get());
+                for (auto node : movingNodes) {
+                    node->parent()->subNodeFree(node->nodeID());
+                    targetGroup->prepend(node);
+                }
+            } else {
+                spdlog::warn("node order addToHead target ID {} not a group, ignoring", targetID);
+            }
+        } break;
+
+        case kGroupTail: {
+            if (targetIt->second->isGroup()) {
+                Group* targetGroup = static_cast<Group*>(targetIt->second.get());
+                for (auto node : movingNodes) {
+                    node->parent()->subNodeFree(node->nodeID());
+                    targetGroup->append(node);
+                }
+            } else {
+                spdlog::warn("node order addToTail target ID {} not a group, ignoring", targetID);
+            }
+        } break;
+        case kBeforeNode: {
+            for (auto node : movingNodes) {
+                node->parent()->subNodeFree(node->nodeID());
+                targetGroup->insertBefore(node, targetID);
+            }
+        } break;
+        case kAfterNode: {
+            for (auto node : movingNodes) {
+                node->parent()->subNodeFree(node->nodeID());
+                targetGroup->insertAfter(node, targetID);
+            }
+        } break;
+
+        case kReplace:
+        case kActionCount:
+            spdlog::warn("nodeOrder got invalid add action code {}, ignoring command.", static_cast<int>(addAction));
+        }
+    } else {
+        spdlog::warn("unable to order nodes as target node {} not found", targetID);
+    }
+}
+
+void RootNode::scinthNew(const std::string& scinthDefName, int nodeID, AddAction addAction, int targetID,
+                         const std::vector<std::pair<std::string, float>>& namedValues,
+                         const std::vector<std::pair<int, float>>& indexedValues) {
+    std::shared_ptr<ScinthDef> scinthDef;
+    {
+        std::lock_guard<std::mutex> lock(m_scinthDefMutex);
+        auto it = m_scinthDefs.find(scinthDefName);
+        if (it != m_scinthDefs.end()) {
+            scinthDef = it->second;
+        }
+    }
+    if (!scinthDef) {
+        spdlog::error("ScinthDef {} not found when building Scinth {}.", scinthDefName, nodeID);
+        return;
+    }
+
+    // Generate a unique negative nodeID if the one provided was negative.
+    if (nodeID < 0) {
+        nodeID = m_nodeSerial.fetch_sub(1);
+    }
+    std::shared_ptr<Scinth> scinth(new Scinth(m_device, nodeID, scinthDef, m_imageMap));
+
+    if (!scinth->create()) {
+        spdlog::error("failed to build Scinth {} from ScinthDef {}.", nodeID, scinthDefName);
+        return;
+    }
+
+    scinth->setParameters(namedValues, indexedValues);
+
+    {
+        std::lock_guard<std::mutex> lock(m_treeMutex);
+        auto existingNode = m_nodes.find(nodeID);
+        auto targetNode = m_nodes.find(nodeID);
+        if (targetNode != m_nodes.end()) {
+        switch (addAction) {
+        case kGroupHead: {
+            
+        } break;
+        case kGroupTail:
+        case kBeforeNode:
+        case kAfterNode:
+        case kReplace:
+        case kActionCount:
+        }
+        } else {
+            spdlog::warn("scinthNew couldn't find target node ID {}, ignoring", targetID);
+        }
+    }
+
+    spdlog::info("Scinth id {} from def {} cueued.", nodeID, scinthDefName);
+
+    // Will need to rebuild command buffer on next frame to include the new scinths.
+    m_commandBuffersDirty = true;
+}
+
 
 void RootNode::groupNew(const std::vector<std::tuple<int, AddAction, int>>& groups) {
     std::lock_guard<std::mutex> lock(m_treeMutex);
@@ -240,42 +374,6 @@ void RootNode::groupNew(const std::vector<std::tuple<int, AddAction, int>>& grou
         int groupID = std::get<0>(tuple);
         AddAction addAction = std::get<1>(tuple);
         int targetID = std::get<2>(tuple);
-
-        if (m_scinthMap.find(groupID) != m_scinthMap.end() || m_groupMap.find(groupID) != m_groupMap.end()) {
-            spdlog::warn("Failed to create group ID {} as this number is already in use.", groupID);
-            continue;
-        }
-        if (targetID != 0) {
-            switch (addAction) {
-            case kGroupHead: {
-                auto target = m_groupMap.find(targetID);
-                if (target == m_groupMap.end()) {
-                    spdlog::warn("Failed to create group ID {} as target ID {} not found.", groupID, targetID);
-                    continue;
-                }
-                auto iter = m_groups.emplace(iter->second, Group{
-                    target->second->scinthBegin,
-                    target->second->scinthBegin,
-                    target->second,
-                    target->second,
-                    groupID });
-                m_groupMap[groupID] = iter;
-                target->second->groupBegin = iter;
-            } break;
-            case kGroupTail: {
-                auto iter = m_groupMap.find(targetID);
-                if (iter == m_groupMap.end()) {
-                    spdlog::warn("Failed to create group ID {} as target ID {} not found.", groupID, targetID);
-                    continue;
-                }
-            } break;
-            case kBeforeNode:
-            case kAfterNode:
-            case kReplace:
-                break;
-            }
-        } else {
-        }
     }
 }
 
@@ -327,53 +425,6 @@ bool RootNode::addAudioIngress(std::shared_ptr<audio::Ingress> ingress, int imag
         m_audioStagers.push_back(stager);
     }
     return true;
-}
-
-void RootNode::scinthNew(const std::string& scinthDefName, int nodeID, AddAction addAction, int targetID,
-                         const std::vector<std::pair<std::string, float>>& namedValues,
-                         const std::vector<std::pair<int, float>>& indexedValues) {
-    std::shared_ptr<ScinthDef> scinthDef;
-    {
-        std::lock_guard<std::mutex> lock(m_scinthDefMutex);
-        auto it = m_scinthDefs.find(scinthDefName);
-        if (it != m_scinthDefs.end()) {
-            scinthDef = it->second;
-        }
-    }
-    if (!scinthDef) {
-        spdlog::error("ScinthDef {} not found when building Scinth {}.", scinthDefName, nodeID);
-        return;
-    }
-
-    // Generate a unique negative nodeID if the one provided was negative.
-    if (nodeID < 0) {
-        nodeID = m_nodeSerial.fetch_sub(1);
-    }
-    std::shared_ptr<Scinth> scinth(new Scinth(m_device, nodeID, scinthDef, m_imageMap));
-
-    if (!scinth->create()) {
-        spdlog::error("failed to build Scinth {} from ScinthDef {}.", nodeID, scinthDefName);
-        return;
-    }
-
-    scinth->setParameters(namedValues, indexedValues);
-
-    {
-        std::lock_guard<std::mutex> lock(m_treeMutex);
-        if (m_nodeMap.find(nodeID) != m_nodeMap.end()) {
-            spdlog::info("Clobbering existing nodeID {}", nodeID);
-            removeNode(nodeID);
-        }
-        if (!insertNode(scinth, addAction, targetID)) {
-            spdlog::error("Failed to add Scinth into render tree.");
-            return;
-        }
-    }
-
-    spdlog::info("Scinth id {} from def {} cueued.", nodeID, scinthDefName);
-
-    // Will need to rebuild command buffer on next frame to include the new scinths.
-    m_commandBuffersDirty = true;
 }
 
 size_t RootNode::numberOfRunningNodes() {
@@ -477,106 +528,6 @@ void RootNode::rebuildCommandBuffer(std::shared_ptr<FrameContext> context) {
     m_commandBuffersDirty = false;
 }
 
-/*
-bool RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int targetID) {
-    if (targetID != 0) {
-        Node* target;
-        auto mapIter = m_nodeMap.find(targetID);
-        if (mapIter != m_nodeMap.end()) {
-            target = mapIter->second->get();
-        } else {
-            spdlog::error("failed to find node targetID {} on node insert", targetID);
-            return false;
-        }
-
-        switch (targetID) {
-        case kGroupHead: {
-            node->setParent(target);
-            target->children().emplace_back(node);
-            auto lastElement = target->children().end();
-            --lastElement;
-            m_nodeMap[node->nodeID()] = lastElement;
-        } break;
-
-        case kGroupTail: {
-            node->setParent(target);
-            target->children().emplace_front(node);
-            m_nodeMap[node->nodeID()] = target->children().begin();
-        } break;
-
-        // Replace does the same as insert before, and then removes the target node after insertion of the new node.
-        case kReplace:
-        case kBeforeNode: {
-            node->setParent(target->parent());
-            m_nodeMap[node->nodeID()] = node->parent()->children().emplace(mapIter->second, node);
-        } break;
-
-        case kAfterNode: {
-            node->setParent(target->parent());
-            auto afterIter = mapIter->second;
-            ++afterIter;
-            m_nodeMap[node->nodeID()] = node->parent()->children().emplace(afterIter, node);
-        } break;
-        }
-
-        if (addAction == kReplace) {
-            removeNode(targetID);
-        }
-    } else {
-        node->setParent(this);
-
-        switch (targetID) {
-        case kGroupHead: {
-            m_children.emplace_back(node);
-            auto endIter = m_children.end();
-            --endIter;
-            m_nodeMap[node->nodeID()] = endIter;
-        } break;
-
-        case kGroupTail: {
-            m_children.emplace_front(node);
-            m_nodeMap[node->nodeID()] = m_children.begin();
-        } break;
-
-        case kBeforeNode:
-        case kAfterNode:
-        case kReplace:
-            spdlog::error("Scinth AddAction {} not supported on root node.", static_cast<int>(addAction));
-            return false;
-        }
-    }
-
-    return true;
-}
-
-void RootNode::removeNode(int targetID) {
-    if (targetID == 0) {
-        spdlog::error("Can't remove root node from render tree.");
-        return;
-    }
-
-    auto mapIter = m_nodeMap.find(targetID);
-    if (mapIter == m_nodeMap.end()) {
-        spdlog::error("failed to find node ID {} on node removal", targetID);
-        return;
-    }
-
-    // Now remove node and all contained nodes from the node map.
-    std::stack<Node*> removeNodes;
-    removeNodes.push(mapIter->second->get());
-    while (removeNodes.size()) {
-        Node* node = removeNodes.top();
-        removeNodes.pop();
-        m_nodeMap.erase(node->nodeID());
-        for (auto child : node->children()) {
-            removeNodes.push(child.get());
-        }
-    }
-
-    // Remove node from parent's child list.
-    mapIter->second->get()->parent()->children().erase(mapIter->second);
-}
-*/
 
 } // namespace comp
 } // namespace scin

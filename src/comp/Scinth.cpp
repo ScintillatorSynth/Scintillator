@@ -20,10 +20,10 @@
 
 namespace scin { namespace comp {
 
-Scinth::Scinth(std::shared_ptr<vk::Device> device, int scinthID, std::shared_ptr<ScinthDef> scinthDef,
+Scinth::Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef,
                std::shared_ptr<ImageMap> imageMap):
-    m_device(device),
-    m_scinthID(scinthID),
+    Node(device, nodeID),
+    m_groupID(0),
     m_scinthDef(scinthDef),
     m_imageMap(imageMap),
     m_cueued(true),

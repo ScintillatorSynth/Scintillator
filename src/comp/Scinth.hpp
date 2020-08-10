@@ -1,6 +1,7 @@
 #ifndef SRC_COMP_SCINTH_HPP_
 #define SRC_COMP_SCINTH_HPP_
 
+#include "comp/Node.hpp"
 #include "vulkan/Vulkan.hpp"
 
 #include <memory>
@@ -26,9 +27,9 @@ class ScinthDef;
 
 /*! Represents a running, controllable instance of a ScinthDef.
  */
-class Scinth {
+class Scinth : public Node {
 public:
-    Scinth(std::shared_ptr<vk::Device> device, int scinthID, std::shared_ptr<ScinthDef> scinthDef,
+    Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef,
            std::shared_ptr<ImageMap> imageMap);
     ~Scinth();
 
@@ -37,7 +38,7 @@ public:
      *
      * \return true if successful, false if not.
      */
-    bool create();
+    bool create() override;
 
     /*! Prepare for the next frame to render. In particular updates the uniform buffer associated with the context, if
      * present, and any other operations to prepare a frame to render at the provided time.
@@ -45,7 +46,7 @@ public:
      * \params context The shared state object for the current frame render.
      * \return true if a command buffer rebuild happened, false if not.
      */
-    bool prepareFrame(std::shared_ptr<FrameContext> context);
+    bool prepareFrame(std::shared_ptr<FrameContext> context) override;
 
     /*! Set parameters on this Scinth, causing a command buffer rebuild on the next call to prepareFrame.
      *  Parameters are set in order starting with the named values and followed by the indexed values, so any duplicate
@@ -55,24 +56,23 @@ public:
      * \param indexedValues The pairs of parameter indices and values to set
      */
     void setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
-                       const std::vector<std::pair<int, float>>& indexedValues);
+                       const std::vector<std::pair<int, float>>& indexedValues) override;
 
     /*! Determines the paused or playing status of the Node. TODO: should paused nodes still render? Unlike in audio,
      * a paused VGen can still produce a still frame.
      *
      * \param run If false, will pause the Node. If true, will play it.
      */
-    void setRunning(bool run) { m_running = run; }
+    void setRun(bool run) override { m_running = run; }
 
-    int scinthID() const { return m_scinthID; }
+    bool isGroup() const override { return false; }
+    bool isScinth() const override { return true; }
 
 private:
     bool allocateDescriptors();
     void updateDescriptors();
     void rebuildBuffers();
 
-    std::shared_ptr<vk::Device> m_device;
-    int m_scinthID;
     std::shared_ptr<ScinthDef> m_scinthDef;
     std::shared_ptr<ImageMap> m_imageMap;
     bool m_cueued;
