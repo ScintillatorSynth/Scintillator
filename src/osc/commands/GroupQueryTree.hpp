@@ -1,14 +1,14 @@
-#ifndef SRC_OSC_COMMANDS_GROUP_FREE_ALL_HPP_
-#define SRC_OSC_COMMANDS_GROUP_FREE_ALL_HPP_
+#ifndef SRC_OSC_COMMANDS_GROUP_QUERY_TREE_HPP_
+#define SRC_OSC_COMMANDS_GROUP_QUERY_TREE_HPP_
 
 #include "osc/commands/Command.hpp"
 
 namespace scin { namespace osc { namespace commands {
 
-class GroupFreeAll : public Command {
+class GroupQueryTree : public Command {
 public:
-    GroupFreeAll(osc::Dispatcher* dispatcher);
-    virtual ~GroupFreeAll();
+    GroupQueryTree(osc::Dispatcher* dispatcher);
+    virtual ~GroupQueryTree();
 
     void processMessage(int argc, lo_arg** argv, const char* types, lo_address address) override;
 };
@@ -17,4 +17,4 @@ public:
 } // namespace osc
 } // namespace scin
 
-#endif // SRC_OSC_COMMANDS_GROUP_FREE_ALL_HPP_
+#endif // SRC_OSC_COMMANDS_GROUP_QUERY_TREE_HPP_

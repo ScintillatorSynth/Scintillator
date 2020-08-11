@@ -1,4 +1,4 @@
-#include "osc/commands/GroupFreeAll.hpp"
+#include "osc/commands/GroupTail.hpp"
 
 #include "comp/RootNode.hpp"
 #include "osc/Dispatcher.hpp"
@@ -9,17 +9,17 @@
 
 namespace scin { namespace osc { namespace commands {
 
-GroupFreeAll::GroupFreeAll(osc::Dispatcher* dispatcher): Command(dispatcher) {}
+GroupTail::GroupTail(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
-GroupFreeAll::~GroupFreeAll() {}
+GroupTail::~GroupTail() {}
 
-void GroupFreeAll::processMessage(int argc, lo_arg** argv, const char* types, lo_address /* address */) {
+void GroupTail::processMessage(int argc, lo_arg** argv, const char* types, lo_address /* address */) {
     std::vector<int> nodeIDs;
     for (auto i = 0; i < argc; ++i) {
         if (types[i] == LO_INT32) {
             nodeIDs.emplace_back(*reinterpret_cast<int32_t*>(argv[i]));
         } else {
-            spdlog::warn("OSC message groupFreeAll got non-integral type argument");
+            spdlog::warn("OSC message groupTail got non-integral type argument");
         }
     }
     m_dispatcher->rootNode()->nodeFree(nodeIDs);

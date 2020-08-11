@@ -1,6 +1,7 @@
 #ifndef SRC_COMP_NODE_HPP_
 #define SRC_COMP_NODE_HPP_
 
+#include <functional>
 #include <list>
 #include <memory>
 #include <string>
@@ -49,11 +50,22 @@ public:
 
     virtual void setRun(bool run) = 0;
 
+    virtual void forEach(std::function<void(std::shared_ptr<Node> node)> f) = 0;
+
+    struct NodeState {
+        int nodeID;
+        int numberOfChildren;  // -1 if a Scinth
+        std::string name;  // "group" if a group, scinthDefName if a scinth
+        std::vector<std::pair<std::string, float>> controlValues;
+    };
+    virtual void appendState(std::vector<NodeState>& nodes) = 0;
+
     virtual bool isGroup() const = 0;
     virtual bool isScinth() const = 0;
 
+    int nodeID() const { return m_nodeID; }
     Group* parent() const { return m_parent; }
-    void setParent(Gruop* parent) { m_parent = parent; }
+    void setParent(Group* parent) { m_parent = parent; }
 
 protected:
     std::shared_ptr<vk::Device> m_device;

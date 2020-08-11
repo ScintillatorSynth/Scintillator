@@ -27,7 +27,7 @@ void NodeAfter::processMessage(int argc, lo_arg** argv, const char* types, lo_ad
             spdlog::warn("OSC NodeAfter got non-integer argument, ignoring pair at index {}", i);
         }
     }
-    m_dispatcher->rootNode()->setNodeAfter(pairs);
+    m_dispatcher->rootNode()->nodeAfter(pairs);
 }
 
 } // namespace commands

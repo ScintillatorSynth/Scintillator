@@ -65,6 +65,9 @@ public:
      */
     void setRun(bool run) override { m_running = run; }
 
+    void forEach(std::function<void(std::shared_ptr<Node> node)>) override {}
+    void appendState(std::vector<Node::NodeState>& nodes) override;
+
     bool isGroup() const override { return false; }
     bool isScinth() const override { return true; }
 

@@ -27,7 +27,7 @@ void NodeBefore::processMessage(int argc, lo_arg** argv, const char* types, lo_a
             spdlog::warn("OSC NodeBefore got non-integer argument, ignoring pair at index {}", i);
         }
     }
-    m_dispatcher->rootNode()->setNodeBefore(pairs);
+    m_dispatcher->rootNode()->nodeBefore(pairs);
 }
 
 } // namespace commands

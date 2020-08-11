@@ -49,20 +49,28 @@ public:
 
     void setRun(bool run) override;
 
+    // Run f on each subnode for recursive post-order traversal.
+    void forEach(std::function<void(std::shared_ptr<Node> node)> f) override;
+    void appendState(std::vector<NodeState>& nodes) override;
+
     bool isGroup() const override { return true; }
     bool isScinth() const override { return false; }
 
-    void subNodeFree(int nodeID);
+    // remove node from self. does nothing recursive.
+    void remove(int nodeID);
     void insertBefore(std::shared_ptr<Node> a, int nodeB);
     void insertAfter(std::shared_ptr<Node> a, int nodeB);
     void prepend(std::shared_ptr<Node> node);
     void append(std::shared_ptr<Node> node);
     // nodeID can equal target
     void replace(std::shared_ptr<Node> node, int target);
+    void freeAll();
+    void deepFree();
+    void queryTree(std::vector<Node::NodeState>& nodes);
 
 protected:
     std::list<std::shared_ptr<Node>> m_subNodes;
-    std::unordered_map<int, std::list<std::shared_ptr<Node>::iterator> m_nodeMap;
+    std::unordered_map<int, std::list<std::shared_ptr<Node>>::iterator> m_nodeMap;
 };
 
 } // namespace comp

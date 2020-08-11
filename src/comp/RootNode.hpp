@@ -1,6 +1,8 @@
 #ifndef SRC_COMP_ROOT_NODE_HPP_
 #define SRC_COMP_ROOT_NODE_HPP_
 
+#include "comp/Node.hpp"
+
 #include <atomic>
 #include <functional>
 #include <list>
@@ -180,16 +182,12 @@ public:
      */
     void groupDeepFree(const std::vector<int>& groupIDs);
 
-    /*! Post a description of this group's subtree to the log.
+    /*! Populates nodes with all of the subnodes of the given groupID.
      *
-     * \param pairs A pair of <groupID, flag>, each groupID will be posted, if flag is nonzero will also post Scinth
-     *        control values.
+     * \param groupID The groupID to query.
+     * \param nodes The vector to populate with NodeState information.
      */
-    void groupDumpTree(const std::vector<std::pair<int, int>>& pairs);
-
-    /*! TODO
-     */
-    void groupQueryTree();
+    void groupQueryTree(int groupID, std::vector<Node::NodeState>& nodes);
 
     /*! Prepare to copy the provided decoded image to a suitable GPU-local buffer.
      *
