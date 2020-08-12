@@ -227,6 +227,7 @@ void RootNode::nodeBefore(const std::vector<std::pair<int, int>>& nodes) {
                     pair.first);
         }
     }
+    m_commandBuffersDirty = true;
 }
 
 void RootNode::nodeAfter(const std::vector<std::pair<int, int>>& nodes) {
@@ -247,6 +248,7 @@ void RootNode::nodeAfter(const std::vector<std::pair<int, int>>& nodes) {
                     pair.first);
         }
     }
+    m_commandBuffersDirty = true;
 }
 
 void RootNode::nodeOrder(AddAction addAction, int targetID, const std::vector<int>& nodeIDs) {
@@ -312,6 +314,7 @@ void RootNode::nodeOrder(AddAction addAction, int targetID, const std::vector<in
     } else {
         spdlog::warn("unable to order nodes as target node {} not found", targetID);
     }
+    m_commandBuffersDirty = true;
 }
 
 void RootNode::scinthNew(const std::string& scinthDefName, int nodeID, AddAction addAction, int targetID,
@@ -365,6 +368,7 @@ void RootNode::groupNew(const std::vector<std::tuple<int, AddAction, int>>& grou
         auto group = std::make_shared<Group>(m_device, groupID);
         insertNode(group, addAction, targetID);
     }
+    m_commandBuffersDirty = true;
 }
 
 void RootNode::groupHead(const std::vector<std::pair<int, int>>& nodes) {
@@ -384,6 +388,7 @@ void RootNode::groupHead(const std::vector<std::pair<int, int>>& nodes) {
             spdlog::warn("groupHead group ID {} not found or not a group", pair.first);
         }
     }
+    m_commandBuffersDirty = true;
 }
 
 void RootNode::groupTail(const std::vector<std::pair<int, int>>& nodes) {
@@ -403,6 +408,7 @@ void RootNode::groupTail(const std::vector<std::pair<int, int>>& nodes) {
             spdlog::warn("groupHead group ID {} not found or not a group", pair.first);
         }
     }
+    m_commandBuffersDirty = true;
 }
 
 void RootNode::groupFreeAll(const std::vector<int>& groupIDs) {
@@ -419,6 +425,7 @@ void RootNode::groupFreeAll(const std::vector<int>& groupIDs) {
             spdlog::warn("groupFreeAll id {} not found or not a group", id);
         }
     }
+    m_commandBuffersDirty = true;
 }
 
 void RootNode::groupDeepFree(const std::vector<int>& groupIDs) {
@@ -437,6 +444,7 @@ void RootNode::groupDeepFree(const std::vector<int>& groupIDs) {
             spdlog::warn("groupDeepFree id {} not found or not a group", id);
         }
     }
+    m_commandBuffersDirty = true;
 }
 
 void RootNode::groupQueryTree(int groupID, std::vector<Node::NodeState>& nodes) {
@@ -614,7 +622,7 @@ void RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int t
         });
         m_nodes.erase(existingNode);
     }
-    auto targetNode = m_nodes.find(node->nodeID());
+    auto targetNode = m_nodes.find(targetID);
     if (targetNode != m_nodes.end()) {
         switch (addAction) {
         case kGroupHead: {
@@ -652,10 +660,10 @@ void RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int t
             m_nodes[node->nodeID()] = node;
         } break;
         case kActionCount:
-            spdlog::error("scinthNew got unknown addAction value, ignoring.");
+            spdlog::error("new got unknown addAction value, ignoring.");
         }
     } else {
-        spdlog::error("scinthNew couldn't find target node ID {}, ignoring", targetID);
+        spdlog::error("new couldn't find target node ID {}, ignoring", targetID);
     }
 }
 

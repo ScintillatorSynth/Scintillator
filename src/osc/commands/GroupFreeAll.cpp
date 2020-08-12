@@ -14,15 +14,15 @@ GroupFreeAll::GroupFreeAll(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 GroupFreeAll::~GroupFreeAll() {}
 
 void GroupFreeAll::processMessage(int argc, lo_arg** argv, const char* types, lo_address /* address */) {
-    std::vector<int> nodeIDs;
+    std::vector<int> groupIDs;
     for (auto i = 0; i < argc; ++i) {
         if (types[i] == LO_INT32) {
-            nodeIDs.emplace_back(*reinterpret_cast<int32_t*>(argv[i]));
+            groupIDs.emplace_back(*reinterpret_cast<int32_t*>(argv[i]));
         } else {
             spdlog::warn("OSC message groupFreeAll got non-integral type argument");
         }
     }
-    m_dispatcher->rootNode()->nodeFree(nodeIDs);
+    m_dispatcher->rootNode()->groupFreeAll(groupIDs);
 }
 
 } // namespace commands

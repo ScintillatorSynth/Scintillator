@@ -42,6 +42,7 @@ void GroupQueryTree::processMessage(int argc, lo_arg** argv, const char* types, 
                 if (state.numberOfChildren == -1) {
                     lo_message_add_string(message, state.name.data());
                     if (includeParams) {
+                        lo_message_add_int32(message, static_cast<int32_t>(state.controlValues.size()));
                         for (auto param : state.controlValues) {
                             lo_message_add_string(message, param.first.data());
                             lo_message_add_float(message, param.second);
