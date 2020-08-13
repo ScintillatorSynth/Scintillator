@@ -172,6 +172,10 @@ void RootNode::defFree(const std::vector<std::string>& names) {
 void RootNode::nodeFree(const std::vector<int>& nodeIDs) {
     std::lock_guard<std::mutex> lock(m_treeMutex);
     for (auto id : nodeIDs) {
+        if (id == 0) {
+            spdlog::error("nodeFree ignoring request to remove root node.");
+            continue;
+        }
         auto it = m_nodes.find(id);
         if (it != m_nodes.end()) {
             it->second->parent()->remove(it->second->nodeID());
@@ -363,6 +367,11 @@ void RootNode::groupNew(const std::vector<std::tuple<int, AddAction, int>>& grou
         int groupID = std::get<0>(tuple);
         AddAction addAction = std::get<1>(tuple);
         int targetID = std::get<2>(tuple);
+
+        if (groupID == 0) {
+            spdlog::error("groupNew ignoring request to clobber root group 0");
+            continue;
+        }
 
         auto group = std::make_shared<Group>(m_device, groupID);
         insertNode(group, addAction, targetID);
@@ -610,6 +619,10 @@ void RootNode::rebuildCommandBuffer(std::shared_ptr<FrameContext> context) {
 }
 
 void RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int targetID) {
+    if (node->nodeID() == 0) {
+        spdlog::error("addNode ignoring request to overwrite root node id 0");
+        return;
+    }
     auto existingNode = m_nodes.find(node->nodeID());
     // Remove existing node of same ID, unless the command is to replace existing node of same ID, as it will be
     // removed as part of the replace operation.
