@@ -173,9 +173,7 @@ void RootNode::nodeFree(const std::vector<int>& nodeIDs) {
         auto it = m_nodes.find(id);
         if (it != m_nodes.end()) {
             it->second->parent()->remove(id);
-            it->second->forEach([this](std::shared_ptr<Node> n) {
-                m_nodes.erase(n->nodeID());
-            });
+            it->second->forEach([this](std::shared_ptr<Node> n) { m_nodes.erase(n->nodeID()); });
             m_nodes.erase(it);
         } else {
             spdlog::warn("unable to free node ID {}, node not found.", id);
@@ -220,11 +218,11 @@ void RootNode::nodeBefore(const std::vector<std::pair<int, int>>& nodes) {
                 itB->second->parent()->insertBefore(itA->second, pair.second);
             } else {
                 spdlog::warn("unable to insert node {} before node {}, node {} not found", pair.first, pair.second,
-                        pair.second);
+                             pair.second);
             }
         } else {
             spdlog::warn("unable to insert node {} before node {}, node {} not found", pair.first, pair.second,
-                    pair.first);
+                         pair.first);
         }
     }
     m_commandBuffersDirty = true;
@@ -241,11 +239,11 @@ void RootNode::nodeAfter(const std::vector<std::pair<int, int>>& nodes) {
                 itB->second->parent()->insertAfter(itA->second, pair.second);
             } else {
                 spdlog::warn("unable to insert node {} after node {}, node {} not found", pair.first, pair.second,
-                        pair.second);
+                             pair.second);
             }
         } else {
             spdlog::warn("unable to insert node {} after node {}, node {} not found", pair.first, pair.second,
-                    pair.first);
+                         pair.first);
         }
     }
     m_commandBuffersDirty = true;
@@ -417,9 +415,7 @@ void RootNode::groupFreeAll(const std::vector<int>& groupIDs) {
         auto groupIt = m_nodes.find(id);
         if (groupIt != m_nodes.end() && groupIt->second->isGroup()) {
             Group* group = static_cast<Group*>(groupIt->second.get());
-            group->forEach([this](std::shared_ptr<Node> n) {
-                m_nodes.erase(n->nodeID());
-            });
+            group->forEach([this](std::shared_ptr<Node> n) { m_nodes.erase(n->nodeID()); });
             group->freeAll();
         } else {
             spdlog::warn("groupFreeAll id {} not found or not a group", id);
@@ -613,13 +609,11 @@ void RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int t
     auto existingNode = m_nodes.find(node->nodeID());
     // Remove existing node of same ID, unless the command is to replace existing node of same ID, as it will be
     // removed as part of the replace operation.
-    if (existingNode != m_nodes.end() &&
-            ((addAction != kReplace) || (addAction == kReplace && node->nodeID() != targetID))) {
+    if (existingNode != m_nodes.end()
+        && ((addAction != kReplace) || (addAction == kReplace && node->nodeID() != targetID))) {
         spdlog::warn("clobbering existing nodeID {}");
         existingNode->second->parent()->remove(node->nodeID());
-        existingNode->second->forEach([this](std::shared_ptr<Node> n) {
-            m_nodes.erase(n->nodeID());
-        });
+        existingNode->second->forEach([this](std::shared_ptr<Node> n) { m_nodes.erase(n->nodeID()); });
         m_nodes.erase(existingNode);
     }
     auto targetNode = m_nodes.find(targetID);
@@ -653,9 +647,7 @@ void RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int t
         } break;
         case kReplace: {
             targetNode->second->parent()->replace(node, targetID);
-            targetNode->second->forEach([this](std::shared_ptr<Node> n) {
-                m_nodes.erase(n->nodeID());
-            });
+            targetNode->second->forEach([this](std::shared_ptr<Node> n) { m_nodes.erase(n->nodeID()); });
             m_nodes.erase(targetNode);
             m_nodes[node->nodeID()] = node;
         } break;

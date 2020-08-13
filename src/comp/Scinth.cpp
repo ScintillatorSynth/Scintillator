@@ -134,12 +134,7 @@ void Scinth::appendState(std::vector<Node::NodeState>& nodes) {
     for (size_t i = 0; i < m_numberOfParameters; ++i) {
         params.emplace_back(std::make_pair(m_scinthDef->abstract()->parameters()[i].name(), m_parameterValues[i]));
     }
-    nodes.emplace_back(Node::NodeState{
-        m_nodeID,
-        -1,
-        m_scinthDef->abstract()->name(),
-        params
-    });
+    nodes.emplace_back(Node::NodeState { m_nodeID, -1, m_scinthDef->abstract()->name(), params });
 }
 
 bool Scinth::allocateDescriptors() {

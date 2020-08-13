@@ -271,12 +271,13 @@ fork {
 	groups[1].moveNodeToHead(groups[0]);
 	groups[2].moveNodeToHead(groups[1]);
 	groups[3].moveNodeToHead(groups[2]);
-	groups[3].moveNodeToTail(groups[4]);
 	groups[4].moveNodeToTail(groups[5]);
 	groups[5].moveNodeToTail(groups[6]);
 	groups[6].moveNodeToTail(groups[7]);
+	expectedTree = ['/scin_g_queryTree.reply', 1, server.defaultGroup.nodeID, 2, groups[3].nodeID, 3, groups[4].nodeID, 3];
 
 	groupSnap.value("right-to-left.png");
+	checkTree.value(server.defaultGroup);
 	server.defaultGroup.dumpTree;
 
     server.quit;

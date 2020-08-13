@@ -39,12 +39,7 @@ void Group::forEach(std::function<void(std::shared_ptr<Node> node)> f) {
 }
 
 void Group::appendState(std::vector<Node::NodeState>& nodes) {
-    nodes.emplace_back(Node::NodeState{
-        m_nodeID,
-        static_cast<int>(m_subNodes.size()),
-        "group",
-        {}
-    });
+    nodes.emplace_back(Node::NodeState { m_nodeID, static_cast<int>(m_subNodes.size()), "group", {} });
 }
 
 void Group::remove(int nodeID) {

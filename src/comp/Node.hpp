@@ -54,8 +54,8 @@ public:
 
     struct NodeState {
         int nodeID;
-        int numberOfChildren;  // -1 if a Scinth
-        std::string name;  // "group" if a group, scinthDefName if a scinth
+        int numberOfChildren; // -1 if a Scinth
+        std::string name; // "group" if a group, scinthDefName if a scinth
         std::vector<std::pair<std::string, float>> controlValues;
     };
     virtual void appendState(std::vector<NodeState>& nodes) = 0;
