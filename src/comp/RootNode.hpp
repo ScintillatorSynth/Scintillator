@@ -219,15 +219,27 @@ public:
      */
     bool addAudioIngress(std::shared_ptr<audio::Ingress> ingress, int imageID);
 
-    /*! Returns the size of the render tree in nodes.
+    /*! Returns the current count of Scinths in the render tree.
      */
-    size_t numberOfRunningNodes();
+    size_t numberOfScinths() const { return m_scinthCount; }
+
+    /*! Returns the current count of Groups in the render tree.
+     */
+    size_t numberOfGroups() const { return m_groupCount; }
 
     std::shared_ptr<StageManager> stageManager() { return m_stageManager; }
 
 protected:
     void rebuildCommandBuffer(std::shared_ptr<FrameContext> context);
+
+    /*! Add the provided node to the tree, respecting the addAction and the targetID. Assumes mutex is acquired.
+     *  Updates counts.
+     */
     void insertNode(std::shared_ptr<Node> node, AddAction addAction, int targetID);
+    /*! Remove the node pointed to by the iterator and any descendant nodes from the map. Doesn't remove the node from
+     *  the parent Group. Assumes mutex is acquired. Updates counts.
+     */
+    void removeNode(std::unordered_map<int, std::shared_ptr<Node>>::iterator it);
 
     std::shared_ptr<vk::Device> m_device;
     std::shared_ptr<Canvas> m_canvas;
@@ -239,6 +251,8 @@ protected:
     std::shared_ptr<ImageMap> m_imageMap;
     bool m_commandBuffersDirty;
     std::atomic<int> m_nodeSerial;
+    std::atomic<size_t> m_scinthCount;
+    std::atomic<size_t> m_groupCount;
 
     std::mutex m_scinthDefMutex;
     std::unordered_map<std::string, std::shared_ptr<ScinthDef>> m_scinthDefs;

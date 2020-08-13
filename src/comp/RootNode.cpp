@@ -35,6 +35,8 @@ RootNode::RootNode(std::shared_ptr<vk::Device> device, std::shared_ptr<Canvas> c
     m_imageMap(new ImageMap()),
     m_commandBuffersDirty(true),
     m_nodeSerial(-2),
+    m_scinthCount(0),
+    m_groupCount(1),
     m_root(new Group(device, 0)) {
     // Root of the tree is a group with ID 0, so set up that association now.
     m_nodes[0] = m_root;
@@ -172,9 +174,8 @@ void RootNode::nodeFree(const std::vector<int>& nodeIDs) {
     for (auto id : nodeIDs) {
         auto it = m_nodes.find(id);
         if (it != m_nodes.end()) {
-            it->second->parent()->remove(id);
-            it->second->forEach([this](std::shared_ptr<Node> n) { m_nodes.erase(n->nodeID()); });
-            m_nodes.erase(it);
+            it->second->parent()->remove(it->second->nodeID());
+            removeNode(it);
         } else {
             spdlog::warn("unable to free node ID {}, node not found.", id);
         }
@@ -415,7 +416,14 @@ void RootNode::groupFreeAll(const std::vector<int>& groupIDs) {
         auto groupIt = m_nodes.find(id);
         if (groupIt != m_nodes.end() && groupIt->second->isGroup()) {
             Group* group = static_cast<Group*>(groupIt->second.get());
-            group->forEach([this](std::shared_ptr<Node> n) { m_nodes.erase(n->nodeID()); });
+            group->forEach([this](std::shared_ptr<Node> n) {
+                m_nodes.erase(n->nodeID());
+                if (n->isScinth()) {
+                    --m_scinthCount;
+                } else {
+                    --m_groupCount;
+                }
+            });
             group->freeAll();
         } else {
             spdlog::warn("groupFreeAll id {} not found or not a group", id);
@@ -433,6 +441,7 @@ void RootNode::groupDeepFree(const std::vector<int>& groupIDs) {
             group->forEach([this](std::shared_ptr<Node> n) {
                 if (n->isScinth()) {
                     m_nodes.erase(n->nodeID());
+                    --m_scinthCount;
                 }
             });
             group->deepFree();
@@ -502,11 +511,6 @@ bool RootNode::addAudioIngress(std::shared_ptr<audio::Ingress> ingress, int imag
         m_audioStagers.push_back(stager);
     }
     return true;
-}
-
-size_t RootNode::numberOfRunningNodes() {
-    std::lock_guard<std::mutex> lock(m_treeMutex);
-    return m_nodes.size();
 }
 
 void RootNode::rebuildCommandBuffer(std::shared_ptr<FrameContext> context) {
@@ -613,8 +617,7 @@ void RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int t
         && ((addAction != kReplace) || (addAction == kReplace && node->nodeID() != targetID))) {
         spdlog::warn("clobbering existing nodeID {}");
         existingNode->second->parent()->remove(node->nodeID());
-        existingNode->second->forEach([this](std::shared_ptr<Node> n) { m_nodes.erase(n->nodeID()); });
-        m_nodes.erase(existingNode);
+        removeNode(existingNode);
     }
     auto targetNode = m_nodes.find(targetID);
     if (targetNode != m_nodes.end()) {
@@ -626,6 +629,7 @@ void RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int t
                 m_nodes[node->nodeID()] = node;
             } else {
                 spdlog::error("add node {} to group head target {} not a group, ignoring", node->nodeID(), targetID);
+                return;
             }
         } break;
         case kGroupTail: {
@@ -635,6 +639,7 @@ void RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int t
                 m_nodes[node->nodeID()] = node;
             } else {
                 spdlog::error("add node {} to group tail target {} not a group, ignoring", node->nodeID(), targetID);
+                return;
             }
         } break;
         case kBeforeNode: {
@@ -647,16 +652,39 @@ void RootNode::insertNode(std::shared_ptr<Node> node, AddAction addAction, int t
         } break;
         case kReplace: {
             targetNode->second->parent()->replace(node, targetID);
-            targetNode->second->forEach([this](std::shared_ptr<Node> n) { m_nodes.erase(n->nodeID()); });
-            m_nodes.erase(targetNode);
+            removeNode(targetNode);
             m_nodes[node->nodeID()] = node;
         } break;
         case kActionCount:
             spdlog::error("new got unknown addAction value, ignoring.");
+            return;
+        }
+
+        if (node->isScinth()) {
+            ++m_scinthCount;
+        } else {
+            ++m_groupCount;
         }
     } else {
         spdlog::error("new couldn't find target node ID {}, ignoring", targetID);
     }
+}
+
+void RootNode::removeNode(std::unordered_map<int, std::shared_ptr<Node>>::iterator it) {
+    it->second->forEach([this](std::shared_ptr<Node> n) {
+        m_nodes.erase(n->nodeID());
+        if (n->isScinth()) {
+            --m_scinthCount;
+        } else {
+            --m_groupCount;
+        }
+    });
+    if (it->second->isScinth()) {
+        --m_scinthCount;
+    } else {
+        --m_groupCount;
+    }
+    m_nodes.erase(it);
 }
 
 } // namespace comp

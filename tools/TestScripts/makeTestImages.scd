@@ -2,7 +2,7 @@
 // integration testing of the render stack.
 (
 var testImagesPath, imageOut, options, server, c, d, testDefs, keptScinths;
-var bar, colors, positions, scinths, expectedTree, groupSnap, checkTree, groups;
+var bar, colors, positions, scinths, expectedTree, groupSnap, checkTree, syncStats, scinthCount, groupCount, groups;
 if (thisProcess.argv.size < 1, {
     "requires at least one argument, the path to the test images repository.".postln;
     "*** SCRIPT FAILED ***".postln;
@@ -201,6 +201,29 @@ fork {
 		}, true);
 		d.wait;
 	};
+	syncStats = { |scinths, groups|
+		var resp = OSCFunc.new({ |msg|
+			scinthCount = msg[1];
+			groupCount = msg[2];
+			resp.free;
+			d.test = true;
+			d.signal;
+		}, '/scin_status.reply');
+		d.test = false;
+		server.sendMsg('/scin_status');
+		d.wait;
+
+		if (scinthCount != scinths, {
+			"scinth count mismatch, expected % got %".format(scinths, scinthCount).postln;
+			"*** SCRIPT FAILED ***".postln;
+			-1.exit;
+		});
+		if (groupCount != groups, {
+			"group count mismatch, expected % got %".format(groups, groupCount).postln;
+			"*** SCRIPT FAILED ***".postln;
+			-1.exit;
+		});
+	};
 
 	// left-to-right with default node ordering
 	scinths = [];
@@ -215,6 +238,7 @@ fork {
 
 	groupSnap.value("left-to-right.png");
 	checkTree.value(server.defaultGroup);
+	syncStats.value(15, 2);
 	server.defaultGroup.dumpTree;
 
 	// outside-in with groups moveToHead/moveToTail
@@ -232,6 +256,7 @@ fork {
 
 	groupSnap.value("outside-in.png");
 	checkTree.value(server.defaultGroup);
+	syncStats.value(15, 10);
 	server.defaultGroup.dumpTree;
 
 	// inside-out testing moveBefore and moveAfter
@@ -260,6 +285,7 @@ fork {
 
 	groupSnap.value("inside-out.png");
 	checkTree.value(server.defaultGroup);
+	syncStats.value(15, 10);
 	server.defaultGroup.dumpTree;
 
 	// right-to-left with nested groups
@@ -278,6 +304,7 @@ fork {
 
 	groupSnap.value("right-to-left.png");
 	checkTree.value(server.defaultGroup);
+	syncStats.value(15, 10);
 	server.defaultGroup.dumpTree;
 
     server.quit;
