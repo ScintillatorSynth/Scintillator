@@ -12,8 +12,6 @@ ScinNode {
 			addBefore: 2,
 			addAfter: 3,
 			addReplace: 4,
-			h: 0,
-			t: 1,
 			0: 0, 1: 1, 2: 2, 3: 3, 4: 4
 		);
 	}
@@ -21,6 +19,10 @@ ScinNode {
 	*basicNew { |server, nodeID|
 		server = server ? ScinServer.default;
 		^super.newCopyArgs(nodeID ?? { UniqueID.next }, server);
+	}
+
+	*actionNumberFor { |addAction|
+		^addActions[addAction];
 	}
 
 	free {

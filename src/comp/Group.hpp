@@ -4,6 +4,7 @@
 #include "comp/Node.hpp"
 
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 namespace scin {

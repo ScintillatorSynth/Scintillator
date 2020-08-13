@@ -307,6 +307,8 @@ fork {
 	syncStats.value(15, 10);
 	server.defaultGroup.dumpTree;
 
+	// TODO: ScinGroup.deepFree, other scinth and group creation and insertion modes (particularly replace), ScinServer.reorder
+
     server.quit;
     1.wait;
     "*** SCRIPT OK ***".postln;

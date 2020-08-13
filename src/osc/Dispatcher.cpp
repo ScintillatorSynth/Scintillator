@@ -35,6 +35,7 @@
 #include "osc/commands/NodeBefore.hpp"
 #include "osc/commands/NodeBefore.hpp"
 #include "osc/commands/NodeFree.hpp"
+#include "osc/commands/NodeOrder.hpp"
 #include "osc/commands/NodeRun.hpp"
 #include "osc/commands/NodeSet.hpp"
 #include "osc/commands/Notify.hpp"
@@ -113,6 +114,7 @@ bool Dispatcher::create(const std::string& bindPort, bool dumpOSC) {
     m_commands[commands::Command::kNodeSet].reset(new commands::NodeSet(this));
     m_commands[commands::Command::kNodeBefore].reset(new commands::NodeBefore(this));
     m_commands[commands::Command::kNodeAfter].reset(new commands::NodeAfter(this));
+    m_commands[commands::Command::kNodeOrder].reset(new commands::NodeOrder(this));
     m_commands[commands::Command::kScinthNew].reset(new commands::ScinthNew(this));
     m_commands[commands::Command::kGroupNew].reset(new commands::GroupNew(this));
     m_commands[commands::Command::kGroupHead].reset(new commands::GroupHead(this));

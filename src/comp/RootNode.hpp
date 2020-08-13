@@ -44,8 +44,8 @@ class ShaderCompiler;
 class StageManager;
 
 /*! Root object of the render tree. Maintains global objects for the render tree such as currently defined ScinthDefs
- * and image buffers. Creates the primary command buffers and render passes. Renders to a Canvas. Maintains a hard-coded
- * nodeID of 0. Maintains the render tree internally as a flat list of Scinths and a set of Group data structures.
+ * and image buffers. Creates the primary command buffers and render passes. Renders to a Canvas. Maintains a root
+ * Group with a hard-coded nodeID of 0.
  */
 class RootNode {
 public:

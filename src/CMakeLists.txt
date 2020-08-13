@@ -247,6 +247,8 @@ set(scintillator_synth_files
     osc/commands/NodeBefore.hpp
     osc/commands/NodeFree.cpp
     osc/commands/NodeFree.hpp
+    osc/commands/NodeOrder.cpp
+    osc/commands/NodeOrder.hpp
     osc/commands/NodeRun.cpp
     osc/commands/NodeRun.hpp
     osc/commands/NodeSet.cpp

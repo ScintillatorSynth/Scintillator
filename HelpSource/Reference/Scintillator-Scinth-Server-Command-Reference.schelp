@@ -1,12 +1,12 @@
 title:: Scintillator Scinth Server Command Reference
-summary:: A list of all OSC commands accepted by scscinth
+summary:: A list of all OSC commands accepted by scinsynth
 categories:: Quarks>Scintillator>Developer Documentation
 
 section::OSC Communication Details
 
 While the SuperCollider synth programs support a variety of connection modalities and multi-user scenarios, at present scinsynth only supports a single client commnicating exclusively over UDP. For asynchronous messages the server will respond to whatever UDP address and port messages are received from.
 
-In general Scintillator attempts to follow a similar command list and structure to that of the SuperCollider sound synthesis servers, with the addition of a code::/scin_:: prefix to each OSC command and response.
+In general Scintillator attempts to follow the command syntax and semantics of the SuperCollider sound synthesis servers, with the addition of a code::/scin_:: prefix to each OSC command and response. In some cases the commands are identical, and the documentation has been copied verbatim from the link::Reference/Server-Command-Reference::.
 
 Some commands are marked as strong::asynchronous::, which in this context means they will send a response message back to the sender, sometimes strong::/scin_done::, upon completion of the command. For any command marked as asynchronous Scintillator is designed to always return a message, even if the execution of the command failed or the message body didn't parse.
 
@@ -26,13 +26,13 @@ Query the status. Replies to sender with the following message:
 
 definitionlist::
 ## /scin_status.reply || table::
-## strong::int:: || number of scinths in the render tree.
-## strong::int:: || number of groups in the render tree.
-## strong::int:: || number of loaded Scinth defintions.
-## strong::int:: || number of warnings in log.
-## strong::int:: || number of errors in log.
+## strong::int:: || number of Scinths in the render tree.
+## strong::int:: || number of Groups in the render tree.
+## strong::int:: || number of loaded ScinthDefs.
+## strong::int:: || cumulative number of warnings in log.
+## strong::int:: || cumulative number of errors in log.
 ## strong::double:: || approximate graphics memory consumed, in bytes.
-## strong::double:: || approximage graphics memory available, in bytes. Some graphics devices don't support this statistic, in which case it will be 0.
+## strong::double:: || approximage graphics memory available, in bytes. Some graphics drivers don't support this statistic, in which case it will be 0.
 ## strong::int:: || target frame rate in frames per second (can be -1 or 0)
 ## strong::double:: || computed mean framerate.
 ## strong::int:: || number of dropped frames, if running real time, 0 otherwise.
@@ -183,6 +183,45 @@ table::
 ## strong::int:: or strong::string:: || A control index or name
 ## strong::int:: or strong::float:: || A control value
 ::
+::
+
+subsection:: /scin_n_before
+Place a node before another.
+table::
+## N * || table::
+    ## strong::int:: || the ID of the node to place (A)
+    ## strong::int:: || the ID of the node before which the above is placed (B)
+    ::
+::
+Places node A in the same group as node B, to execute immediately before node B.
+
+subsection:: /scin_n_after
+Place a node after another.
+table::
+## N * || table::
+    ## strong::int:: || the ID of the node to place (A)
+    ## strong::int:: || the ID of the node after which the above is placed (B)
+    ::
+::
+Places node A in the same group as node B, to execute immediately after node B.
+
+
+subsection:: /scin_n_order
+Move and order a list of nodes.
+table::
+## strong::int:: || add action (0,1,2 or 3 see below)
+## strong::int:: || add target ID
+## N * strong::int:: || node IDs
+::
+
+Move the listed nodes to the location specified by the target and add action, and place them in the order specified. Nodes which have already been freed will be ignored.
+definitionlist::
+## add actions: || table::
+    ## 0 || construct the node order at the head of the group specified by the add target ID.
+    ## 1 || construct the node order at the tail of the group specified by the add target ID.
+    ## 2 || construct the node order just before the node specified by the add target ID.
+    ## 3 || construct the node order just after the node specified by the add target ID.
+    ::
 ::
 
 section::Scinth Commands

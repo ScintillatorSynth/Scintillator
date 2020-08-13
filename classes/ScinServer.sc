@@ -129,7 +129,6 @@ ScinServer {
 	var addr;
 	var statusPoller;
 	var currentLogLevel;
-	var <defaultGroup;
 
 	// For local scinsynth instances. Remote not yet supported.
 	*new { |options|
@@ -148,7 +147,6 @@ ScinServer {
 
 	init {
 		CmdPeriod.add(this);
-		ScinServer.default = this;
 
 		if (options.isNil, {
 			options = ScinServerOptions.new;
@@ -173,7 +171,7 @@ ScinServer {
 
 	cmdPeriod {
 		if (addr.notNil, {
-			addr.sendMsg('/scin_g_freeAll', defaultGroup.nodeID);
+			addr.sendMsg('/scin_g_freeAll');
 		});
 	}
 
@@ -189,10 +187,7 @@ ScinServer {
 			^nil;
 		});
 
-		// Configure the status poller to have us set up the defaultGroup once booted.
-		statusPoller.doWhenBooted({ this.prMakeDefaultGroup; });
 		statusPoller.serverBooting = true;
-
 		Platform.case(
 			\osx, {
 				commandLine = scinBinaryPath.shellQuote + options.asOptionsString() + '--crashpadHandlerPath='
@@ -369,6 +364,11 @@ ScinServer {
 		this.sendMsg('/scin_uploadCrashReport', 'all');
 	}
 
+	reorder { |nodeList, target, addAction=\addToHead|
+		target = target.asScinTarget;
+		this.sendMsg('/scin_n_order', ScinNode.actionNumberFor(addAction), target.nodeID, *(nodeList.collect(_.nodeID)));
+	}
+
 	prTempLowerLogLevel { |newLevel, doneToken|
 		if (currentLogLevel > newLevel, {
 			var oldLevel = currentLogLevel;
@@ -382,14 +382,8 @@ ScinServer {
 		});
 	}
 
-	prMakeDefaultGroup {
-		defaultGroup = ScinGroup.basicNew(this);
-		this.sendMsg('/scin_g_new', defaultGroup.nodeID, 0, 0);
-	}
-
 	serverRunning { ^statusPoller.serverRunning; }
 	serverBooting { ^statusPoller.serverBooting; }
 	numberOfWarnings { ^statusPoller.numberOfWarnings; }
 	numberOfErrors { ^statusPoller.numberOfErrors; }
-	asScinTarget { ^this.defaultGroup; }
 }
