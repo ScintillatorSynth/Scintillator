@@ -27,10 +27,10 @@ void GroupNew::processMessage(int argc, lo_arg** argv, const char* types, lo_add
                                                     static_cast<comp::RootNode::AddAction>(actionNumber),
                                                     *reinterpret_cast<int32_t*>(argv[i + 2])));
             } else {
-                spdlog::warn("OSC groupNew got bad add action number {}", actionNumber);
+                spdlog::error("OSC groupNew got bad add action number {}", actionNumber);
             }
         } else {
-            spdlog::warn("OSC message groupNew got non-integral type argument");
+            spdlog::error("OSC message groupNew got non-integral type argument");
         }
     }
     m_dispatcher->rootNode()->groupNew(groups);
