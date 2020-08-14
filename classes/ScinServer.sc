@@ -370,6 +370,19 @@ ScinServer {
 
 	reorder { |nodeList, target, addAction=\addToHead|
 		target = target.asScinTarget;
+		if (addAction === \addToHead or: { addAction === \addToTail }, {
+			if (target.class !== 'ScinGroup'.asClass, {
+				Error.new("\addToHead and \addToTail require target to be a group.").throw;
+			});
+		});
+		// Update the nodes to have the new group assignments based on the re-ordering
+		switch (addAction,
+			\addToHead, { nodeList.do({ |node| node.group = target; }); },
+			\addToTail, { nodeList.do({ |node| node.group = target; }); },
+			\addBefore, { nodeList.do({ |node| node.group = target.group; }); },
+			\addAfter, { nodeList.do({ |node| node.group = target.group; }); },
+			{ Error.new("unsupported addAction value %".format(addAction)).throw; }
+		);
 		this.sendMsg('/scin_n_order', ScinNode.actionNumberFor(addAction), target.nodeID, *(nodeList.collect(_.nodeID)));
 	}
 

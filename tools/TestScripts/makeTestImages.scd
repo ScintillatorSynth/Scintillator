@@ -181,7 +181,7 @@ fork {
 			msg.do({ |ele, i|
 				// Floats won't match exactly due to truncation to 32 bits for seding via
 				// OSC, so we check that the truncated values match.
-				if (ele.class == 0.224.class, {
+				if (ele.class === 'Float'.asClass, {
 					if (ele.as32Bits != expectedTree[i].as32Bits, {
 						"query float mismatch at position %, got %, expected %".format(
 							i, ele, expectedTree[i]).postln;
@@ -307,7 +307,49 @@ fork {
 	syncStats.value(15, 10);
 	server.defaultGroup.dumpTree;
 
-	// TODO: ScinGroup.deepFree, other scinth and group creation and insertion modes (particularly replace), ScinServer.reorder
+	// Test deepFree and replacement insertion by creating new scinths with backward
+	// position/color relationships. Still rendering right-to-left just with inverted
+	// colors.
+	groups[3].deepFree; // should free scinths[7] through scinths[14]
+	// Test replacing a group with a Scinth
+	scinths[0] = Scinth.new(\bar, [x: positions[0], r: colors[14][0], g: colors[14][1],
+		b: colors[14][2]], groups[7], \addReplace);
+	6.do({ |i|
+		var j = i + 1;
+		scinths[j] = Scinth.new(\bar, [x: positions[j], r: colors[14 - j][0],
+			g: colors[14 - j][1], b: colors[14 - j][2]], scinths[j], \addReplace);
+	});
+	8.do({ |i|
+		var j = 14 - i;
+		scinths[j] = Scinth.new(\bar, [x: positions[j], r: colors[i][0],
+			g: colors[i][1], b: colors[i][2]], groups[i / 2]);
+	});
+
+	groupSnap.value("right-to-left-inverted.png");
+	checkTree.value(server.defaultGroup);
+	syncStats.value(15, 9);
+	server.defaultGroup.dumpTree;
+
+	// Test server reordering to get back to left-to-right with inverted colors
+	server.reorder(scinths[13..1], groups[4], \addBefore);
+	// Test replacing groups with Scinths
+	scinths[0] = Scinth.new(\bar, [x: positions[0], r: colors[14][0], g: colors[14][1],
+		b: colors[14][2]], groups[3], \addReplace);
+	scinths[14] = Scinth.new(\bar, [x: positions[14], r: colors[0][0], g: colors[0][1],
+		b: colors[0][2]], groups[4], \addReplace);
+	expectedTree = ['/scin_g_queryTree.reply', 1, server.defaultGroup.nodeID, 15];
+	15.do({ |i|
+		expectedTree = expectedTree ++ [scinths[i].nodeID, -1, \bar, 4, \x, positions[i],
+			\r, colors[14 - i][0], \g, colors[14 - i][1], \b, colors[14 - i][2]];
+	});
+
+	server.defaultGroup.dumpTree;
+
+
+	groupSnap.value("left-to-right-inverted.png");
+	checkTree.value(server.defaultGroup);
+	syncStats.value(15, 2);
+	server.defaultGroup.dumpTree;
 
     server.quit;
     1.wait;

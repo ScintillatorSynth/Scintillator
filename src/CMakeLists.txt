@@ -310,7 +310,7 @@ elseif(UNIX)
     ExternalProject_add(linuxdeploy
         PREFIX ext
         STEP_TARGETS install
-        # TODO: restore continuous URL once hang in appimage plugin tool has been fixed
+        # TODO(166): restore continuous URL once hang in appimage plugin tool has been fixed
         #        URL https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
         URL https://artifacts.assassinate-you.net/artifactory/list/linuxdeploy/travis-456/linuxdeploy-x86_64.AppImage
         DOWNLOAD_NO_EXTRACT ON
@@ -711,7 +711,7 @@ add_custom_target(sclang_language_config
 )
 
 # Reference source and test images. We always use a specific git hash, to control which images we compare against.
-set(SCIN_TEST_IMAGE_HASH "afe8472fb6060f63271b8eca8ed731b0c53f9a29")
+set(SCIN_TEST_IMAGE_HASH "ed3cc193377581f65071b9133196f58bc27f2994")
 ExternalProject_Add(reference_images
     PREFIX ref
     STEP_TARGETS update
