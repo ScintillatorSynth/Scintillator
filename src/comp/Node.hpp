@@ -48,8 +48,16 @@ public:
     virtual void setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
                                const std::vector<std::pair<int, float>>& indexedValues) = 0;
 
+    /*! Set the running state of this node. If this node is a group, sets the state for every node in this group.
+     *
+     * \param run If true will play the node. If false, will pause.
+     */
     virtual void setRun(bool run) = 0;
 
+    /*! Run the provided function f on this node and each of its descendants, if any.
+     *
+     * \param f The function to run, providing each node as an argument.
+     */
     virtual void forEach(std::function<void(std::shared_ptr<Node> node)> f) = 0;
 
     struct NodeState {

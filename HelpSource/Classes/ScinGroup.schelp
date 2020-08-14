@@ -69,6 +69,8 @@ code::
 (
 ~scinths = [];
 ~groups = [];
+// This ScinthDef defines a Scinth that draws a vertical bar of width 0.25
+// with color and position defined as parameters.
 ~bar = ScinthDef.new(\bar, { |x = 0.0, r = 1.0, g = 1.0, b = 1.0|
 	var xpos = (VX.pr(VNormPos.pr) - x).abs;
 	VRGBAOut.pr(r, g, b, 1.0 - VStep.pr(0.125, xpos));
@@ -95,9 +97,9 @@ code::
 	var x = (i - 7) / 7.0;
 	~positions = ~positions.add(x);
 });
-// Add 15 Scinths drawing from left to write. Because the default is to add Scinths to the tail of the
+// Add 15 Scinths drawing from left to right. Because the default is to add Scinths to the tail of the
 // default group, we see the flat list of Scinths in the default group and the first Scinth on the left
-// is almost completely covered by the next one.
+// is almost completely covered by the next one, while the last Scinth on the right is completely exposed.
 15.do({ |i|
 	~scinths = ~scinths.add(Scinth.new(\bar, [x: ~positions[i],
 		r: ~colors[i][0], g: ~colors[i][1], b: ~colors[i][2]]));
@@ -106,6 +108,8 @@ code::
 ScinServer.default.defaultGroup.dumpTree;
 )
 ::
+
+image::ScinGroup-left-to-right.png::
 
 dumpTree output:
 
@@ -128,8 +132,6 @@ NODE TREE ScinGroup 1002
     1063 bar
 ::
 
-image::ScinGroup-left-to-right.png::
-
 code::
 (
 // Now we create 8 groups and move nodes around so that the first to draw are the outer two
@@ -145,6 +147,8 @@ code::
 ScinServer.default.defaultGroup.dumpTree;
 )
 ::
+
+image::ScinGroup-outside-in.png::
 
 dumpTree output:
 
@@ -174,5 +178,3 @@ NODE TREE ScinGroup 1002
     1071 group
         1056 bar
 ::
-
-image::ScinGroup-outside-in.png::
