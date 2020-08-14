@@ -24,7 +24,8 @@ void Status::processMessage(int /* argc */, lo_arg** /* argv */, const char* /* 
     m_dispatcher->frameTimer()->getGraphicsMemoryBudget(graphicsBytesUsed, graphicsBytesAvailable);
     m_dispatcher->frameTimer()->getStats(targetFrameRate, meanFrameRate, lateFrames);
     m_dispatcher->respond(address, "/scin_status.reply",
-                          static_cast<int32_t>(m_dispatcher->rootNode()->numberOfRunningNodes()), 1,
+                          static_cast<int32_t>(m_dispatcher->rootNode()->numberOfScinths()),
+                          static_cast<int32_t>(m_dispatcher->rootNode()->numberOfGroups()),
                           static_cast<int32_t>(m_dispatcher->archetypes()->numberOfAbstractScinthDefs()),
                           static_cast<int32_t>(numberOfWarnings), static_cast<int32_t>(numberOfErrors),
                           static_cast<double>(graphicsBytesUsed), static_cast<double>(graphicsBytesAvailable),

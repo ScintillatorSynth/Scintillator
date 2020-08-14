@@ -58,19 +58,33 @@ public:
     void setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
                        const std::vector<std::pair<int, float>>& indexedValues) override;
 
+    /*! Determines the paused or playing status of the Node. TODO: should paused nodes still render? Unlike in audio,
+     * a paused VGen can still produce a still frame.
+     *
+     * \param run If false, will pause the Node. If true, will play it.
+     */
+    void setRun(bool run) override { m_running = run; }
+
+    void forEach(std::function<void(std::shared_ptr<Node> node)>) override {}
+    void appendState(std::vector<Node::NodeState>& nodes) override;
+
+    bool isGroup() const override { return false; }
+    bool isScinth() const override { return true; }
+
 private:
     bool allocateDescriptors();
     void updateDescriptors();
     void rebuildBuffers();
 
-    bool m_cueued;
-    double m_startTime;
-
-    // Keep a reference to the ScinthDef, so that it does not get deleted until all referring Scinths have also been
-    // deleted.
     std::shared_ptr<ScinthDef> m_scinthDef;
     std::shared_ptr<ImageMap> m_imageMap;
+    bool m_cueued;
     VkDescriptorPool m_descriptorPool;
+    size_t m_numberOfParameters;
+    bool m_commandBuffersDirty;
+
+    bool m_running;
+    double m_startTime;
     std::vector<VkDescriptorSet> m_descriptorSets;
     std::vector<std::shared_ptr<vk::DeviceImage>> m_fixedImages;
     std::vector<std::shared_ptr<vk::DeviceImage>> m_parameterizedImages;
@@ -81,8 +95,6 @@ private:
     std::shared_ptr<vk::CommandBuffer> m_computeCommands;
     std::shared_ptr<vk::CommandBuffer> m_drawCommands;
     std::unique_ptr<float[]> m_parameterValues;
-    size_t m_numberOfParameters;
-    bool m_commandBuffersDirty;
 };
 
 } // namespace comp

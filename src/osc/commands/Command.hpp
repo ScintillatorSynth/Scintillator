@@ -13,6 +13,9 @@ namespace commands {
 
 class Command {
 public:
+    // Where it makes sense, trying to keep these numbers the same as the corresponding SuperCollider server values.
+    // Receiving a numeric argument as the command path is not currently supported but should be relatively
+    // straightforward to add, assuming liblo supports it.
     enum Number : size_t {
         // Master Controls
         kNone = 0,
@@ -25,29 +28,38 @@ public:
         kVersion = 64,
 
         // Scinth Definition Commands
-        kDRecv = 5,
-        kDLoad = 6,
-        kDLoadDir = 7,
-        kDFree = 8,
+        kDefRecv = 5,
+        kDefLoad = 6,
+        kDefLoadDir = 7,
+        kDefFree = 8,
 
         // Node Commands
-        kNFree = 11,
-        kNRun = 12,
-        kNSet = 15,
+        kNodeFree = 11,
+        kNodeRun = 12,
+        kNodeSet = 15,
+        kNodeBefore = 18,
+        kNodeAfter = 19,
+        kNodeOrder = 62,
 
         // Scinth Commands
-        kSNew = 9,
+        kScinthNew = 9,
 
         // Group Commands
+        kGroupNew = 21,
+        kGroupHead = 22,
+        kGroupTail = 23,
         kGroupFreeAll = 24,
+        kGroupDeepFree = 50,
+        kGroupDumpTree = 56,
+        kGroupQueryTree = 57,
 
         // ImageBuffer Commands
-        kIBAllocRead = 29,
-        kIBQuery = 47,
+        kImageBufferAllocRead = 29,
+        kImageBufferQuery = 47,
 
         // Non Real Time Commands
-        kNRTScreenShot = 67,
-        kNRTAdvanceFrame = 68,
+        kScreenShot = 67,
+        kAdvanceFrame = 68,
 
         // Testing Utility Commands
         kEcho = 69,

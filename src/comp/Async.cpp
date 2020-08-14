@@ -274,7 +274,7 @@ void Async::asyncScinthDefLoadDirectory(fs::path path, std::function<void(size_t
             std::vector<std::shared_ptr<const base::AbstractScinthDef>> scinthDefs =
                 m_archetypes->loadFromFile(p.string());
             for (auto scinthDef : scinthDefs) {
-                if (m_rootNode->buildScinthDef(scinthDef)) {
+                if (m_rootNode->defAdd(scinthDef)) {
                     ++parseCount;
                 }
             }
@@ -294,7 +294,7 @@ void Async::asyncScinthDefLoadFile(fs::path path, std::function<void(size_t)> co
     std::vector<std::shared_ptr<const base::AbstractScinthDef>> scinthDefs = m_archetypes->loadFromFile(path.string());
     size_t parseCount = 0;
     for (auto scinthDef : scinthDefs) {
-        if (m_rootNode->buildScinthDef(scinthDef)) {
+        if (m_rootNode->defAdd(scinthDef)) {
             ++parseCount;
         }
     }
@@ -305,7 +305,7 @@ void Async::asyncScinthDefLoadFile(fs::path path, std::function<void(size_t)> co
 void Async::asyncScinthDefParseString(std::string yaml, std::function<void(size_t)> completion) {
     std::vector<std::shared_ptr<const base::AbstractScinthDef>> scinthDefs = m_archetypes->parseFromString(yaml);
     for (auto scinthDef : scinthDefs) {
-        m_rootNode->buildScinthDef(scinthDef);
+        m_rootNode->defAdd(scinthDef);
     }
     completion(scinthDefs.size());
 }

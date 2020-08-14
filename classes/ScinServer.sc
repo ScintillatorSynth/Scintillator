@@ -129,6 +129,7 @@ ScinServer {
 	var addr;
 	var statusPoller;
 	var currentLogLevel;
+	var <defaultGroup;
 
 	// For local scinsynth instances. Remote not yet supported.
 	*new { |options|
@@ -147,6 +148,7 @@ ScinServer {
 
 	init {
 		CmdPeriod.add(this);
+		ScinServer.default = this;
 
 		if (options.isNil, {
 			options = ScinServerOptions.new;
@@ -171,7 +173,7 @@ ScinServer {
 
 	cmdPeriod {
 		if (addr.notNil, {
-			addr.sendMsg('/scin_g_freeAll');
+			addr.sendMsg('/scin_g_freeAll', defaultGroup.nodeID);
 		});
 	}
 
@@ -187,7 +189,9 @@ ScinServer {
 			^nil;
 		});
 
+		statusPoller.doWhenBooted({ this.prMakeDefaultGroup; });
 		statusPoller.serverBooting = true;
+
 		Platform.case(
 			\osx, {
 				commandLine = scinBinaryPath.shellQuote + options.asOptionsString() + '--crashpadHandlerPath='
@@ -364,6 +368,24 @@ ScinServer {
 		this.sendMsg('/scin_uploadCrashReport', 'all');
 	}
 
+	reorder { |nodeList, target, addAction=\addToHead|
+		target = target.asScinTarget;
+		if (addAction === \addToHead or: { addAction === \addToTail }, {
+			if (target.class !== 'ScinGroup'.asClass, {
+				Error.new("\addToHead and \addToTail require target to be a group.").throw;
+			});
+		});
+		// Update the nodes to have the new group assignments based on the re-ordering
+		switch (addAction,
+			\addToHead, { nodeList.do({ |node| node.group = target; }); },
+			\addToTail, { nodeList.do({ |node| node.group = target; }); },
+			\addBefore, { nodeList.do({ |node| node.group = target.group; }); },
+			\addAfter, { nodeList.do({ |node| node.group = target.group; }); },
+			{ Error.new("unsupported addAction value %".format(addAction)).throw; }
+		);
+		this.sendMsg('/scin_n_order', ScinNode.actionNumberFor(addAction), target.nodeID, *(nodeList.collect(_.nodeID)));
+	}
+
 	prTempLowerLogLevel { |newLevel, doneToken|
 		if (currentLogLevel > newLevel, {
 			var oldLevel = currentLogLevel;
@@ -377,8 +399,14 @@ ScinServer {
 		});
 	}
 
+	prMakeDefaultGroup {
+		defaultGroup = ScinGroup.basicNew(this);
+		this.sendMsg('/scin_g_new', defaultGroup.nodeID, 0, 0);
+	}
+
 	serverRunning { ^statusPoller.serverRunning; }
 	serverBooting { ^statusPoller.serverBooting; }
 	numberOfWarnings { ^statusPoller.numberOfWarnings; }
 	numberOfErrors { ^statusPoller.numberOfErrors; }
+	asScinTarget { ^this.defaultGroup; }
 }

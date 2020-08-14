@@ -1,5 +1,7 @@
 #include "comp/FrameContext.hpp"
 
+#include "comp/Node.hpp"
+
 namespace scin { namespace comp {
 
 FrameContext::FrameContext(size_t imageIndex): m_imageIndex(imageIndex), m_frameTime(0) {}

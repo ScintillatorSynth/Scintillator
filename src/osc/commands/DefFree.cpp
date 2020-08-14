@@ -25,7 +25,7 @@ void DefFree::processMessage(int argc, lo_arg** argv, const char* types, lo_addr
         }
     }
     m_dispatcher->archetypes()->freeAbstractScinthDefs(names);
-    m_dispatcher->rootNode()->freeScinthDefs(names);
+    m_dispatcher->rootNode()->defFree(names);
 }
 
 } // namespace commands

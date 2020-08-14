@@ -1,12 +1,12 @@
 title:: Scintillator Scinth Server Command Reference
-summary:: A list of all OSC commands accepted by scscinth
+summary:: A list of all OSC commands accepted by scinsynth
 categories:: Quarks>Scintillator>Developer Documentation
 
 section::OSC Communication Details
 
 While the SuperCollider synth programs support a variety of connection modalities and multi-user scenarios, at present scinsynth only supports a single client commnicating exclusively over UDP. For asynchronous messages the server will respond to whatever UDP address and port messages are received from.
 
-In general Scintillator attempts to follow a similar command list and structure to that of the SuperCollider sound synthesis servers, with the addition of a code::/scin_:: prefix to each OSC command and response.
+In general Scintillator attempts to follow the command syntax and semantics of the SuperCollider sound synthesis servers, with the addition of a code::/scin_:: prefix to each OSC command and response. In some cases the commands are identical, and the documentation has been copied verbatim from the link::Reference/Server-Command-Reference::.
 
 Some commands are marked as strong::asynchronous::, which in this context means they will send a response message back to the sender, sometimes strong::/scin_done::, upon completion of the command. For any command marked as asynchronous Scintillator is designed to always return a message, even if the execution of the command failed or the message body didn't parse.
 
@@ -26,13 +26,13 @@ Query the status. Replies to sender with the following message:
 
 definitionlist::
 ## /scin_status.reply || table::
-## strong::int:: || number of nodes in the render tree.
-## strong::int:: || number of groups. TODO: fix so this number is accurate and the previous is number of Scinths
-## strong::int:: || number of loaded Scinth defintions.
-## strong::int:: || number of warnings in log.
-## strong::int:: || number of errors in log.
+## strong::int:: || number of Scinths in the render tree.
+## strong::int:: || number of Groups in the render tree.
+## strong::int:: || number of loaded ScinthDefs.
+## strong::int:: || cumulative number of warnings in log.
+## strong::int:: || cumulative number of errors in log.
 ## strong::double:: || approximate graphics memory consumed, in bytes.
-## strong::double:: || approximage graphics memory available, in bytes. Some graphics devices don't support this statistic, in which case it will be 0.
+## strong::double:: || approximage graphics memory available, in bytes. Some graphics drivers don't support this statistic, in which case it will be 0.
 ## strong::int:: || target frame rate in frames per second (can be -1 or 0)
 ## strong::double:: || computed mean framerate.
 ## strong::int:: || number of dropped frames, if running real time, 0 otherwise.
@@ -153,7 +153,7 @@ table::
 ## N * strong::int:: || node ID
 ::
 
-Stops a node abruptly, removes it from its group, and frees its memory. More than one nodeID may be specified as additional integer arguments in the message. Note that since Scinths and Groups share the same ID space Groups can also be specified on the list of IDs and they will be deleted. In Scintillator this command has same effect as calling teletype::/scin_g_freeAll::.
+Stops a node abruptly, removes it from its group, and frees its memory. More than one nodeID may be specified as additional integer arguments in the message. If a node is a group this command will free all contained nodes as well.
 
 subsection::/scin_n_run
 
@@ -183,6 +183,45 @@ table::
 ## strong::int:: or strong::string:: || A control index or name
 ## strong::int:: or strong::float:: || A control value
 ::
+::
+
+subsection:: /scin_n_before
+Place a node before another.
+table::
+## N * || table::
+    ## strong::int:: || the ID of the node to place (A)
+    ## strong::int:: || the ID of the node before which the above is placed (B)
+    ::
+::
+Places node A in the same group as node B, to execute immediately before node B.
+
+subsection:: /scin_n_after
+Place a node after another.
+table::
+## N * || table::
+    ## strong::int:: || the ID of the node to place (A)
+    ## strong::int:: || the ID of the node after which the above is placed (B)
+    ::
+::
+Places node A in the same group as node B, to execute immediately after node B.
+
+
+subsection:: /scin_n_order
+Move and order a list of nodes.
+table::
+## strong::int:: || add action (0,1,2 or 3 see below)
+## strong::int:: || add target ID
+## N * strong::int:: || node IDs
+::
+
+Move the listed nodes to the location specified by the target and add action, and place them in the order specified. Nodes which have already been freed will be ignored.
+definitionlist::
+## add actions: || table::
+    ## 0 || construct the node order at the head of the group specified by the add target ID.
+    ## 1 || construct the node order at the tail of the group specified by the add target ID.
+    ## 2 || construct the node order just before the node specified by the add target ID.
+    ## 3 || construct the node order just after the node specified by the add target ID.
+    ::
 ::
 
 section::Scinth Commands
@@ -220,21 +259,106 @@ The SuperCollider Synthesis Server command reference specifies if the provided I
 
 section::Group Commands
 
-subsection::/scin_g_clearColor
+subsection:: /scin_g_new
+Create a new group.
+table::
+## N * || table::
+    ## strong::int:: || new group ID
+    ## strong::int:: || add action (0,1,2, 3 or 4 see below)
+    ## strong::int:: || add target ID
+    ::
+::
 
-Sets the background color for the provided group.
+Create a new group and add it to the tree of nodes.
+There are four ways to add the group to the tree as determined by the add action argument which is defined as follows (the same as for strong::/s_new::):
+definitionlist::
+## add actions: || table::
+    ## 0 || add the new group to the the head of the group specified by the add target ID.
+    ## 1 || add the new group to the the tail of the group specified by the add target ID.
+    ## 2 || add the new group just before the node specified by the add target ID.
+    ## 3 || add the new group just after the node specified by the add target ID.
+    ## 4 || the new node replaces the node specified by the add target ID. The target node is freed.
+    ::
+::
+Multiple groups may be created in one command by adding arguments.
 
-TODO
+subsection:: /scin_g_head
+Add node to head of group.
+table::
+## N * || table::
+    ## strong::int:: || group ID
+    ## strong::int:: || node ID
+    ::
+::
+
+Adds the node to the head (first to be executed) of the group.
+
+subsection:: /scin_g_tail
+Add node to tail of group.
+table::
+## N * || table::
+    ## strong::int:: || group ID
+    ## strong::int:: || node ID
+    ::
+::
+Adds the node to the tail (last to be executed) of the group.
 
 subsection::/scin_g_freeAll
 
-Deletes all nodes in a group.
+Deletes all nodes in a group, leaving the group empty but intact.
 
 table::
 ## N * strong::int:: || group ID(s)
 ::
 
-Recursively frees all nodes in the groups specified. Note that since Scinths and Groups share the same ID space individual Scinths can also be specified on the list of IDs and they will be deleted. In Scintillator this command has same effect as calling teletype::/scin_n_free::.
+Recursively frees all nodes in the groups specified.
+
+subsection:: /scin_g_deepFree
+Free all Scinths in this group and all its sub-groups.
+table::
+## N * strong::int:: || group ID(s)
+::
+Traverses all groups below this group and frees all the Scinths. Sub-groups are not freed. A list of groups may be specified.
+
+subsection:: /scin_g_dumpTree
+Post a representation of this group's node subtree.
+table::
+## N * || table::
+    ## strong::int:: || group ID
+    ## strong::int:: || flag; if not 0 the current control (arg) values for synths will be posted
+    ::
+::
+
+Posts a representation of this group's node subtree, i.e. all the groups and synths contained within it, optionally including the current control values for synths. The information is posted at the informational level in the log.
+
+subsection:: /scin_g_queryTree
+Get a representation of this group's node subtree.
+table::
+## N * || table::
+    ## strong::int:: || group ID
+    ## strong::int:: || flag: if not 0 the current control (arg) values for Scinths will be included
+    ::
+::
+Request a representation of this group's node subtree, i.e. all the groups and synths contained within it. Replies to the sender with a strong::/g_queryTree.reply:: message listing all of the nodes contained within the group in the following format:
+table::
+## strong::int:: || flag: if Scinth control values are included 1, else 0
+## strong::int:: || node ID of the requested group
+## strong::int:: || number of child nodes contained within the requested group
+## then for each node in the subtree: || table::
+    ## strong::int:: || node ID
+    ## strong::int:: || number of child nodes contained within this node. If -1 this is a Scinth, if >=0 it's a group
+    ## then, if this node is a Scinth:
+    ## strong::symbol:: || the ScinthDef name for this node.
+	## then, if flag (see above) is true:
+    ## strong::int:: || numControls for this synth (M)
+    ## M * || table::
+        ## strong::symbol:: || control name
+        ## strong::float::  || value
+        ::
+    ::
+::
+
+N.B. The order of nodes corresponds to their execution order on the server. Thus child nodes (those contained within a group) are listed immediately following their parent.
 
 section::ImageBuffer Commands
 

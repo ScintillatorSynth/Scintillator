@@ -1,6 +1,7 @@
 #include "comp/Scinth.hpp"
 
 #include "base/AbstractScinthDef.hpp"
+#include "base/Parameter.hpp"
 #include "base/Shape.hpp"
 #include "base/VGen.hpp"
 #include "comp/Canvas.hpp"
@@ -23,9 +24,9 @@ namespace scin { namespace comp {
 Scinth::Scinth(std::shared_ptr<vk::Device> device, int nodeID, std::shared_ptr<ScinthDef> scinthDef,
                std::shared_ptr<ImageMap> imageMap):
     Node(device, nodeID),
-    m_cueued(true),
     m_scinthDef(scinthDef),
     m_imageMap(imageMap),
+    m_cueued(true),
     m_descriptorPool(VK_NULL_HANDLE),
     m_numberOfParameters(0),
     m_commandBuffersDirty(true) {}
@@ -120,10 +121,20 @@ void Scinth::setParameters(const std::vector<std::pair<std::string, float>>& nam
     }
 
     for (auto indexPair : indexedValues) {
-        m_parameterValues[indexPair.first] = indexPair.second;
+        if (indexPair.first >= 0 && static_cast<size_t>(indexPair.first) < m_numberOfParameters) {
+            m_parameterValues[indexPair.first] = indexPair.second;
+        }
     }
 
     m_commandBuffersDirty = true;
+}
+
+void Scinth::appendState(std::vector<Node::NodeState>& nodes) {
+    std::vector<std::pair<std::string, float>> params;
+    for (size_t i = 0; i < m_numberOfParameters; ++i) {
+        params.emplace_back(std::make_pair(m_scinthDef->abstract()->parameters()[i].name(), m_parameterValues[i]));
+    }
+    nodes.emplace_back(Node::NodeState { m_nodeID, -1, m_scinthDef->abstract()->name(), params });
 }
 
 bool Scinth::allocateDescriptors() {

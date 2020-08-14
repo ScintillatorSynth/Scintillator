@@ -1,6 +1,7 @@
 #ifndef SRC_COMP_NODE_HPP_
 #define SRC_COMP_NODE_HPP_
 
+#include <functional>
 #include <list>
 #include <memory>
 #include <string>
@@ -16,6 +17,7 @@ class Device;
 namespace comp {
 
 class FrameContext;
+class Group;
 
 /*! Abstract base class for the individual elements within a rendering tree. Descendants are RootNode, Group, and
  *  Scinth.
@@ -46,25 +48,37 @@ public:
     virtual void setParameters(const std::vector<std::pair<std::string, float>>& namedValues,
                                const std::vector<std::pair<int, float>>& indexedValues) = 0;
 
-    int nodeID() const { return m_nodeID; }
-    Node* parent() const { return m_parent; }
-    void setParent(Node* parent) { m_parent = parent; }
-    std::list<std::shared_ptr<Node>>& children() { return m_children; }
-
-    /*! Determines the paused or playing status of the Node. TODO: should paused nodes still render? Unlike in audio,
-     * a paused VGen can still produce a still frame.
+    /*! Set the running state of this node. If this node is a group, sets the state for every node in this group.
      *
-     * \param run If false, will pause the Node. If true, will play it.
+     * \param run If true will play the node. If false, will pause.
      */
-    void setRunning(bool run) { m_running = run; }
+    virtual void setRun(bool run) = 0;
+
+    /*! Run the provided function f on this node and each of its descendants, if any.
+     *
+     * \param f The function to run, providing each node as an argument.
+     */
+    virtual void forEach(std::function<void(std::shared_ptr<Node> node)> f) = 0;
+
+    struct NodeState {
+        int nodeID;
+        int numberOfChildren; // -1 if a Scinth
+        std::string name; // "group" if a group, scinthDefName if a scinth
+        std::vector<std::pair<std::string, float>> controlValues;
+    };
+    virtual void appendState(std::vector<NodeState>& nodes) = 0;
+
+    virtual bool isGroup() const = 0;
+    virtual bool isScinth() const = 0;
+
+    int nodeID() const { return m_nodeID; }
+    Group* parent() const { return m_parent; }
+    void setParent(Group* parent) { m_parent = parent; }
 
 protected:
     std::shared_ptr<vk::Device> m_device;
     int m_nodeID;
-    Node* m_parent;
-    bool m_running;
-
-    std::list<std::shared_ptr<Node>> m_children;
+    Group* m_parent;
 };
 
 } // namespace comp

@@ -49,7 +49,7 @@ void NodeSet::processMessage(int argc, lo_arg** argv, const char* types, lo_addr
         }
     }
 
-    m_dispatcher->rootNode()->setNodeParameters(nodeID, namedValues, indexedValues);
+    m_dispatcher->rootNode()->nodeSet(nodeID, namedValues, indexedValues);
 }
 
 } // namespace commands

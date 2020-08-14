@@ -1,4 +1,4 @@
-#include "osc/commands/NodeRun.hpp"
+#include "osc/commands/NodeAfter.hpp"
 
 #include "comp/RootNode.hpp"
 #include "osc/Dispatcher.hpp"
@@ -9,14 +9,14 @@
 
 namespace scin { namespace osc { namespace commands {
 
-NodeRun::NodeRun(osc::Dispatcher* dispatcher): Command(dispatcher) {}
+NodeAfter::NodeAfter(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
-NodeRun::~NodeRun() {}
+NodeAfter::~NodeAfter() {}
 
-void NodeRun::processMessage(int argc, lo_arg** argv, const char* types, lo_address /* address */) {
+void NodeAfter::processMessage(int argc, lo_arg** argv, const char* types, lo_address /* address */) {
     std::vector<std::pair<int, int>> pairs;
     if (argc % 2) {
-        spdlog::warn("OSC NodeRun got odd number of arguments, ignoring last value.");
+        spdlog::warn("OSC NodeAfter got odd number of arguments, ignoring last value.");
         --argc;
     }
     for (auto i = 0; i < argc; i += 2) {
@@ -24,10 +24,10 @@ void NodeRun::processMessage(int argc, lo_arg** argv, const char* types, lo_addr
             pairs.emplace_back(
                 std::make_pair(*reinterpret_cast<int32_t*>(argv[i]), *reinterpret_cast<int32_t*>(argv[i + 1])));
         } else {
-            spdlog::warn("OSC NodeRun got non-integer argument, ignoring pair at index {}", i);
+            spdlog::warn("OSC NodeAfter got non-integer argument, ignoring pair at index {}", i);
         }
     }
-    m_dispatcher->rootNode()->nodeRun(pairs);
+    m_dispatcher->rootNode()->nodeAfter(pairs);
 }
 
 } // namespace commands

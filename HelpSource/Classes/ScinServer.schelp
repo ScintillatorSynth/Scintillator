@@ -18,7 +18,7 @@ ARGUMENT:: options
 An optional instance of link::Classes/ScinServerOptions::. If code::nil::, an instance of ScinServerOptions will be created using the default values.
 
 INSTANCEMETHODS::
-private::init, prTempLowerLogLevel
+private::init, prTempLowerLogLevel, asScinTarget, cmdPeriod, prMakeDefaultGroup
 
 METHOD:: boot
 It not already booted, boots the Scintillator synthesis server.
@@ -31,6 +31,9 @@ Returns the current number of errors reported by the server since boot.
 
 METHOD::options
 Provides access to the link::Classes/ScinServerOptions:: object that was or will be used to boot the Server. This allows for convenient modifications of the options before boot, without having to create a separate ScinServerOptions object to provide on the call to new().
+
+METHOD:: defaultGroup
+On boot ScinServer creates this group. It is the group that by default any new groups or Scinths will be added to. It is also the group that is emptied when Cmd+Period is pressed.
 
 METHOD:: logLevel
 Updates the logging level on the server to the provided argument. Lower log levels are inclusive of all higher log levels, so they tend to log more, and the highest log level turns off logging. This overrides any command-line argument supplied to scinsynth at startup.
@@ -112,6 +115,25 @@ Convenience method that adds the provided function to the boot callbacks list an
 
 ARGUMENT:: onComplete
 The function to call when the server is detected as booted. The function is called with one argument, the ScinServer object which just booted.
+
+METHOD:: reorder
+Moves a list of nodes in order to a new location. This is used to control rendering order, an important consideration when blending between Scinths.
+
+ARGUMENT::nodeList
+The list of link::Classes/ScinNode::s, in order, to move.
+
+ARGUMENT::target
+An optional link::Classes/ScinNode::, The target node to move the list of nodes relative to. If nil the target will be the defaultGroup on the server.
+
+ARGUMENT::addAction
+An optional symbol describing which behavior to use when placing the nodes. If nil the default is code::\addToTail::.
+
+table::
+## code::\addToHead:: || target must be a group, the nodes will be added in order to the beginning of the group.
+## code::\addToTail:: || target must be a group, the nodes will be added in order to the end of the group. This is the default if no action is specified.
+## code::\addBefore:: || place all nodes immediately before target and in the same group.
+## code::\addAfter:: || place all nodes immediately after target and in the same group.
+::
 
 subsection:: Synchronous Commands
 
