@@ -124,21 +124,21 @@ def main(argv):
     os.makedirs(os.path.join(outDir, "images", "ref", "groups"), exist_ok=True)
     os.makedirs(os.path.join(outDir, "images", "test", "groups"), exist_ok=True)
     os.makedirs(os.path.join(outDir, "images", "diff", "groups"), exist_ok=True)
-    with os.scandir(os.path.join(goldPath, "reference", "groups")) as it:
-        for entry in it:
-            if entry.is_file() and entry.name.endswith('.png'):
-                shutil.copyfile(os.path.join(goldPath, "reference", "groups", entry.name),
-                        os.path.join(outDir, "images", "ref", "groups", entry.name))
-                shutil.copyfile(os.path.join(scinPath, "build", "testing", "groups", entry.name),
-                        os.path.join(outDir, "images", "test", "groups", entry.name))
-                status = 'OK'
-                if not imagesIdentical(os.path.join(outDir, "images", "ref", "groups", entry.name),
-                        os.path.join(outDir, "images", "test", "groups", entry.name),
-                        os.path.join(outDir, "images", "diff", "groups", entry.name)):
-                    status = '<strong>DIFFERENT</strong>'
-                    diffCount += 1
-                    print("** difference detected in groups/{filename}".format(filename=entry.name))
-                outFile.write("""
+    it = os.scandir(os.path.join(goldPath, "reference", "groups"))
+    for entry in it:
+        if entry.is_file() and entry.name.endswith('.png'):
+            shutil.copyfile(os.path.join(goldPath, "reference", "groups", entry.name),
+                    os.path.join(outDir, "images", "ref", "groups", entry.name))
+            shutil.copyfile(os.path.join(scinPath, "build", "testing", "groups", entry.name),
+                    os.path.join(outDir, "images", "test", "groups", entry.name))
+            status = 'OK'
+            if not imagesIdentical(os.path.join(outDir, "images", "ref", "groups", entry.name),
+                    os.path.join(outDir, "images", "test", "groups", entry.name),
+                    os.path.join(outDir, "images", "diff", "groups", entry.name)):
+                status = '<strong>DIFFERENT</strong>'
+                diffCount += 1
+                print("** difference detected in groups/{filename}".format(filename=entry.name))
+            outFile.write("""
 <tr><td>{status}</td><td>{name}</td><td><img src="images/ref/groups/{name}" /></td><td><img src="images/test/groups/{name}" /></td><td><img src="images/diff/groups/{name}" /></td></tr>""".format(status=status, name=entry.name))
 
     outFile.write("""
