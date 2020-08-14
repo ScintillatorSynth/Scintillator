@@ -1,12 +1,13 @@
 TITLE:: Scinth
 summary:: Represents a running synth node on the Scintillator server.
 categories:: Quarks>Scintillator>Scinth
-related:: Classes/ScinthDef, Classes/VGen
+related:: Classes/ScinthDef, Classes/VGen, Classes/ScinNode, Classes/ScinGroup
 
 description::
 A Scinth is the client-side representation of a synth node on the Scintillator server. A Scinth is a single video-producing using, analagous to a link::Classes/Synth:: on the audio server. What it does is defined by a link::Classes/ScinthDef::, which specifices which link::Classes/VGen::s are used and how they are conncted together.
 
 classmethods::
+private:: basicNew
 
 method:: new
 
@@ -18,8 +19,22 @@ A Symbol specifying the name of the ScinthDef to use in creating the Scinth.
 ARGUMENT:: args
 An optional link::Classes/Array:: specifying initial values for the ScinthDef's controls. These are pairs of control name or index and value.
 
-ARGUMENT:: server
-An optional link::Classes/ScinServer:: object to play this Scinth on. This argument is analagous to the Synth.new target argument, but since Groups are not yet supported on Scintillator it is only possible to specify which server to send to.
+ARGUMENT:: target
+A ScinNode to add the new Scinth relative to. If nil, the default group on the default ScinServer will be used.
+
+argument:: addAction
+one of the following Symbols:
+definitionlist::
+## \addToHead || add at the head of the group specified by target, which must be a ScinGroup
+## \addToTail || (the default) add at the tail of the group specified by target, which must be a ScinGroup
+## \addAfter || add immediately after target in its server's node order
+## \addBefore || add immediately before target in its server's node order
+## \addReplace || replace target and take its place in its server's node order
+::
+
+note::
+Unlike the audio server, the default for Scinths is to add them to the strong::tail:: of the target group. This means they will draw last in the group, overwriting (or blending with) anything that was drawn by previous Scinths.
+::
 
 returns:: A new Scinth object.
 

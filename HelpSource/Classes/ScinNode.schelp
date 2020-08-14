@@ -1,0 +1,69 @@
+TITLE:: ScinNode
+summary:: Abstract superclass of Scinth and ScinGroup
+categories:: Quarks>Scintillator>Scinth
+related:: Classes/Scinth, Classes/ScinGroup, Classes/Node
+
+DESCRIPTION::
+Analogous to (and patterned after) the SuperCollider audio synthesis link::Classes/Node::, ScinNode represents a server asset and encapsulates behavior common to both link::Classes/Scinth::s and link::Classes/ScinGroup::s. Users of Scintillator will not normally interact with ScinNodes, choosing rather the derived classes link::Classes/Scinth:: and link::Classes/ScinGroup::.
+
+CLASSMETHODS::
+private:: basicNew, addActions
+
+METHOD:: actionNumberFor
+A convenience routine to convert one of the addAction symbols, used on various ScinNode, ScinGroup, and ScinServer methods, to the corresponding number used in the OSC messages sent to scinserver.
+
+ARGUMENT:: addAction
+A symbol, one of code::\addToHead::, code::\addToTail::, code::\addBefore::, code::\addAfter::, or code::\addReplace::.
+
+returns:: the numeric equivalent of the provided add action.
+
+INSTANCEMETHODS::
+private:: asScinTarget
+
+METHOD:: nodeID
+returns:: The unique integer identifier for this node. Can be negative to represent server-generated node ids.
+
+METHOD:: server
+returns:: The link::Classes/ScinServer:: where this ScinNode is running.
+
+METHOD:: moveToHead
+Sends a request to the server to move this ScinNode to the first position in targetGroup, meaning it will render before any other nodes in that group.
+
+ARGUMENT:: targetGroup
+If a ScinGroup the server will move this to the head of that group. If nil the server will move the node to the head of the default group on the server.
+
+METHOD:: set
+Set the provided parameter name, value pairs on this node. If this node is a group this command will set for every node contained within the group.
+
+ARGUMENT::  ... args
+The pairs of parameter name as a symbol, parameter value as a Float to set.
+
+METHOD:: group
+returns:: The ScinGroup that contains this ScinNode.
+
+METHOD:: run
+Sends a command to the server to run or pause this ScinNode, depending on the value of flag. If this group will set the run state on every contained node.
+
+ARGUMENT:: flag
+A boolean. If true, will run the ScinNode. If false, will pause.
+
+METHOD:: moveBefore
+Sends a request to the server to move this ScinNode to directly before the targetNode, contained in the same group as targetNode. This means this Node will execute immediately before targetNode on the server.
+
+ARGUMENT:: targetNode
+The node that this node will move directly before.
+
+METHOD:: free
+Immediately stop this ScinNode and remove it from the render tree. If this node is a group all subnodes will also be freed.
+
+METHOD:: moveAfter
+Sends a request to the server to move this ScinNode to directly after the targetNode, contained in the same group as targetNode. This means this Node will execute immediately after targetNode on the server.
+
+ARGUMENT:: targetNode
+The node that this node will move directly after.
+
+METHOD:: moveToTail
+Sends a request to the server to move this ScinNode to the last position in targetGroup, meaning it will render after any other nodes in that group.
+
+ARGUMENT:: targetGroup
+If a ScinGroup the server will move this to the tail of that group. If nil the server will move the node to the tail of the default group on the server.
