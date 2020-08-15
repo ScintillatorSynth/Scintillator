@@ -75,5 +75,8 @@ else
     ./configure --prefix=/usr/local
     make
     sudo make install
+
+    # signal the installer to include libstdc++ as optional, to support older Linuxes
+    cp /usr/lib/x86_64-linux-gnu/libstdc++.so.6 $TRAVIS_BUILD_DIR/build/install-ext/lib
 fi
 

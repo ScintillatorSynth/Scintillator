@@ -319,10 +319,21 @@ elseif(UNIX)
         BUILD_COMMAND ""
         INSTALL_COMMAND chmod u+x <DOWNLOADED_FILE> && cp <DOWNLOADED_FILE> ${SCIN_EXT_INSTALL_DIR}/bin
     )
+    ExternalProject_add(checkrt
+        PREFIX ext
+        STEP_TARGETS install
+        URL https://github.com/darealshinji/AppImageKit-checkrt/releases/download/continuous/exec-x86_64.so
+        DOWNLOAD_NO_EXTRACT ON
+        UPDATE_COMMAND ""
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND cp <DOWNLOADED_FILE> ${SCIN_EXT_INSTALL_DIR}/lib/exec.so
+    )
     set(SCIN_LINUX_DEPLOY "${SCIN_EXT_INSTALL_DIR}/bin/linuxdeploy-x86_64.AppImage")
     # We need the linuxdeploy tool to construct the AppImage.
     add_dependencies(scinsynth
         linuxdeploy-install
+        checkrt-install
     )
 elseif(WIN32)
     add_executable(scinsynth ${scintillator_synth_files})
@@ -570,6 +581,7 @@ elseif(UNIX)
         )
         file(MAKE_DIRECTORY ${SCIN_APPDIR}/usr/share/vulkan/explicit_layer.d)
         file(MAKE_DIRECTORY ${SCIN_APPDIR}/usr/share/vulkan/icd.d)
+        file(MAKE_DIRECTORY ${SCIN_APPDIR}/usr/optional)
     "
     VERBATIM
     )
@@ -581,6 +593,18 @@ elseif(UNIX)
     install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/libVkLayer_khronos_validation.so"
         DESTINATION "${SCIN_APPDIR}/usr/share/vulkan/explicit_layer.d"
     )
+    # Optionally copy the libstdc++ libraries (and supporting code) if they exist. This is used to signal the inclusion
+    # of these libraries for compatibility on older version of Linux, and is usually only done on official builds for
+    # distribution.
+    if (EXISTS "${SCIN_EXT_INSTALL_DIR}/lib/libstdc++.so.6")
+        message(STATUS "including libstdc++.so.6 in the AppImage install")
+        install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/libstdc++.so.6"
+            DESTINATION "${SCIN_APPDIR}/usr/optional"
+        )
+        install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/exec.so"
+            DESTINATION "${SCIN_APPDIR}/usr/optional"
+        )
+    endif()
     # Copy the swiftshader binary and metadata
     install(DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d"
         DESTINATION "${SCIN_APPDIR}/usr/share/vulkan"
@@ -593,6 +617,7 @@ elseif(UNIX)
     # tool knows where to look for the dependent libraries.
     install(CODE "
         set(ENV{LD_LIBRARY_PATH} \"${SCIN_EXT_INSTALL_DIR}/lib\")
+        set(ENV{VERSION} ${GIT_COMMIT_HASH})
         execute_process(
             COMMAND ${SCIN_LINUX_DEPLOY} -d ${CMAKE_CURRENT_BINARY_DIR}/scinsynth.desktop -i ${PROJECT_SOURCE_DIR}/src/linux/scinsynth.png -e ${CMAKE_CURRENT_BINARY_DIR}/scinsynth --custom-apprun=${PROJECT_SOURCE_DIR}/src/linux/AppRun --appdir ${SCIN_APPDIR} --output appimage
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/bin
@@ -659,8 +684,8 @@ if (UNIX AND NOT APPLE AND CMAKE_BUILD_TYPE STREQUAL "Coverage")
         set(LLVM_COV llvm-cov)
     endif()
 
-    set(SCIN_TEST_IMAGES_ENV "LLVM_PROFILE_FILE=scin_test_images.profraw")
-    set(SCIN_TEST_OSC_ENV "LLVM_PROFILE_FILE=scin_test_osc.profraw")
+    set(SCIN_TEST_IMAGES_ENV "LLVM_PROFILE_FILE=${CMAKE_CURRENT_BINARY_DIR}/scin_test_images.profraw")
+    set(SCIN_TEST_OSC_ENV "LLVM_PROFILE_FILE=${CMAKE_CURRENT_BINARY_DIR}/scin_test_osc.profraw")
 
     add_custom_command(OUTPUT scinsynth_coverage.profdata
         COMMAND ${CMAKE_COMMAND} -E env "LLVM_PROFILE_FILE=run_unittests.profraw" ./run_unittests
