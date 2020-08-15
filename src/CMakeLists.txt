@@ -581,7 +581,6 @@ elseif(UNIX)
         )
         file(MAKE_DIRECTORY ${SCIN_APPDIR}/usr/share/vulkan/explicit_layer.d)
         file(MAKE_DIRECTORY ${SCIN_APPDIR}/usr/share/vulkan/icd.d)
-        file(MAKE_DIRECTORY ${SCIN_APPDIR}/usr/optional)
     "
     VERBATIM
     )
@@ -597,9 +596,19 @@ elseif(UNIX)
     # of these libraries for compatibility on older version of Linux, and is usually only done on official builds for
     # distribution.
     if (EXISTS "${SCIN_EXT_INSTALL_DIR}/lib/libstdc++.so.6")
-        message(STATUS "including libstdc++.so.6 in the AppImage install")
+        message(STATUS "including local stdc++ libraries in the AppImage install")
+        install(CODE "
+            file(MAKE_DIRECTORY ${SCIN_APPDIR}/usr/optional)
+            file(MAKE_DIRECTORY ${SCIN_APPDIR}/usr/optional/libstdc++)
+            file(MAKE_DIRECTORY ${SCIN_APPDIR}/usr/optional/libgcc)
+        "
+        VERBATIM
+        )
         install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/libstdc++.so.6"
-            DESTINATION "${SCIN_APPDIR}/usr/optional"
+            DESTINATION "${SCIN_APPDIR}/usr/optional/libstdc++"
+        )
+        install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/libgcc_s.so.1"
+            DESTINATION "${SCIN_APPDIR}/usr/optional/libgcc"
         )
         install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/exec.so"
             DESTINATION "${SCIN_APPDIR}/usr/optional"
