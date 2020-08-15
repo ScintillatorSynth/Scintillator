@@ -75,6 +75,6 @@ else
     CRASHPAD_HANDLER="--crashpadHandlerPath=$HERE/usr/bin/crashpad_handler"
 fi
 
-$exec "$HERE/usr/bin/scinsynth" $CRASHPAD_HANDLER "$@"
-exit $?
+exec $exec "$HERE/usr/bin/scinsynth" $CRASHPAD_HANDLER "$@"
+# exit $?
 

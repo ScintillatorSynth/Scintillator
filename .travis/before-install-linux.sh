@@ -78,6 +78,5 @@ else
 
     # signal the installer to include libstdc++ as optional, to support older Linuxes
     cp /usr/lib/x86_64-linux-gnu/libstdc++.so.6 $TRAVIS_BUILD_DIR/build/install-ext/lib
-    cp /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 $TRAVIS_BUILD_DIR/build/install-ext/lib
 fi
 

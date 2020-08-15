@@ -604,9 +604,6 @@ elseif(UNIX)
         install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/exec.so"
             DESTINATION "${SCIN_APPDIR}/usr/optional"
         )
-        install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/libgcc_s.so.1"
-            DESTINATION "${SCIN_APPDIR}/usr/optional"
-        )
     endif()
     # Copy the swiftshader binary and metadata
     install(DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d"
