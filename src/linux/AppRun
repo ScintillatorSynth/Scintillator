@@ -20,7 +20,7 @@ if [ -n "$APPIMAGE" ] && [ "$(file -b "$APPIMAGE" | cut -d, -f2)" != " x86-64" ]
   libc6arch="libc6"
 fi
 
-cd "usr"
+cd usr
 
 if [ -e "./optional/libstdc++/libstdc++.so.6" ]; then
   lib="$(PATH="/sbin:$PATH" ldconfig -p | grep "libstdc++\.so\.6 ($libc6arch)" | awk 'NR==1{print $NF}')"
@@ -75,6 +75,6 @@ else
     CRASHPAD_HANDLER="--crashpadHandlerPath=$HERE/usr/bin/crashpad_handler"
 fi
 
-$exec "$HERE/usr/bin/scinsynth" $CRASHPAD_HANDLER "$@"
+$exec $CRASHPAD_HANDLER $*
 exit $?
 
