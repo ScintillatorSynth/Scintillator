@@ -684,8 +684,8 @@ if (UNIX AND NOT APPLE AND CMAKE_BUILD_TYPE STREQUAL "Coverage")
         set(LLVM_COV llvm-cov)
     endif()
 
-    set(SCIN_TEST_IMAGES_ENV "LLVM_PROFILE_FILE=scin_test_images.profraw")
-    set(SCIN_TEST_OSC_ENV "LLVM_PROFILE_FILE=scin_test_osc.profraw")
+    set(SCIN_TEST_IMAGES_ENV "LLVM_PROFILE_FILE=${CMAKE_CURRENT_BINARY_DIR}/scin_test_images.profraw")
+    set(SCIN_TEST_OSC_ENV "LLVM_PROFILE_FILE=${CMAKE_CURRENT_BINARY_DIR}/scin_test_osc.profraw")
 
     add_custom_command(OUTPUT scinsynth_coverage.profdata
         COMMAND ${CMAKE_COMMAND} -E env "LLVM_PROFILE_FILE=run_unittests.profraw" ./run_unittests
