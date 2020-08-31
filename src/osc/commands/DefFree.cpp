@@ -1,6 +1,6 @@
 #include "osc/commands/DefFree.hpp"
 
-#include "comp/Compositor.hpp"
+#include "comp/RootNode.hpp"
 #include "base/Archetypes.hpp"
 #include "osc/Dispatcher.hpp"
 
@@ -15,7 +15,7 @@ DefFree::DefFree(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 DefFree::~DefFree() {}
 
-void DefFree::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
+void DefFree::processMessage(int argc, lo_arg** argv, const char* types, lo_address /* address */) {
     std::vector<std::string> names;
     for (int i = 0; i < argc; ++i) {
         if (types[i] == LO_STRING) {
@@ -25,7 +25,7 @@ void DefFree::processMessage(int argc, lo_arg** argv, const char* types, lo_addr
         }
     }
     m_dispatcher->archetypes()->freeAbstractScinthDefs(names);
-    m_dispatcher->compositor()->freeScinthDefs(names);
+    m_dispatcher->rootNode()->defFree(names);
 }
 
 } // namespace commands

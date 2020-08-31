@@ -1,16 +1,19 @@
 #include "comp/FrameTimer.hpp"
 
+#include "vulkan/Device.hpp"
+
 #include "spdlog/spdlog.h"
 
 namespace scin { namespace comp {
 
 const size_t kFramePeriodWindowSize = 60;
 
-FrameTimer::FrameTimer(int targetFrameRate):
+FrameTimer::FrameTimer(std::shared_ptr<vk::Device> device, int targetFrameRate):
+    m_device(device),
+    m_targetFrameRate(targetFrameRate),
     m_trackLateFrames(targetFrameRate < 0),
     m_periodSum(0),
     m_lateFrames(0),
-    m_targetFrameRate(targetFrameRate),
     m_meanFrameRate(0),
     m_totalLateFrames(0) {}
 
@@ -55,7 +58,7 @@ double FrameTimer::elapsedTime() {
     return std::chrono::duration<double, std::chrono::seconds::period>(m_lastFrameTime - m_startTime).count();
 }
 
-void FrameTimer::getStats(int& targetFrameRateOut, double& meanFrameRateOut, size_t lateFramesOut) const {
+void FrameTimer::getStats(int& targetFrameRateOut, double& meanFrameRateOut, size_t& lateFramesOut) const {
     std::lock_guard<std::mutex> lock(m_statsMutex);
     targetFrameRateOut = m_targetFrameRate;
     meanFrameRateOut = m_meanFrameRate;
@@ -78,6 +81,10 @@ void FrameTimer::updateStats(double meanPeriod) {
 
     m_totalLateFrames += m_lateFrames;
     m_lateFrames = 0;
+}
+
+bool FrameTimer::getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudgetOut) const {
+    return m_device->getGraphicsMemoryBudget(bytesUsedOut, bytesBudgetOut);
 }
 
 } // namespace comp

@@ -9,7 +9,7 @@ Quit::Quit(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 Quit::~Quit() {}
 
-void Quit::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
+void Quit::processMessage(int /* argc */, lo_arg** /* argv */, const char* /* types */, lo_address address) {
     std::shared_ptr<Address> origin(new Address(address));
     m_dispatcher->callQuitHandler(origin);
 }

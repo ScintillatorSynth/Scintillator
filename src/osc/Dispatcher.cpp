@@ -3,28 +3,39 @@
 #include "av/ImageEncoder.hpp"
 #include "base/Archetypes.hpp"
 #include "comp/Async.hpp"
-#include "comp/Compositor.hpp"
 #include "comp/FrameTimer.hpp"
 #include "comp/Offscreen.hpp"
+#include "comp/RootNode.hpp"
 #include "infra/CrashReporter.hpp"
 #include "infra/Logger.hpp"
 #include "infra/Version.hpp"
 #include "osc/Address.hpp"
 #include "osc/BlobMessage.hpp"
 #include "osc/commands/AdvanceFrame.hpp"
-#include "osc/commands/CreateCrashReport.hpp"
 #include "osc/commands/DefFree.hpp"
 #include "osc/commands/DefLoad.hpp"
 #include "osc/commands/DefLoadDir.hpp"
 #include "osc/commands/DefReceive.hpp"
 #include "osc/commands/DumpOSC.hpp"
 #include "osc/commands/Echo.hpp"
+#include "osc/commands/GroupDeepFree.hpp"
+#include "osc/commands/GroupDumpTree.hpp"
+#include "osc/commands/GroupFreeAll.hpp"
+#include "osc/commands/GroupHead.hpp"
+#include "osc/commands/GroupNew.hpp"
+#include "osc/commands/GroupQueryTree.hpp"
+#include "osc/commands/GroupTail.hpp"
 #include "osc/commands/ImageBufferAllocRead.hpp"
 #include "osc/commands/ImageBufferQuery.hpp"
 #include "osc/commands/LogAppend.hpp"
 #include "osc/commands/LogCrashReports.hpp"
 #include "osc/commands/LogLevel.hpp"
+#include "osc/commands/NodeAfter.hpp"
+#include "osc/commands/NodeAfter.hpp"
+#include "osc/commands/NodeBefore.hpp"
+#include "osc/commands/NodeBefore.hpp"
 #include "osc/commands/NodeFree.hpp"
+#include "osc/commands/NodeOrder.hpp"
 #include "osc/commands/NodeRun.hpp"
 #include "osc/commands/NodeSet.hpp"
 #include "osc/commands/Notify.hpp"
@@ -45,13 +56,13 @@
 namespace scin { namespace osc {
 
 Dispatcher::Dispatcher(std::shared_ptr<infra::Logger> logger, std::shared_ptr<comp::Async> async,
-                       std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<comp::Compositor> compositor,
+                       std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<comp::RootNode> rootNode,
                        std::shared_ptr<comp::Offscreen> offscreen, std::shared_ptr<const comp::FrameTimer> frameTimer,
                        std::function<void()> quitHandler, std::shared_ptr<infra::CrashReporter> crashReporter):
     m_logger(logger),
     m_async(async),
     m_archetypes(archetypes),
-    m_compositor(compositor),
+    m_rootNode(rootNode),
     m_offscreen(offscreen),
     m_frameTimer(frameTimer),
     m_quitHandler(quitHandler),
@@ -94,22 +105,31 @@ bool Dispatcher::create(const std::string& bindPort, bool dumpOSC) {
     m_commands[commands::Command::kSync].reset(new commands::Sync(this));
     m_commands[commands::Command::kLogLevel].reset(new commands::LogLevel(this));
     m_commands[commands::Command::kVersion].reset(new commands::ScinVersion(this));
-    m_commands[commands::Command::kDRecv].reset(new commands::DefReceive(this));
-    m_commands[commands::Command::kDLoad].reset(new commands::DefLoad(this));
-    m_commands[commands::Command::kDLoadDir].reset(new commands::DefLoadDir(this));
-    m_commands[commands::Command::kDFree].reset(new commands::DefFree(this));
-    m_commands[commands::Command::kNFree].reset(new commands::NodeFree(this));
-    m_commands[commands::Command::kNRun].reset(new commands::NodeRun(this));
-    m_commands[commands::Command::kNSet].reset(new commands::NodeSet(this));
-    m_commands[commands::Command::kSNew].reset(new commands::ScinthNew(this));
-    m_commands[commands::Command::kIBAllocRead].reset(new commands::ImageBufferAllocRead(this));
-    m_commands[commands::Command::kIBQuery].reset(new commands::ImageBufferQuery(this));
-    m_commands[commands::Command::kNRTScreenShot].reset(new commands::ScreenShot(this));
-    m_commands[commands::Command::kNRTAdvanceFrame].reset(new commands::AdvanceFrame(this));
+    m_commands[commands::Command::kDefRecv].reset(new commands::DefReceive(this));
+    m_commands[commands::Command::kDefLoad].reset(new commands::DefLoad(this));
+    m_commands[commands::Command::kDefLoadDir].reset(new commands::DefLoadDir(this));
+    m_commands[commands::Command::kDefFree].reset(new commands::DefFree(this));
+    m_commands[commands::Command::kNodeFree].reset(new commands::NodeFree(this));
+    m_commands[commands::Command::kNodeRun].reset(new commands::NodeRun(this));
+    m_commands[commands::Command::kNodeSet].reset(new commands::NodeSet(this));
+    m_commands[commands::Command::kNodeBefore].reset(new commands::NodeBefore(this));
+    m_commands[commands::Command::kNodeAfter].reset(new commands::NodeAfter(this));
+    m_commands[commands::Command::kNodeOrder].reset(new commands::NodeOrder(this));
+    m_commands[commands::Command::kScinthNew].reset(new commands::ScinthNew(this));
+    m_commands[commands::Command::kGroupNew].reset(new commands::GroupNew(this));
+    m_commands[commands::Command::kGroupHead].reset(new commands::GroupHead(this));
+    m_commands[commands::Command::kGroupTail].reset(new commands::GroupTail(this));
+    m_commands[commands::Command::kGroupFreeAll].reset(new commands::GroupFreeAll(this));
+    m_commands[commands::Command::kGroupDeepFree].reset(new commands::GroupDeepFree(this));
+    m_commands[commands::Command::kGroupDumpTree].reset(new commands::GroupDumpTree(this));
+    m_commands[commands::Command::kGroupQueryTree].reset(new commands::GroupQueryTree(this));
+    m_commands[commands::Command::kImageBufferAllocRead].reset(new commands::ImageBufferAllocRead(this));
+    m_commands[commands::Command::kImageBufferQuery].reset(new commands::ImageBufferQuery(this));
+    m_commands[commands::Command::kScreenShot].reset(new commands::ScreenShot(this));
+    m_commands[commands::Command::kAdvanceFrame].reset(new commands::AdvanceFrame(this));
     m_commands[commands::Command::kEcho].reset(new commands::Echo(this));
     m_commands[commands::Command::kLogAppend].reset(new commands::LogAppend(this));
     m_commands[commands::Command::kSleepFor].reset(new commands::SleepFor(this));
-    m_commands[commands::Command::kCreateCrashReport].reset(new commands::CreateCrashReport(this));
     m_commands[commands::Command::kLogCrashReports].reset(new commands::LogCrashReports(this));
     m_commands[commands::Command::kUploadCrashReport].reset(new commands::UploadCrashReport(this));
 

@@ -1,6 +1,6 @@
 #include "osc/commands/NodeFree.hpp"
 
-#include "comp/Compositor.hpp"
+#include "comp/RootNode.hpp"
 #include "osc/Dispatcher.hpp"
 
 #include "spdlog/spdlog.h"
@@ -13,7 +13,7 @@ NodeFree::NodeFree(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 NodeFree::~NodeFree() {}
 
-void NodeFree::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
+void NodeFree::processMessage(int argc, lo_arg** argv, const char* types, lo_address /* address */) {
     std::vector<int> nodes;
     for (int i = 0; i < argc; ++i) {
         if (types[i] == LO_INT32) {
@@ -22,7 +22,7 @@ void NodeFree::processMessage(int argc, lo_arg** argv, const char* types, lo_add
             spdlog::warn("OSC NodeFree skipping non-integer type at index {}", i);
         }
     }
-    m_dispatcher->compositor()->freeNodes(nodes);
+    m_dispatcher->rootNode()->nodeFree(nodes);
 }
 
 } // namespace commands

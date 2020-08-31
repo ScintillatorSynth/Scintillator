@@ -7,6 +7,32 @@ import subprocess
 import sys
 import yaml
 
+# returns True if images are identical, False if not
+def imagesIdentical(refImagePath, testImagePath, diffOutPath):
+    # compute difference image
+    subprocess.run(["compare", refImagePath, testImagePath, diffOutPath]);
+    # now capture result from separate computation TODO: is there a way to get both from one run of compare?
+    if sys.version_info.minor > 5:
+        results = subprocess.run(["compare",
+            refImagePath,
+            testImagePath,
+            "-metric", "PSNR", "-format", "'%[fx:mean*100]'", "info:"],
+            encoding="utf-8", stderr=subprocess.PIPE)
+        out = results.stderr
+    else:
+        results = subprocess.run(["compare",
+            refImagePath,
+            testImagePath,
+            "-metric", "PSNR", "-format", "'%[fx:mean*100]'", "info:"],
+            stderr=subprocess.PIPE)
+        out = results.stderr.decode('utf-8')
+    status = 'OK'
+    # some versions of compare are returning inf and some return zero for identical images so we check for both.
+    if out != 'inf' and out != '0' and out != '1.#INF':
+        print("difference results: " + out)
+        return False
+    return True
+
 def main(argv):
     if len(argv) != 5:
         print('compare-test-images.py <Scintillator path> <TestGoldImages path> <commithash> <test image hash> <output directory path>');
@@ -72,26 +98,16 @@ def main(argv):
             # copy test image file to report output directory
             shutil.copyfile(os.path.join(scinPath, "build", "testing", category, imageFileName),
                     os.path.join(testOutDir, imageFileName))
-            # compute difference image
-            subprocess.run(["compare",
-                os.path.join(refOutDir, imageFileName),
-                os.path.join(testOutDir, imageFileName),
-                os.path.join(diffOutDir, imageFileName)])
-            # now capture result from separate computation TODO: is there a way to get both from one run of compare?
-            results = subprocess.run(["compare",
-                os.path.join(refOutDir, imageFileName),
-                os.path.join(testOutDir, imageFileName),
-                "-metric", "PSNR", "-format", "'%[fx:mean*100]'", "info:"],
-                encoding="utf-8", stderr=subprocess.PIPE)
             status = 'OK'
-            # some versions of compare are returning inf and some return zero for identical images so we check for both.
-            if results.stderr != 'inf' and results.stderr != '0' and results.stderr != '1.#INF':
+            if not imagesIdentical(os.path.join(refOutDir, imageFileName), os.path.join(testOutDir, imageFileName),
+                    os.path.join(diffOutDir, imageFileName)):
                 status = '<strong>DIFERENT</strong>'
                 diffCount += 1
-                print("difference detected in {category}/{filename}".format(category=category, filename=imageFileName))
+                print("**  difference detected in {category}/{filename}".format(
+                    category=category, filename=imageFileName))
             # write out table row
             outFile.write("""
-<tr><td>{status}</td><td>{t}</td><td><img src="images/ref/{category}/{name}" /></td><td><img src="images/test/{category}/{name} " /></td><td><img src="images/diff/{category}/{name}" /></td></tr>""".format(
+<tr><td>{status}</td><td>{t}</td><td><img src="images/ref/{category}/{name}" /></td><td><img src="images/test/{category}/{name}" /></td><td><img src="images/diff/{category}/{name}" /></td></tr>""".format(
     status=status, t=t, category=category, name=imageFileName))
             t += dt
 
@@ -99,6 +115,34 @@ def main(argv):
 </table>""")
 
     outFile.write("""
+<hr/>
+<h3>Groups and Scinth Ordering Tests</h3>
+<table>
+<tr><th>status</th><th>name</th><th>reference image</th><th>{commitHash} image</th><th>difference</th></tr>
+""".format(commitHash=commitHash))
+
+    os.makedirs(os.path.join(outDir, "images", "ref", "groups"), exist_ok=True)
+    os.makedirs(os.path.join(outDir, "images", "test", "groups"), exist_ok=True)
+    os.makedirs(os.path.join(outDir, "images", "diff", "groups"), exist_ok=True)
+    it = os.scandir(os.path.join(goldPath, "reference", "groups"))
+    for entry in it:
+        if entry.is_file() and entry.name.endswith('.png'):
+            shutil.copyfile(os.path.join(goldPath, "reference", "groups", entry.name),
+                    os.path.join(outDir, "images", "ref", "groups", entry.name))
+            shutil.copyfile(os.path.join(scinPath, "build", "testing", "groups", entry.name),
+                    os.path.join(outDir, "images", "test", "groups", entry.name))
+            status = 'OK'
+            if not imagesIdentical(os.path.join(outDir, "images", "ref", "groups", entry.name),
+                    os.path.join(outDir, "images", "test", "groups", entry.name),
+                    os.path.join(outDir, "images", "diff", "groups", entry.name)):
+                status = '<strong>DIFFERENT</strong>'
+                diffCount += 1
+                print("** difference detected in groups/{filename}".format(filename=entry.name))
+            outFile.write("""
+<tr><td>{status}</td><td>{name}</td><td><img src="images/ref/groups/{name}" /></td><td><img src="images/test/groups/{name}" /></td><td><img src="images/diff/groups/{name}" /></td></tr>""".format(status=status, name=entry.name))
+
+    outFile.write("""
+</table>
 </body>
 </html>""")
     outFile.close()

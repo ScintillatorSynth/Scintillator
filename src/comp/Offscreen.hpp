@@ -31,9 +31,9 @@ class HostImage;
 namespace comp {
 
 class Canvas;
-class Compositor;
 class FrameTimer;
 class RenderSync;
+class RootNode;
 class Swapchain;
 
 /*! Used in place of Window as a host for a Framebuffer when no Window is to be created.
@@ -64,11 +64,11 @@ public:
 
     /*! Start a thread to render at the provided framerate.
      */
-    void runThreaded(std::shared_ptr<Compositor> compositor);
+    void runThreaded(std::shared_ptr<RootNode> rootNode);
 
     /*! Render at the provided framerate on this thread.
      */
-    void run(std::shared_ptr<Compositor> compositor);
+    void run(std::shared_ptr<RootNode> rootNode);
 
     /*! Adds a video or image encoder to the list of encoders to call with readback images from subsequent frames.
      */
@@ -111,7 +111,7 @@ public:
     std::shared_ptr<const FrameTimer> frameTimer() { return m_frameTimer; }
 
 private:
-    void threadMain(std::shared_ptr<Compositor> compositor);
+    void threadMain(std::shared_ptr<RootNode> rootNode);
     void processPendingEncodes(size_t frameIndex);
     bool writeCopyCommands(std::shared_ptr<vk::CommandBuffer> commandBuffer, size_t bufferIndex, VkImage sourceImage,
                            VkImage destinationImage);
@@ -139,11 +139,8 @@ private:
 
     // threadMain-only access
     std::thread m_renderThread;
-    std::vector<std::shared_ptr<vk::CommandBuffer>> m_computeCommands;
-    std::vector<std::shared_ptr<vk::CommandBuffer>> m_drawCommands;
     std::vector<std::vector<scin::av::Encoder::SendBuffer>> m_pendingEncodes;
     std::vector<std::shared_ptr<vk::HostImage>> m_readbackImages;
-    bool m_readbackSupportsBlit;
     // The index of this vector is the frameIndex, so the index of the pipelined framebuffer. The value is -1 if no
     // swapchain blit was requested, or the index of the swapchain source image (so 0 or 1).
     std::vector<int> m_pendingSwapchainBlits;

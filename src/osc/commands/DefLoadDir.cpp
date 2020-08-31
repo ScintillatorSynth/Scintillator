@@ -32,7 +32,7 @@ void DefLoadDir::processMessage(int argc, lo_arg** argv, const char* types, lo_a
         }
     }
     std::shared_ptr<Address> origin(new Address(address));
-    m_dispatcher->async()->scinthDefLoadDirectory(path, [this, origin, onCompletion](int) {
+    m_dispatcher->async()->scinthDefLoadDirectory(path, [this, origin, onCompletion](size_t) {
         if (onCompletion) {
             m_dispatcher->processMessageFrom(origin->get(), onCompletion);
         }

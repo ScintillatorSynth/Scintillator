@@ -100,7 +100,7 @@ void Device::destroy() {
     }
 }
 
-bool Device::getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudgetOut) {
+bool Device::getGraphicsMemoryBudget(size_t& bytesUsedOut, size_t& bytesBudgetOut) const {
     bytesUsedOut = 0;
     bytesBudgetOut = 0;
 

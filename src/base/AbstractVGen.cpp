@@ -6,8 +6,8 @@ namespace scin { namespace base {
 
 AbstractVGen::AbstractVGen(const std::string& name, unsigned supportedRates, bool isSampler,
                            const std::vector<std::string>& inputs, const std::vector<std::string>& outputs,
-                           const std::vector<std::vector<int>> inputDimensions,
-                           const std::vector<std::vector<int>> outputDimensions, const std::string& shader):
+                           const std::vector<std::vector<size_t>> inputDimensions,
+                           const std::vector<std::vector<size_t>> outputDimensions, const std::string& shader):
     m_name(name),
     m_supportedRates(supportedRates),
     m_isSampler(isSampler),
@@ -23,7 +23,7 @@ AbstractVGen::~AbstractVGen() {}
 bool AbstractVGen::prepareTemplate() {
     // First build a map of all tokens (also verifying uniqueness of names in the process)
     std::unordered_map<std::string, Parameter> parameterMap;
-    for (auto i = 0; i < m_inputs.size(); ++i) {
+    for (size_t i = 0; i < m_inputs.size(); ++i) {
         if (parameterMap.find(m_inputs[i]) != parameterMap.end()) {
             spdlog::error("VGen {} has a duplicate parameter name {}", m_name, m_inputs[i]);
             return false;
@@ -34,7 +34,7 @@ bool AbstractVGen::prepareTemplate() {
         }
         parameterMap.insert({ m_inputs[i], Parameter(Parameter::Kind::kInput, i) });
     }
-    for (auto i = 0; i < m_outputs.size(); ++i) {
+    for (size_t i = 0; i < m_outputs.size(); ++i) {
         if (parameterMap.find(m_outputs[i]) != parameterMap.end()) {
             spdlog::error("VGen {} has a duplicate parameter name {}", m_name, m_outputs[i]);
             return false;
@@ -85,7 +85,7 @@ bool AbstractVGen::prepareTemplate() {
 std::string AbstractVGen::parameterize(const std::vector<std::string>& inputs,
                                        const std::unordered_map<Intrinsic, std::string>& intrinsics,
                                        const std::vector<std::string>& outputs,
-                                       const std::vector<int>& outputDimensions,
+                                       const std::vector<size_t>& outputDimensions,
                                        const std::unordered_set<std::string>& alreadyDefined) const {
     if (!m_valid) {
         spdlog::error("VGen {} parameterized but invalid.", m_name);
@@ -99,10 +99,10 @@ std::string AbstractVGen::parameterize(const std::vector<std::string>& inputs,
     }
 
     std::string shader;
-    size_t shaderPos = 0;
+    std::smatch::difference_type shaderPos = 0;
     // We keep a running list of the first time we encounter outputs in the shader code, because we will need to
     // declare them.
-    std::unordered_set<int> outputsEncountered;
+    std::unordered_set<size_t> outputsEncountered;
     for (auto param : m_parameters) {
         if (shaderPos < param.first.position()) {
             shader += m_shader.substr(shaderPos, param.first.position() - shaderPos);

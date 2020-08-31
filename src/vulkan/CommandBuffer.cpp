@@ -24,7 +24,7 @@ bool CommandBuffer::create(size_t count, bool isPrimary) {
     } else {
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
     }
-    allocInfo.commandBufferCount = count;
+    allocInfo.commandBufferCount = static_cast<uint32_t>(count);
 
     if (vkAllocateCommandBuffers(m_device->get(), &allocInfo, m_commandBuffers.data()) != VK_SUCCESS) {
         spdlog::error("error allocating command buffers.");
@@ -36,19 +36,11 @@ bool CommandBuffer::create(size_t count, bool isPrimary) {
 
 void CommandBuffer::destroy() {
     spdlog::debug("CommandBuffer destructor");
-    m_scinth = nullptr;
-    m_secondaryCommands.clear();
-
     if (m_commandBuffers.size()) {
-        vkFreeCommandBuffers(m_device->get(), m_commandPool->get(), m_commandBuffers.size(), m_commandBuffers.data());
+        vkFreeCommandBuffers(m_device->get(), m_commandPool->get(), static_cast<uint32_t>(m_commandBuffers.size()),
+                             m_commandBuffers.data());
         m_commandBuffers.clear();
     }
-}
-
-void CommandBuffer::associateScinth(std::shared_ptr<comp::Scinth> scinth) { m_scinth = scinth; }
-
-void CommandBuffer::associateSecondaryCommands(const std::vector<std::shared_ptr<CommandBuffer>>& commands) {
-    m_secondaryCommands.insert(m_secondaryCommands.begin(), commands.begin(), commands.end());
 }
 
 } // namespace vk

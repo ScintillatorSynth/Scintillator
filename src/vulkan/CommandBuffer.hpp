@@ -6,14 +6,7 @@
 #include <memory>
 #include <vector>
 
-namespace scin {
-
-namespace comp {
-// TODO: this dependency back to comp namespace is a serious code smell.
-class Scinth;
-}
-
-namespace vk {
+namespace scin { namespace vk {
 
 class CommandPool;
 class Device;
@@ -35,12 +28,6 @@ public:
 
     void destroy();
 
-    /*! Associate a Scinth with the command buffer, so none of the associated resources in the Scinth will be destroyed
-     * until after this CommandBuffer goes out of scope.
-     */
-    void associateScinth(std::shared_ptr<comp::Scinth> scinth);
-    void associateSecondaryCommands(const std::vector<std::shared_ptr<CommandBuffer>>& secondary);
-
     VkCommandBuffer buffer(size_t i) { return m_commandBuffers[i]; }
     size_t count() const { return m_commandBuffers.size(); }
 
@@ -48,8 +35,6 @@ private:
     std::shared_ptr<Device> m_device;
     std::shared_ptr<CommandPool> m_commandPool;
     std::vector<VkCommandBuffer> m_commandBuffers;
-    std::shared_ptr<comp::Scinth> m_scinth;
-    std::vector<std::shared_ptr<CommandBuffer>> m_secondaryCommands;
 };
 
 } // namespace vk

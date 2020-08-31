@@ -121,19 +121,22 @@ FramebufferImage::~FramebufferImage() {}
 
 bool FramebufferImage::create(uint32_t width, uint32_t height) { return createDeviceImage(width, height, true); }
 
-HostImage::HostImage(std::shared_ptr<Device> device): AllocatedImage(device, VK_FORMAT_R8G8B8A8_UNORM) {}
+HostImage::HostImage(std::shared_ptr<Device> device): AllocatedImage(device, VK_FORMAT_R8G8B8A8_UNORM), m_stride(0) {}
 
 HostImage::~HostImage() {}
 
-bool HostImage::create(uint32_t width, uint32_t height) {
+bool HostImage::create(uint32_t width, uint32_t height) { return createWithStride(width, height, width); }
+
+bool HostImage::createWithStride(uint32_t width, uint32_t height, uint32_t stride) {
     m_extent.width = width;
     m_extent.height = height;
+    m_stride = stride;
 
     VkImageCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     createInfo.imageType = VK_IMAGE_TYPE_2D;
     createInfo.format = m_format;
-    createInfo.extent.width = width;
+    createInfo.extent.width = stride;
     createInfo.extent.height = height;
     createInfo.extent.depth = 1;
     createInfo.arrayLayers = 1;

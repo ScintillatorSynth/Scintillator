@@ -1,7 +1,7 @@
 #ifndef SRC_OSC_ADDRESS_HPP_
 #define SRC_OSC_ADDRESS_HPP_
 
-#include "lo/lo.h"
+#include "osc/LOIncludes.hpp"
 
 namespace scin { namespace osc {
 

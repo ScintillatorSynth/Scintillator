@@ -18,3 +18,9 @@ cmake ..
 make
 
 
+Xenial
+------
+
+Requires gperf 3.1, which will need to be built from sources.
+Requires openssl 1.1, which will need to be built from sources, or copied from the install-ext/ssl directory.
+

@@ -1,4 +1,4 @@
-#include "gtest/gtest.h"
+#include "base/GTestIncludes.hpp"
 
 #include "base/AbstractVGen.hpp"
 #include "base/Intrinsic.hpp"

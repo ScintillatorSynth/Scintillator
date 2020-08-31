@@ -10,10 +10,6 @@ include_directories(
     ${SCIN_EXT_INSTALL_DIR}/include
 )
 
-if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    add_definitions(-DSCIN_RELEASE)
-endif()
-
 #### "Core" files (without external dependencies)
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/base")
 
@@ -53,6 +49,13 @@ add_library(scintillator_base STATIC
     base/VGen.hpp
 )
 
+target_compile_options(scintillator_base PRIVATE
+     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+     -Wall -Wextra -Wpedantic -Werror>
+     $<$<CXX_COMPILER_ID:MSVC>:
+     /W4 /WX /DNOMINMAX>
+)
+
 target_link_libraries(scintillator_base
     fmt
     glm
@@ -79,11 +82,19 @@ add_executable(run_unittests
     base/AbstractScinthDef_unittests.cpp
     base/AbstractVGen_unittests.cpp
     base/Archetypes_unittests.cpp
+    base/GTestIncludes.hpp
     base/Manifest_unittests.cpp
     base/Shape_unittests.cpp
     base/VGen_unittests.cpp
 
     run_unittests.cpp
+)
+
+target_compile_options(run_unittests PRIVATE
+     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+     -Wall -Wextra -Wpedantic -Werror>
+     $<$<CXX_COMPILER_ID:MSVC>:
+     /W4 /WX /DNOMINMAX>
 )
 
 target_link_libraries(run_unittests
@@ -147,18 +158,24 @@ set(scintillator_synth_files
     comp/AudioStager.hpp
     comp/Canvas.cpp
     comp/Canvas.hpp
-    comp/Compositor.cpp
-    comp/Compositor.hpp
+    comp/FrameContext.cpp
+    comp/FrameContext.hpp
     comp/FrameTimer.cpp
     comp/FrameTimer.hpp
+    comp/Group.cpp
+    comp/Group.hpp
     comp/ImageMap.cpp
     comp/ImageMap.hpp
+    comp/Node.cpp
+    comp/Node.hpp
     comp/Offscreen.cpp
     comp/Offscreen.hpp
     comp/Pipeline.cpp
     comp/Pipeline.hpp
     comp/RenderSync.cpp
     comp/RenderSync.hpp
+    comp/RootNode.cpp
+    comp/RootNode.hpp
     comp/SamplerFactory.cpp
     comp/SamplerFactory.hpp
     comp/Scinth.cpp
@@ -188,8 +205,6 @@ set(scintillator_synth_files
     osc/commands/AdvanceFrame.cpp
     osc/commands/AdvanceFrame.hpp
     osc/commands/Command.hpp
-    osc/commands/CreateCrashReport.cpp
-    osc/commands/CreateCrashReport.hpp
     osc/commands/DefFree.cpp
     osc/commands/DefFree.hpp
     osc/commands/DefLoad.cpp
@@ -202,6 +217,20 @@ set(scintillator_synth_files
     osc/commands/DumpOSC.hpp
     osc/commands/Echo.cpp
     osc/commands/Echo.hpp
+    osc/commands/GroupDeepFree.cpp
+    osc/commands/GroupDeepFree.hpp
+    osc/commands/GroupDumpTree.cpp
+    osc/commands/GroupDumpTree.hpp
+    osc/commands/GroupFreeAll.cpp
+    osc/commands/GroupFreeAll.hpp
+    osc/commands/GroupHead.cpp
+    osc/commands/GroupHead.hpp
+    osc/commands/GroupNew.cpp
+    osc/commands/GroupNew.hpp
+    osc/commands/GroupQueryTree.cpp
+    osc/commands/GroupQueryTree.hpp
+    osc/commands/GroupTail.cpp
+    osc/commands/GroupTail.hpp
     osc/commands/ImageBufferAllocRead.cpp
     osc/commands/ImageBufferAllocRead.hpp
     osc/commands/ImageBufferQuery.cpp
@@ -212,8 +241,14 @@ set(scintillator_synth_files
     osc/commands/LogCrashReports.hpp
     osc/commands/LogLevel.cpp
     osc/commands/LogLevel.hpp
+    osc/commands/NodeAfter.cpp
+    osc/commands/NodeAfter.hpp
+    osc/commands/NodeBefore.cpp
+    osc/commands/NodeBefore.hpp
     osc/commands/NodeFree.cpp
     osc/commands/NodeFree.hpp
+    osc/commands/NodeOrder.cpp
+    osc/commands/NodeOrder.hpp
     osc/commands/NodeRun.cpp
     osc/commands/NodeRun.hpp
     osc/commands/NodeSet.cpp
@@ -236,6 +271,7 @@ set(scintillator_synth_files
     osc/commands/Sync.hpp
     osc/commands/UploadCrashReport.cpp
     osc/commands/UploadCrashReport.hpp
+    osc/LOIncludes.hpp
 
     vulkan/Buffer.cpp
     vulkan/Buffer.hpp
@@ -274,17 +310,30 @@ elseif(UNIX)
     ExternalProject_add(linuxdeploy
         PREFIX ext
         STEP_TARGETS install
-        URL https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+        # TODO(166): restore continuous URL once hang in appimage plugin tool has been fixed
+        #        URL https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+        URL https://artifacts.assassinate-you.net/artifactory/list/linuxdeploy/travis-456/linuxdeploy-x86_64.AppImage
         DOWNLOAD_NO_EXTRACT ON
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND chmod u+x <DOWNLOADED_FILE> && cp <DOWNLOADED_FILE> ${SCIN_EXT_INSTALL_DIR}/bin
     )
+    ExternalProject_add(checkrt
+        PREFIX ext
+        STEP_TARGETS install
+        URL https://github.com/darealshinji/AppImageKit-checkrt/releases/download/continuous/exec-x86_64.so
+        DOWNLOAD_NO_EXTRACT ON
+        UPDATE_COMMAND ""
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND cp <DOWNLOADED_FILE> ${SCIN_EXT_INSTALL_DIR}/lib/exec.so
+    )
     set(SCIN_LINUX_DEPLOY "${SCIN_EXT_INSTALL_DIR}/bin/linuxdeploy-x86_64.AppImage")
     # We need the linuxdeploy tool to construct the AppImage.
     add_dependencies(scinsynth
         linuxdeploy-install
+        checkrt-install
     )
 elseif(WIN32)
     add_executable(scinsynth ${scintillator_synth_files})
@@ -292,6 +341,13 @@ elseif(WIN32)
         MSVC_RUNTIME_LIBRARY "MultiThreadedDLL"
     )
 endif()
+
+target_compile_options(scinsynth PRIVATE
+     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+     -Wall -Wextra -Wpedantic -Werror>
+     $<$<CXX_COMPILER_ID:MSVC>:
+     /W4 /WX /DNOMINMAX>
+)
 
 # Force using the locally sourced libraries as opposed to system libs
 find_library(SHADERC_LIBRARY
@@ -536,6 +592,28 @@ elseif(UNIX)
     install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/libVkLayer_khronos_validation.so"
         DESTINATION "${SCIN_APPDIR}/usr/share/vulkan/explicit_layer.d"
     )
+    # Optionally copy the libstdc++ libraries (and supporting code) if they exist. This is used to signal the inclusion
+    # of these libraries for compatibility on older version of Linux, and is usually only done on official builds for
+    # distribution.
+    if (EXISTS "${SCIN_EXT_INSTALL_DIR}/lib/libstdc++.so.6")
+        message(STATUS "including local stdc++ libraries in the AppImage install")
+        install(CODE "
+            file(MAKE_DIRECTORY ${SCIN_APPDIR}/usr/optional)
+            file(MAKE_DIRECTORY ${SCIN_APPDIR}/usr/optional/libstdc++)
+            file(MAKE_DIRECTORY ${SCIN_APPDIR}/usr/optional/libgcc)
+        "
+        VERBATIM
+        )
+        install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/libstdc++.so.6"
+            DESTINATION "${SCIN_APPDIR}/usr/optional/libstdc++"
+        )
+        install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/libgcc_s.so.1"
+            DESTINATION "${SCIN_APPDIR}/usr/optional/libgcc"
+        )
+        install(FILES "${SCIN_EXT_INSTALL_DIR}/lib/exec.so"
+            DESTINATION "${SCIN_APPDIR}/usr/optional"
+        )
+    endif()
     # Copy the swiftshader binary and metadata
     install(DIRECTORY "${SCIN_EXT_INSTALL_DIR}/share/vulkan/icd.d"
         DESTINATION "${SCIN_APPDIR}/usr/share/vulkan"
@@ -548,6 +626,7 @@ elseif(UNIX)
     # tool knows where to look for the dependent libraries.
     install(CODE "
         set(ENV{LD_LIBRARY_PATH} \"${SCIN_EXT_INSTALL_DIR}/lib\")
+        set(ENV{VERSION} ${GIT_COMMIT_HASH})
         execute_process(
             COMMAND ${SCIN_LINUX_DEPLOY} -d ${CMAKE_CURRENT_BINARY_DIR}/scinsynth.desktop -i ${PROJECT_SOURCE_DIR}/src/linux/scinsynth.png -e ${CMAKE_CURRENT_BINARY_DIR}/scinsynth --custom-apprun=${PROJECT_SOURCE_DIR}/src/linux/AppRun --appdir ${SCIN_APPDIR} --output appimage
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/bin
@@ -614,8 +693,8 @@ if (UNIX AND NOT APPLE AND CMAKE_BUILD_TYPE STREQUAL "Coverage")
         set(LLVM_COV llvm-cov)
     endif()
 
-    set(SCIN_TEST_IMAGES_ENV "LLVM_PROFILE_FILE=scin_test_images.profraw")
-    set(SCIN_TEST_OSC_ENV "LLVM_PROFILE_FILE=scin_test_osc.profraw")
+    set(SCIN_TEST_IMAGES_ENV "LLVM_PROFILE_FILE=${CMAKE_CURRENT_BINARY_DIR}/scin_test_images.profraw")
+    set(SCIN_TEST_OSC_ENV "LLVM_PROFILE_FILE=${CMAKE_CURRENT_BINARY_DIR}/scin_test_osc.profraw")
 
     add_custom_command(OUTPUT scinsynth_coverage.profdata
         COMMAND ${CMAKE_COMMAND} -E env "LLVM_PROFILE_FILE=run_unittests.profraw" ./run_unittests
@@ -666,7 +745,7 @@ add_custom_target(sclang_language_config
 )
 
 # Reference source and test images. We always use a specific git hash, to control which images we compare against.
-set(SCIN_TEST_IMAGE_HASH "86a51c4ddb2f6f036241ac021587d951ecd703f0")
+set(SCIN_TEST_IMAGE_HASH "ed3cc193377581f65071b9133196f58bc27f2994")
 ExternalProject_Add(reference_images
     PREFIX ref
     STEP_TARGETS update

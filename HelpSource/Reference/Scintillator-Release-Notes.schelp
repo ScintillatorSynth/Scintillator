@@ -5,6 +5,15 @@ related:: Guides/Scintillator-User-Guide
 
 section:: Release Notes
 
+subsection:: 0.0.8 31 August 2020
+
+list::
+## Adds support for Linux versions as old as Ubuntu Xenial. [link::https://github.com/ScintillatorSynth/Scintillator/pull/168##168::,link::https://github.com/ScintillatorSynth/Scintillator/pull/167##167::, link::https://github.com/ScintillatorSynth/Scintillator/pull/157##157::]
+## Adds support for ScinGroups and execution ordering on the server [link::https://github.com/ScintillatorSynth/Scintillator/pull/162##162::]
+## Automatically stop all Scinths when Cmd+Period is pressed. [link::https://github.com/ScintillatorSynth/Scintillator/pull/155##155::]
+## Fixes a bug in (link::https://github.com/ScintillatorSynth/Scintillator/issues/143##143::) in image saving in non-aligned image widths [link::https://github.com/ScintillatorSynth/Scintillator/pull/154##154::]
+::
+
 subsection:: 0.0.7 27 July 2020
 
 list::

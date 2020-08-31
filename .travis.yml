@@ -8,7 +8,7 @@ jobs:
     - CC=clang-8 CXX=clang++-8
     - DO_COVERAGE=true
   - os: linux
-    dist: bionic
+    dist: xenial
     env:
     - DO_COVERAGE=false
   - os: osx
@@ -38,8 +38,9 @@ deploy:
   cleanup: false
   acl: public_read
   on:
+    tags: false
     condition: "$DO_COVERAGE = true"
-    branch: master
+    all_branches: true
 - provider: s3
   access_key_id: "$AWS_KEY"
   secret_access_key: "$AWS_SECRET"
@@ -53,7 +54,7 @@ deploy:
   on:
     tags: false
     condition: "$DO_COVERAGE = false"
-    branch: master
+    all_branches: true
 - provider: s3
   access_key_id: "$AWS_KEY"
   secret_access_key: "$AWS_SECRET"
@@ -73,9 +74,10 @@ deploy:
   secret_access_key: "$GCS_SYMBOL_KEY"
   detect_encoding: true
   bucket: scintillator-gargamelle-symbols
-  skip_cleanup: true
+  cleanup: false
   local_dir: "$HOME/symbols"
   on:
+    tags: false
     condition: "$DO_COVERAGE = false"
     all_branches: true
 

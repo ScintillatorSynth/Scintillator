@@ -4,9 +4,14 @@
 
 #include <cstring>
 
-// Some of the gperf generated code uses the register keyword, which is deprecated in C++17.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wregister"
+#if _MSC_VER
+// Disable MSVC warning on generated code.
+#pragma warning(push)
+#pragma warning(disable: 4267)
+#elif __GNUC__ || __clang__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
 
 namespace {
 
@@ -23,29 +28,42 @@ dumpOSC,            scin::osc::commands::Command::Number::kDumpOSC
 sync,               scin::osc::commands::Command::Number::kSync
 logLevel,           scin::osc::commands::Command::Number::kLogLevel
 version,            scin::osc::commands::Command::Number::kVersion
-d_recv,             scin::osc::commands::Command::Number::kDRecv
-d_load,             scin::osc::commands::Command::Number::kDLoad
-d_loadDir,          scin::osc::commands::Command::Number::kDLoadDir
-d_free,             scin::osc::commands::Command::Number::kDFree
-n_free,             scin::osc::commands::Command::Number::kNFree
-n_run,              scin::osc::commands::Command::Number::kNRun
-n_set,              scin::osc::commands::Command::Number::kNSet
-s_new,              scin::osc::commands::Command::Number::kSNew
-ib_allocRead,       scin::osc::commands::Command::Number::kIBAllocRead
-ib_query,           scin::osc::commands::Command::Number::kIBQuery
-nrt_screenShot,     scin::osc::commands::Command::Number::kNRTScreenShot
-nrt_advanceFrame,   scin::osc::commands::Command::Number::kNRTAdvanceFrame
+d_recv,             scin::osc::commands::Command::Number::kDefRecv
+d_load,             scin::osc::commands::Command::Number::kDefLoad
+d_loadDir,          scin::osc::commands::Command::Number::kDefLoadDir
+d_free,             scin::osc::commands::Command::Number::kDefFree
+n_free,             scin::osc::commands::Command::Number::kNodeFree
+n_run,              scin::osc::commands::Command::Number::kNodeRun
+n_set,              scin::osc::commands::Command::Number::kNodeSet
+n_before,           scin::osc::commands::Command::Number::kNodeBefore
+n_after,            scin::osc::commands::Command::Number::kNodeAfter
+n_order,            scin::osc::commands::Command::Number::kNodeOrder
+s_new,              scin::osc::commands::Command::Number::kScinthNew
+g_new,              scin::osc::commands::Command::Number::kGroupNew
+g_head,             scin::osc::commands::Command::Number::kGroupHead
+g_tail,             scin::osc::commands::Command::Number::kGroupTail
+g_freeAll,          scin::osc::commands::Command::Number::kGroupFreeAll
+g_deepFree,         scin::osc::commands::Command::Number::kGroupDeepFree
+g_dumpTree,         scin::osc::commands::Command::Number::kGroupDumpTree
+g_queryTree,        scin::osc::commands::Command::Number::kGroupQueryTree
+ib_allocRead,       scin::osc::commands::Command::Number::kImageBufferAllocRead
+ib_query,           scin::osc::commands::Command::Number::kImageBufferQuery
+nrt_screenShot,     scin::osc::commands::Command::Number::kScreenShot
+nrt_advanceFrame,   scin::osc::commands::Command::Number::kAdvanceFrame
 echo,               scin::osc::commands::Command::Number::kEcho
 logAppend,          scin::osc::commands::Command::Number::kLogAppend
 sleepFor,           scin::osc::commands::Command::Number::kSleepFor
-createCrashReport,  scin::osc::commands::Command::Number::kCreateCrashReport
 logCrashReports,    scin::osc::commands::Command::Number::kLogCrashReports
 uploadCrashReport,  scin::osc::commands::Command::Number::kUploadCrashReport
 %%
 
 } // namespace
 
-#pragma clang diagnostic pop
+#if _MSC_VER
+#pragma warning(pop)
+#elif __GNUC__ || __clang__
+#pragma GCC diagnostic pop
+#endif
 
 namespace scin { namespace osc { namespace commands {
 

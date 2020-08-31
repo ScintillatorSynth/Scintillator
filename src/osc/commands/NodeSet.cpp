@@ -1,6 +1,6 @@
 #include "osc/commands/NodeSet.hpp"
 
-#include "comp/Compositor.hpp"
+#include "comp/RootNode.hpp"
 #include "osc/Dispatcher.hpp"
 
 #include "spdlog/spdlog.h"
@@ -14,7 +14,7 @@ NodeSet::NodeSet(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 NodeSet::~NodeSet() {}
 
-void NodeSet::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
+void NodeSet::processMessage(int argc, lo_arg** argv, const char* types, lo_address /* address */) {
     if (argc < 1 || types[0] != LO_INT32) {
         spdlog::error("OSC NodeSet expecting integer ScinthID as first argument.");
         return;
@@ -49,7 +49,7 @@ void NodeSet::processMessage(int argc, lo_arg** argv, const char* types, lo_addr
         }
     }
 
-    m_dispatcher->compositor()->setNodeParameters(nodeID, namedValues, indexedValues);
+    m_dispatcher->rootNode()->nodeSet(nodeID, namedValues, indexedValues);
 }
 
 } // namespace commands

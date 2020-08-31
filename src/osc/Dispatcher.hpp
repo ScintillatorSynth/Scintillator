@@ -3,7 +3,7 @@
 
 #include "osc/commands/Command.hpp"
 
-#include "lo/lo.h"
+#include "osc/LOIncludes.hpp"
 
 #include <array>
 #include <functional>
@@ -18,9 +18,9 @@ class Archetypes;
 
 namespace comp {
 class Async;
-class Compositor;
 class FrameTimer;
 class Offscreen;
+class RootNode;
 }
 
 namespace infra {
@@ -43,14 +43,14 @@ public:
      * \param logger The shared logging object.
      * \param async The async operations handler.
      * \param archetypes The archetypes dictionary.
-     * \param compositor The root compositor, for issuing synchronous commands directly.
+     * \param rootNode The singleton root node of the render graph, for issuing synchronous commands directly.
      * \param offscreen The offscreen renderer, if running in non realtime, for encode requests.
      * \param quitHandler Function to call if we receive an OSC /scin_quit command. When called, it should safely
      *        terminate the scinsynth program.
      * \param crashReporter The crash reporting object, for requesting minidumps.
      */
     Dispatcher(std::shared_ptr<infra::Logger> logger, std::shared_ptr<comp::Async> async,
-               std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<comp::Compositor> compositor,
+               std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<comp::RootNode> rootNode,
                std::shared_ptr<comp::Offscreen> offscreen, std::shared_ptr<const comp::FrameTimer> frameTimer,
                std::function<void()> quitHandler, std::shared_ptr<infra::CrashReporter> crashReporter);
     ~Dispatcher();
@@ -112,7 +112,7 @@ public:
     std::shared_ptr<infra::Logger> logger() { return m_logger; }
     std::shared_ptr<comp::Async> async() { return m_async; }
     std::shared_ptr<base::Archetypes> archetypes() { return m_archetypes; }
-    std::shared_ptr<comp::Compositor> compositor() { return m_compositor; }
+    std::shared_ptr<comp::RootNode> rootNode() { return m_rootNode; }
     std::shared_ptr<comp::Offscreen> offscreen() { return m_offscreen; }
     std::shared_ptr<const comp::FrameTimer> frameTimer() { return m_frameTimer; }
     std::shared_ptr<infra::CrashReporter> crashReporter() { return m_crashReporter; }
@@ -130,7 +130,7 @@ private:
     std::shared_ptr<infra::Logger> m_logger;
     std::shared_ptr<comp::Async> m_async;
     std::shared_ptr<base::Archetypes> m_archetypes;
-    std::shared_ptr<comp::Compositor> m_compositor;
+    std::shared_ptr<comp::RootNode> m_rootNode;
     std::shared_ptr<comp::Offscreen> m_offscreen;
     std::shared_ptr<const comp::FrameTimer> m_frameTimer;
     std::function<void()> m_quitHandler;

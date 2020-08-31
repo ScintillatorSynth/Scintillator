@@ -2,9 +2,22 @@
 
 #include "infra/Version.hpp"
 
+#if _MSC_VER
+#    pragma warning(push)
+#    pragma warning(disable : 4100)
+#elif __GNUC__ || __clang__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
 #include <client/crash_report_database.h>
 #include <client/crashpad_client.h>
 #include <client/settings.h>
+#if _MSC_VER
+#    pragma warning(pop)
+#elif __GNUC__ || __clang__
+#    pragma GCC diagnostic pop
+#endif
+
 #include <fmt/core.h>
 #include <spdlog/spdlog.h>
 #include <util/misc/capture_context.h>
@@ -21,9 +34,14 @@ namespace {
 static const char* kGargamelleURL = "https://ggml.scintillatorsynth.org/api/dump";
 
 void logReport(const crashpad::CrashReportDatabase::Report& report) {
-    tm* createTime = localtime(&report.creation_time);
+    struct tm createTime;
+#if _MSC_VER
+    localtime_s(&createTime, &report.creation_time);
+#else
+    localtime_r(&report.creation_time, &createTime);
+#endif
     std::array<char, 128> timeBuf;
-    strftime(timeBuf.data(), sizeof(timeBuf), "%a %d %b %H:%M:%S %Y", createTime);
+    strftime(timeBuf.data(), sizeof(timeBuf), "%a %d %b %H:%M:%S %Y", &createTime);
     spdlog::info("    id: {}, on: {}, uploaded: {}", report.uuid.ToString(), timeBuf.data(),
                  report.uploaded ? "yes" : "no");
 }
@@ -77,22 +95,6 @@ bool CrashReporter::openDatabase() {
 
 void CrashReporter::closeDatabase() { m_database = nullptr; }
 
-#if __linux__
-void CrashReporter::dumpWithoutCrash() {
-    spdlog::info("generating linux minidump without crash.");
-    crashpad::NativeCPUContext context;
-    crashpad::CaptureContext(&context);
-    m_client->DumpWithoutCrash(&context);
-}
-#elif (WIN32)
-void CrashReporter::dumpWithoutCrash() {
-    spdlog::info("generating windows minidump without crash.");
-    CONTEXT context;
-    crashpad::CaptureContext(&context);
-    m_client->DumpWithoutCrash(context);
-}
-#endif
-
 int CrashReporter::logCrashReports() {
     if (!openDatabase())
         return -1;
@@ -108,7 +110,7 @@ int CrashReporter::logCrashReports() {
         return -1;
     }
 
-    auto notUploaded = pendingReports.size();
+    int notUploaded = static_cast<int>(pendingReports.size());
     if (pendingReports.size() + completedReports.size()) {
         spdlog::info("Crash report database contains {} reports:", pendingReports.size() + completedReports.size());
         for (auto report : pendingReports) {

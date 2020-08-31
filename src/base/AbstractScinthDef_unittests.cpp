@@ -1,4 +1,4 @@
-#include "gtest/gtest.h"
+#include "base/GTestIncludes.hpp"
 
 #include "base/AbstractScinthDef.hpp"
 #include "base/Archetypes.hpp"
@@ -247,7 +247,7 @@ TEST_F(AbstractScinthDefTest, BuildWithNormPosPixelRate) {
     // Vertex manifest should contain the position and the NormPos.
     std::unordered_set<Intrinsic> vertexIntrinsics { Intrinsic::kPosition, Intrinsic::kNormPos };
     ASSERT_EQ(2, def->vertexManifest().numberOfElements());
-    for (auto i = 0; i < def->vertexManifest().numberOfElements(); ++i) {
+    for (size_t i = 0; i < def->vertexManifest().numberOfElements(); ++i) {
         vertexIntrinsics.erase(def->vertexManifest().intrinsicForElement(i));
     }
     EXPECT_EQ(0, vertexIntrinsics.size());
@@ -303,7 +303,7 @@ TEST_F(AbstractScinthDefTest, BuildWithTexPosPixelRate) {
     // Vertex manifest should contain the position and the NormPos.
     std::unordered_set<Intrinsic> vertexIntrinsics { Intrinsic::kPosition, Intrinsic::kTexPos };
     ASSERT_EQ(2, def->vertexManifest().numberOfElements());
-    for (auto i = 0; i < def->vertexManifest().numberOfElements(); ++i) {
+    for (size_t i = 0; i < def->vertexManifest().numberOfElements(); ++i) {
         vertexIntrinsics.erase(def->vertexManifest().intrinsicForElement(i));
     }
     EXPECT_EQ(0, vertexIntrinsics.size());
@@ -379,8 +379,9 @@ TEST_F(AbstractScinthDefTest, BuildPixelRateParams) {
     ASSERT_EQ(1, def->parameters().size());
     EXPECT_EQ("a", def->parameters()[0].name());
     EXPECT_EQ(0.5, def->parameters()[0].defaultValue());
-    EXPECT_EQ(0, def->indexForParameterName("a"));
-
+    size_t indexOfA = 1;
+    EXPECT_TRUE(def->indexForParameterName("a", indexOfA));
+    EXPECT_EQ(0, indexOfA);
     EXPECT_EQ(1, def->instances().size());
     EXPECT_EQ(0, def->computeFixedImages().size());
     EXPECT_EQ(0, def->drawFixedImages().size());

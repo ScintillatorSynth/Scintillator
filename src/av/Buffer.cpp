@@ -2,10 +2,11 @@
 
 namespace scin { namespace av {
 
-Buffer::Buffer(AVBufferRef* bufferRef, int width, int height):
+Buffer::Buffer(AVBufferRef* bufferRef, int width, int height, int stride):
     m_bufferRef(bufferRef),
     m_width(width),
-    m_height(height) {}
+    m_height(height),
+    m_stride(stride) {}
 
 Buffer::~Buffer() { av_buffer_unref(&m_bufferRef); }
 

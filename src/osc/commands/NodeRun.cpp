@@ -1,6 +1,6 @@
 #include "osc/commands/NodeRun.hpp"
 
-#include "comp/Compositor.hpp"
+#include "comp/RootNode.hpp"
 #include "osc/Dispatcher.hpp"
 
 #include "spdlog/spdlog.h"
@@ -13,7 +13,7 @@ NodeRun::NodeRun(osc::Dispatcher* dispatcher): Command(dispatcher) {}
 
 NodeRun::~NodeRun() {}
 
-void NodeRun::processMessage(int argc, lo_arg** argv, const char* types, lo_address address) {
+void NodeRun::processMessage(int argc, lo_arg** argv, const char* types, lo_address /* address */) {
     std::vector<std::pair<int, int>> pairs;
     if (argc % 2) {
         spdlog::warn("OSC NodeRun got odd number of arguments, ignoring last value.");
@@ -27,7 +27,7 @@ void NodeRun::processMessage(int argc, lo_arg** argv, const char* types, lo_addr
             spdlog::warn("OSC NodeRun got non-integer argument, ignoring pair at index {}", i);
         }
     }
-    m_dispatcher->compositor()->setRun(pairs);
+    m_dispatcher->rootNode()->nodeRun(pairs);
 }
 
 } // namespace commands

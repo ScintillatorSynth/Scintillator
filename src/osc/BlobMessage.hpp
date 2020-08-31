@@ -1,12 +1,13 @@
 #ifndef SRC_OSC_BLOB_MESSAGE_HPP_
 #define SRC_OSC_BLOB_MESSAGE_HPP_
 
-#include "lo/lo.h"
+#include "osc/LOIncludes.hpp"
 
 #include <memory>
 
 namespace scin { namespace osc {
-/*! Can extract a copy of a message from a OSC blob lo_blob data structure.
+
+/*! Can extract a copy of a message from an OSC blob lo_blob data structure, allowing it to be sent as a lo_message.
  */
 class BlobMessage {
 public:

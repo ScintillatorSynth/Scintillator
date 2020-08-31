@@ -1,23 +1,19 @@
 #include "audio/PortAudio.hpp"
-#include "av/AVIncludes.hpp"
 #include "base/Archetypes.hpp"
 #include "base/FileSystem.hpp"
-#include "comp/Async.hpp" // TODO: audit includes
-#include "comp/Compositor.hpp"
+#include "comp/Async.hpp"
 #include "comp/FrameTimer.hpp"
 #include "comp/Offscreen.hpp"
-#include "comp/Pipeline.hpp"
+#include "comp/RootNode.hpp"
+#include "comp/ShaderCompiler.hpp"
 #include "comp/Window.hpp"
 #include "infra/CrashReporter.hpp"
 #include "infra/Logger.hpp"
 #include "infra/Version.hpp"
 #include "osc/Dispatcher.hpp"
-#include "vulkan/Buffer.hpp"
-#include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/DeviceChooser.hpp"
 #include "vulkan/Instance.hpp"
-#include "vulkan/Shader.hpp"
 #include "vulkan/Vulkan.hpp"
 
 #include <fmt/core.h>
@@ -247,7 +243,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    if (!device && chooser.bestDeviceIndex() >= 0) {
+    if (!device && chooser.bestDeviceIndex() < chooser.devices().size()) {
         auto info = chooser.devices().at(chooser.bestDeviceIndex());
         if (FLAGS_createWindow && !info.supportsWindow()) {
             spdlog::error("Automatically chosen device {} doesn't support window rendering.", info.name());
@@ -290,20 +286,21 @@ int main(int argc, char* argv[]) {
         frameTimer = offscreen->frameTimer();
     }
 
-    std::shared_ptr<scin::comp::Compositor> compositor(new scin::comp::Compositor(device, canvas));
-    if (!compositor->create()) {
-        spdlog::error("unable to create Compositor.");
+    std::shared_ptr<scin::comp::RootNode> rootNode(new scin::comp::RootNode(device, canvas));
+    if (!rootNode->create()) {
+        spdlog::error("unable to create root node.");
         return EXIT_FAILURE;
     }
 
     std::shared_ptr<scin::base::Archetypes> archetypes(new scin::base::Archetypes());
-    std::shared_ptr<scin::comp::Async> async(new scin::comp::Async(archetypes, compositor, device));
+    std::shared_ptr<scin::comp::Async> async(new scin::comp::Async(archetypes, rootNode, device));
     async->run(FLAGS_asyncWorkerThreads);
 
     // Chain async calls to load VGens, then ScinthDefs.
-    async->vgenLoadDirectory(quarkPath / "vgens", [async, &quarkPath, compositor](int) {
-        async->scinthDefLoadDirectory(quarkPath / "scinthdefs",
-                                      [](int) { spdlog::info("finished loading predefined VGens and ScinthDefs."); });
+    async->vgenLoadDirectory(quarkPath / "vgens", [async, &quarkPath](size_t) {
+        async->scinthDefLoadDirectory(quarkPath / "scinthdefs", [](size_t) {
+            spdlog::info("finished loading predefined VGens and ScinthDefs.");
+        });
     });
 
     std::function<void()> quitHandler;
@@ -312,7 +309,7 @@ int main(int argc, char* argv[]) {
     } else {
         quitHandler = [offscreen] { offscreen->stop(); };
     }
-    scin::osc::Dispatcher dispatcher(logger, async, archetypes, compositor, offscreen, frameTimer, quitHandler,
+    scin::osc::Dispatcher dispatcher(logger, async, archetypes, rootNode, offscreen, frameTimer, quitHandler,
                                      crashReporter);
     if (!dispatcher.create(FLAGS_portNumber, FLAGS_dumpOSC)) {
         spdlog::error("Failed creating OSC command dispatcher.");
@@ -323,16 +320,16 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    // Connect audio ingress to compositor if available.
+    // Connect audio ingress to render tree if available.
     if (portAudio->ingress()) {
-        compositor->addAudioIngress(portAudio->ingress(), 1);
+        rootNode->addAudioIngress(portAudio->ingress(), 1);
     }
 
     // ========== Main loop.
     if (FLAGS_createWindow) {
-        window->run(compositor);
+        window->run(rootNode);
     } else {
-        offscreen->run(compositor);
+        offscreen->run(rootNode);
     }
 
     // ========== OSC cleanup
@@ -341,7 +338,7 @@ int main(int argc, char* argv[]) {
 
     // ========== Vulkan cleanup.
     async->stop();
-    compositor->destroy();
+    rootNode->destroy();
     if (FLAGS_createWindow) {
         window->destroy();
     } else {

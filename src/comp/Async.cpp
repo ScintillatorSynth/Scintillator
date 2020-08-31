@@ -2,7 +2,7 @@
 
 #include "av/ImageDecoder.hpp"
 #include "base/Archetypes.hpp"
-#include "comp/Compositor.hpp"
+#include "comp/RootNode.hpp"
 #include "comp/ScinthDef.hpp"
 #include "infra/Logger.hpp"
 #include "vulkan/Buffer.hpp"
@@ -17,10 +17,10 @@
 
 namespace scin { namespace comp {
 
-Async::Async(std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<Compositor> compositor,
+Async::Async(std::shared_ptr<base::Archetypes> archetypes, std::shared_ptr<RootNode> rootNode,
              std::shared_ptr<vk::Device> device):
     m_archetypes(archetypes),
-    m_compositor(compositor),
+    m_rootNode(rootNode),
     m_device(device),
     m_quit(false),
     m_numberOfActiveWorkers(0),
@@ -31,7 +31,7 @@ Async::~Async() { stop(); }
 void Async::run(size_t numberOfWorkerThreads) {
     size_t workers = std::max(static_cast<size_t>(1), numberOfWorkerThreads);
     spdlog::info("Async starting {} worker threads.", workers);
-    for (auto i = 0; i < workers; ++i) {
+    for (size_t i = 0; i < workers; ++i) {
         std::string threadName = fmt::format("async_{}", i);
         m_workerThreads.emplace_back(std::thread(&Async::workerThreadMain, this, threadName));
     }
@@ -63,7 +63,7 @@ void Async::stop() {
     }
 }
 
-void Async::vgenLoadDirectory(fs::path path, std::function<void(int)> completion) {
+void Async::vgenLoadDirectory(fs::path path, std::function<void(size_t)> completion) {
     {
         std::lock_guard<std::mutex> lock(m_jobQueueMutex);
         m_jobQueue.emplace_back([this, path, completion]() { asyncVGenLoadDirectory(path, completion); });
@@ -71,7 +71,7 @@ void Async::vgenLoadDirectory(fs::path path, std::function<void(int)> completion
     m_jobQueueCondition.notify_one();
 }
 
-void Async::scinthDefLoadDirectory(fs::path path, std::function<void(int)> completion) {
+void Async::scinthDefLoadDirectory(fs::path path, std::function<void(size_t)> completion) {
     {
         std::lock_guard<std::mutex> lock(m_jobQueueMutex);
         m_jobQueue.emplace_back([this, path, completion]() { asyncScinthDefLoadDirectory(path, completion); });
@@ -79,7 +79,7 @@ void Async::scinthDefLoadDirectory(fs::path path, std::function<void(int)> compl
     m_jobQueueCondition.notify_one();
 }
 
-void Async::scinthDefLoadFile(fs::path path, std::function<void(int)> completion) {
+void Async::scinthDefLoadFile(fs::path path, std::function<void(size_t)> completion) {
     {
         std::lock_guard<std::mutex> lock(m_jobQueueMutex);
         m_jobQueue.emplace_back([this, path, completion]() { asyncScinthDefLoadFile(path, completion); });
@@ -87,7 +87,7 @@ void Async::scinthDefLoadFile(fs::path path, std::function<void(int)> completion
     m_jobQueueCondition.notify_one();
 }
 
-void Async::scinthDefParseString(std::string yaml, std::function<void(int)> completion) {
+void Async::scinthDefParseString(std::string yaml, std::function<void(size_t)> completion) {
     {
         std::lock_guard<std::mutex> lock(m_jobQueueMutex);
         m_jobQueue.emplace_back([this, yaml, completion]() { asyncScinthDefParseString(yaml, completion); });
@@ -238,15 +238,15 @@ void Async::syncThreadMain() {
     spdlog::debug("Async sync watcher thread exiting.");
 }
 
-void Async::asyncVGenLoadDirectory(fs::path path, std::function<void(int)> completion) {
+void Async::asyncVGenLoadDirectory(fs::path path, std::function<void(size_t)> completion) {
     if (!fs::exists(path) || !fs::is_directory(path)) {
         spdlog::error("nonexistent or not directory path {} for VGens.", path.string());
-        completion(-1);
+        completion(0);
         return;
     }
 
     spdlog::debug("Parsing yaml files in {} for AbstractVGens.", path.string());
-    auto parseCount = 0;
+    size_t parseCount = 0;
     for (auto entry : fs::directory_iterator(path)) {
         auto p = entry.path();
         if (fs::is_regular_file(p) && p.extension() == ".yaml") {
@@ -258,15 +258,15 @@ void Async::asyncVGenLoadDirectory(fs::path path, std::function<void(int)> compl
     completion(parseCount);
 }
 
-void Async::asyncScinthDefLoadDirectory(fs::path path, std::function<void(int)> completion) {
+void Async::asyncScinthDefLoadDirectory(fs::path path, std::function<void(size_t)> completion) {
     if (!fs::exists(path) || !fs::is_directory(path)) {
         spdlog::error("nonexistent or not directory path '{}' for ScinthDefs.", path.string());
-        completion(-1);
+        completion(0);
         return;
     }
 
     spdlog::debug("Parsing yaml files in directory {} for ScinthDefs.", path.string());
-    auto parseCount = 0;
+    size_t parseCount = 0;
     for (auto entry : fs::directory_iterator(path)) {
         auto p = entry.path();
         if (fs::is_regular_file(p) && p.extension() == ".yaml") {
@@ -274,7 +274,7 @@ void Async::asyncScinthDefLoadDirectory(fs::path path, std::function<void(int)> 
             std::vector<std::shared_ptr<const base::AbstractScinthDef>> scinthDefs =
                 m_archetypes->loadFromFile(p.string());
             for (auto scinthDef : scinthDefs) {
-                if (m_compositor->buildScinthDef(scinthDef)) {
+                if (m_rootNode->defAdd(scinthDef)) {
                     ++parseCount;
                 }
             }
@@ -284,17 +284,17 @@ void Async::asyncScinthDefLoadDirectory(fs::path path, std::function<void(int)> 
     completion(parseCount);
 }
 
-void Async::asyncScinthDefLoadFile(fs::path path, std::function<void(int)> completion) {
+void Async::asyncScinthDefLoadFile(fs::path path, std::function<void(size_t)> completion) {
     if (!fs::exists(path) || !fs::is_regular_file(path)) {
         spdlog::error("nonexistent or nonfile path '{}' for ScinthDefs.", path.string());
-        completion(-1);
+        completion(0);
         return;
     }
     spdlog::debug("Loading ScinthDefs from file {}.", path.string());
     std::vector<std::shared_ptr<const base::AbstractScinthDef>> scinthDefs = m_archetypes->loadFromFile(path.string());
-    auto parseCount = 0;
+    size_t parseCount = 0;
     for (auto scinthDef : scinthDefs) {
-        if (m_compositor->buildScinthDef(scinthDef)) {
+        if (m_rootNode->defAdd(scinthDef)) {
             ++parseCount;
         }
     }
@@ -302,10 +302,10 @@ void Async::asyncScinthDefLoadFile(fs::path path, std::function<void(int)> compl
     completion(parseCount);
 }
 
-void Async::asyncScinthDefParseString(std::string yaml, std::function<void(int)> completion) {
+void Async::asyncScinthDefParseString(std::string yaml, std::function<void(size_t)> completion) {
     std::vector<std::shared_ptr<const base::AbstractScinthDef>> scinthDefs = m_archetypes->parseFromString(yaml);
     for (auto scinthDef : scinthDefs) {
-        m_compositor->buildScinthDef(scinthDef);
+        m_rootNode->defAdd(scinthDef);
     }
     completion(scinthDefs.size());
 }
@@ -364,7 +364,7 @@ void Async::asyncReadImageIntoNewBuffer(int bufferID, std::string filePath, int 
         m_activeStaging.insert(serial);
     }
 
-    m_compositor->stageImage(bufferID, textureWidth, textureHeight, imageBuffer, [this, serial, completion] {
+    m_rootNode->stageImage(bufferID, textureWidth, textureHeight, imageBuffer, [this, serial, completion] {
         {
             std::lock_guard<std::mutex> lock(m_stagingMutex);
             m_activeStaging.erase(serial);

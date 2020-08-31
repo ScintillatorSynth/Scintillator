@@ -30,9 +30,9 @@ bool Pipeline::create(const base::Manifest& vertexManifest, const base::Shape* s
     vertexBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
     std::vector<VkVertexInputAttributeDescription> vertexAttributes(vertexManifest.numberOfElements());
-    for (auto i = 0; i < vertexManifest.numberOfElements(); ++i) {
+    for (size_t i = 0; i < vertexManifest.numberOfElements(); ++i) {
         vertexAttributes[i].binding = 0;
-        vertexAttributes[i].location = i;
+        vertexAttributes[i].location = static_cast<uint32_t>(i);
         VkFormat format;
         switch (vertexManifest.typeForElement(i)) {
         case base::Manifest::ElementType::kFloat:
@@ -50,6 +50,10 @@ bool Pipeline::create(const base::Manifest& vertexManifest, const base::Shape* s
         case base::Manifest::ElementType::kVec4:
             format = VK_FORMAT_R32G32B32A32_SFLOAT;
             break;
+
+        default:
+            spdlog::error("unsupported vertex format in Pipeline creation");
+            return false;
         }
         vertexAttributes[i].format = format;
         vertexAttributes[i].offset = vertexManifest.offsetForElement(i);
@@ -59,7 +63,7 @@ bool Pipeline::create(const base::Manifest& vertexManifest, const base::Shape* s
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertexInputInfo.vertexBindingDescriptionCount = 1;
     vertexInputInfo.pVertexBindingDescriptions = &vertexBindingDescription;
-    vertexInputInfo.vertexAttributeDescriptionCount = vertexAttributes.size();
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexAttributes.size());
     vertexInputInfo.pVertexAttributeDescriptions = vertexAttributes.data();
 
     // Input Assembly
@@ -169,7 +173,7 @@ bool Pipeline::create(const base::Manifest& vertexManifest, const base::Shape* s
     if (pushConstantBlockSize) {
         pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT;
         pushConstantRange.offset = 0;
-        pushConstantRange.size = pushConstantBlockSize;
+        pushConstantRange.size = static_cast<uint32_t>(pushConstantBlockSize);
         pipelineLayoutInfo.pushConstantRangeCount = 1;
         pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
     } else {
@@ -250,7 +254,7 @@ bool Pipeline::createCompute(std::shared_ptr<vk::Shader> computeShader, VkDescri
     if (pushConstantBlockSize) {
         pushConstantRange.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
         pushConstantRange.offset = 0;
-        pushConstantRange.size = pushConstantBlockSize;
+        pushConstantRange.size = static_cast<uint32_t>(pushConstantBlockSize);
         pipelineLayoutInfo.pushConstantRangeCount = 1;
         pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
     } else {

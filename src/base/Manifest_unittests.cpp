@@ -1,4 +1,4 @@
-#include "gtest/gtest.h"
+#include "base/GTestIncludes.hpp"
 
 #include "base/Manifest.hpp"
 
@@ -32,7 +32,7 @@ TEST(ManifestTest, HomogeneousTypes) {
     EXPECT_EQ(3 * sizeof(float), allFloats.sizeInBytes());
     // All floats should be aligned on their size and represented in the manifest.
     std::unordered_set<std::string> allFloatNames;
-    for (auto i = 0; i < allFloats.numberOfElements(); ++i) {
+    for (size_t i = 0; i < allFloats.numberOfElements(); ++i) {
         EXPECT_EQ("float", allFloats.typeNameForElement(i));
         EXPECT_EQ(sizeof(float), allFloats.strideForElement(i));
         EXPECT_EQ(i * sizeof(float), allFloats.offsetForElement(i));

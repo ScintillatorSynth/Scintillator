@@ -3,9 +3,10 @@
 #include "av/Buffer.hpp"
 #include "av/BufferPool.hpp"
 #include "av/Encoder.hpp"
-#include "comp/Compositor.hpp"
+#include "comp/FrameContext.hpp"
 #include "comp/FrameTimer.hpp"
 #include "comp/RenderSync.hpp"
+#include "comp/RootNode.hpp"
 #include "comp/StageManager.hpp"
 #include "comp/Swapchain.hpp"
 #include "vulkan/CommandBuffer.hpp"
@@ -24,7 +25,7 @@ Offscreen::Offscreen(std::shared_ptr<vk::Device> device, int width, int height, 
     m_numberOfImages(0),
     m_width(width),
     m_height(height),
-    m_frameTimer(new FrameTimer(frameRate)),
+    m_frameTimer(new FrameTimer(device, frameRate)),
     m_framebuffer(new vk::Framebuffer(device)),
     m_renderSync(new RenderSync(device)),
     m_commandPool(new vk::CommandPool(device)),
@@ -65,27 +66,13 @@ bool Offscreen::create(size_t numberOfImages) {
 
     // Prepare for readback by allocating GPU memory for readback images, checking for efficient copy operations from
     // the framebuffer to those readback images, and building command buffers to do the actual readback.
-    for (auto i = 0; i < m_numberOfImages; ++i) {
+    for (size_t i = 0; i < m_numberOfImages; ++i) {
         std::shared_ptr<vk::HostImage> image(new vk::HostImage(m_device));
-        if (!image->create(m_width, m_height)) {
+        if (!image->createWithStride(m_width, m_height, m_bufferPool->stride())) {
             spdlog::error("Offscreen failed to create {} readback images.", m_numberOfImages);
             return false;
         }
         m_readbackImages.push_back(image);
-    }
-
-    // Check if the physical device supports from and to the required formats.
-    m_readbackSupportsBlit = true;
-    VkFormatProperties format;
-    vkGetPhysicalDeviceFormatProperties(m_device->physical(), m_framebuffer->format(), &format);
-    if (!(format.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT)) {
-        spdlog::warn("Offscreen swapchain surface doesn't support blit source, readback will be slow.");
-        m_readbackSupportsBlit = false;
-    }
-    vkGetPhysicalDeviceFormatProperties(m_device->physical(), m_readbackImages[0]->format(), &format);
-    if (!(format.linearTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT)) {
-        spdlog::warn("Offscreen readback image format doesn't support blit destination, readback will be slow.");
-        m_readbackSupportsBlit = false;
     }
 
     // Build the readback commands.
@@ -98,20 +85,10 @@ bool Offscreen::create(size_t numberOfImages) {
         spdlog::error("Offscreen failed to create command buffers.");
         return false;
     }
-    if (m_readbackSupportsBlit) {
-        for (auto i = 0; i < m_numberOfImages; ++i) {
-            if (!writeBlitCommands(m_readbackCommands, i, m_framebuffer->image(i), m_readbackImages[i]->get(),
-                                   VK_IMAGE_LAYOUT_UNDEFINED)) {
-                spdlog::error("Offscreen failed to create readback command buffers.");
-                return false;
-            }
-        }
-    } else {
-        for (auto i = 0; i < m_numberOfImages; ++i) {
-            if (!writeCopyCommands(m_readbackCommands, i, m_framebuffer->image(i), m_readbackImages[i]->get())) {
-                spdlog::error("Offscreen failed to create readback command buffers.");
-                return false;
-            }
+    for (size_t i = 0; i < m_numberOfImages; ++i) {
+        if (!writeCopyCommands(m_readbackCommands, i, m_framebuffer->image(i), m_readbackImages[i]->get())) {
+            spdlog::error("Offscreen failed to create readback command buffers.");
+            return false;
         }
     }
 
@@ -123,14 +100,14 @@ bool Offscreen::supportSwapchain(std::shared_ptr<Swapchain> swapchain, std::shar
     m_swapRenderSync = swapRenderSync;
 
     // Build the transfer from framebuffer to swapchain images command buffers.
-    for (auto i = 0; i < m_numberOfImages; ++i) {
+    for (size_t i = 0; i < m_numberOfImages; ++i) {
         std::shared_ptr<vk::CommandBuffer> buffer(new vk::CommandBuffer(m_device, m_commandPool));
         if (!buffer->create(swapchain->numberOfImages(), true)) {
             spdlog::error("Offscreen failed creating swapchain source blit command buffers.");
             return false;
         }
         // The jth command buffer will blit from the ith framebuffer image to the jth swapchain image.
-        for (auto j = 0; j < swapchain->numberOfImages(); ++j) {
+        for (size_t j = 0; j < swapchain->numberOfImages(); ++j) {
             if (!writeBlitCommands(buffer, j, m_framebuffer->image(i), swapchain->images()[j]->get(),
                                    VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)) {
                 spdlog::error("Offscreen failed writing swapchain source blit command buffers.");
@@ -144,16 +121,16 @@ bool Offscreen::supportSwapchain(std::shared_ptr<Swapchain> swapchain, std::shar
     return true;
 }
 
-void Offscreen::runThreaded(std::shared_ptr<Compositor> compositor) {
+void Offscreen::runThreaded(std::shared_ptr<RootNode> rootNode) {
     m_render = true;
-    m_renderThread = std::thread(&Offscreen::threadMain, this, compositor);
+    m_renderThread = std::thread(&Offscreen::threadMain, this, rootNode);
     m_renderCondition.notify_one();
 }
 
-void Offscreen::run(std::shared_ptr<Compositor> compositor) {
+void Offscreen::run(std::shared_ptr<RootNode> rootNode) {
     m_render = true;
     m_renderCondition.notify_one();
-    threadMain(compositor);
+    threadMain(rootNode);
 }
 
 void Offscreen::addEncoder(std::shared_ptr<scin::av::Encoder> encoder) {
@@ -206,8 +183,6 @@ void Offscreen::destroy() {
     m_swapchain = nullptr;
     m_swapBlitCommands.clear();
 
-    m_computeCommands.clear();
-    m_drawCommands.clear();
     m_pendingEncodes.clear();
     m_readbackImages.clear();
     m_encoders.clear();
@@ -221,10 +196,10 @@ void Offscreen::destroy() {
 
 std::shared_ptr<Canvas> Offscreen::canvas() { return m_framebuffer->canvas(); }
 
-void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
+void Offscreen::threadMain(std::shared_ptr<RootNode> rootNode) {
     spdlog::info("Offscreen render thread starting up.");
 
-    compositor->stageManager()->setStagingRequested([this] {
+    rootNode->stageManager()->setStagingRequested([this] {
         {
             std::lock_guard<std::mutex> lock(m_renderMutex);
             m_stagingRequested = true;
@@ -234,12 +209,12 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
 
     double time = 0.0;
     size_t frameNumber = 0;
-    size_t frameIndex = 0;
+    uint32_t frameIndex = 0;
 
-    m_computeCommands.resize(m_numberOfImages);
-    m_drawCommands.resize(m_numberOfImages);
-    for (auto i = 0; i < m_numberOfImages; ++i) {
-        m_pendingSwapchainBlits.push_back(-1);
+    std::vector<std::shared_ptr<FrameContext>> contexts;
+    for (size_t i = 0; i < m_numberOfImages; ++i) {
+        m_pendingSwapchainBlits.emplace_back(-1);
+        contexts.emplace_back(std::shared_ptr<FrameContext>(new FrameContext(i)));
     }
     m_pendingEncodes.resize(m_numberOfImages);
 
@@ -287,7 +262,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
         }
 
         if (stage) {
-            compositor->stageManager()->submitTransferCommands(m_device->graphicsQueue());
+            rootNode->stageManager()->submitTransferCommands(m_device->graphicsQueue());
         }
         if (swapBlit) {
             blitAndPresent(frameIndex, swapImageIndex);
@@ -304,14 +279,10 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
 
         processPendingEncodes(frameIndex);
 
-        // OK, we now consider the contents of the framebuffer (and any blit targets) as subject to GPU mutation.
-        if (!compositor->prepareFrame(frameIndex, time)) {
-            spdlog::critical("Failed to prepare frame, terminating.");
-            break;
-        }
-
-        m_computeCommands[frameIndex] = compositor->computeCommands();
-        m_drawCommands[frameIndex] = compositor->drawCommands();
+        // OK, we now consider the contents of the framebuffer (and any blit targets) as subject to GPU mutation, so
+        // we can prepare the frame.
+        contexts[frameIndex]->reset(time);
+        rootNode->prepareFrame(contexts[frameIndex]);
 
         VkSubmitInfo drawSubmitInfo = {};
         drawSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -321,14 +292,14 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
         VkPipelineStageFlags computeWaitStage[] = { VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT };
         VkPipelineStageFlags colorWaitStage[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
-        if (m_computeCommands[frameIndex]) {
+        if (contexts[frameIndex]->computeCommands().size()) {
             VkSubmitInfo computeSubmitInfo = {};
             computeSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
             computeSubmitInfo.waitSemaphoreCount = 1;
             computeSubmitInfo.pWaitSemaphores = renderFinished;
             computeSubmitInfo.pWaitDstStageMask = computeWaitStage;
             computeSubmitInfo.commandBufferCount = 1;
-            VkCommandBuffer computeCommandBuffers[] = { m_computeCommands[frameIndex]->buffer(frameIndex) };
+            VkCommandBuffer computeCommandBuffers[] = { contexts[frameIndex]->computePrimary()->buffer(frameIndex) };
             computeSubmitInfo.pCommandBuffers = computeCommandBuffers;
             computeSubmitInfo.signalSemaphoreCount = 1;
             computeSubmitInfo.pSignalSemaphores = computeFinished;
@@ -362,7 +333,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
         drawSubmitInfo.pSignalSemaphores = renderFinished;
 
         std::vector<VkCommandBuffer> drawCommandBuffers;
-        drawCommandBuffers.push_back(m_drawCommands[frameIndex]->buffer(frameIndex));
+        drawCommandBuffers.push_back(contexts[frameIndex]->drawPrimary()->buffer(frameIndex));
 
         // Build list of active encoder frames we need to fill, if any. If we are flushing this frame we will process
         // this list before starting another render. If pipelined, we add this to the list of destinations once we
@@ -389,7 +360,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
 
         m_renderSync->resetFrame(frameIndex);
 
-        drawSubmitInfo.commandBufferCount = drawCommandBuffers.size();
+        drawSubmitInfo.commandBufferCount = static_cast<uint32_t>(drawCommandBuffers.size());
         drawSubmitInfo.pCommandBuffers = drawCommandBuffers.data();
 
         if (vkQueueSubmit(m_device->graphicsQueue(), 1, &drawSubmitInfo, m_renderSync->frameRendering(frameIndex))
@@ -407,7 +378,7 @@ void Offscreen::threadMain(std::shared_ptr<Compositor> compositor) {
 
         time += deltaTime;
         ++frameNumber;
-        frameIndex = frameNumber % m_numberOfImages;
+        frameIndex = static_cast<uint32_t>(frameNumber % m_numberOfImages);
     }
 
     vkDeviceWaitIdle(m_device->get());
