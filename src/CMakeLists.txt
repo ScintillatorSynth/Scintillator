@@ -310,9 +310,7 @@ elseif(UNIX)
     ExternalProject_add(linuxdeploy
         PREFIX ext
         STEP_TARGETS install
-        # TODO(166): restore continuous URL once hang in appimage plugin tool has been fixed
-        #        URL https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-        URL https://artifacts.assassinate-you.net/artifactory/list/linuxdeploy/travis-456/linuxdeploy-x86_64.AppImage
+        URL https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
         DOWNLOAD_NO_EXTRACT ON
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND ""
