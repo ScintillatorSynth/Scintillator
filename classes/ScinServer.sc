@@ -192,6 +192,8 @@ ScinServer {
 		statusPoller.doWhenBooted({ this.prMakeDefaultGroup; });
 		statusPoller.serverBooting = true;
 
+		statusPoller.start;
+
 		Platform.case(
 			\osx, {
 				commandLine = scinBinaryPath.shellQuote + options.asOptionsString() + '--crashpadHandlerPath='

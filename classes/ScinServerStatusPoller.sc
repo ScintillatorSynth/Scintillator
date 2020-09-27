@@ -8,6 +8,8 @@ ScinServerStatusPoller {
 	var lastPingReceived;
 	var bootCallbacks;
 
+	var <active;
+
 	var <serverRunning;
 	var <>serverBooting;
 	var <numberOfScinths;
@@ -27,8 +29,11 @@ ScinServerStatusPoller {
 
 	init {
 		bootCallbacks = List.new;
-		serverRunning = false;
-		serverBooting = false;
+		this.prReset;
+	}
+
+	start {
+		active = true;
 		lastPingReceived = false;
 		statusReplyFunc = OSCFunc.new({ |msg, time, addr|
 			lastPingReceived = true;
@@ -57,7 +62,7 @@ ScinServerStatusPoller {
 			}, {
 				if (serverRunning, {
 					serverRunning = false;
-					this.prOnRunningStop;
+					this.prReset;
 				});
 			});
 			lastPingReceived = false;
@@ -86,9 +91,22 @@ ScinServerStatusPoller {
 		}
 	}
 
-	prOnRunningStop {
+	prReset {
 		// Zero out variables except for errors and warnings, which can be
 		// reset by new server instance.
+		active = false;
+		serverRunning = false;
+		serverBooting = false;
+
+		if (statusReplyFunc.notNil, {
+			statusReplyFunc.free;
+			statusReplyFunc = nil;
+		});
+		if (pingTask.notNil, {
+			pingTask.free;
+			pingTask = nil;
+		});
+
 		numberOfScinths = 0;
 		numberOfGroups = 0;
 		numberOfScinthDefs = 0;
