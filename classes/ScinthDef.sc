@@ -7,6 +7,7 @@ ScinthDef {
 	var <>defServer;
 	var <>controls;
 	var <>controlNames;
+	var <>tweens;
 
 	*new { |name, vGenGraphFunc, shape, renderOptions|
 		^super.newCopyArgs(name.asSymbol, vGenGraphFunc, shape, renderOptions).children_(Array.new(64)).build();
@@ -21,6 +22,7 @@ ScinthDef {
 			});
 		});
 		// renderOptions as nil just means we accept the default
+		tweens = Array.new;
 
 		VGen.buildScinthDef = this;
 		func.valueArray(this.prBuildControls);
@@ -57,6 +59,7 @@ ScinthDef {
 			{ vgen.inputs[i].isNumber } { 1 }
 			{ vgen.inputs[i].isControlVGen } { 1 }
 			{ vgen.inputs[i].isVGen } { children[vgen.inputs[i].scinthIndex].outDims[vgen.inputs[i].outputIndex] }
+			{ vgen.inputs[i].class.asSymbol === 'ScinTween' } { vgen.inputs[i].levelDimension }
 			{ "*** vgen input class: %".format(vgen.inputs[i]).postln; nil; }
 		});
 
@@ -124,6 +127,17 @@ ScinthDef {
 				yaml = yaml ++ depthIndent ++ "  defaultValue: " ++ control.asString ++ "\n";
 			});
 		});
+
+		if (tweens.size > 0, {
+			yaml = yaml ++ indent ++ "tweens:\n";
+			tweens.do({ |tween|
+				yaml = yaml ++ depthIndent ++ "- levels:" + tween.levels.asString ++ "\n";
+				yaml = yaml ++ depthIndent ++ "  times:" + tween.times.asString ++ "\n";
+				yaml = yaml ++ depthIndent ++ "  curve:" + tween.curve.asString ++ "\n";
+				yaml = yaml ++ depthIndent ++ "  sampleRate: " ++ tween.sampleRate.asString ++ "\n";
+			});
+		});
+
 		yaml = yaml ++ indent ++ "vgens:\n";
 		children.do({ |vgen, index|
 			yaml = yaml ++ depthIndent ++ "- className:"  + vgen.name ++ "\n";
@@ -159,6 +173,11 @@ ScinthDef {
 						yaml = yaml ++ secondDepth ++ "  outputIndex: 0\n";
 						yaml = yaml ++ secondDepth ++ "  dimension:" + vgen.inDims[inputIndex] ++ "\n";
 					}
+					{ input.class.asSymbol === 'ScinTween' } {
+						yaml = yaml ++ secondDepth ++ "- type: tween\n";
+						yaml = yaml ++ secondDepth ++ "  tweenIndex:" + input.tweenIndex ++ "\n";
+						yaml = yaml ++ secondDepth ++ "  dimension:" + input.levelDimension ++ "\n";
+					}
 					{ Error.new("unknown input").throw };
 				});
 			});
@@ -191,7 +210,7 @@ ScinthDef {
 
 	checkInputs {
 		var firstErr;
-		children.do { | vgen |
+		children.do { |vgen|
 			var err;
 			if((err = vgen.checkInputs).notNil) {
 				err = vgen.class.asString + err;

@@ -21,7 +21,8 @@ table::
 ## code::name:: || string || name of the ScinthDef, used as primary means of identification
 ## code::shape:: || dictionary || A map describing the geometry to render the ScinthDef with
 ## code::options:: || dictionary || A emphasis::optional:: map describing rendering options for the ScinthDef
-## code::parameters:: || list || An emphasis::optional:: key, if the ScinthDef has parameters, will be Parameter YAML dictionaries in an ordered list
+## code::parameters:: || list || An emphasis::optional:: key, if the ScinthDef has parameters, will be parameter dictionaries in an ordered list
+## code::tweens:: || list || An emphasis::optional:: key, an ordered list of tween dictionaries
 ## code::vgens:: || list || the VGen YAML dictionaries in an ordered list
 ::
 
@@ -44,10 +45,24 @@ table::
 
 subsection::Parameter Dictionary Spec
 
+Specifies the parameters that can be modifed by OSC commands such as code::/scin_n_set:: while Scinth instances of this ScinthDef are running.
+
 table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
 ## code::name:: || string || Name of the parameter.
 ## code::defaultValue:: || float || The default value of the parameter.
+::
+
+subsection::Tween Dictionary Spec
+
+As Scintillator precomputes tween curves at ScinthDef time and saves them into textures, tweens are specified separately from VGens. This ordered list of dictionary entries allows VGens to specify tween curves as inputs by choosing an index.
+
+table::
+## strong::key:: || strong::YAML type:: || strong::notes::
+## code::levels:: || list || A list of either individual float elements or sublists of 1-4 float elements, supporting envelopes that are 1-4 dimensions.
+## code::times:: || list || A list of individual float elements, of the same length as levels, giving durations of segments in seconds.
+## code::curve:: || string or list || Determines the shape of the envelope segments. If one string is provided all segments are assigned that shape, or this can be a list that specifies individual shapes for each segment. For the list of currently supported shapes see the link::Classes/VTween:: documentation.
+## code::sampleRate:: || float || Specified as samples per second, controls how often the entire tweening function should be sampled
 ::
 
 subsection::VGen Dictionary Spec
@@ -65,7 +80,7 @@ table::
 
 subsection::VGen Sampler Dictionary Spec
 
-Sampling VGens must include the sampler dictionary, which contains configuration data for the image sampler. For more details see the documentation on link::Classes/Sampler:: parameters.
+Sampling VGens must include the sampler dictionary, which contains configuration data for the image sampler. For more details see the documentation on link::Classes/VSampler:: parameters.
 
 table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
@@ -109,6 +124,11 @@ table::
 table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
 ## code::index:: || int || The parameter index to use.
+::
+## code::tween:: ||
+table::
+## strong::key:: || strong::YAML type:: || strong::notes::
+## code::tweenIndex:: || int || The tween index to use.
 ::
 ::
 
