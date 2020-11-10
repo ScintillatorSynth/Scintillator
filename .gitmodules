@@ -26,3 +26,6 @@
 [submodule "third_party/portaudio"]
 	path = third_party/portaudio
 	url = https://git.assembla.com/portaudio.git
+[submodule "third_party/tweeny"]
+	path = third_party/tweeny
+	url = https://github.com/mobius3/tweeny
