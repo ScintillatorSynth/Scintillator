@@ -241,7 +241,7 @@ bool Scinth::allocateDescriptors() {
         std::vector<VkDescriptorImageInfo> imageInfos(totalSamplers);
         auto samplerIndex = 0;
         auto imageInfoIndex = 0;
-        for (const auto pair : m_scinthDef->abstract()->drawFixedImages()) {
+        for (const auto& pair : m_scinthDef->abstract()->drawFixedImages()) {
             std::shared_ptr<vk::DeviceImage> image = m_imageMap->getImage(pair.second);
             if (!image) {
                 spdlog::error("Scinth {} failed to find constant image ID {}.", m_nodeID, pair.second);
@@ -271,7 +271,7 @@ bool Scinth::allocateDescriptors() {
         }
 
         samplerIndex = 0;
-        for (const auto pair : m_scinthDef->abstract()->drawParameterizedImages()) {
+        for (const auto& pair : m_scinthDef->abstract()->drawParameterizedImages()) {
             // Look up default value of parameter using parameter index, provided as second value in the pair.
             size_t parameterIndex = pair.second;
             size_t imageID = static_cast<int>(m_scinthDef->abstract()->parameters()[parameterIndex].defaultValue());
