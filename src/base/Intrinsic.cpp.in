@@ -12,6 +12,7 @@
 #elif __GNUC__ || __clang__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#pragma GCC diagnostic ignored "-Wregister"
 #endif
 
 namespace {

@@ -545,7 +545,7 @@ void RootNode::rebuildCommandBuffer(std::shared_ptr<FrameContext> context) {
             }
 
             std::vector<VkCommandBuffer> commandBuffers;
-            for (const auto command : context->computeCommands()) {
+            for (const auto& command : context->computeCommands()) {
                 commandBuffers.emplace_back(command->buffer(i));
             }
             vkCmdExecuteCommands(m_computePrimary->buffer(i), static_cast<uint32_t>(commandBuffers.size()),
@@ -599,7 +599,7 @@ void RootNode::rebuildCommandBuffer(std::shared_ptr<FrameContext> context) {
                                  VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
             std::vector<VkCommandBuffer> commandBuffers;
-            for (const auto command : context->drawCommands()) {
+            for (const auto& command : context->drawCommands()) {
                 commandBuffers.emplace_back(command->buffer(i));
             }
             vkCmdExecuteCommands(m_drawPrimary->buffer(i), static_cast<uint32_t>(commandBuffers.size()),

@@ -5,7 +5,7 @@ echo "*** installing pyyaml"
 cd $HOME
 git clone https://github.com/yaml/pyyaml.git pyyaml
 cd pyyaml
-/c/Python38/python.exe setup.py install
+/c/Python39/python.exe setup.py install
 
 echo "*** installing Vulkan SDK"
 cd $HOME
@@ -14,6 +14,6 @@ powershell "./vulkan-sdk.exe /S"
 
 echo "*** installing build binary deps"
 cd $TRAVIS_BUILD_DIR
-/c/Python38/python.exe tools/fetch-binary-deps.py
-/c/Python38/python.exe tools/fetch-sclang.py $TRAVIS_HOME/sclang
+/c/Python39/python.exe tools/fetch-binary-deps.py
+/c/Python39/python.exe tools/fetch-sclang.py $TRAVIS_HOME/sclang
 
