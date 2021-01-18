@@ -1,13 +1,13 @@
-#ifndef SRC_CORE_VGEN_HPP_
-#define SRC_CORE_VGEN_HPP_
+#ifndef SRC_BASE_VGEN_HPP_
+#define SRC_BASE_VGEN_HPP_
 
 #include "base/AbstractSampler.hpp"
 #include "base/AbstractVGen.hpp"
 
+#include <glm/glm.hpp>
+
 #include <memory>
 #include <vector>
-
-#include "glm/glm.hpp"
 
 namespace scin { namespace base {
 
@@ -149,4 +149,4 @@ private:
 
 } // namespace scin
 
-#endif // SRC_CORE_VGEN_HPP_
+#endif // SRC_BASE_VGEN_HPP_

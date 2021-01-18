@@ -424,6 +424,7 @@ target_link_libraries(scinsynth
     portaudio_static
     scintillator_base
     spdlog
+    tweeny
 )
 
 target_include_directories(scinsynth PRIVATE
