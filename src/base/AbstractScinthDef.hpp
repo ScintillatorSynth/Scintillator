@@ -1,5 +1,5 @@
-#ifndef SRC_CORE_ABSTRACT_SCINTHDEF_HPP_
-#define SRC_CORE_ABSTRACT_SCINTHDEF_HPP_
+#ifndef SRC_BASE_ABSTRACT_SCINTHDEF_HPP_
+#define SRC_BASE_ABSTRACT_SCINTHDEF_HPP_
 
 #include "base/AbstractVGen.hpp"
 #include "base/Intrinsic.hpp"
@@ -161,4 +161,4 @@ private:
 } // namespace base
 } // namespace scin
 
-#endif // SRC_CORE_ABSTRACT_SCINTHDEF_HPP_
+#endif // SRC_BASE_ABSTRACT_SCINTHDEF_HPP_

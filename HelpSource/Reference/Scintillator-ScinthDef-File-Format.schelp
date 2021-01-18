@@ -60,9 +60,10 @@ As Scintillator precomputes tween curves at ScinthDef time and saves them into t
 table::
 ## strong::key:: || strong::YAML type:: || strong::notes::
 ## code::levels:: || list || A list of either individual float elements or sublists of 1-4 float elements, supporting envelopes that are 1-4 dimensions.
-## code::times:: || list || A list of individual float elements, of the same length as levels, giving durations of segments in seconds.
+## code::durations:: || list || A list of individual float elements, of the same length as levels, giving durations of segments in seconds.
 ## code::curve:: || string or list || Determines the shape of the envelope segments. If one string is provided all segments are assigned that shape, or this can be a list that specifies individual shapes for each segment. For the list of currently supported shapes see the link::Classes/VTween:: documentation.
 ## code::sampleRate:: || float || Specified as samples per second, controls how often the entire tweening function should be sampled
+## code::dimension:: || int || A number from 1-4, describes the dimension of the level values
 ::
 
 subsection::VGen Dictionary Spec

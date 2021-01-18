@@ -108,5 +108,5 @@ endif()
 add_subdirectory(portaudio)
 
 ### tweeny
-add_subdirectory(tweeny)
+add_subdirectory(tweeny EXCLUDE_FROM_ALL)
 
