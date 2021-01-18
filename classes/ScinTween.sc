@@ -1,10 +1,51 @@
 ScinTween {
-	var <levels, <times, <curve, <sampleRate;
+	classvar <tweenNames;
+
+	var <levels, <times, <curves, <sampleRate;
 	var <>tweenIndex;
 
-	*new { |levels = #[0, 1, 0], times = #[1, 1], curve=\lin, sampleRate = 120|
+	*initClass {
+		// These values need to match those specified in Tween.hpp in scinserver.
+		tweenNames = IdentityDictionary.newFrom(
+			(
+				backIn: 0,
+				backInOut: 1,
+				bounceIn: 2,
+				bounceInOut: 3,
+				bounceOut: 4,
+				circularIn: 5,
+				circularInOut: 6,
+				circularOut: 7,
+				cubicIn: 8,
+				cubicInOut: 9,
+				cubicOut: 10,
+				elasticIn: 11,
+				elasticInOut: 12,
+				elasticOut: 13,
+				exponentialIn: 14,
+				exponentialInOut: 15,
+				exponentialOut: 16,
+				linear: 17,
+				quadraticIn: 18,
+				quadraticInOut: 19,
+				quadraticOut: 20,
+				quarticIn: 21,
+				quarticInOut: 22,
+				quarticOut: 23,
+				quinticIn: 24,
+				quinticInOut: 25,
+				quinticOut: 26,
+				sinusodalIn: 27,
+				sinusodalInOut: 28,
+				sinusodalOut: 29
+			)
+		);
+
+	}
+
+	*new { |levels = #[0, 1, 0], times = #[1, 1], curves=\linear, sampleRate = 120|
 		times = times.asArray.wrapExtend(levels.size - 1);
-		^super.newCopyArgs(levels, times, curve, sampleRate);
+		^super.newCopyArgs(levels, times, curves, sampleRate);
 	}
 
 	levelDimension {

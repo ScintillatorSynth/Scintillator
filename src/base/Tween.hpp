@@ -11,40 +11,41 @@ namespace scin { namespace base {
  */
 struct Tween {
 public:
-    Tween(int dimension, float sampleRate);
-    ~Tween();
+    Tween(int dimension, float sampleRate, const std::vector<glm::vec4>& levels,
+        const std::vector<float>& durations, const std::vector<Curve>& curves);
+    ~Tween() = default;
 
     enum Curve {
-        kBackIn,
-        kBackInOut,
-        kBounceIn,
-        kBounceInOut,
-        kBounceOut,
-        kCircularIn,
-        kCircularInOut,
-        kCircularOut,
-        kCubicIn,
-        kCubicInOut,
-        kCubicOut,
-        kElasticIn,
-        kElasticInOut,
-        kElasticOut,
-        kExponentialIn,
-        kExponentialInOut,
-        kExponentialOut,
-        kLinear,
-        kQuadraticIn,
-        kQuadraticInOut,
-        kQuadraticOut,
-        kQuarticIn,
-        kQuarticInOut,
-        kQuarticOut,
-        kQuinticIn,
-        kQuinticInOut,
-        kQuinticOut,
-        kSinusodalIn,
-        kSinusodalInOut,
-        kSinusodalOut
+        kBackIn = 0,
+        kBackInOut = 1,
+        kBounceIn = 2,
+        kBounceInOut = 3,
+        kBounceOut = 4,
+        kCircularIn = 5,
+        kCircularInOut = 6,
+        kCircularOut = 7,
+        kCubicIn = 8,
+        kCubicInOut = 9,
+        kCubicOut = 10,
+        kElasticIn = 11,
+        kElasticInOut = 12,
+        kElasticOut = 13,
+        kExponentialIn = 14,
+        kExponentialInOut = 15,
+        kExponentialOut = 16,
+        kLinear = 17,
+        kQuadraticIn = 18,
+        kQuadraticInOut = 19,
+        kQuadraticOut = 20,
+        kQuarticIn = 21,
+        kQuarticInOut = 22,
+        kQuarticOut = 23,
+        kQuinticIn = 24,
+        kQuinticInOut = 25,
+        kQuinticOut = 26,
+        kSinusodalIn = 27,
+        kSinusodalInOut = 28,
+        kSinusodalOut = 29
     };
 
     int dimension() const { return m_dimension; }

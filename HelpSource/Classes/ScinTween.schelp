@@ -1,0 +1,87 @@
+TITLE:: ScinTween
+summary:: Describes a sequence of curves for use in animating VGen properties
+categories:: Quarks > Scintillator > Scinth
+related:: Classes/VTweenGen, Classes/ScinthDef
+
+DESCRIPTION::
+(put long description here)
+
+
+CLASSMETHODS::
+
+METHOD:: initClass
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: tweenNames
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: new
+(describe method here)
+
+ARGUMENT:: levels
+(describe argument here)
+
+ARGUMENT:: times
+(describe argument here)
+
+ARGUMENT:: curves
+(describe argument here)
+
+ARGUMENT:: sampleRate
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+
+INSTANCEMETHODS::
+
+METHOD:: sampleRate
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: times
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: tweenIndex
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: curves
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: levelDimension
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: levels
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: asVGenInput
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: isValidVGenInput
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+
+EXAMPLES::
+
+code::
+(some example code)
+::

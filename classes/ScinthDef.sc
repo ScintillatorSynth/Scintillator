@@ -133,7 +133,11 @@ ScinthDef {
 			tweens.do({ |tween|
 				yaml = yaml ++ depthIndent ++ "- levels:" + tween.levels.asString ++ "\n";
 				yaml = yaml ++ depthIndent ++ "  times:" + tween.times.asString ++ "\n";
-				yaml = yaml ++ depthIndent ++ "  curve:" + tween.curve.asString ++ "\n";
+				if (tween.curve.isArray, {
+					yaml = yaml ++ depthIndent ++ "  curves:" + ScinTween.tweenNames.atAll(tween.curve).asString ++ "\n";
+				}, {
+					yaml = yaml ++ depthIndent ++ "  curves:" + ScinTween.tweenNames.at(tween.curve).asString ++ "\n";
+				});
 				yaml = yaml ++ depthIndent ++ "  sampleRate: " ++ tween.sampleRate.asString ++ "\n";
 			});
 		});
