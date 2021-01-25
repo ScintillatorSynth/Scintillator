@@ -2,11 +2,11 @@
 
 #include "base/AbstractSampler.hpp"
 #include "base/AbstractScinthDef.hpp"
+#include "base/AbstractTween.hpp"
 #include "base/AbstractVGen.hpp"
 #include "base/Parameter.hpp"
 #include "base/RenderOptions.hpp"
 #include "base/Shape.hpp"
-#include "base/Tween.hpp"
 #include "base/VGen.hpp"
 
 #include "spdlog/spdlog.h"
@@ -262,7 +262,7 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
     }
 
     // Parse tween list if present.
-    std::vector<Tween> tweens;
+    std::vector<AbstractTween> tweens;
     if (node["tweens"]) {
         if (!node["tweens"].IsSequence()) {
             spdlog::error("ScinthDef named {} got non-sequence tweens key", name);
@@ -292,12 +292,12 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
                 spdlog::error("ScinthDef {} has absent or malformed curves key within tween.", name);
                 return nullptr;
             }
-            std::vector<Tween::Curve> curves;
+            std::vector<AbstractTween::Curve> curves;
             if (tween["curves"].IsScalar()) {
-                curves.emplace_back(static_cast<Tween::Curve>(tween["curves"].as<int>()));
+                curves.emplace_back(static_cast<AbstractTween::Curve>(tween["curves"].as<int>()));
             } else if (tween["curves"].IsSequence()) {
                 for (auto curve : tween["curves"]) {
-                    curves.emplace_back(static_cast<Tween::Curve>(curve.as<int>()));
+                    curves.emplace_back(static_cast<AbstractTween::Curve>(curve.as<int>()));
                 }
             } else {
                 spdlog::error("ScinthDef {} has tween with invalid curves key.", name);
@@ -362,7 +362,7 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
                 return nullptr;
             }
 
-            Tween tn(dimension, sampleRate, totalTime, loop, levels, durations, curves);
+            AbstractTween tn(dimension, sampleRate, totalTime, loop, levels, durations, curves);
             if (!tn.validate()) {
                 spdlog::error("ScinthDef {} has invalid tween.", name);
                 return nullptr;

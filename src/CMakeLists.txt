@@ -31,6 +31,8 @@ add_library(scintillator_base STATIC
     base/AbstractSampler.hpp
     base/AbstractScinthDef.cpp
     base/AbstractScinthDef.hpp
+    base/AbstractTween.cpp
+    base/AbstractTween.hpp
     base/AbstractVGen.cpp
     base/AbstractVGen.hpp
     base/Archetypes.cpp
@@ -45,8 +47,6 @@ add_library(scintillator_base STATIC
     base/RenderOptions.hpp
     base/Shape.cpp
     base/Shape.hpp
-    base/Tween.cpp
-    base/Tween.hpp
     base/VGen.cpp
     base/VGen.hpp
 )

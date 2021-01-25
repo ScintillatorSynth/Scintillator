@@ -1,9 +1,10 @@
-#include "base/Tween.hpp"
+#include "base/AbstractTween.hpp"
 
 namespace scin { namespace base {
 
-Tween::Tween(int dimension, float sampleRate, float totalTime, bool loop, const std::vector<glm::vec4>& levels,
-             const std::vector<float>& durations, const std::vector<Curve>& curves):
+AbstractTween::AbstractTween(int dimension, float sampleRate, float totalTime, bool loop,
+                             const std::vector<glm::vec4>& levels, const std::vector<float>& durations,
+                             const std::vector<Curve>& curves):
     m_dimension(dimension),
     m_sampleRate(sampleRate),
     m_totalTime(totalTime),
@@ -12,7 +13,7 @@ Tween::Tween(int dimension, float sampleRate, float totalTime, bool loop, const 
     m_durations(durations),
     m_curves(curves) {}
 
-bool Tween::validate() const {
+bool AbstractTween::validate() const {
     bool valid = m_dimension > 0 && m_dimension < 5 && m_dimension != 3;
     valid &= m_levels.size() > 1;
     valid &= m_levels.size() - 1 == m_durations.size();

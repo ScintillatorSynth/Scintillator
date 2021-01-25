@@ -1,12 +1,12 @@
 #ifndef SRC_BASE_ABSTRACT_SCINTHDEF_HPP_
 #define SRC_BASE_ABSTRACT_SCINTHDEF_HPP_
 
+#include "base/AbstractTween.hpp"
 #include "base/AbstractVGen.hpp"
 #include "base/Intrinsic.hpp"
 #include "base/Manifest.hpp"
 #include "base/Parameter.hpp"
 #include "base/RenderOptions.hpp"
-#include "base/Tween.hpp"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -50,12 +50,12 @@ public:
      * \param shape The shape object associated with this.
      * \param renderOptions A RenderOptions object detailing the options to use rendering this ScinthDef
      * \param parameters A list of Parameter objects, in order.
-     * \param tweens A list of Tween objects, in order.
+     * \param tweens A list of AbstractTween objects, in order.
      * \param instances The VGens in topological order from inputs to output. It is assumed these have been individually
      *        validated already, meaning that each VGen has appropriate rate and input configuration.
      */
     AbstractScinthDef(const std::string& name, std::unique_ptr<Shape> shape, const RenderOptions& renderOptions,
-                      const std::vector<Parameter>& parameters, const std::vector<Tween>& tweens,
+                      const std::vector<Parameter>& parameters, const std::vector<AbstractTween>& tweens,
                       const std::vector<VGen>& instances);
 
     /*! Destructs an AbstractScinthDef and all associated resources.
@@ -80,7 +80,7 @@ public:
     const Shape* shape() const { return m_shape.get(); }
     const RenderOptions& renderOptions() const { return m_renderOptions; }
     const std::vector<Parameter>& parameters() const { return m_parameters; }
-    const std::vector<Tween>& tweens() const { return m_tweens; }
+    const std::vector<AbstractTween>& tweens() const { return m_tweens; }
     const std::vector<VGen>& instances() const { return m_instances; }
 
     // First element in pair is sampler key, second element is the imageID.
@@ -128,7 +128,7 @@ private:
     std::unique_ptr<Shape> m_shape;
     RenderOptions m_renderOptions;
     std::vector<Parameter> m_parameters;
-    std::vector<Tween> m_tweens;
+    std::vector<AbstractTween> m_tweens;
     std::vector<VGen> m_instances;
 
     // These are pairs of sampler config, image or parameter index, grouped into sets to de-dupe the pairs.

@@ -32,23 +32,109 @@
 namespace {
 
 template <typename T, typename... Ts>
-tweeny::tween<T, Ts...>& applyCurve(scin::base::Tween::Curve curve, tweeny::tween<T, Ts...>& tween) {
+tweeny::tween<T, Ts...>& applyCurve(scin::base::AbstractTween::Curve curve, tweeny::tween<T, Ts...>& tween) {
     switch (curve) {
-    case scin::base::Tween::Curve::kBackIn:
+    case scin::base::AbstractTween::Curve::kBackIn:
         return tween.via(tweeny::easing::backIn);
-        break;
 
-    default:
-        break;
+    case scin::base::AbstractTween::Curve::kBackInOut:
+        return tween.via(tweeny::easing::backInOut);
+
+    case scin::base::AbstractTween::Curve::kBackOut:
+        return tween.via(tweeny::easing::backOut);
+
+    case scin::base::AbstractTween::Curve::kBounceIn:
+        return tween.via(tweeny::easing::bounceIn);
+
+    case scin::base::AbstractTween::Curve::kBounceInOut:
+        return tween.via(tweeny::easing::bounceInOut);
+
+    case scin::base::AbstractTween::Curve::kBounceOut:
+        return tween.via(tweeny::easing::bounceOut);
+
+    case scin::base::AbstractTween::Curve::kCircularIn:
+        return tween.via(tweeny::easing::circularIn);
+
+    case scin::base::AbstractTween::Curve::kCircularInOut:
+        return tween.via(tweeny::easing::circularInOut);
+
+    case scin::base::AbstractTween::Curve::kCircularOut:
+        return tween.via(tweeny::easing::circularOut);
+
+    case scin::base::AbstractTween::Curve::kCubicIn:
+        return tween.via(tweeny::easing::cubicIn);
+
+    case scin::base::AbstractTween::Curve::kCubicInOut:
+        return tween.via(tweeny::easing::cubicInOut);
+
+    case scin::base::AbstractTween::Curve::kCubicOut:
+        return tween.via(tweeny::easing::cubicOut);
+
+    case scin::base::AbstractTween::Curve::kElasticIn:
+        return tween.via(tweeny::easing::elasticIn);
+
+    case scin::base::AbstractTween::Curve::kElasticInOut:
+        return tween.via(tweeny::easing::elasticInOut);
+
+    case scin::base::AbstractTween::Curve::kElasticOut:
+        return tween.via(tweeny::easing::elasticOut);
+
+    case scin::base::AbstractTween::Curve::kExponentialIn:
+        return tween.via(tweeny::easing::exponentialIn);
+
+    case scin::base::AbstractTween::Curve::kExponentialInOut:
+        return tween.via(tweeny::easing::exponentialInOut);
+
+    case scin::base::AbstractTween::Curve::kExponentialOut:
+        return tween.via(tweeny::easing::exponentialOut);
+
+    case scin::base::AbstractTween::Curve::kLinear:
+        return tween.via(tweeny::easing::linear);
+
+    case scin::base::AbstractTween::Curve::kQuadraticIn:
+        return tween.via(tweeny::easing::quadraticIn);
+
+    case scin::base::AbstractTween::Curve::kQuadraticInOut:
+        return tween.via(tweeny::easing::quadraticInOut);
+
+    case scin::base::AbstractTween::Curve::kQuadraticOut:
+        return tween.via(tweeny::easing::quadraticOut);
+
+    case scin::base::AbstractTween::Curve::kQuarticIn:
+        return tween.via(tweeny::easing::quarticIn);
+
+    case scin::base::AbstractTween::Curve::kQuarticInOut:
+        return tween.via(tweeny::easing::quarticInOut);
+
+    case scin::base::AbstractTween::Curve::kQuarticOut:
+        return tween.via(tweeny::easing::quarticOut);
+
+    case scin::base::AbstractTween::Curve::kQuinticIn:
+        return tween.via(tweeny::easing::quinticIn);
+
+    case scin::base::AbstractTween::Curve::kQuinticInOut:
+        return tween.via(tweeny::easing::quinticInOut);
+
+    case scin::base::AbstractTween::Curve::kQuinticOut:
+        return tween.via(tweeny::easing::quinticOut);
+
+    case scin::base::AbstractTween::Curve::kSinusoidalIn:
+        return tween.via(tweeny::easing::sinusoidalIn);
+
+    case scin::base::AbstractTween::Curve::kSinusoidalInOut:
+        return tween.via(tweeny::easing::sinusoidalInOut);
+
+    case scin::base::AbstractTween::Curve::kSinusoidalOut:
+        return tween.via(tweeny::easing::sinusoidalOut);
     }
 
     return tween;
 }
 
-void fillTween1(size_t numberOfSamples, const scin::base::Tween& abstractTween,
+void fillTween1(size_t numberOfSamples, const scin::base::AbstractTween& abstractTween,
                 std::shared_ptr<scin::vk::HostBuffer> hostTable) {
     auto tween = tweeny::from(abstractTween.levels()[0].x);
-    scin::base::Tween::Curve curve = abstractTween.curves()[0];
+    scin::base::AbstractTween::Curve curve = abstractTween.curves()[0];
     for (size_t i = 0; i < abstractTween.durations().size(); ++i) {
         int32_t durationMs = static_cast<int32_t>(abstractTween.durations()[i] * 1000.0f);
         if (durationMs == 0) {
@@ -70,10 +156,10 @@ void fillTween1(size_t numberOfSamples, const scin::base::Tween& abstractTween,
     }
 }
 
-void fillTween2(size_t numberOfSamples, const scin::base::Tween& abstractTween,
+void fillTween2(size_t numberOfSamples, const scin::base::AbstractTween& abstractTween,
                 std::shared_ptr<scin::vk::HostBuffer> hostTable) {
     auto tween = tweeny::from(abstractTween.levels()[0].x, abstractTween.levels()[0].y);
-    scin::base::Tween::Curve curve = abstractTween.curves()[0];
+    scin::base::AbstractTween::Curve curve = abstractTween.curves()[0];
     for (size_t i = 0; i < abstractTween.durations().size(); ++i) {
         int32_t durationMs = static_cast<int32_t>(abstractTween.durations()[i] * 1000.0f);
         if (durationMs == 0) {
@@ -97,11 +183,11 @@ void fillTween2(size_t numberOfSamples, const scin::base::Tween& abstractTween,
     }
 }
 
-void fillTween4(size_t numberOfSamples, const scin::base::Tween& abstractTween,
+void fillTween4(size_t numberOfSamples, const scin::base::AbstractTween& abstractTween,
                 std::shared_ptr<scin::vk::HostBuffer> hostTable) {
     auto tween = tweeny::from(abstractTween.levels()[0].x, abstractTween.levels()[0].y, abstractTween.levels()[0].z,
                               abstractTween.levels()[0].w);
-    scin::base::Tween::Curve curve = abstractTween.curves()[0];
+    scin::base::AbstractTween::Curve curve = abstractTween.curves()[0];
     for (size_t i = 0; i < abstractTween.durations().size(); ++i) {
         int32_t durationMs = static_cast<int32_t>(abstractTween.durations()[i] * 1000.0f);
         if (durationMs == 0) {
