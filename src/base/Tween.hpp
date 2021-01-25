@@ -11,10 +11,6 @@ namespace scin { namespace base {
  */
 struct Tween {
 public:
-    Tween(int dimension, float sampleRate, const std::vector<glm::vec4>& levels,
-        const std::vector<float>& durations, const std::vector<Curve>& curves);
-    ~Tween() = default;
-
     enum Curve {
         kBackIn = 0,
         kBackInOut = 1,
@@ -48,16 +44,26 @@ public:
         kSinusodalOut = 29
     };
 
+    Tween(int dimension, float sampleRate, float totalTime, bool loop, const std::vector<glm::vec4>& levels,
+          const std::vector<float>& durations, const std::vector<Curve>& curves);
+    ~Tween() = default;
+
+    bool validate() const;
+
     int dimension() const { return m_dimension; }
     float sampleRate() const { return m_sampleRate; }
+    float totalTime() const { return m_totalTime; }
+    bool loop() const { return m_loop; }
 
     const std::vector<glm::vec4>& levels() const { return m_levels; }
     const std::vector<float>& durations() const { return m_durations; }
-    const std::vector<Curve>& curves() const { return m_curve; }
+    const std::vector<Curve>& curves() const { return m_curves; }
 
 private:
     int m_dimension;
     float m_sampleRate;
+    float m_totalTime;
+    bool m_loop;
 
     std::vector<glm::vec4> m_levels;
     std::vector<float> m_durations;
@@ -67,4 +73,4 @@ private:
 } // namespace base
 } // namespace scin
 
-#define SRC_BASE_TWEEN_HPP_
+#endif // SRC_BASE_TWEEN_HPP_

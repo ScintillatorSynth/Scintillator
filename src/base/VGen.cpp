@@ -6,7 +6,9 @@ namespace scin { namespace base {
 
 VGen::VGen(std::shared_ptr<const AbstractVGen> abstractVGen, AbstractVGen::Rates rate):
     m_abstractVGen(abstractVGen),
-    m_rate(rate) {}
+    m_rate(rate),
+    m_imageIndex(0),
+    m_tweenIndex(-1) {}
 
 VGen::~VGen() {}
 
@@ -15,6 +17,8 @@ void VGen::setSamplerConfig(size_t imageIndex, InputType imageArgType, const Abs
     m_imageArgType = imageArgType;
     m_abstractSampler = sampler;
 }
+
+void VGen::setTweenIndex(int tweenIndex) { m_tweenIndex = tweenIndex; }
 
 void VGen::addConstantInput(float constantValue) { m_inputs.emplace_back(VGenInput(constantValue)); }
 void VGen::addConstantInput(glm::vec2 constantValue) { m_inputs.emplace_back(VGenInput(constantValue)); }

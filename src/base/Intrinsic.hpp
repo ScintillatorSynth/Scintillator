@@ -5,7 +5,18 @@
 
 namespace scin { namespace base {
 
-enum Intrinsic : int { kFragCoord, kNormPos, kPi, kPosition, kSampler, kTime, kTexPos, kNotFound };
+enum Intrinsic : int {
+    kFragCoord,
+    kNormPos,
+    kPi,
+    kPosition,
+    kSampler,
+    kTime,
+    kTexPos,
+    kTweenDuration,
+    kTweenSampler,
+    kNotFound
+};
 
 /*! Returns Intrinsic enum associated with name, or kNotFound if no Intrinsic found by that name.
  *

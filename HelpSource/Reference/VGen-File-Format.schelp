@@ -12,6 +12,7 @@ table::
 ## code::name:: || string || strong::required:: || The name of the VGen, must be unique. Used to identify this VGen in ScinthDef descriptions.
 ## code::rates:: || list || strong::required:: || A list of strings identifying the rates the VGen supports, at least one of code::frame::, code::shape::, code::pixel::.
 ## code::sampler:: || boolean || optional || If present, specifies if this VGen is a sampling VGen that will take an image input. If not present, the value is assumed to be false.
+## code::tween:: || boolean || optional || If present, specifices if this VGen has a tween table to sample.
 ## code::inputs:: || list || optional || A list identifying input names in the shader program. The ordering of inputs here must match the ordering of inputs on the ScinthDef, as those inputs can be supplied unnamed.
 ## code::outputs:: || list || strong::required:: || A list of strings identifying names of output parameters. At least one element must exist in this list.
 ## code::dimensions:: || list || strong::required:: || A list of dictionaries of keys mapping dimension on inputs to dimension on outputs of the VGen (see below).
@@ -43,6 +44,8 @@ table::
 ## code::@sampler:: || n/a || frame || The curently configured and bound sampler and image. Only usable in sampling VGens.
 ## code::@time:: || 1 || frame || The runtime of the Scinth instance in seconds.
 ## code::@texPos:: || 2 || shape || Position of the fragment in texture coordinates space.
+## code::@tweenSampler:: || n/a || frame || The currently configured and bound sampler of the tween. Only usable in tween VGens.
+## code::@tweenDuration:: || 1 || frame || The total duration of the tween in seconds. Only usable in tween VGens.
 ::
 
 subsection::@fragCoord

@@ -9,14 +9,128 @@
 #include "comp/SamplerFactory.hpp"
 #include "comp/Scinth.hpp"
 #include "comp/ShaderCompiler.hpp"
+#include "comp/StageManager.hpp"
 #include "vulkan/Buffer.hpp"
 #include "vulkan/CommandPool.hpp"
 #include "vulkan/Device.hpp"
+#include "vulkan/Image.hpp"
 
 #include "glm/glm.hpp"
 #include "spdlog/spdlog.h"
 
+#if __GNUC__ || __clang__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
+#include "tweeny.h"
+#if __GNUC__ || __clang__
+#    pragma GCC diagnostic pop
+#endif
+
 #include <array>
+
+namespace {
+
+template <typename T, typename... Ts>
+tweeny::tween<T, Ts...>& applyCurve(scin::base::Tween::Curve curve, tweeny::tween<T, Ts...>& tween) {
+    switch (curve) {
+    case scin::base::Tween::Curve::kBackIn:
+        return tween.via(tweeny::easing::backIn);
+        break;
+
+    default:
+        break;
+    }
+
+    return tween;
+}
+
+void fillTween1(size_t numberOfSamples, const scin::base::Tween& abstractTween,
+                std::shared_ptr<scin::vk::HostBuffer> hostTable) {
+    auto tween = tweeny::from(abstractTween.levels()[0].x);
+    scin::base::Tween::Curve curve = abstractTween.curves()[0];
+    for (size_t i = 0; i < abstractTween.durations().size(); ++i) {
+        int32_t durationMs = static_cast<int32_t>(abstractTween.durations()[i] * 1000.0f);
+        if (durationMs == 0) {
+            continue;
+        }
+        if (i < abstractTween.curves().size()) {
+            curve = abstractTween.curves()[i];
+        }
+        tween = tween.to(abstractTween.levels()[i + 1].x).during(durationMs);
+        tween = applyCurve(curve, tween);
+    }
+
+    float* values = static_cast<float*>(hostTable->mappedAddress());
+    for (size_t i = 0; i < numberOfSamples; ++i) {
+        int32_t t = static_cast<int32_t>(abstractTween.totalTime() * 1000.0f * static_cast<float>(i)
+                                         / static_cast<float>(numberOfSamples - 1));
+        *values = tween.seek(t);
+        ++values;
+    }
+}
+
+void fillTween2(size_t numberOfSamples, const scin::base::Tween& abstractTween,
+                std::shared_ptr<scin::vk::HostBuffer> hostTable) {
+    auto tween = tweeny::from(abstractTween.levels()[0].x, abstractTween.levels()[0].y);
+    scin::base::Tween::Curve curve = abstractTween.curves()[0];
+    for (size_t i = 0; i < abstractTween.durations().size(); ++i) {
+        int32_t durationMs = static_cast<int32_t>(abstractTween.durations()[i] * 1000.0f);
+        if (durationMs == 0) {
+            continue;
+        }
+        if (i < abstractTween.curves().size()) {
+            curve = abstractTween.curves()[i];
+        }
+        tween = tween.to(abstractTween.levels()[i + 1].x, abstractTween.levels()[i + 1].y).during(durationMs);
+        tween = applyCurve(curve, tween);
+    }
+
+    float* values = static_cast<float*>(hostTable->mappedAddress());
+    for (size_t i = 0; i < numberOfSamples; ++i) {
+        int32_t t =
+            abstractTween.totalTime() * 1000.0f * static_cast<float>(i) / static_cast<float>(numberOfSamples - 1);
+        std::array<float, 2> point = tween.seek(t);
+        values[0] = point[0];
+        values[1] = point[1];
+        values += 2;
+    }
+}
+
+void fillTween4(size_t numberOfSamples, const scin::base::Tween& abstractTween,
+                std::shared_ptr<scin::vk::HostBuffer> hostTable) {
+    auto tween = tweeny::from(abstractTween.levels()[0].x, abstractTween.levels()[0].y, abstractTween.levels()[0].z,
+                              abstractTween.levels()[0].w);
+    scin::base::Tween::Curve curve = abstractTween.curves()[0];
+    for (size_t i = 0; i < abstractTween.durations().size(); ++i) {
+        int32_t durationMs = static_cast<int32_t>(abstractTween.durations()[i] * 1000.0f);
+        if (durationMs == 0) {
+            continue;
+        }
+        if (i < abstractTween.curves().size()) {
+            curve = abstractTween.curves()[i];
+        }
+        tween = tween
+                    .to(abstractTween.levels()[i + 1].x, abstractTween.levels()[i + 1].y,
+                        abstractTween.levels()[i + 1].z, abstractTween.levels()[i + 1].w)
+                    .during(durationMs);
+        tween = applyCurve(curve, tween);
+    }
+
+    float* values = static_cast<float*>(hostTable->mappedAddress());
+    for (size_t i = 0; i < numberOfSamples; ++i) {
+        int32_t t =
+            abstractTween.totalTime() * 1000.0f * static_cast<float>(i) / static_cast<float>(numberOfSamples - 1);
+        std::array<float, 4> point = tween.seek(t);
+        values[0] = point[0];
+        values[1] = point[1];
+        values[2] = point[2];
+        values[3] = point[3];
+        values += 4;
+    }
+}
+
+} // namespace
 
 namespace scin { namespace comp {
 
@@ -46,9 +160,13 @@ ScinthDef::~ScinthDef() {
     if (m_emptySampler) {
         m_samplerFactory->releaseSampler(m_emptySampler);
     }
+
+    for (auto sampler : m_tweenSamplers) {
+        m_samplerFactory->releaseSampler(sampler);
+    }
 }
 
-bool ScinthDef::build(ShaderCompiler* compiler) {
+bool ScinthDef::build(ShaderCompiler* compiler, StageManager* stageManager) {
     // Build the vertex data. Because Intrinsics can add data payloads to the vertex data, each ScinthDef shares a
     // vertex buffer and index buffer across all Scinth instances, allowing for the potential unique combination
     // between Shape data and payloads.
@@ -78,6 +196,11 @@ bool ScinthDef::build(ShaderCompiler* compiler) {
 
     if (!buildSamplers()) {
         spdlog::error("ScinthDef failed to build Samplers list for ScinthDef {}", m_abstract->name());
+        return false;
+    }
+
+    if (!buildTweens(stageManager)) {
+        spdlog::error("ScinthDef {} failed to build Tweens", m_abstract->name());
         return false;
     }
 
@@ -151,7 +274,8 @@ bool ScinthDef::buildDescriptorLayout() {
         bindings.emplace_back(uniformBinding);
     }
 
-    auto totalSamplers = m_abstract->drawFixedImages().size() + m_abstract->drawParameterizedImages().size();
+    auto totalSamplers = m_abstract->drawFixedImages().size() + m_abstract->drawParameterizedImages().size()
+        + m_abstract->tweens().size();
     for (size_t i = 0; i < totalSamplers; ++i) {
         VkDescriptorSetLayoutBinding imageBinding = {};
         imageBinding.binding = static_cast<uint32_t>(bindings.size());
@@ -211,6 +335,77 @@ bool ScinthDef::buildSamplers() {
     // correctly as transparent black.
     if (m_parameterizedSamplers.size()) {
         m_emptySampler = m_samplerFactory->getSampler(0);
+    }
+
+    return true;
+}
+
+bool ScinthDef::buildTweens(StageManager* stageManager) {
+    for (const auto& abstractTween : m_abstract->tweens()) {
+        size_t numberOfSamples = static_cast<size_t>(std::ceil(abstractTween.totalTime() * abstractTween.sampleRate()));
+        size_t packDimension = abstractTween.dimension();
+        size_t numberOfFloats = numberOfSamples * packDimension;
+        spdlog::info("Building Tween image for ScinthDef {}, {} total samples", m_abstract->name(), numberOfSamples);
+        auto hostTable =
+            std::make_shared<vk::HostBuffer>(m_device, vk::Buffer::Kind::kStaging, numberOfFloats * sizeof(float));
+        if (!hostTable->create()) {
+            spdlog::error("Failed to create host buffer for tween within ScinthDef {}", m_abstract->name());
+            return false;
+        }
+        std::shared_ptr<vk::DeviceImage> image;
+
+        switch (abstractTween.dimension()) {
+        case 1:
+            fillTween1(numberOfSamples, abstractTween, hostTable);
+            image = std::make_shared<vk::DeviceImage>(m_device, VK_FORMAT_R32_SFLOAT);
+            break;
+
+        case 2:
+            fillTween2(numberOfSamples, abstractTween, hostTable);
+            image = std::make_shared<vk::DeviceImage>(m_device, VK_FORMAT_R32G32_SFLOAT);
+            break;
+
+        case 4:
+            fillTween4(numberOfSamples, abstractTween, hostTable);
+            image = std::make_shared<vk::DeviceImage>(m_device, VK_FORMAT_R32G32B32A32_SFLOAT);
+            break;
+
+        default:
+            spdlog::error("Unsupported tween dimension {} in ScinthDef {}.", abstractTween.dimension(),
+                          m_abstract->name());
+            return false;
+        }
+
+        if (!image->create(numberOfSamples, 1)) {
+            spdlog::error("Failed to create tween image with width {} for ScinthDef {}", numberOfSamples,
+                          m_abstract->name());
+            return false;
+        }
+
+        if (!image->createView()) {
+            spdlog::error("Failed to create tween image view for ScinthDef {}", m_abstract->name());
+            return false;
+        }
+
+        if (!stageManager->stageImage(hostTable, image, [this]() {
+                spdlog::info("Tween image staged for ScinthDef {}", m_abstract->name());
+            })) {
+            spdlog::error("Failed to stage tween image for ScinthDef {}", m_abstract->name());
+            return false;
+        }
+
+        m_tweenImages.emplace_back(image);
+
+        base::AbstractSampler sampler;
+        sampler.enableAnisotropicFiltering(false);
+
+        if (abstractTween.loop()) {
+            sampler.setAddressModeU(base::AbstractSampler::AddressMode::kRepeat);
+        } else {
+            sampler.setAddressModeU(base::AbstractSampler::AddressMode::kClampToEdge);
+        }
+
+        m_tweenSamplers.emplace_back(m_samplerFactory->getSampler(sampler));
     }
 
     return true;

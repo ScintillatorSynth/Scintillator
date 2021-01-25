@@ -4,13 +4,14 @@
 
 namespace scin { namespace base {
 
-AbstractVGen::AbstractVGen(const std::string& name, unsigned supportedRates, bool isSampler,
+AbstractVGen::AbstractVGen(const std::string& name, unsigned supportedRates, bool isSampler, bool hasTween,
                            const std::vector<std::string>& inputs, const std::vector<std::string>& outputs,
                            const std::vector<std::vector<size_t>> inputDimensions,
                            const std::vector<std::vector<size_t>> outputDimensions, const std::string& shader):
     m_name(name),
     m_supportedRates(supportedRates),
     m_isSampler(isSampler),
+    m_hasTween(hasTween),
     m_inputs(inputs),
     m_outputs(outputs),
     m_inputDimensions(inputDimensions),

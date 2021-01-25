@@ -5,7 +5,8 @@
 
 namespace scin { namespace base {
 
-/*! Represents a set of configuration parameters for a Vulkan 2D image sampler. Packs the configuration into a single
+/*!
+ * Represents a set of configuration parameters for a Vulkan 2D image sampler. Packs the configuration into a single
  * unsigned int value to allow coalescing of Samplers across Vulkan, as they are a resource available in limited
  * quantities.
  */
@@ -40,6 +41,9 @@ public:
     enum ClampBorderColor : uint32_t { kTransparentBlack = 0, kBlack = 0x100000, kWhite = 0x200000 };
     void setClampBorderColor(ClampBorderColor color);
     ClampBorderColor clampBorderColor() const;
+
+    void useUnnormalizedCoordinates(bool use);
+    bool isUsingUnnormalizedCoordinates() const;
 
     uint32_t key() const { return m_key; }
 

@@ -1,7 +1,7 @@
 ScinTween {
 	classvar <tweenNames;
 
-	var <levels, <times, <curves, <sampleRate;
+	var <levels, <times, <curves, <sampleRate, <loop;
 	var <>tweenIndex;
 
 	*initClass {
@@ -43,9 +43,9 @@ ScinTween {
 
 	}
 
-	*new { |levels = #[0, 1, 0], times = #[1, 1], curves=\linear, sampleRate = 120|
+	*new { |levels = #[0, 1, 0], times = #[1, 1], curves=\linear, sampleRate = 120, loop = false|
 		times = times.asArray.wrapExtend(levels.size - 1);
-		^super.newCopyArgs(levels, times, curves, sampleRate);
+		^super.newCopyArgs(levels, times, curves, sampleRate, loop);
 	}
 
 	levelDimension {
@@ -57,27 +57,30 @@ ScinTween {
 	asVGenInput { ^this }
 }
 
-VTweenGen : VGen {
+BaseVTweenGen : VGen {
 	var <>tween;
 
 	*fr { |tween, levelScale = 1.0, levelBias = 0.0, timeScale = 1.0|
-		VTweenGen.prAddTween(tween);
-		^this.multiNew(\frame, tween, levelScale, levelBias, timeScale).tween_(tween);
+		BaseVTweenGen.prAddTween(tween);
+		^this.multiNew(\frame, levelScale, levelBias, timeScale).tween_(tween);
 	}
 
 	*sr { |tween, levelScale = 1.0, levelBias = 0.0, timeScale = 1.0|
-		VTweenGen.prAddTween(tween);
-		^this.multiNew(\shape, tween, levelScale, levelBias, timeScale).tween_(tween);
+		BaseVTweenGen.prAddTween(tween);
+		^this.multiNew(\shape, levelScale, levelBias, timeScale).tween_(tween);
 	}
 
 	*pr { |tween, levelScale = 1.0, levelBias = 0.0, timeScale = 1.0|
-		VTweenGen.prAddTween(tween);
-		^this.multiNew(\pixel, tween, levelScale, levelBias, timeScale).tween_(tween);
+		BaseVTweenGen.prAddTween(tween);
+		^this.multiNew(\pixel, levelScale, levelBias, timeScale).tween_(tween);
 	}
 
 	*prAddTween { |tween|
 		if (tween.class.asSymbol !== 'ScinTween', {
 			Error.new("First argument to VTweenGen must be a ScinTween.").throw;
+		});
+		if (tween.levelDimension == 3, {
+			Error.new("Due to limited hardware support, 3D Tweens are not supported.").throw;
 		});
 		if (tween.tweenIndex.isNil, {
 			VGen.buildScinthDef.tweens.add(tween);
@@ -85,11 +88,27 @@ VTweenGen : VGen {
 		});
 	}
 
-	inputDimensions {
-		^[[1, 1, 1, 1]];
-	}
+	hasTweenVGen { ^true }
 
+	inputDimensions {
+		^[[1, 1, 1]];
+	}
+}
+
+VTweenGen1 : BaseVTweenGen {
 	outputDimensions {
-		^[[tween.levelDimension]];
+		^[[1]];
+	}
+}
+
+VTweenGen2 : BaseVTweenGen {
+	outputDimensions {
+		^[[2]];
+	}
+}
+
+VTweenGen4 : BaseVTweenGen {
+	outputDimensions {
+		^[[4]];
 	}
 }

@@ -53,7 +53,7 @@ AbstractSampler::AddressMode AbstractSampler::addressModeV() const {
     return static_cast<AddressMode>((m_key & 0x000f0000) >> 4);
 }
 
-// Two bits for border color, bits 24 and 25
+// Two bits for border color, bits 20 and 21
 void AbstractSampler::setClampBorderColor(AbstractSampler::ClampBorderColor color) {
     m_key = (m_key & 0xff0fffff) | color;
 }
@@ -61,6 +61,17 @@ void AbstractSampler::setClampBorderColor(AbstractSampler::ClampBorderColor colo
 AbstractSampler::ClampBorderColor AbstractSampler::clampBorderColor() const {
     return static_cast<ClampBorderColor>(m_key & 0x00f00000);
 }
+
+// 1 bit for using unnormalized coordinates, bit 24
+void AbstractSampler::useUnnormalizedCoordinates(bool use) {
+    if (use) {
+        m_key = m_key | 0x01000000;
+    } else {
+        m_key = m_key & 0xf0ffffff;
+    }
+}
+
+bool AbstractSampler::isUsingUnnormalizedCoordinates() const { return m_key & 0x01000000; }
 
 } // namespace base
 

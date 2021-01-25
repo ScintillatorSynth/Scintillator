@@ -1,0 +1,31 @@
+# Tween Interpolation
+---
+name: VTweenGen1
+rates: [ frame, shape, pixel ]
+tween: true
+inputs: [ levelScale, levelBias, timeScale ]
+outputs: [ out ]
+dimensions:
+    - inputs: [ 1, 1, 1]
+      outputs: 1
+shader: "@out = @levelBias + (texture(@tweenSampler, vec2(@time * @timeScale / @tweenDuration, 0.0)).x * @levelScale);"
+---
+name: VTweenGen2
+rates: [ frame, shape, pixel ]
+tween: true
+inputs: [ levelScale, levelBias, timeScale ]
+outputs: [ out ]
+dimensions:
+    - inputs: [ 1, 1, 1]
+      outputs: 2
+shader: "@out = @levelBias + texture(@tweenSampler, vec2(@time * @timeScale / @tweenDuration, 0.0)).xy * @levelScale);"
+---
+name: VTweenGen4
+rates: [ frame, shape, pixel ]
+tween: true
+inputs: [ levelScale, levelBias, timeScale ]
+outputs: [ out ]
+dimensions:
+    - inputs: [ 1, 1, 1]
+      outputs: 4
+shader: "@out = @levelBias + texture(@tweenSampler, vec2(@time * @timeScale / @tweenDuration, 0.0)) * @levelScale);"

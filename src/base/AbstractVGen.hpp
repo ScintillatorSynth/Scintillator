@@ -25,7 +25,8 @@ public:
     /*! Construct an AbstractVGen with all required and optional data.
      *
      * \param name The name to use for this VGen, must be unique.
-     * \param isSampler If true indicates this is a sampling VGen
+     * \param isSampler If true indicates this is a sampling VGen.
+     * \param hasTween If true indicates this VGen has a bound tween sampling input.
      * \param inputs A list of input names, can be empty.
      * \param outputs A list of output names, must be at least one.
      * \param inputDimensions Each subarray describes the allowable dimensions of the input at that index, and so should
@@ -37,7 +38,7 @@ public:
      *        with inputDimesion.
      * \param shader The template shader code.
      */
-    AbstractVGen(const std::string& name, unsigned supportedRates, bool isSampler,
+    AbstractVGen(const std::string& name, unsigned supportedRates, bool isSampler, bool hasTween,
                  const std::vector<std::string>& inputs, const std::vector<std::string>& outputs,
                  const std::vector<std::vector<size_t>> inputDimensions,
                  const std::vector<std::vector<size_t>> outputDimensions, const std::string& shader);
@@ -68,6 +69,7 @@ public:
     const std::string& name() const { return m_name; }
     unsigned supportedRates() const { return m_supportedRates; }
     bool isSampler() const { return m_isSampler; }
+    bool hasTween() const { return m_hasTween; }
     const std::vector<std::string>& inputs() const { return m_inputs; }
     const std::unordered_set<Intrinsic>& intrinsics() const { return m_intrinsics; }
     const std::vector<std::string>& outputs() const { return m_outputs; }
@@ -92,6 +94,7 @@ private:
     std::string m_name;
     unsigned m_supportedRates;
     bool m_isSampler;
+    bool m_hasTween;
     std::vector<std::string> m_inputs;
     std::vector<std::string> m_outputs;
     std::vector<std::vector<size_t>> m_inputDimensions;

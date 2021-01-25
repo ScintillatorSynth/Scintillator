@@ -59,7 +59,6 @@ ScinthDef {
 			{ vgen.inputs[i].isNumber } { 1 }
 			{ vgen.inputs[i].isControlVGen } { 1 }
 			{ vgen.inputs[i].isVGen } { children[vgen.inputs[i].scinthIndex].outDims[vgen.inputs[i].outputIndex] }
-			{ vgen.inputs[i].class.asSymbol === 'ScinTween' } { vgen.inputs[i].levelDimension }
 			{ "*** vgen input class: %".format(vgen.inputs[i]).postln; nil; }
 		});
 
@@ -132,13 +131,15 @@ ScinthDef {
 			yaml = yaml ++ indent ++ "tweens:\n";
 			tweens.do({ |tween|
 				yaml = yaml ++ depthIndent ++ "- levels:" + tween.levels.asString ++ "\n";
-				yaml = yaml ++ depthIndent ++ "  times:" + tween.times.asString ++ "\n";
-				if (tween.curve.isArray, {
-					yaml = yaml ++ depthIndent ++ "  curves:" + ScinTween.tweenNames.atAll(tween.curve).asString ++ "\n";
+				yaml = yaml ++ depthIndent ++ "  durations:" + tween.times.asString ++ "\n";
+				if (tween.curves.isArray, {
+					yaml = yaml ++ depthIndent ++ "  curves:" + ScinTween.tweenNames.atAll(tween.curves).asString ++ "\n";
 				}, {
-					yaml = yaml ++ depthIndent ++ "  curves:" + ScinTween.tweenNames.at(tween.curve).asString ++ "\n";
+					yaml = yaml ++ depthIndent ++ "  curves:" + ScinTween.tweenNames.at(tween.curves).asString ++ "\n";
 				});
 				yaml = yaml ++ depthIndent ++ "  sampleRate: " ++ tween.sampleRate.asString ++ "\n";
+				yaml = yaml ++ depthIndent ++ "  loop: " ++ tween.loop.asString ++ "\n";
+				yaml = yaml ++ depthIndent ++ "  dimension: " ++ tween.levelDimension.asString ++ "\n";
 			});
 		});
 
@@ -157,6 +158,12 @@ ScinthDef {
 				yaml = yaml ++ secondDepth ++ "  addressModeV:" + vgen.addressModeV ++ "\n";
 				yaml = yaml ++ secondDepth ++ "  clampBorderColor:" + vgen.clampBorderColor ++ "\n";
 			});
+
+			if (vgen.hasTweenVGen, {
+				yaml = yaml ++ depthIndent ++ "  tween:\n";
+				yaml = yaml ++ secondDepth ++ "  index:" + vgen.tween.tweenIndex ++ "\n";
+			});
+
 			if (vgen.inputs.size > 0, {
 				yaml = yaml ++ depthIndent ++ "  inputs:\n";
 				vgen.inputs.do({ |input, inputIndex|
@@ -176,11 +183,6 @@ ScinthDef {
 						yaml = yaml ++ secondDepth ++ "  vgenIndex:" + input.scinthIndex.asString ++ "\n";
 						yaml = yaml ++ secondDepth ++ "  outputIndex: 0\n";
 						yaml = yaml ++ secondDepth ++ "  dimension:" + vgen.inDims[inputIndex] ++ "\n";
-					}
-					{ input.class.asSymbol === 'ScinTween' } {
-						yaml = yaml ++ secondDepth ++ "- type: tween\n";
-						yaml = yaml ++ secondDepth ++ "  tweenIndex:" + input.tweenIndex ++ "\n";
-						yaml = yaml ++ secondDepth ++ "  dimension:" + input.levelDimension ++ "\n";
 					}
 					{ Error.new("unknown input").throw };
 				});

@@ -13,11 +13,12 @@ namespace scin { namespace base {
 
 AbstractScinthDef::AbstractScinthDef(const std::string& name, std::unique_ptr<Shape> shape,
                                      const RenderOptions& renderOptions, const std::vector<Parameter>& parameters,
-                                     const std::vector<VGen>& instances):
+                                     const std::vector<Tween>& tweens, const std::vector<VGen>& instances):
     m_name(name),
     m_shape(std::move(shape)),
     m_renderOptions(renderOptions),
     m_parameters(parameters),
+    m_tweens(tweens),
     m_instances(instances),
     m_hasComputeStage(false) {}
 
@@ -227,6 +228,16 @@ bool AbstractScinthDef::buildDrawStage(const std::set<size_t>& vertexVGens, cons
                 m_vertexManifest.addElement(name, Manifest::ElementType::kVec2, Intrinsic::kTexPos);
                 intrinsics[Intrinsic::kTexPos] = fmt::format("{}_in_texPos", m_prefix);
             } break;
+
+            case kTweenDuration:
+                intrinsics[Intrinsic::kTweenDuration] =
+                    fmt::format("{}f", m_tweens[m_instances[index].tweenIndex()].totalTime());
+                break;
+
+            case kTweenSampler:
+                intrinsics[Intrinsic::kTweenSampler] =
+                    fmt::format("{}_tween_{}", m_prefix, m_instances[index].tweenIndex());
+                break;
             }
         }
 
@@ -355,6 +366,16 @@ bool AbstractScinthDef::buildDrawStage(const std::set<size_t>& vertexVGens, cons
                 m_vertexManifest.addElement("texPos", Manifest::ElementType::kVec2, Intrinsic::kTexPos);
                 intrinsics[Intrinsic::kTexPos] = fmt::format("{}_in_texPos", m_prefix);
             } break;
+
+            case kTweenDuration:
+                intrinsics[Intrinsic::kTweenDuration] =
+                    fmt::format("{}f", m_tweens[m_instances[index].tweenIndex()].totalTime());
+                break;
+
+            case kTweenSampler:
+                intrinsics[Intrinsic::kTweenSampler] =
+                    fmt::format("{}_tween_{}", m_prefix, m_instances[index].tweenIndex());
+                break;
             }
         }
 
@@ -376,6 +397,7 @@ bool AbstractScinthDef::buildDrawStage(const std::set<size_t>& vertexVGens, cons
     return true;
 }
 
+// TODO: validate images and tweens as inputs to frame-rate VGens
 bool AbstractScinthDef::buildComputeStage(const std::set<size_t>& computeVGens) {
     // It's possible we have no frame-rate VGens, in which case we can elide the compute stage entirely.
     m_hasComputeStage = computeVGens.size() > 0;
@@ -458,6 +480,16 @@ bool AbstractScinthDef::buildComputeStage(const std::set<size_t>& computeVGens) 
             case kTime:
                 m_uniformManifest.addElement("time", Manifest::ElementType::kFloat, Intrinsic::kTime);
                 intrinsics[Intrinsic::kTime] = fmt::format("{}_ubo.time", m_prefix);
+                break;
+
+            case kTweenDuration:
+                intrinsics[Intrinsic::kTweenDuration] =
+                    fmt::format("{}f", m_tweens[m_instances[index].tweenIndex()].totalTime());
+                break;
+
+            case kTweenSampler:
+                intrinsics[Intrinsic::kTweenSampler] =
+                    fmt::format("{}_tween_{}", m_prefix, m_instances[index].tweenIndex());
                 break;
 
             case kFragCoord:
@@ -601,6 +633,21 @@ bool AbstractScinthDef::finalizeShaders() {
             + samplerBody;
         fragmentHeader += "\n"
                           "// --- parammeterized image sampler inputs\n"
+            + samplerBody;
+    }
+
+    // Tween images are declared here.
+    if (m_tweens.size()) {
+        std::string samplerBody;
+        for (size_t i = 0; i < m_tweens.size(); ++i) {
+            samplerBody += fmt::format("layout(binding = {}) uniform sampler2D {}_tween_{};\n", binding, m_prefix, i);
+            ++binding;
+        }
+        vertexHeader += "\n"
+                        "// -- tween image sampler inputs\n"
+            + samplerBody;
+        fragmentHeader += "\n"
+                          "// -- tween image sampler inputs\n"
             + samplerBody;
     }
 
