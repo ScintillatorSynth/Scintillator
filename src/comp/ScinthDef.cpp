@@ -18,12 +18,18 @@
 #include "glm/glm.hpp"
 #include "spdlog/spdlog.h"
 
-#if __GNUC__ || __clang__
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4244)
+#pragma warning(disable: 4127)
+#elif __GNUC__ || __clang__
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 #include "tweeny.h"
-#if __GNUC__ || __clang__
+#if _MSC_VER
+#pragma warning(pop)
+#elif __GNUC__ || __clang__
 #    pragma GCC diagnostic pop
 #endif
 
@@ -174,8 +180,8 @@ void fillTween2(size_t numberOfSamples, const scin::base::AbstractTween& abstrac
 
     float* values = static_cast<float*>(hostTable->mappedAddress());
     for (size_t i = 0; i < numberOfSamples; ++i) {
-        int32_t t =
-            abstractTween.totalTime() * 1000.0f * static_cast<float>(i) / static_cast<float>(numberOfSamples - 1);
+        int32_t t = static_cast<int32_t>(
+            abstractTween.totalTime() * 1000.0f * static_cast<float>(i) / static_cast<float>(numberOfSamples - 1));
         std::array<float, 2> point = tween.seek(t);
         values[0] = point[0];
         values[1] = point[1];
@@ -205,8 +211,8 @@ void fillTween4(size_t numberOfSamples, const scin::base::AbstractTween& abstrac
 
     float* values = static_cast<float*>(hostTable->mappedAddress());
     for (size_t i = 0; i < numberOfSamples; ++i) {
-        int32_t t =
-            abstractTween.totalTime() * 1000.0f * static_cast<float>(i) / static_cast<float>(numberOfSamples - 1);
+        int32_t t = static_cast<int32_t>(
+            abstractTween.totalTime() * 1000.0f * static_cast<float>(i) / static_cast<float>(numberOfSamples - 1));
         std::array<float, 4> point = tween.seek(t);
         values[0] = point[0];
         values[1] = point[1];
@@ -462,7 +468,7 @@ bool ScinthDef::buildTweens(StageManager* stageManager) {
             return false;
         }
 
-        if (!image->create(numberOfSamples, 1)) {
+        if (!image->create(static_cast<uint32_t>(numberOfSamples), 1)) {
             spdlog::error("Failed to create tween image with width {} for ScinthDef {}", numberOfSamples,
                           m_abstract->name());
             return false;
