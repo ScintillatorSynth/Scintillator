@@ -44,7 +44,7 @@ ScinTween {
 
 	}
 
-	*new { |levels = #[0, 1, 0], times = #[1, 1], curves=\linear, sampleRate = 120, loop = false|
+	*new { |levels = #[0, 1], times = #[1], curves=\linear, sampleRate = 120, loop = false|
 		times = times.asArray.wrapExtend(levels.size - 1);
 		^super.newCopyArgs(levels, times, curves, sampleRate, loop);
 	}
@@ -109,6 +109,62 @@ VTweenGen2 : BaseVTweenGen {
 }
 
 VTweenGen4 : BaseVTweenGen {
+	outputDimensions {
+		^[[4]];
+	}
+}
+
+BaseVTweenSampler : VGen {
+	var <>tween;
+
+	*fr { |tween, t|
+		BaseVTweenSampler.prAddTween(tween);
+		^this.multiNew(\frame, t).tween_(tween);
+	}
+
+	*sr { |tween, t|
+		BaseVTweenSampler.prAddTween(tween);
+		^this.multiNew(\shape, t).tween_(tween);
+	}
+
+	*pr { |tween, t|
+		BaseVTweenSampler.prAddTween(tween);
+		^this.multiNew(\pixel, t).tween_(tween);
+	}
+
+	*prAddTween { |tween|
+		if (tween.class.asSymbol !== 'ScinTween', {
+			Error.new("First argument to VTweenSampler must be a ScinTween.").throw;
+		});
+		if (tween.levelDimension == 3, {
+			Error.new("Due to limited hardware support, 3D Tweens are not supported.").throw;
+		});
+		if (tween.tweenIndex.isNil, {
+			VGen.buildScinthDef.tweens.add(tween);
+			tween.tweenIndex = VGen.buildScinthDef.tweens.size - 1;
+		});
+	}
+
+	hasTweenVGen { ^true }
+
+	inputDimensions {
+		^[[1]];
+	}
+}
+
+VTweenSampler1 : BaseVTweenSampler {
+	outputDimensions {
+		^[[1]];
+	}
+}
+
+VTweenSampler2 : BaseVTweenSampler {
+	outputDimensions {
+		^[[2]];
+	}
+}
+
+VTweenSampler4 : BaseVTweenSampler {
 	outputDimensions {
 		^[[4]];
 	}

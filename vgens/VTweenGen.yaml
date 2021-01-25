@@ -8,7 +8,7 @@ outputs: [ out ]
 dimensions:
     - inputs: [ 1, 1, 1]
       outputs: 1
-shader: "@out = @levelBias + (texture(@tweenSampler, vec2(@time * @timeScale / @tweenDuration, 0.0)).x * @levelScale);"
+shader: "@out = @levelBias + (texture(@tweenSampler, vec2(@time * @timeScale / @tweenDuration, 0.5f)).x * @levelScale);"
 ---
 name: VTweenGen2
 rates: [ frame, shape, pixel ]
@@ -18,7 +18,7 @@ outputs: [ out ]
 dimensions:
     - inputs: [ 1, 1, 1]
       outputs: 2
-shader: "@out = @levelBias + texture(@tweenSampler, vec2(@time * @timeScale / @tweenDuration, 0.0)).xy * @levelScale);"
+shader: "@out = @levelBias + texture(@tweenSampler, vec2(@time * @timeScale / @tweenDuration, 0.5f)).xy * @levelScale);"
 ---
 name: VTweenGen4
 rates: [ frame, shape, pixel ]
@@ -28,4 +28,34 @@ outputs: [ out ]
 dimensions:
     - inputs: [ 1, 1, 1]
       outputs: 4
-shader: "@out = @levelBias + texture(@tweenSampler, vec2(@time * @timeScale / @tweenDuration, 0.0)) * @levelScale);"
+shader: "@out = @levelBias + texture(@tweenSampler, vec2(@time * @timeScale / @tweenDuration, 0.5f)) * @levelScale);"
+---
+name: VTweenSampler1
+rates: [ frame, shape, pixel ]
+tween: true
+inputs: [ t ]
+outputs: [ out ]
+dimensions:
+    - inputs: [ 2 ]
+      outputs: 1
+shader: "@out = texture(@tweenSampler, vec2(@t, 0.5f)).x;"
+---
+name: VTweenSampler2
+rates: [ frame, shape, pixel ]
+tween: true
+inputs: [ t ]
+outputs: [ out ]
+dimensions:
+    - inputs: [ 1 ]
+      outputs: 2
+shader: "@out = texture(@tweenSampler, vec2(@t, 0.5f)).xy;"
+---
+name: VTweenSampler
+rates: [ frame, shape, pixel ]
+tween: true
+inputs: [ t ]
+outputs: [ out ]
+dimensions:
+    - inputs: [ 2 ]
+      outputs: 4
+shader: "@out = texture(@tweenSampler, vec2(@t, 0.5f));"
