@@ -61,19 +61,19 @@ ScinTween {
 BaseVTweenGen : VGen {
 	var <>tween;
 
-	*fr { |tween, levelScale = 1.0, levelBias = 0.0, timeScale = 1.0|
+	*fr { |tween, levelScale = 1.0, levelBias = 0.0, timeScale = 1.0, timeBias = 0.0|
 		BaseVTweenGen.prAddTween(tween);
-		^this.multiNew(\frame, levelScale, levelBias, timeScale).tween_(tween);
+		^this.multiNew(\frame, levelScale, levelBias, timeScale, timeBias).tween_(tween);
 	}
 
-	*sr { |tween, levelScale = 1.0, levelBias = 0.0, timeScale = 1.0|
+	*sr { |tween, levelScale = 1.0, levelBias = 0.0, timeScale = 1.0, timeBias = 0.0|
 		BaseVTweenGen.prAddTween(tween);
-		^this.multiNew(\shape, levelScale, levelBias, timeScale).tween_(tween);
+		^this.multiNew(\shape, levelScale, levelBias, timeScale, timeBias).tween_(tween);
 	}
 
-	*pr { |tween, levelScale = 1.0, levelBias = 0.0, timeScale = 1.0|
+	*pr { |tween, levelScale = 1.0, levelBias = 0.0, timeScale = 1.0, timeBias = 0.0|
 		BaseVTweenGen.prAddTween(tween);
-		^this.multiNew(\pixel, levelScale, levelBias, timeScale).tween_(tween);
+		^this.multiNew(\pixel, levelScale, levelBias, timeScale, timeBias).tween_(tween);
 	}
 
 	*prAddTween { |tween|
@@ -92,7 +92,7 @@ BaseVTweenGen : VGen {
 	hasTweenVGen { ^true }
 
 	inputDimensions {
-		^[[1, 1, 1]];
+		^[[1, 1, 1, 1]];
 	}
 }
 

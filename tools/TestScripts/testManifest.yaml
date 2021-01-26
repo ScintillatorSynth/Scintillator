@@ -253,3 +253,18 @@
     - i: 1
     - i: 2
     - i: -1
+- name: "VTweenGen4 Color and Shape"
+  category: "tween"
+  comment: "Test 4D Tween generation and sampling"
+  shortName: "vtweengen4"
+  scinthDef: '{
+    var tween = ScinTween.new(
+        levels: #[[0, 0.5, 1.0, 1.0], [1.0, 0.0, 0.5, 1.0], [0.5, 1.0, 0.0, 1.0], [0, 0.5, 1.0, 1.0]],
+        times: #[1, 1, 1], curves: [\bounceInOut, \cubicInOut, \sinusoidalInOut], loop: true);
+    var pos = VNormPos.pr;
+    var v = VTweenGen4.pr(tween, timeBias: VX.pr(pos));
+    var clip = 1.0 - VStep.pr(VX.pr(v), VY.pr(pos).abs);
+    VVec4.pr(VX.pr(v) * clip, VY.pr(v) * clip, VZ.pr(v) * clip, 1.0);
+  }'
+  captureTimes: [ 1, 1, 1, 1 ]
+
