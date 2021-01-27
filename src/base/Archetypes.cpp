@@ -339,7 +339,7 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
 
             case 2: {
                 for (auto v2 : tween["levels"]) {
-                    if (!v2.IsSequence() || v2.size() != 3) {
+                    if (!v2.IsSequence() || v2.size() != 2) {
                         spdlog::error("ScinthDef {} has tween with dimension 2 but not 2-element level.", name);
                         return nullptr;
                     }

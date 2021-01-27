@@ -267,4 +267,366 @@
     VVec4.pr(VX.pr(v) * clip, VY.pr(v) * clip, VZ.pr(v) * clip, 1.0);
   }'
   captureTimes: [ 1, 1, 1, 1 ]
-
+- name: "VTweenSampler2 Color"
+  category: "tween"
+  comment: "Test 2D Tween generation and sampling"
+  shortName: "vTweenSampler2"
+  scinthDef: '{
+    var tween = ScinTween.new(
+        levels: #[[0, 1], [1, 1], [1, 0], [0, 1], [0, 0]],
+        times: #[0.1, 0.1, 0.1, 0.1], curves: \bounceInOut);
+    var v = VTweenSampler2.pr(tween, VX.pr(VTexPos.pr));
+    VRGBOut.pr(VX.pr(v), VY.pr(v), 0.2);
+    }'
+  captureTimes: [ 1 ]
+- name: "TweenCurve Graph Extents"
+  category: "tween"
+  comment: "Adds the top and bottom indicators for the tween curves"
+  shortName: "extents"
+  scinthDef: "{
+    var yPos = VY.pr(VTexPos.pr);
+    VRGBOut.pr(1.0 - VStep.pr(0.0025, (0.75 - yPos).abs), 0.0, 1.0 - VStep.pr(0.0025, (0.25 - yPos).abs));
+    }"
+  captureTimes: [ 1 ]
+  keep: true
+- name: "Tween backIn Curve"
+  category: "tween"
+  comment: "backIn Curve"
+  shortName: "backIn"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \backIn);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween backInOut Curve"
+  category: "tween"
+  comment: "backInOut Curve"
+  shortName: "backInOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \backInOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween backOut Curve"
+  category: "tween"
+  comment: "backOut Curve"
+  shortName: "backOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \backOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween bounceIn Curve"
+  category: "tween"
+  comment: "bounceIn Curve"
+  shortName: "bounceIn"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \bounceIn);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween bounceInOut Curve"
+  category: "tween"
+  comment: "bounceInOut Curve"
+  shortName: "bounceInOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \bounceInOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween bounceOut Curve"
+  category: "tween"
+  comment: "bounceOut Curve"
+  shortName: "bounceOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \bounceOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween circularIn Curve"
+  category: "tween"
+  comment: "circularIn Curve"
+  shortName: "circularIn"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \circularIn);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween circularInOut Curve"
+  category: "tween"
+  comment: "circularInOut Curve"
+  shortName: "circularInOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \circularInOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween circularOut Curve"
+  category: "tween"
+  comment: "circularOut Curve"
+  shortName: "circularOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \circularOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween cubicIn Curve"
+  category: "tween"
+  comment: "cubicIn Curve"
+  shortName: "cubicIn"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \cubicIn);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween cubicInOut Curve"
+  category: "tween"
+  comment: "cubicInOut Curve"
+  shortName: "cubicInOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \cubicInOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween cubicOut Curve"
+  category: "tween"
+  comment: "cubicOut Curve"
+  shortName: "cubicOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \cubicOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween elasticIn Curve"
+  category: "tween"
+  comment: "elasticIn Curve"
+  shortName: "elasticIn"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \elasticIn);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween elasticInOut Curve"
+  category: "tween"
+  comment: "elasticInOut Curve"
+  shortName: "elasticInOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \elasticInOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween elasticOut Curve"
+  category: "tween"
+  comment: "elasticOut Curve"
+  shortName: "elasticOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \elasticOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween exponentialIn Curve"
+  category: "tween"
+  comment: "exponentialIn Curve"
+  shortName: "exponentialIn"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \exponentialIn);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween exponentialInOut Curve"
+  category: "tween"
+  comment: "exponentialInOut Curve"
+  shortName: "exponentialInOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \exponentialInOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween exponentialOut Curve"
+  category: "tween"
+  comment: "exponentialOut Curve"
+  shortName: "exponentialOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \exponentialOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween linear Curve"
+  category: "tween"
+  comment: "linear Curve"
+  shortName: "linear"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \linear);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween quadraticIn Curve"
+  category: "tween"
+  comment: "quadraticIn Curve"
+  shortName: "quadraticIn"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \quadraticIn);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween quadraticInOut Curve"
+  category: "tween"
+  comment: "quadraticInOut Curve"
+  shortName: "quadraticInOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \quadraticInOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween quadraticOut Curve"
+  category: "tween"
+  comment: "quadraticOut Curve"
+  shortName: "quadraticOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \quadraticOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween quarticIn Curve"
+  category: "tween"
+  comment: "quarticIn Curve"
+  shortName: "quarticIn"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \quarticIn);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween quarticInOut Curve"
+  category: "tween"
+  comment: "quarticInOut Curve"
+  shortName: "quarticInOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \quarticInOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween quarticOut Curve"
+  category: "tween"
+  comment: "quarticOut Curve"
+  shortName: "quarticOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \quarticOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween quinticIn Curve"
+  category: "tween"
+  comment: "quinticIn Curve"
+  shortName: "quinticIn"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \quinticIn);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween quinticInOut Curve"
+  category: "tween"
+  comment: "quinticInOut Curve"
+  shortName: "quinticInOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \quinticInOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween quinticOut Curve"
+  category: "tween"
+  comment: "quinticOut Curve"
+  shortName: "quinticOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \quinticOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween sinusoidalIn Curve"
+  category: "tween"
+  comment: "sinusoidalIn Curve"
+  shortName: "sinusoidalIn"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \sinusoidalIn);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween sinusoidalInOut Curve"
+  category: "tween"
+  comment: "sinusoidalInOut Curve"
+  shortName: "sinusoidalInOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \sinusoidalInOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
+- name: "Tween sinusoidalOut Curve"
+  category: "tween"
+  comment: "sinusoidalOut Curve"
+  shortName: "sinusoidalOut"
+  scinthDef: '{
+    var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \sinusoidalOut);
+    var pos = VTexPos.pr;
+    var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.5) + 0.25);
+    VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+    }'
+  captureTimes: [ 1 ]
