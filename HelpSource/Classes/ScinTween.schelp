@@ -1,87 +1,82 @@
 TITLE:: ScinTween
 summary:: Describes a sequence of curves for use in animating VGen properties
-categories:: Quarks > Scintillator > Scinth
-related:: Classes/VTweenGen, Classes/ScinthDef
+categories:: Quarks>Scintillator>Scinth
+related:: Classes/VTweenGen1, Classes/VTweenSampler1, Classes/ScinthDef
 
 DESCRIPTION::
-(put long description here)
 
+A ScinTween describes a series of curves by providing pairs of levels, timings, and curves. The curve is provided to the server which will generate a lookup table for use in VGens. ScinTween is similar to the audio link::Classes/Env:: class but with two notable differences, namely that the Tween curves (see table below) describe curves commonly used in visual animation instead of audio synthesis, and that Tweens cannot trigger done actions.
 
 CLASSMETHODS::
-
-METHOD:: initClass
-(describe method here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: tweenNames
-(describe method here)
-
-returns:: (describe returnvalue here)
+private::initClass, tweenNames
 
 METHOD:: new
-(describe method here)
 
 ARGUMENT:: levels
-(describe argument here)
+strong::An array:: of single level values or subarrays of 2 or 4 values each, describing the one, two, or four-dimensional values to reach at each point of the tween.
 
 ARGUMENT:: times
-(describe argument here)
+strong::An array:: with one less element than code::levels::, describing the duration of time between each point in levels.
 
 ARGUMENT:: curves
-(describe argument here)
+strong::A symbol:: or an array of symbols, the same size as code::times::, chosen from the table below, that describes the curve to follow between the levels.
 
 ARGUMENT:: sampleRate
-(describe argument here)
+strong::An integer:: describing the number of points per second to put into the tween table.
+
+ARGUMENT:: loop
+strong::A boolean:: which if true will repeat the tween indefinitely. If false samples before 0 and after the total duration of the tween will return the values at 0 and the end of the tween respectively.
 
 returns:: (describe returnvalue here)
+A new ScinTween object.
 
+subsection::Supported Tween Curves
+
+The following images are generated as part of the Scintillator server regression tests. They are charts of all the supported tween curves running from level 0 to 1 over a period of 1, making them simple to chart using link::Classes/VTweenSampler1::. The red line along the bottom of the image indicates a zero value and the blue line at the top indicates the 1 value. Note that many curves go above and below the extreme of their target level.
+
+table::
+## code::\backIn:: image::backIn_0.png:: || code::\backInOut:: image::backInOut_0.png:: || code::\backOut:: image::backOut_0.png::
+## code::\bounceIn:: image::bounceIn_0.png:: || code::\bounceInOut:: image::bounceInOut_0.png:: || code::\bounceOut:: image::bounceOut_0.png::
+## code::\circularIn:: image::circularIn_0.png:: || code::\circularInOut:: image::circularInOut_0.png:: || code::\circularOut:: image::circularOut_0.png::
+## code::\cubicIn::  image::cubicIn_0.png:: || code::\cubicInOut:: image::cubicInOut_0.png:: || code::\cubicOut:: image::cubicOut_0.png::
+## code::\elasticIn:: image::elasticIn_0.png:: || code::\elasticInOut:: image::elasticInOut_0.png:: || code::\elasticOut::  image::elasticOut_0.png::
+## code::\exponentialIn:: image::exponentialIn_0.png:: || code::\exponentialInOut:: image::exponentialInOut_0.png:: || code::\exponentialOut:: image::exponentialOut_0.png::
+## || code::\linear:: image::linear_0.png:: ||
+## code::\quadraticIn:: image::quadraticIn_0.png:: || code::\quadraticInOut:: image::quadraticInOut_0.png:: || code::\quadraticOut:: image::quadraticOut_0.png::
+## code::\quarticIn:: image::quarticIn_0.png:: || code::\quarticInOut:: image::quarticInOut_0.png:: || code::\quarticOut::  image::quarticOut_0.png::
+## code::\quinticIn:: image::quinticIn_0.png:: || code::\quinticInOut:: image::quinticInOut_0.png:: || code::\quinticOut::  image::quinticOut_0.png::
+## code::\sinusoidalIn:: image::sinusoidalIn_0.png:: || code::\sinusoidalInOut:: image::sinusoidalInOut_0.png:: || code::\sinusoidalOut:: image::sinusoidalOut_0.png::
+::
 
 INSTANCEMETHODS::
-
-METHOD:: sampleRate
-(describe method here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: times
-(describe method here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: tweenIndex
-(describe method here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: curves
-(describe method here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: levelDimension
-(describe method here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: levels
-(describe method here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: asVGenInput
-(describe method here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: isValidVGenInput
-(describe method here)
-
-returns:: (describe returnvalue here)
-
+private::sampleRate, times, tweenIndex, curves, levelDimension, levels, asVGenInput, isValidVGenInput, loop
 
 EXAMPLES::
 
 code::
-(some example code)
+// Generates the \bounceIn graph depicted above. First we bring in the red and blue lines to show scale.
+(
+~lines = ScinthDef.new(\lines, {
+	var yPos = VY.pr(VTexPos.pr);
+	VRGBOut.pr(1.0 - VStep.pr(0.0025, (0.95 - yPos).abs), 0.0, 1.0 - VStep.pr(0.0025, (0.05 - yPos).abs));
+}).add;
+)
+
+(
+~gg = Scinth.new(\lines);
+)
+
+// Now the plot of the Tween curve using VTweenSampler will draw opaque white over the lines Scinth
+(
+~tw = ScinthDef.new(\tw, {
+	var tween = ScinTween.new(levels: #[0, 1], times: #[1], curves: \bounceIn);
+	var pos = VTexPos.pr;
+	var val = 1.0 - ((VTweenSampler1.pr(tween, VX.pr(pos)) * 0.9) + 0.05);
+	VRGBAOut.pr(1.0, 1.0, 1.0, 1.0 - VStep.pr(0.005, (VY.pr(pos) - val).abs));
+}).add;
+)
+
+(
+~k = Scinth.new(\tw);
+)
 ::
