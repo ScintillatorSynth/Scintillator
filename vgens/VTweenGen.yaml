@@ -50,7 +50,7 @@ dimensions:
       outputs: 2
 shader: "@out = texture(@tweenSampler, vec2(@t, 0.5f)).xy;"
 ---
-name: VTweenSampler
+name: VTweenSampler4
 rates: [ frame, shape, pixel ]
 tween: true
 inputs: [ t ]

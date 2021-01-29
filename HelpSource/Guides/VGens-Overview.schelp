@@ -48,6 +48,43 @@ table::
 :: || Returns the dimensions in pixels of the provided ScinImageBuffer. Roughly analogous to link::Classes/BufFrames::.
 ::
 
+section::Tween Sampling
+
+The link::Classes/ScinTween:: class describes a series of simple curves which the server can populate into a table, and then sample with interpolation with VGens at runtime. Scintillator provides VTweenGen VGens for sampling the tween curves over time, and VTweenSampler VGens for time-invariant tween sampling.
+
+table::
+## strong::VGen:: || strong::Rates:: || strong::Dimensions:: || strong::Description::
+## link::Classes/VTweenGen1::code::.fr(tween, levelScale, levelBias, timeScale, timeBias):: || frame, shape, pixel || table::
+## strong::input:: || strong::output::
+## tween, 1, 1, 1, 1 || 1
+:: || Samples a 1-dimensional tween table over time.
+
+## link::Classes/VTweenGen2::code::.fr(tween, levelScale, levelBias, timeScale, timeBias):: || frame, shape, pixel || table::
+## strong::input:: || strong::output::
+## tween, 1, 1, 1, 1 || 2
+:: || Samples a 2-dimensional tween table over time.
+
+## link::Classes/VTweenGen4::code::.fr(tween, levelScale, levelBias, timeScale, timeBias):: || frame, shape, pixel || table::
+## strong::input:: || strong::output::
+## tween, 1, 1, 1, 1 || 4
+:: || Samples a 4-dimensional tween table over time.
+
+## link::Classes/VTweenSampler1::code::.fr(tween, t):: || frame, shape, pixel || table::
+## strong::input:: || strong::output::
+## tween, 1 || 1
+:: || Samples a 1-dimensional tween table at any point.
+
+## link::Classes/VTweenSampler2::code::.fr(tween, t):: || frame, shape, pixel || table::
+## strong::input:: || strong::output::
+## tween, 1 || 2
+:: || Samples a 2-dimensional tween table at any point.
+
+## link::Classes/VTweenSampler4::code::.fr(tween, t):: || frame, shape, pixel || table::
+## strong::input:: || strong::output::
+## tween, 1 || 4
+:: || Samples a 4-dimensional tween table at any point.
+::
+
 section::Fragment Position
 
 Scintillator offers a few different means to determine the position of the current fragment shader relative to the geometry being rendered, or the onscreen pixel dimensions. The link::Classes/VTexPos:: VGen is in the Image Sampling section.

@@ -1,0 +1,13 @@
+TITLE:: BaseVTweenSampler
+summary:: Internal-only base class for common code between VTweenSampler1-4, not intended for direct use
+categories:: Quarks>Scintillator>VGens>Tweens
+related:: Classes/VTweenSampler1, Classes/VTweenSampler2, Classes/VTweenSampler4
+
+DESCRIPTION::
+This is an internal class to reuse code between the VTweenSampler1-4 classes, and should not be directly used as a VGen.
+
+CLASSMETHODS::
+private:: fr, prAddTween, pr, sr
+
+INSTANCEMETHODS::
+private:: hasTweenVGen, inputDimensions, tween

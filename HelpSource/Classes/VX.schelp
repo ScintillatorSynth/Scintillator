@@ -3,6 +3,7 @@ summary:: Extract the first single-dimensional element from a vector
 categories:: Quarks>Scintillator>VGens>Vector Manipulation>Element Access
 related:: Classes/VY, Classes/VZ, Classes/VW
 
+
 DESCRIPTION::
 Like its sibling classes link::Classes/VY::, link::Classes/VZ::, link::Classes/VW::, access a particular single-dimensional element of the provided vector, in this case the first element, commonly called code::x:: in computer graphics parlance.
 

@@ -1,0 +1,70 @@
+TITLE:: VTweenGen4
+summary:: Samples a four-dimensional tween table over time.
+categories:: Quarks>Scintillator>VGens>Tweens
+related:: Classes/ScinTween, Classes/VTweenGen2, Classes/VTweenGen4, Classes/VTweenSampler1
+
+DESCRIPTION::
+Similar to link::Classes/EnvGen::, the VTweenGen4 class samples a 4-dimensional link::Classes/ScinTween:: table over time, to return an interpolated tween value. With the exception of code::tween::, all parameters to VTweenGen4 are modulateable and update each time the VGen draws.
+
+CLASSMETHODS::
+private:: prAddTween
+
+METHOD:: fr
+METHOD:: pr
+METHOD:: sr
+
+Make a VTweenGen4 at the requested rate.
+
+ARGUMENT:: tween
+A link::Classes/ScinTween:: object to sample.
+
+ARGUMENT:: levelScale
+The sampled levels of the Tween are multiplied by this value.
+
+ARGUMENT:: levelBias
+The value to add to the sampled level.
+
+ARGUMENT:: timeScale
+The durations of each segment are multiplied by this value.
+
+ARGUMENT:: timeBias
+This value is added to the current time on each sample.
+
+strong::dimensions::
+table::
+## strong::input:: || strong::output::
+## tween, 1, 1, 1, 1 || 4
+::
+
+INSTANCEMETHODS::
+private:: hasTweenVGen, inputDimensions, tween, outputDimensions
+
+EXAMPLES::
+
+code::
+(
+~v = ScinServer.new.boot;
+)
+
+(
+~k = ScinthDef.new(\tw, { |px = 0.7, py = 0.2|
+	var tween = ScinTween.new(
+		levels: #[[1.0, 0.224, 0.0, 1.0], [0.031, 0.486, 0.729, 1.0],
+			[0.482, 0.929, 0.0, 1.0], [1.0, 0.224, 0.0, 1.0]],
+		times: #[0.05, 0.1, 0.15],
+		curves: \elasticIn,
+		loop: true);
+	VTweenGen4.pr(tween, timeBias: VLength.pr(VTexPos.pr - VVec2.pr(px, py)));
+}).add;
+)
+
+(
+~t = Scinth.new(\tw);
+)
+
+(
+~t.free;
+)
+::
+
+image::VTweenGen4.png::

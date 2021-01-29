@@ -1,0 +1,70 @@
+TITLE:: VTweenGen1
+summary:: Samples a single-dimensional tween table over time.
+categories:: Quarks>Scintillator>VGens>Tweens
+related:: Classes/ScinTween, Classes/VTweenGen2, Classes/VTweenGen4, Classes/VTweenSampler1
+
+DESCRIPTION::
+Similar to link::Classes/EnvGen::, the VTweenGen1 class samples a 1-dimensional link::Classes/ScinTween:: table over time, to return an interpolated tween value. With the exception of code::tween::, all parameters to VTweenGen1 are modulateable and update each time the VGen draws.
+
+CLASSMETHODS::
+private:: prAddTween
+
+METHOD:: fr
+METHOD:: pr
+METHOD:: sr
+
+Make a VTweenGen1 at the requested rate.
+
+ARGUMENT:: tween
+A link::Classes/ScinTween:: object to sample.
+
+ARGUMENT:: levelScale
+The sampled levels of the Tween are multiplied by this value.
+
+ARGUMENT:: levelBias
+The value to add to the sampled level.
+
+ARGUMENT:: timeScale
+The durations of each segment are multiplied by this value.
+
+ARGUMENT:: timeBias
+This value is added to the current time on each sample.
+
+strong::dimensions::
+table::
+## strong::input:: || strong::output::
+## tween, 1, 1, 1, 1 || 1
+::
+
+INSTANCEMETHODS::
+private:: hasTweenVGen, inputDimensions, tween, outputDimensions
+
+EXAMPLES::
+
+code::
+(
+~v = ScinServer.new.boot;
+)
+
+(
+~k = ScinthDef.new(\tw, {
+	var tween = ScinTween.new(
+		levels: #[0, 1, 0, 1, 0],
+		times: #[0.05, 0.1, 0.15, 0.2],
+		curves: \circularIn,
+		loop: true);
+	var v = VTweenGen1.pr(tween, timeBias: VY.pr(VTexPos.pr));
+	VBWOut.pr(v);
+}).add;
+)
+
+(
+~t = Scinth.new(\tw);
+)
+
+(
+~t.free;
+)
+::
+
+image::VTweenGen1.png::
