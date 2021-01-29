@@ -8,15 +8,15 @@ namespace scin { namespace base {
 
 TEST(VGenTest, InvalidInputCounts) {
     std::shared_ptr<const AbstractVGen> noInputs(new AbstractVGen("noInput", scin::base::AbstractVGen::Rates::kPixel,
-                                                                  false, {}, { "out" }, { {} }, { { 1 } },
+                                                                  false, false, {}, { "out" }, { {} }, { { 1 } },
                                                                   "@out = @time * 0.5f;"));
     VGen someInputs(noInputs, AbstractVGen::Rates::kPixel);
     someInputs.addConstantInput(1.0f);
     EXPECT_FALSE(someInputs.validate());
 
     std::shared_ptr<const AbstractVGen> twoInputs(new AbstractVGen("twoInputs", scin::base::AbstractVGen::Rates::kPixel,
-                                                                   false, { "in1", "in2" }, { "out" }, { { 1, 1 } },
-                                                                   { { 1 } }, "@out = @in1 + @in2;"));
+                                                                   false, false, { "in1", "in2" }, { "out" },
+                                                                   { { 1, 1 } }, { { 1 } }, "@out = @in1 + @in2;"));
     VGen incrementalInputs(twoInputs, AbstractVGen::Rates::kPixel);
     EXPECT_FALSE(incrementalInputs.validate());
     incrementalInputs.addVGenInput(0, 0, 1);
@@ -29,7 +29,7 @@ TEST(VGenTest, InvalidInputCounts) {
 
 TEST(VGenTest, InvalidRate) {
     std::shared_ptr<const AbstractVGen> frameRateOnly(
-        new AbstractVGen("frameRateOnly", scin::base::AbstractVGen::Rates::kFrame, false, {}, { "out" }, { {} },
+        new AbstractVGen("frameRateOnly", scin::base::AbstractVGen::Rates::kFrame, false, false, {}, { "out" }, { {} },
                          { { 1 } }, "@out = 25.0;"));
     VGen pixelRate(frameRateOnly, AbstractVGen::Rates::kPixel);
     EXPECT_FALSE(pixelRate.validate());
@@ -37,8 +37,8 @@ TEST(VGenTest, InvalidRate) {
 
 TEST(VGenTest, InputValuesAndTypesRetained) {
     std::shared_ptr<const AbstractVGen> threeInputs(
-        new AbstractVGen("threeInputs", scin::base::AbstractVGen::Rates::kPixel, false, { "a", "b", "c" }, { "out" },
-                         { { 1, 1, 1 } }, { { 1 } }, "@out = @a + @b + @c;"));
+        new AbstractVGen("threeInputs", scin::base::AbstractVGen::Rates::kPixel, false, false, { "a", "b", "c" },
+                         { "out" }, { { 1, 1, 1 } }, { { 1 } }, "@out = @a + @b + @c;"));
     VGen allConstants(threeInputs, AbstractVGen::Rates::kPixel);
     allConstants.addConstantInput(-1.0f);
     allConstants.addConstantInput(2.0f);

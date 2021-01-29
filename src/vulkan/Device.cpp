@@ -20,6 +20,7 @@ Device::Device(std::shared_ptr<Instance> instance, const DeviceInfo& deviceInfo)
     m_numberOfMemoryHeaps(deviceInfo.numberOfMemoryHeaps()),
     m_supportsMemoryBudget(deviceInfo.supportsMemoryBudget()),
     m_supportsSamplerAnisotropy(deviceInfo.supportsSamplerAnisotropy()),
+    m_maxImageDimension2D(deviceInfo.maxImageDimension2D()),
     m_device(VK_NULL_HANDLE),
     m_allocator(VK_NULL_HANDLE),
     m_computeQueue(VK_NULL_HANDLE),

@@ -7,6 +7,7 @@ ScinthDef {
 	var <>defServer;
 	var <>controls;
 	var <>controlNames;
+	var <>tweens;
 
 	*new { |name, vGenGraphFunc, shape, renderOptions|
 		^super.newCopyArgs(name.asSymbol, vGenGraphFunc, shape, renderOptions).children_(Array.new(64)).build();
@@ -21,6 +22,7 @@ ScinthDef {
 			});
 		});
 		// renderOptions as nil just means we accept the default
+		tweens = Array.new;
 
 		VGen.buildScinthDef = this;
 		func.valueArray(this.prBuildControls);
@@ -124,6 +126,23 @@ ScinthDef {
 				yaml = yaml ++ depthIndent ++ "  defaultValue: " ++ control.asString ++ "\n";
 			});
 		});
+
+		if (tweens.size > 0, {
+			yaml = yaml ++ indent ++ "tweens:\n";
+			tweens.do({ |tween|
+				yaml = yaml ++ depthIndent ++ "- levels:" + tween.levels.asString ++ "\n";
+				yaml = yaml ++ depthIndent ++ "  durations:" + tween.times.asString ++ "\n";
+				if (tween.curves.isArray, {
+					yaml = yaml ++ depthIndent ++ "  curves:" + ScinTween.tweenNames.atAll(tween.curves).asString ++ "\n";
+				}, {
+					yaml = yaml ++ depthIndent ++ "  curves:" + ScinTween.tweenNames.at(tween.curves).asString ++ "\n";
+				});
+				yaml = yaml ++ depthIndent ++ "  sampleRate: " ++ tween.sampleRate.asString ++ "\n";
+				yaml = yaml ++ depthIndent ++ "  loop: " ++ tween.loop.asString ++ "\n";
+				yaml = yaml ++ depthIndent ++ "  dimension: " ++ tween.levelDimension.asString ++ "\n";
+			});
+		});
+
 		yaml = yaml ++ indent ++ "vgens:\n";
 		children.do({ |vgen, index|
 			yaml = yaml ++ depthIndent ++ "- className:"  + vgen.name ++ "\n";
@@ -139,6 +158,12 @@ ScinthDef {
 				yaml = yaml ++ secondDepth ++ "  addressModeV:" + vgen.addressModeV ++ "\n";
 				yaml = yaml ++ secondDepth ++ "  clampBorderColor:" + vgen.clampBorderColor ++ "\n";
 			});
+
+			if (vgen.hasTweenVGen, {
+				yaml = yaml ++ depthIndent ++ "  tween:\n";
+				yaml = yaml ++ secondDepth ++ "  index:" + vgen.tween.tweenIndex ++ "\n";
+			});
+
 			if (vgen.inputs.size > 0, {
 				yaml = yaml ++ depthIndent ++ "  inputs:\n";
 				vgen.inputs.do({ |input, inputIndex|
@@ -191,7 +216,7 @@ ScinthDef {
 
 	checkInputs {
 		var firstErr;
-		children.do { | vgen |
+		children.do { |vgen|
 			var err;
 			if((err = vgen.checkInputs).notNil) {
 				err = vgen.class.asString + err;

@@ -16,6 +16,7 @@ TEST(AbstractSamplerTest, FilterMode) {
     EXPECT_EQ(a.addressModeU(), b.addressModeU());
     EXPECT_EQ(a.addressModeV(), b.addressModeV());
     EXPECT_EQ(a.clampBorderColor(), b.clampBorderColor());
+    EXPECT_EQ(a.isUsingUnnormalizedCoordinates(), b.isUsingUnnormalizedCoordinates());
 
     a.setMinFilterMode(AbstractSampler::FilterMode::kNearest);
     EXPECT_EQ(a.key(), b.key());
@@ -29,6 +30,7 @@ TEST(AbstractSamplerTest, FilterMode) {
     EXPECT_EQ(a.addressModeU(), b.addressModeU());
     EXPECT_EQ(a.addressModeV(), b.addressModeV());
     EXPECT_EQ(a.clampBorderColor(), b.clampBorderColor());
+    EXPECT_EQ(a.isUsingUnnormalizedCoordinates(), b.isUsingUnnormalizedCoordinates());
 }
 
 TEST(AbstractSamplerTest, AnistropicFiltering) {
@@ -42,6 +44,7 @@ TEST(AbstractSamplerTest, AnistropicFiltering) {
     EXPECT_EQ(a.addressModeU(), b.addressModeU());
     EXPECT_EQ(a.addressModeV(), b.addressModeV());
     EXPECT_EQ(a.clampBorderColor(), b.clampBorderColor());
+    EXPECT_EQ(a.isUsingUnnormalizedCoordinates(), b.isUsingUnnormalizedCoordinates());
 }
 
 TEST(AbstractSamplerTest, AddressMode) {
@@ -55,6 +58,7 @@ TEST(AbstractSamplerTest, AddressMode) {
     EXPECT_EQ(a.isAnisotropicFilteringEnabled(), b.isAnisotropicFilteringEnabled());
     EXPECT_EQ(a.addressModeV(), b.addressModeV());
     EXPECT_EQ(a.clampBorderColor(), b.clampBorderColor());
+    EXPECT_EQ(a.isUsingUnnormalizedCoordinates(), b.isUsingUnnormalizedCoordinates());
 
     b.setAddressModeU(AbstractSampler::AddressMode::kRepeat);
     EXPECT_NE(a.key(), b.key());
@@ -65,6 +69,7 @@ TEST(AbstractSamplerTest, AddressMode) {
     EXPECT_EQ(a.isAnisotropicFilteringEnabled(), b.isAnisotropicFilteringEnabled());
     EXPECT_EQ(a.addressModeV(), b.addressModeV());
     EXPECT_EQ(a.clampBorderColor(), b.clampBorderColor());
+    EXPECT_EQ(a.isUsingUnnormalizedCoordinates(), b.isUsingUnnormalizedCoordinates());
 
     a.setAddressModeU(AbstractSampler::AddressMode::kMirroredRepeat);
     EXPECT_NE(a.key(), b.key());
@@ -75,6 +80,7 @@ TEST(AbstractSamplerTest, AddressMode) {
     EXPECT_EQ(a.isAnisotropicFilteringEnabled(), b.isAnisotropicFilteringEnabled());
     EXPECT_EQ(a.addressModeV(), b.addressModeV());
     EXPECT_EQ(a.clampBorderColor(), b.clampBorderColor());
+    EXPECT_EQ(a.isUsingUnnormalizedCoordinates(), b.isUsingUnnormalizedCoordinates());
 
     b.setAddressModeU(AbstractSampler::AddressMode::kMirroredRepeat);
     b.setAddressModeV(AbstractSampler::AddressMode::kClampToEdge);
@@ -86,6 +92,7 @@ TEST(AbstractSamplerTest, AddressMode) {
     EXPECT_EQ(a.isAnisotropicFilteringEnabled(), b.isAnisotropicFilteringEnabled());
     EXPECT_EQ(a.addressModeU(), b.addressModeU());
     EXPECT_EQ(a.clampBorderColor(), b.clampBorderColor());
+    EXPECT_EQ(a.isUsingUnnormalizedCoordinates(), b.isUsingUnnormalizedCoordinates());
 
     a.setAddressModeV(AbstractSampler::AddressMode::kRepeat);
     EXPECT_NE(a.key(), b.key());
@@ -96,6 +103,7 @@ TEST(AbstractSamplerTest, AddressMode) {
     EXPECT_EQ(a.isAnisotropicFilteringEnabled(), b.isAnisotropicFilteringEnabled());
     EXPECT_EQ(a.addressModeU(), b.addressModeU());
     EXPECT_EQ(a.clampBorderColor(), b.clampBorderColor());
+    EXPECT_EQ(a.isUsingUnnormalizedCoordinates(), b.isUsingUnnormalizedCoordinates());
 
     b.setAddressModeV(AbstractSampler::AddressMode::kMirroredRepeat);
     EXPECT_NE(a.key(), b.key());
@@ -106,6 +114,7 @@ TEST(AbstractSamplerTest, AddressMode) {
     EXPECT_EQ(a.isAnisotropicFilteringEnabled(), b.isAnisotropicFilteringEnabled());
     EXPECT_EQ(a.addressModeU(), b.addressModeU());
     EXPECT_EQ(a.clampBorderColor(), b.clampBorderColor());
+    EXPECT_EQ(a.isUsingUnnormalizedCoordinates(), b.isUsingUnnormalizedCoordinates());
 }
 
 TEST(AbstractSamplerTest, ClampBorderColor) {
@@ -120,6 +129,7 @@ TEST(AbstractSamplerTest, ClampBorderColor) {
     EXPECT_EQ(a.isAnisotropicFilteringEnabled(), b.isAnisotropicFilteringEnabled());
     EXPECT_EQ(a.addressModeU(), b.addressModeU());
     EXPECT_EQ(a.addressModeV(), b.addressModeV());
+    EXPECT_EQ(a.isUsingUnnormalizedCoordinates(), b.isUsingUnnormalizedCoordinates());
 
     b.setClampBorderColor(AbstractSampler::ClampBorderColor::kWhite);
     EXPECT_EQ(a.clampBorderColor(), AbstractSampler::ClampBorderColor::kBlack);
@@ -129,6 +139,21 @@ TEST(AbstractSamplerTest, ClampBorderColor) {
     EXPECT_EQ(a.isAnisotropicFilteringEnabled(), b.isAnisotropicFilteringEnabled());
     EXPECT_EQ(a.addressModeU(), b.addressModeU());
     EXPECT_EQ(a.addressModeV(), b.addressModeV());
+    EXPECT_EQ(a.isUsingUnnormalizedCoordinates(), b.isUsingUnnormalizedCoordinates());
+}
+
+TEST(AbstractSamplerTest, UseUnnormalizedCoordinates) {
+    AbstractSampler a, b;
+    a.useUnnormalizedCoordinates(true);
+    EXPECT_NE(a.key(), b.key());
+    EXPECT_EQ(a.isUsingUnnormalizedCoordinates(), true);
+    EXPECT_EQ(b.isUsingUnnormalizedCoordinates(), false);
+    EXPECT_EQ(a.minFilterMode(), b.magFilterMode());
+    EXPECT_EQ(a.magFilterMode(), b.magFilterMode());
+    EXPECT_EQ(a.isAnisotropicFilteringEnabled(), b.isAnisotropicFilteringEnabled());
+    EXPECT_EQ(a.addressModeU(), b.addressModeU());
+    EXPECT_EQ(a.addressModeV(), b.addressModeV());
+    EXPECT_EQ(a.clampBorderColor(), b.clampBorderColor());
 }
 
 } // namespace base

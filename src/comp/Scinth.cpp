@@ -80,6 +80,8 @@ bool Scinth::prepareFrame(std::shared_ptr<FrameContext> context) {
             case base::Intrinsic::kPosition:
             case base::Intrinsic::kSampler:
             case base::Intrinsic::kTexPos:
+            case base::Intrinsic::kTweenDuration:
+            case base::Intrinsic::kTweenSampler:
                 spdlog::critical("Unknown or invalid uniform Intrinsic in Scinth {}", m_nodeID);
                 return true;
             }
@@ -102,6 +104,9 @@ bool Scinth::prepareFrame(std::shared_ptr<FrameContext> context) {
         context->appendImage(image);
     }
     for (auto image : m_parameterizedImages) {
+        context->appendImage(image);
+    }
+    for (auto image : m_scinthDef->tweenImages()) {
         context->appendImage(image);
     }
 
@@ -164,8 +169,8 @@ bool Scinth::allocateDescriptors() {
         }
     }
 
-    auto totalSamplers =
-        m_scinthDef->abstract()->drawFixedImages().size() + m_scinthDef->abstract()->drawParameterizedImages().size();
+    auto totalSamplers = m_scinthDef->abstract()->drawFixedImages().size()
+        + m_scinthDef->abstract()->drawParameterizedImages().size() + m_scinthDef->tweenSamplers().size();
     if (totalSamplers) {
         VkDescriptorPoolSize samplerPoolSize = {};
         samplerPoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -305,6 +310,28 @@ bool Scinth::allocateDescriptors() {
 
             ++binding;
             ++samplerIndex;
+            ++imageInfoIndex;
+        }
+
+        // Add any tween images to bindings.
+        for (size_t j = 0; j < m_scinthDef->tweenImages().size(); ++j) {
+            std::shared_ptr<vk::DeviceImage> image = m_scinthDef->tweenImages()[j];
+
+            imageInfos[imageInfoIndex].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfos[imageInfoIndex].imageView = image->view();
+            imageInfos[imageInfoIndex].sampler = m_scinthDef->tweenSamplers()[j]->get();
+
+            VkWriteDescriptorSet imageWrite = {};
+            imageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            imageWrite.dstSet = m_descriptorSets[i];
+            imageWrite.dstBinding = binding;
+            imageWrite.dstArrayElement = 0;
+            imageWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            imageWrite.descriptorCount = 1;
+            imageWrite.pImageInfo = imageInfos.data() + imageInfoIndex;
+            descriptorWrites.emplace_back(imageWrite);
+
+            ++binding;
             ++imageInfoIndex;
         }
 

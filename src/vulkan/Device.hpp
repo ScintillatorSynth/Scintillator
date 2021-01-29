@@ -52,6 +52,7 @@ public:
     VkQueue graphicsQueue() { return m_graphicsQueue; }
     VkQueue presentQueue() { return m_presentQueue; }
     bool supportsSamplerAnisotropy() const { return m_supportsSamplerAnisotropy; }
+    uint32_t maxImageDimension2D() const { return m_maxImageDimension2D; }
 
 private:
     std::shared_ptr<Instance> m_instance;
@@ -63,6 +64,7 @@ private:
     int m_numberOfMemoryHeaps;
     bool m_supportsMemoryBudget;
     bool m_supportsSamplerAnisotropy;
+    uint32_t m_maxImageDimension2D;
     VkDevice m_device;
     VmaAllocator m_allocator;
     VkQueue m_computeQueue;
@@ -71,7 +73,6 @@ private:
 };
 
 } // namespace vk
-
 } // namespace scin
 
 #endif // SRC_VULKAN_DEVICE_HPP_

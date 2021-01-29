@@ -193,6 +193,7 @@ VOutputProxy : VGen {
 	isVGen { ^false }
 	isControlVGen { ^false }
 	isSamplerVGen { ^false }
+	hasTweenVGen { ^false }
 }
 
 + AbstractFunction {

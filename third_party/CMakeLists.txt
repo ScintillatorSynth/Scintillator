@@ -107,3 +107,6 @@ elseif(WIN32)
 endif()
 add_subdirectory(portaudio)
 
+### tweeny
+add_subdirectory(tweeny EXCLUDE_FROM_ALL)
+

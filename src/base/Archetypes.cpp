@@ -2,6 +2,7 @@
 
 #include "base/AbstractSampler.hpp"
 #include "base/AbstractScinthDef.hpp"
+#include "base/AbstractTween.hpp"
 #include "base/AbstractVGen.hpp"
 #include "base/Parameter.hpp"
 #include "base/RenderOptions.hpp"
@@ -260,6 +261,117 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
         }
     }
 
+    // Parse tween list if present.
+    std::vector<AbstractTween> tweens;
+    if (node["tweens"]) {
+        if (!node["tweens"].IsSequence()) {
+            spdlog::error("ScinthDef named {} got non-sequence tweens key", name);
+            return nullptr;
+        }
+
+        for (auto tween : node["tweens"]) {
+            // Expecting a dictionary with keys "levels", "durations", "curves", "sampleRate" and "dimension".
+            if (!tween.IsMap()) {
+                spdlog::error("ScinthDef {} got non-dictionary tween entry.", name);
+                return nullptr;
+            }
+
+            if (!tween["dimension"] || !tween["dimension"].IsScalar()) {
+                spdlog::error("ScinthDef {} has absent or malformed dimension key within tween.", name);
+                return nullptr;
+            }
+            int dimension = tween["dimension"].as<int>();
+
+            if (!tween["sampleRate"] || !tween["sampleRate"].IsScalar()) {
+                spdlog::error("ScinthDef {} has absent or malformed sampleRate key within tween.", name);
+                return nullptr;
+            }
+            float sampleRate = tween["sampleRate"].as<float>();
+
+            if (!tween["curves"]) {
+                spdlog::error("ScinthDef {} has absent or malformed curves key within tween.", name);
+                return nullptr;
+            }
+            std::vector<AbstractTween::Curve> curves;
+            if (tween["curves"].IsScalar()) {
+                curves.emplace_back(static_cast<AbstractTween::Curve>(tween["curves"].as<int>()));
+            } else if (tween["curves"].IsSequence()) {
+                for (auto curve : tween["curves"]) {
+                    curves.emplace_back(static_cast<AbstractTween::Curve>(curve.as<int>()));
+                }
+            } else {
+                spdlog::error("ScinthDef {} has tween with invalid curves key.", name);
+                return nullptr;
+            }
+
+            float totalTime = 0;
+            std::vector<float> durations;
+            if (!tween["durations"] || !tween["durations"].IsSequence()) {
+                spdlog::error("ScinthDef {} has absent or malformed durations key within tween.", name);
+                return nullptr;
+            }
+            for (auto dur : tween["durations"]) {
+                float durFloat = dur.as<float>();
+                totalTime += durFloat;
+                durations.emplace_back(durFloat);
+            }
+
+            bool loop = false;
+            if (tween["loop"] && tween["loop"].IsScalar()) {
+                loop = tween["loop"].as<bool>();
+            }
+
+            std::vector<glm::vec4> levels;
+            if (!tween["levels"] || !tween["levels"].IsSequence()) {
+                spdlog::error("ScinthDef {} has absent or malformed levels key within tween.", name);
+                return nullptr;
+            }
+            switch (dimension) {
+            case 1: {
+                for (auto v1 : tween["levels"]) {
+                    if (!v1.IsScalar()) {
+                        spdlog::error("ScinthDef {} has tween with dimension 1 but non-scalar level.", name);
+                        return nullptr;
+                    }
+                    levels.emplace_back(v1.as<float>(), 0.0, 0.0, 0.0);
+                }
+            } break;
+
+            case 2: {
+                for (auto v2 : tween["levels"]) {
+                    if (!v2.IsSequence() || v2.size() != 2) {
+                        spdlog::error("ScinthDef {} has tween with dimension 2 but not 2-element level.", name);
+                        return nullptr;
+                    }
+                    levels.emplace_back(v2[0].as<float>(), v2[1].as<float>(), 0.0, 0.0);
+                }
+            } break;
+
+            case 4: {
+                for (auto v4 : tween["levels"]) {
+                    if (!v4.IsSequence() || v4.size() != 4) {
+                        spdlog::error("ScinthDef {} has tween with dimension 4 but not 4-element level.", name);
+                        return nullptr;
+                    }
+                    levels.emplace_back(v4[0].as<float>(), v4[1].as<float>(), v4[2].as<float>(), v4[3].as<float>());
+                }
+            } break;
+
+            default:
+                spdlog::error("ScinthDef {} has unsupported dimension value {} within tween.", name, dimension);
+                return nullptr;
+            }
+
+            AbstractTween tn(dimension, sampleRate, totalTime, loop, levels, durations, curves);
+            if (!tn.validate()) {
+                spdlog::error("ScinthDef {} has invalid tween.", name);
+                return nullptr;
+            }
+
+            tweens.emplace_back(tn);
+        }
+    }
+
     // Parse VGen list.
     if (!node["vgens"] || !node["vgens"].IsSequence()) {
         spdlog::error("ScinthDef named {} missing or not sequence vgens key", name);
@@ -395,6 +507,21 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
             }
         }
 
+        if (vgen["tween"] && vgen["tween"].IsMap()) {
+            if (!vgenClass->hasTween()) {
+                spdlog::error("ScinthDef {} has non-tween VGen {} with tween dictionary", name, className);
+                return nullptr;
+            }
+
+            auto tween = vgen["tween"];
+            // Required key tween index.
+            if (!tween["index"] || !tween["index"].IsScalar()) {
+                spdlog::error("ScinthDef {} has sampler VGen {} missing image or imageArgType keys.", name, className);
+                return nullptr;
+            }
+            instance.setTweenIndex(tween["index"].as<int>());
+        }
+
         if (!vgen["outputs"] || !vgen["outputs"].IsSequence()) {
             spdlog::error("ScinthDef {} has vgen with className {} with absent or malformed outputs key", name,
                           className);
@@ -423,6 +550,13 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
                     return nullptr;
                 }
 
+                if (!input["dimension"] || !input["dimension"].IsScalar()) {
+                    spdlog::error("ScinthDef {} has VGen {} input with absent or malformed dimension key.", name,
+                                  className);
+                    return nullptr;
+                }
+                int dimension = input["dimension"].as<int>();
+
                 std::string inputTypeString = input["type"].as<std::string>();
                 auto typeIt = m_vgenInputTypes.find(inputTypeString);
                 if (typeIt == m_vgenInputTypes.end()) {
@@ -431,14 +565,8 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
                     return nullptr;
                 }
                 VGen::InputType inputType = typeIt->second;
-
-                if (!input["dimension"] || !input["dimension"].IsScalar()) {
-                    spdlog::error("ScinthDef {} has VGen {} input with absent or malformed dimension key.", name,
-                                  className);
-                    return nullptr;
-                }
-                int dimension = input["dimension"].as<int>();
-                if (inputType == VGen::InputType::kConstant) {
+                switch (inputType) {
+                case VGen::InputType::kConstant: {
                     if (!input["value"]) {
                         spdlog::error("ScinthDef {} has VGen {} constant input with no value key.", name, className);
                         return nullptr;
@@ -446,7 +574,9 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
                     // TODO: higher-dimensional constants.
                     float constantValue = input["value"].as<float>();
                     instance.addConstantInput(constantValue);
-                } else if (inputType == VGen::InputType::kVGen) {
+                } break;
+
+                case VGen::InputType::kVGen: {
                     if (!input["vgenIndex"] || !input["outputIndex"]) {
                         spdlog::error("ScinthDef {} has VGen {} vgen input with no vgenIndex or outputIndex key.", name,
                                       className);
@@ -465,13 +595,21 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
                         return nullptr;
                     }
                     instance.addVGenInput(vgenIndex, outputIndex, dimension);
-                } else if (inputType == VGen::InputType::kParameter) {
+                } break;
+
+                case VGen::InputType::kParameter: {
                     if (!input["index"]) {
                         spdlog::error("ScinthDef {} has VGen {} parameter input with no index key.", name, className);
                         return nullptr;
                     }
                     size_t parameterIndex = input["index"].as<size_t>();
                     instance.addParameterInput(parameterIndex);
+                } break;
+
+                default: {
+                    spdlog::error("ScinthDef {} has VGen {} parameter with unsupported input type.", name, className);
+                    return nullptr;
+                } break;
                 }
             }
         }
@@ -485,7 +623,7 @@ std::shared_ptr<AbstractScinthDef> Archetypes::extractSingleNode(const YAML::Nod
     }
 
     std::shared_ptr<AbstractScinthDef> scinthDef(
-        new AbstractScinthDef(name, std::move(shape), renderOptions, parameters, instances));
+        new AbstractScinthDef(name, std::move(shape), renderOptions, parameters, tweens, instances));
     return scinthDef;
 }
 
@@ -531,6 +669,11 @@ int Archetypes::extractAbstractVGensFromNodes(const std::vector<YAML::Node>& nod
         bool isSampler = false;
         if (node["sampler"] && node["sampler"].IsScalar()) {
             isSampler = node["sampler"].as<bool>();
+        }
+
+        bool hasTween = false;
+        if (node["tween"] && node["tween"].IsScalar()) {
+            hasTween = node["tween"].as<bool>();
         }
 
         if (!node["outputs"] || !node["outputs"].IsSequence()) {
@@ -632,7 +775,7 @@ int Archetypes::extractAbstractVGensFromNodes(const std::vector<YAML::Node>& nod
             continue;
         }
 
-        std::shared_ptr<AbstractVGen> vgen(new AbstractVGen(name, supportedRates, isSampler, inputs, outputs,
+        std::shared_ptr<AbstractVGen> vgen(new AbstractVGen(name, supportedRates, isSampler, hasTween, inputs, outputs,
                                                             inputDimensions, outputDimensions, shader));
         if (!vgen->prepareTemplate()) {
             spdlog::error("VGen {} failed template preparation.", name);

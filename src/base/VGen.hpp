@@ -1,13 +1,13 @@
-#ifndef SRC_CORE_VGEN_HPP_
-#define SRC_CORE_VGEN_HPP_
+#ifndef SRC_BASE_VGEN_HPP_
+#define SRC_BASE_VGEN_HPP_
 
 #include "base/AbstractSampler.hpp"
 #include "base/AbstractVGen.hpp"
 
+#include <glm/glm.hpp>
+
 #include <memory>
 #include <vector>
-
-#include "glm/glm.hpp"
 
 namespace scin { namespace base {
 
@@ -24,6 +24,10 @@ public:
      * non-sampling VGens.
      */
     void setSamplerConfig(size_t imageIndex, InputType imageArgType, const AbstractSampler& sampler);
+
+    /*! Sets the Tween index for the VGen, if needed.
+     */
+    void setTweenIndex(int tweenIndex);
 
     /*! Adds a single-dimensional constant-valued input.
      *
@@ -48,7 +52,6 @@ public:
      * \param dimension The dimension of the input.
      */
     void addVGenInput(size_t vgenIndex, size_t outputIndex, size_t dimension);
-
 
     /*! Add an output to this VGen with supplied dimension.
      *
@@ -109,6 +112,8 @@ public:
     InputType imageArgType() const { return m_imageArgType; }
     const AbstractSampler& sampler() const { return m_abstractSampler; }
 
+    int tweenIndex() const { return m_tweenIndex; }
+
 private:
     struct VGenInput {
         explicit VGenInput(float c): type(kConstant), dimension(1), vgenOutputIndex(0) { value.constant1 = c; }
@@ -141,6 +146,7 @@ private:
     size_t m_imageIndex;
     InputType m_imageArgType;
     AbstractSampler m_abstractSampler;
+    int m_tweenIndex;
     std::vector<VGenInput> m_inputs;
     std::vector<size_t> m_outputDimensions;
 };
@@ -149,4 +155,4 @@ private:
 
 } // namespace scin
 
-#endif // SRC_CORE_VGEN_HPP_
+#endif // SRC_BASE_VGEN_HPP_

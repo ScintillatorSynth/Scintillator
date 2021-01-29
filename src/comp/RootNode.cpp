@@ -145,7 +145,7 @@ void RootNode::destroy() {
 bool RootNode::defAdd(std::shared_ptr<const base::AbstractScinthDef> abstractScinthDef) {
     std::shared_ptr<ScinthDef> scinthDef(new ScinthDef(m_device, m_canvas, m_computeCommandPool, m_drawCommandPool,
                                                        m_samplerFactory, abstractScinthDef));
-    if (!scinthDef->build(m_shaderCompiler.get())) {
+    if (!scinthDef->build(m_shaderCompiler.get(), m_stageManager.get())) {
         return false;
     }
 

@@ -44,6 +44,7 @@ public:
     bool supportsSamplerAnisotropy() const { return m_features.samplerAnisotropy; }
     uint32_t deviceID() const { return m_properties.deviceID; }
     uint32_t vendorID() const { return m_properties.vendorID; }
+    uint32_t maxImageDimension2D() const { return m_properties.limits.maxImageDimension2D; }
 
 private:
     std::shared_ptr<Instance> m_instance;
