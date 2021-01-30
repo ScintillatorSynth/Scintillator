@@ -25,7 +25,7 @@
 	url = https://github.com/fmtlib/fmt.git
 [submodule "third_party/portaudio"]
 	path = third_party/portaudio
-	url = https://git.assembla.com/portaudio.git
+	url = https://github.com/PortAudio/portaudio
 [submodule "third_party/tweeny"]
 	path = third_party/tweeny
 	url = https://github.com/mobius3/tweeny
