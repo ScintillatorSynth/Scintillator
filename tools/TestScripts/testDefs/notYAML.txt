@@ -1,1 +1,0 @@
-Not a YAML file, for testing /scin_d_load and /scin_d_loadDir.
